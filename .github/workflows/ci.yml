@@ -46,9 +46,9 @@ jobs:
       - name: Run backend tests
         working-directory: backend
         run: npm test
-
-      - name: Upload coverage to Codecov
+      - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
         with:
-          files: backend/coverage/lcov.info,frontend/coverage/lcov.info
-          fail_ci_if_error: true
+            token: ${{ secrets.CODECOV_TOKEN }}
+            files: backend/coverage/lcov.info,frontend/coverage/lcov.info
+            slug: Hikers-for-life/Hiking-Logbook
