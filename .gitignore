@@ -28,5 +28,6 @@ yarn-error.log*
 
 # Leave for now
 backend/node_modules/
+frontend/node_modules/
 
 
