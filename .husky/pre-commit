@@ -5,3 +5,5 @@ npm run lint --prefix backend
 # Run tests in frontend and backend
 npm test --prefix frontend -- --watchAll=false
 npm test --prefix backend
+
+npx lint-staged
