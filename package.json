@@ -2,7 +2,7 @@
   "name": "hiking-logbook-root",
   "private": true,
   "scripts": {
-    "prepare": "husky"
+    "prepare": "husky install"
   },
 
   "lint-staged": {

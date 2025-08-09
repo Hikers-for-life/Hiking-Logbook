@@ -20,6 +20,10 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
+          
+      # 3. Install root dependencies (for husky etc.)
+      - name: Install root dependencies
+        run: npm install
 
       # ---- FRONTEND ----
       - name: Install frontend dependencies
