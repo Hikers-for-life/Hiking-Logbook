@@ -1,0 +1,10 @@
+{
+  "name": "hiking-logbook-root",
+  "private": true,
+  "scripts": {
+    "test:coverage": "npm run test:coverage --prefix frontend && npm run test:coverage --prefix backend && npx jest-merge --out coverage/merged"
+  },
+  "devDependencies": {
+    "jest-merge": "^1.0.3"
+  }
+}

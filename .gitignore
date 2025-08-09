@@ -1,0 +1,33 @@
+# Node.js & React
+
+# Dependency folders
+node_modules/
+.pnp/
+.pnp.js
+
+# Build outputs
+dist/
+build/
+
+# Firebase
+.firebase/
+firebase-debug.log
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.env
+.env.local
+.env.development
+.env.production
+
+# Editor files
+.DS_Store
+.vscode/
+
+# Leave for now
+backend/node_modules/
+frontend/node_modules/
+
+
