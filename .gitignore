@@ -31,3 +31,8 @@ backend/node_modules/
 frontend/node_modules/
 
 
+# Test coverage
+coverage/
+frontend/coverage/
+backend/coverage/
+
