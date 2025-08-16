@@ -1,5 +1,6 @@
 import logo from './logo.svg';
 import './App.css';
+import Login from './login.jsx';
 
 function App() {
   return (
@@ -9,6 +10,8 @@ function App() {
         <p>
           Edit <code>src/App.js</code> and save to reload.
         </p>
+
+        <Login> </Login>
         <a
           className="App-link"
           href="https://reactjs.org"
@@ -17,6 +20,11 @@ function App() {
         >
           Learn React
         </a>
+
+        <link
+          rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
+        />
       </header>
     </div>
   );
