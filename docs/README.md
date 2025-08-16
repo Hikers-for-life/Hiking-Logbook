@@ -1,7 +1,7 @@
 # Hiking Logbook – Documentation
 
 Welcome to the documentation hub for the **Hiking Logbook** project.  
-This file serves as a **table of contents** and guide to navigate both **product documentation** (what we are building) and **process documentation** (how we are building).  
+This file serves as a **table of contents** and guide to navigate both **product documentation** (what we are building) and **process documentation** (how we are building it).  
 
 > ⚠️ **Note:**  
 > This documentation is a **living document**.  
