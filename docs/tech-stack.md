@@ -16,7 +16,7 @@ External APIs (**Google Maps**, **OpenWeather**, **Geolocation**, **Crowdsource 
 
 All deployments are managed through **GitHub Actions** to Firebase Hosting, ensuring that every update passes linting, testing, and CI/CD checks before going live.
 
-![text](Untitled-2025-08-13-1535.png)  
+![text](techStack.png)  
 *Diagram showcasing the different components of the tech stack.*
 
 
