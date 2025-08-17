@@ -75,12 +75,12 @@ export default function Login() {
 const styles = {
   container: {
     display: 'flex',
-    inset: 0,
+    inset:'0px',
     flexDirection: 'column',
     alignItems: 'center',
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
     height: '100vh',
-    /*position:'fixed',*/
+    position:'fixed',
     fontFamily: 'Arial, sans-serif',
     backgroundColor: 'rgba(17, 16, 16, 0.4)',
   },
@@ -110,7 +110,7 @@ const styles = {
     border: 'white',
     backgroundPosition: 'center',
     right: '3%',
-    bottom: '3.6%',
+    bottom: '3.9%',
     left: '-4.8%',
   },
   //THE WHITE BOX
@@ -119,7 +119,7 @@ const styles = {
     flexDirection: 'column',
     backgroundPosition: 'center',
     width: '450px',
-    height: '600px',
+    height: '560px',
     padding: '24px',
     overflow: 'hidden',
     backgroundColor: '#fff',
