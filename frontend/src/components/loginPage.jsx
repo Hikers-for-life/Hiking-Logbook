@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import mountain from './forest-waterfall.jpg';
 
+
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -55,11 +56,11 @@ export default function Login() {
             --------------------- Or Continue With ---------------------
           </h3>
           <div style={styles.socialButtons}>
-            <button style={styles.socialButton}>
-              <i class="fa-brands fa-google"></i> Google
+            <button style={styles.socialButton} type="button">
+              <i className="fa-brands fa-google"></i> Google
             </button>
-            <button style={styles.socialButton}>
-              <i class="fa-brands fa-facebook"></i> Facebook
+            <button style={styles.socialButton} type="button">
+              <i className="fa-brands fa-facebook"></i> Facebook
             </button>
           </div>
           <p style={styles.signP}>Don't have an account?</p>
@@ -70,18 +71,20 @@ export default function Login() {
   );
 }
 
+//USED PLAIN CSS INSTEAD OF TAILWINDCSS
 const styles = {
   container: {
     display: 'flex',
-    inset: 0,
+    inset:'0px',
     flexDirection: 'column',
     alignItems: 'center',
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
     height: '100vh',
-    /*position:'fixed',*/
+    position:'fixed',
     fontFamily: 'Arial, sans-serif',
     backgroundColor: 'rgba(17, 16, 16, 0.4)',
   },
+  //THE WELCOME BACK
   title: {
     margin: '0',
     fontSize: '24px',
@@ -89,14 +92,16 @@ const styles = {
     color: 'white',
     left: '24px',
   },
+  //cCONTINUE YOUR JOURNEY
   message: {
     fontSize: '14px',
     marginTop: '4px',
     color: 'rgba(255,255,255,0.9)',
   },
+  //THE IMAGE
   banner: {
     height: '500px',
-    width: '496px',
+    width: '494px',
     position: 'relative',
     padding: '0px',
     boxShadow: '0 2px 8px black',
@@ -105,15 +110,16 @@ const styles = {
     border: 'white',
     backgroundPosition: 'center',
     right: '3%',
-    bottom: '3.7%',
+    bottom: '3.9%',
     left: '-4.8%',
   },
+  //THE WHITE BOX
   form: {
     display: 'flex',
     flexDirection: 'column',
     backgroundPosition: 'center',
     width: '450px',
-    height: '600px',
+    height: '560px',
     padding: '24px',
     overflow: 'hidden',
     backgroundColor: '#fff',
@@ -129,6 +135,7 @@ const styles = {
     border: '2px solid #ccc',
     boxSizing: 'border-box',
   },
+  //SIGNIN DASHBOARD
   button: {
     padding: '12px',
     fontSize: '16px',
@@ -139,6 +146,7 @@ const styles = {
     borderRadius: '6px',
     cursor: 'pointer',
   },
+  //THE EMAIL, PASSWORD ON TOP OF THE INPUTS
   label: {
     marginBottom: '6px',
     fontSize: '14px',
@@ -146,7 +154,7 @@ const styles = {
     color: '#333',
     textAlign: 'left',
   },
-
+//OR CONTINUE WITH
   message2: {
     textAlign: 'center',
     color: '#999',
@@ -154,6 +162,7 @@ const styles = {
     textTransform: 'uppercase',
     fontWeight: '600',
   },
+  //BOTH GOOGLE AND FACEBOOK
   socialButtons: {
     display: 'flex',
     gap: '10px',
@@ -168,14 +177,16 @@ const styles = {
     borderRadius: 8,
     fontWeight: 'bold',
   },
+  //SIGNUP BUTTON
   signup: {
     background: 'none',
     border: 'none',
     color: '#15803d',
     cursor: 'pointer',
     fontWeight: '600',
-    padding: 0,
+    padding:'3px',
   },
+  //DON'T HAVE AN ACCOUNT?
   signP: {
     color: '#666',
     fontWeight: '600',

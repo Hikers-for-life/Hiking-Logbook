@@ -10,6 +10,11 @@ function App() {
         <p className="text-white">
           Edit <code>src/App.js</code> and save to reload.
         </p>
+
+        <div>
+          <LoginPage></LoginPage>
+        </div>
+       
       <div>
         <LoginPage/>
       </div>
@@ -22,10 +27,6 @@ function App() {
           Learn React
         </a>
 
-        <link
-          rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
-        />
       </header>
     </div>
   );
