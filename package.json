@@ -8,13 +8,14 @@
   "lint-staged": {
     "frontend/**/*.{js,jsx,ts,tsx}": [
       "npm run lint --prefix frontend",
-      "npm test --prefix frontend -- --findRelatedTests"
+      "npm test --prefix frontend -- --watchAll=false --findRelatedTests"
     ],
     "backend/**/*.js": [
       "npm run lint --prefix backend",
       "npm test --prefix backend -- --findRelatedTests"
     ]
   },
+
 
   "devDependencies": {
     "husky": "^9.1.7",
