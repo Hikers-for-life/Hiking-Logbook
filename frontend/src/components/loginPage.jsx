@@ -55,11 +55,10 @@ export default function Login() {
             --------------------- Or Continue With ---------------------
           </h3>
           <div style={styles.socialButtons}>
-            <button style={styles.socialButton} type="button">
+            <button style={styles.socialButton}>
               <i class="fa-brands fa-google"></i> Google
             </button>
-            <button style={styles.socialButton} type="button">
-              {' '}
+            <button style={styles.socialButton}>
               <i class="fa-brands fa-facebook"></i> Facebook
             </button>
           </div>
@@ -79,7 +78,7 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'flex-end',
     height: '100vh',
-    position:'fixed',
+    /*position:'fixed',*/
     fontFamily: 'Arial, sans-serif',
     backgroundColor: 'rgba(17, 16, 16, 0.4)',
   },
@@ -97,7 +96,7 @@ const styles = {
   },
   banner: {
     height: '500px',
-    width: '494px',
+    width: '496px',
     position: 'relative',
     padding: '0px',
     boxShadow: '0 2px 8px black',
@@ -106,7 +105,7 @@ const styles = {
     border: 'white',
     backgroundPosition: 'center',
     right: '3%',
-    bottom: '3.6%',
+    bottom: '3.7%',
     left: '-4.8%',
   },
   form: {

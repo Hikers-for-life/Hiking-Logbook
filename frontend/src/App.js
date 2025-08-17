@@ -1,6 +1,6 @@
 import logo from './logo.svg';
 import './App.css';
-//import LoginPage from './components/loginPage.jsx';
+import LoginPage from './components/loginPage.jsx';
 
 function App() {
   return (
@@ -10,7 +10,9 @@ function App() {
         <p className="text-white">
           Edit <code>src/App.js</code> and save to reload.
         </p>
- 
+      <div>
+        <LoginPage/>
+      </div>
         <a
           className="App-link text-blue-400"
           href="https://reactjs.org"
