@@ -78,15 +78,6 @@ We have chosen **Agile (Scrum-based)** as our project management methodology. Ag
   - *Scrum Master*, Ntokozo Skosana: facilitates the scrum process.
   - *Development Team*, Risuna Ntimana, Naledi Mogomotsi, Stelly Jane, Annah Mlimi, Ntokozo Skosana: Responsible for delivering features.
 
-*Workflow*: Idea → Backlog → Refinement → Sprint Planning → Build → Review → Release.
-*Definition of Ready*: Story has value, acceptance criteria, dependencies known, effort estimated.
-*Definition of Done*: 
-- Code merged to dev with green CI (lint, tests, coverage),
-- Reviewed & approved (≥1 reviewer),
-- Acceptance tests pass,
-- Docs updated (README/feature docs),
-- Deployed to staging or preview.
-
 ---
 
 ## 3. User Stories and Acceptance Tests
