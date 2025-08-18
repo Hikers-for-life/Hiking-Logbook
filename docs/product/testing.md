@@ -35,9 +35,8 @@ The goal of our testing strategy is to ensure that all components of the Hiking 
     - Test controllers and services in isolation.
     - Tests cover individual functions (e.g., authentication, data validation).
     - Run with:
- ```bash
-  cd backend
-  npm run test
+       cd backend
+       npm run test
 
 **Frontend:**
   - **Framework**: Jest + React Testing Library.
@@ -46,9 +45,8 @@ The goal of our testing strategy is to ensure that all components of the Hiking 
     - Validate rendering, form inputs, and button actions.
     - Ensure state updates correctly on user input.
     - Run with:
- ```bash
-  cd frontend
-  npm run test
+       cd frontend
+       npm run test
   
 2. ### Integration Testing
 **Backend:**
