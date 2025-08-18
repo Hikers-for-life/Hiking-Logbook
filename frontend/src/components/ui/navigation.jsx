@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "../ui/button";
 import { Menu, X, Mountain, MapPin, Users, Trophy, Calendar } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -11,6 +12,7 @@ export const Navigation = () => {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const navigate = useNavigate();
 
   const navItems = [
     { name: "Logbook", icon: MapPin, href: "/" },
@@ -29,6 +31,10 @@ export const Navigation = () => {
 
   const handleViewProfile = () => {
     setIsProfileOpen(true);
+  };
+
+  const handleEditProfile = () => {
+    navigate("/edit-profile"); 
   };
 
   return (
@@ -54,7 +60,7 @@ export const Navigation = () => {
               </Link>
             ))}
             {isLoggedIn ? (
-              <ProfileDropdown onLogout={handleLogout} onViewProfile={handleViewProfile} />
+              <ProfileDropdown onLogout={handleLogout} onViewProfile={handleViewProfile} onEditProfile={handleEditProfile} />
             ) : (
               <Button 
                 variant="default" 
