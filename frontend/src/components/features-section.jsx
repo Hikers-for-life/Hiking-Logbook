@@ -1,4 +1,4 @@
-import { Card, CardContent } from "./ui/card";
+import { Card, CardContent } from "../components/ui/card";
 import { Users, Trophy, Calendar, MapPin, Camera, TrendingUp } from "lucide-react";
 import hikersImage from "../assets/hikers-group.jpg";
 import appPreviewImage from "../assets/app-preview.jpg";
