@@ -1,32 +1,16 @@
-import logo from './logo.svg';
-import './App.css';
-import LoginPage from './components/loginPage.jsx';
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Index from "./pages/Index.jsx";
+import NotFound from "./pages/NotFound.jsx";
+import Signup from './pages/Signup.jsx';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header flex flex-col justify-center items-center bg-gray-800">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p className="text-white">
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-
-        <div>
-          <LoginPage></LoginPage>
-        </div>
-       
-        <a
-          className="App-link text-blue-400"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-
-      </header>
-    </div>
-  );
-}
-
+const App = () => (
+      <BrowserRouter>
+        <Routes>
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/" element={<Index />} />
+          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+);
 export default App;

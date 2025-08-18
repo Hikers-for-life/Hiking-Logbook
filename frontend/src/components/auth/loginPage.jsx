@@ -1,71 +1,90 @@
-import React, { useState } from 'react';
-import mountain from './forest-waterfall.jpg';
+import React, { useState, useEffect } from 'react';
+import mountain from '../assets/forest-waterfall.jpg';
 
-
-export default function Login() {
+export default function Login({ open, onOpenChange, onLogin }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
+  // Close modal when `open` changes to false
+  useEffect(() => {
+    if (!open) {
+      setEmail('');
+      setPassword('');
+    }
+  }, [open]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    // For demo, just log and call onLogin
     console.log('Logging in with:', { email, password });
+    onLogin(email); // Pass email for initials
+    onOpenChange(false); // Close modal
   };
 
+  if (!open) return null; // Only render when open
+
   return (
-    <div style={styles.container}>
-      <div style={styles.formContainer}>
-        <form style={styles.form} onSubmit={handleSubmit}>
-          <div
-            style={{
-              ...styles.banner,
-              backgroundImage: `url(${mountain})`,
-            }}
-          >
-            <div style={styles.gradientOverlay} />
-            <div style={styles.headerText}>
-              <h2 style={styles.title}>Welcome Back</h2>
-              <p style={styles.message}>Continue your hiking journey</p>
+    <div style={styles.overlay}>
+      <div style={styles.container}>
+        <div style={styles.formContainer}>
+          <form style={styles.form} onSubmit={handleSubmit}>
+            <div
+              style={{
+                ...styles.banner,
+                backgroundImage: `url(${mountain})`,
+              }}
+            >
+              <div style={styles.gradientOverlay} />
+              <div style={styles.headerText}>
+                <h2 style={styles.title}>Welcome Back</h2>
+                <p style={styles.message}>Continue your hiking journey</p>
+              </div>
             </div>
-          </div>
-          <label style={styles.label} htmlFor="email">
-            Email
-          </label>
-          <input
-            style={styles.input}
-            type="email"
-            placeholder="your@gmail.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-          <label style={styles.label} htmlFor="password">
-            Password
-          </label>
-          <input
-            style={styles.input}
-            type="password"
-            placeholder="Enter your Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-          <button style={styles.button} type="submit">
-            Sign In to Dashboard
-          </button>
-          <h3 style={styles.message2}>
-            --------------------- Or Continue With ---------------------
-          </h3>
-          <div style={styles.socialButtons}>
-            <button style={styles.socialButton} type="button">
-              <i className="fa-brands fa-google"></i> Google
+
+            <label style={styles.label} htmlFor="email">
+              Email
+            </label>
+            <input
+              style={styles.input}
+              type="email"
+              placeholder="your@gmail.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+
+            <label style={styles.label} htmlFor="password">
+              Password
+            </label>
+            <input
+              style={styles.input}
+              type="password"
+              placeholder="Enter your Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+
+            <button style={styles.button} type="submit">
+              Sign In to Dashboard
             </button>
-            <button style={styles.socialButton} type="button">
-              <i className="fa-brands fa-facebook"></i> Facebook
-            </button>
-          </div>
-          <p style={styles.signP}>Don't have an account?</p>
-          <button style={styles.signup}>Sign Up</button>
-        </form>
+
+            <h3 style={styles.message2}>
+              --------------------- Or Continue With ---------------------
+            </h3>
+            <div style={styles.socialButtons}>
+              <button style={styles.socialButton} type="button">
+                <i className="fa-brands fa-google"></i> Google
+              </button>
+              <button style={styles.socialButton} type="button">
+                <i className="fa-brands fa-facebook"></i> Facebook
+              </button>
+            </div>
+
+            <p style={styles.signP}>Don't have an account?</p>
+            <button style={styles.signup}>Sign Up</button>
+          </form>
+        </div>
       </div>
     </div>
   );
@@ -73,6 +92,16 @@ export default function Login() {
 
 //USED PLAIN CSS INSTEAD OF TAILWINDCSS
 const styles = {
+  overlay: {
+    position: 'fixed',
+    inset: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+
   container: {
     display: 'flex',
     inset:'0px',

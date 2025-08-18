@@ -16,15 +16,19 @@ This file serves as a **table of contents** and guide to navigate both **product
 ### Product Documentation
 1. [Functional & Non-Functional Requirements](https://hikers-for-life.github.io/Hiking-Logbook/product/requirements.html)
 2. [UX Documentation](https://hikers-for-life.github.io/Hiking-Logbook/product/ux.html)
-3. [Architecture & Design](https://hikers-for-life.github.io/Hiking-Logbook/product/architecture.html)
+3. **Architecture & Design**
+     - [API specifications](https://hikers-for-life.github.io/Hiking-Logbook/product/architecture/api_specifications.html)
+     - [Database schema](https://hikers-for-life.github.io/Hiking-Logbook/product/architecture/database_schema.html)
+     - [Module interactions](https://hikers-for-life.github.io/Hiking-Logbook/product/architecture/module_interactions.html)
 4. [Testing Documentation](https://hikers-for-life.github.io/Hiking-Logbook/product/testing.html)
 
 ### Process Documentation
 5. [Strategy Roadmap](https://hikers-for-life.github.io/Hiking-Logbook/process/strategy.html)
-6. [Technology Roadmap](https://hikers-for-life.github.io/Hiking-Logbook/process/technology.html)
+6. [Technology Roadmap](https://hikers-for-life.github.io/Hiking-Logbook/process/technology.html))
 7. [Release Roadmap](https://hikers-for-life.github.io/Hiking-Logbook/process/release.html)
 8. [Metrics](https://hikers-for-life.github.io/Hiking-Logbook/process/metrics.html)
 9. [Standards](https://hikers-for-life.github.io/Hiking-Logbook/process/standards.html)
+
 
 
 ---
@@ -68,4 +72,6 @@ To measure project quality and progress, we track:
 ## 🚀 Purpose of this Documentation
 
 This documentation is designed not just to explain the final product but to demonstrate the **process, quality standards, and intentionality** behind its development. It reflects both the *engineering mindset* and *collaborative teamwork* that went into the Hiking Logbook project.
+
+
 
