@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
-import Index from "./pages/Index";
+import Index from "../pages/Index";
 import { MemoryRouter } from "react-router-dom";
-import NotFound from "./pages/NotFound";
+import NotFound from "../pages/NotFound";
 
 test("renders Index page", () => {
   render(

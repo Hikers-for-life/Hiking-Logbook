@@ -20,6 +20,8 @@ const profileSchema = z.object({
   location: z.string().min(2, "Location must be at least 2 characters"),
 });
 
+
+
 const EditProfile = () => {
   const [profileImage, setProfileImage] = useState("/placeholder.svg");
   const { toast } = useToast();
@@ -81,6 +83,7 @@ const EditProfile = () => {
                   type="file"
                   className="hidden"
                   accept="image/*"
+                  aria-label="Upload avatar" 
                   onChange={handleImageUpload}
                 />
               </label>
