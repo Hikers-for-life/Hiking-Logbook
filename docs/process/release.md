@@ -211,5 +211,5 @@ This roadmap is reviewed and updated every sprint. Changes may occur based on:
 
 ## Sprint 1 proof
 
-[First meeting (PDF)](./docs/sprint1/First Meeting.pdf)
-[Second meeting (PDF)](./docs/sprint1/Second Meeting.pdf)
+- [First meeting](../sprint1/first-meeting.md)
+- [Second meeting](../sprint1/second-meeting.md)
