@@ -8,7 +8,7 @@ This document outlines the release strategy for our software project, with versi
 ## Release Strategy
 
 **Release Cycle**: Version release after every sprint completion  
-**Current Version**: 1.0  
+**Current Version**: 0.1.0  
 **Sprint Duration**: 2 weeks  
 **Release Schedule**: Bi-weekly version releases
 
@@ -16,7 +16,7 @@ This document outlines the release strategy for our software project, with versi
 
 ## Version History & Current Status
 
-### Version 1.0 (Current Release)
+### Version 0.1.0 (Current Release)
 - **Release Date**: 19 August 2025
 - **Sprint**: Sprint 1
 - **Status**: ✅ Released
@@ -35,7 +35,7 @@ This document outlines the release strategy for our software project, with versi
 
 ## Upcoming Releases
 
-### Version 1.1 (Next Release)
+### Version 0.2.0 (Next Release)
 - **Target Release**: 2 September 2025
 - **Sprint**: Sprint 2
 - **Status**: 🔄 Planned
@@ -60,7 +60,7 @@ This document outlines the release strategy for our software project, with versi
 - All new pages fully functional with responsive design
 - Database queries optimized for sub-500ms response times
 
-### Version 1.2
+### Version 0.3.0
 - **Target Release**: 29 September 2025
 - **Sprint**: Sprint 3
 - **Status**: 📋 In Planning
@@ -82,7 +82,7 @@ This document outlines the release strategy for our software project, with versi
 - Hike planning feature adoption by 60% of users
 - Overall system performance optimized
 
-### Version 1.3 (Final Release)
+### Version 1.0 (Final Release)
 - **Target Release**: 19 October 2025
 - **Sprint**: Sprint 4
 - **Status**: 📋 In Planning
@@ -114,10 +114,10 @@ This document outlines the release strategy for our software project, with versi
 
 | Sprint | Version | Duration | Key Focus | Release Date |
 |--------|---------|----------|-----------|--------------|
-| Sprint 1 | v1.0 | 2 weeks | Authentication & Core UI | ✅ Completed |
-| Sprint 2 | v1.1 | 2 weeks | Core Features & Database | 2 September 2025 |
-| Sprint 3 | v1.2 | 4 weeks | Social & Hiking Features | 29 September 2025 |
-| Sprint 4 | v1.3 | 3 weeks | Final Polish & Launch Prep | 19 October 2025 |
+| Sprint 1 | v0.1.0 | 2 weeks | Authentication & Core UI | ✅ Completed |
+| Sprint 2 | v0.2.0 | 2 weeks | Core Features & Database | 2 September 2025 |
+| Sprint 3 | v0.3.0 | 4 weeks | Social & Hiking Features | 29 September 2025 |
+| Sprint 4 | v1.0 | 3 weeks | Final Polish & Launch Prep | 19 October 2025 |
 
 ---
 
