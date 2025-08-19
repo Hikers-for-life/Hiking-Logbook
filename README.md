@@ -278,9 +278,10 @@ For issues and questions:
 
 ---
 
-**Happy Hiking! **
+**Happy Hiking!**
 
 
 *Built with ❤️ for the hiking community*
+
 
 
