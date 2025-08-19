@@ -3,6 +3,15 @@ import Index from "./pages/Index";
 import { MemoryRouter } from "react-router-dom";
 import NotFound from "./pages/NotFound";
 
+beforeAll(() => {
+  jest.spyOn(console, "error").mockImplementation(() => {}); // silence console.error
+});
+
+afterAll(() => {
+  console.error.mockRestore();
+});
+
+
 test("renders Index page", () => {
   render(
     <MemoryRouter initialEntries={["/"]}>
