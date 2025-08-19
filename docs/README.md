@@ -47,7 +47,7 @@ This file serves as a **table of contents** and guide to navigate both **product
 
 ---
 
-## 📌 Documentation Standards
+##  Documentation Standards
 
 - **File Format**: Markdown (`.md`) for readability on GitHub and easy conversion to PDF if required.  
 - **Naming Conventions**: Lowercase filenames with underscores if needed (e.g., `architecture_design.md`).  
@@ -56,7 +56,7 @@ This file serves as a **table of contents** and guide to navigate both **product
 
 ---
 
-## 📊 Metrics Approach
+##  Metrics Approach
 
 To measure project quality and progress, we track:
 - Story points completed per sprint.  
@@ -66,7 +66,7 @@ To measure project quality and progress, we track:
 
 ---
 
-## 📚 Glossary
+##  Glossary
 
 - **Logbook**: A digital record of hikes including notes, weather, and GPS routes.  
 - **Planned Hike**: A scheduled hike with route, checklist, and invited friends.  
@@ -75,9 +75,10 @@ To measure project quality and progress, we track:
 
 ---
 
-## 🚀 Purpose of this Documentation
+##  Purpose of this Documentation
 
 This documentation is designed not just to explain the final product but to demonstrate the **process, quality standards, and intentionality** behind its development. It reflects both the *engineering mindset* and *collaborative teamwork* that went into the Hiking Logbook project.
+
 
 
 
