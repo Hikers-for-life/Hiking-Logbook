@@ -47,6 +47,7 @@
     "cmdk": "^1.1.1",
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.6.0",
+    "firebase": "^12.1.0",
     "hiking-logbook-root": "file:..",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.539.0",
@@ -83,6 +84,12 @@
       "react-app",
       "react-app/jest"
     ]
+  },
+
+  "jest": {
+    "moduleNameMapper": {
+      "^firebase/(.*)$": "<rootDir>/src/mocks/firebase/$1.js"
+    }
   },
   "browserslist": {
     "production": [
