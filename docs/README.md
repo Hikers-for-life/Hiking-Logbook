@@ -24,7 +24,7 @@ This file serves as a **table of contents** and guide to navigate both **product
 
 ### Process Documentation
 5. [Strategy Roadmap](https://hikers-for-life.github.io/Hiking-Logbook/process/strategy.html)
-6. [Technology Roadmap](https://hikers-for-life.github.io/Hiking-Logbook/process/technology.html))
+6. [Technology Roadmap](https://hikers-for-life.github.io/Hiking-Logbook/process/technology.html)
 7. [Release Roadmap](https://hikers-for-life.github.io/Hiking-Logbook/process/release.html)
 8. [Metrics](https://hikers-for-life.github.io/Hiking-Logbook/process/metrics.html)
 9. [Standards](https://hikers-for-life.github.io/Hiking-Logbook/process/standards.html)
@@ -72,6 +72,7 @@ To measure project quality and progress, we track:
 ## 🚀 Purpose of this Documentation
 
 This documentation is designed not just to explain the final product but to demonstrate the **process, quality standards, and intentionality** behind its development. It reflects both the *engineering mindset* and *collaborative teamwork* that went into the Hiking Logbook project.
+
 
 
 
