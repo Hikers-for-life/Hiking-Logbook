@@ -56,8 +56,8 @@ This project structure follows **modern full-stack best practices** and aligns w
 
 ## 2. Project Management Methodology
 
-### Agile (Scrum-Based Approach)
-We have chosen **Agile (Scrum-based)** as our project management methodology. Agile allows us to work iteratively, adapt to changing requirements, and deliver value to users continuously. This is particularly important for our Hiking Logbook project, where user feedback and evolving features will shape the product.
+### Scrum (Agile-Based Approach)
+We have chosen **Scrum (Agile-based)** as our project management methodology. Agile allows us to work iteratively, adapt to changing requirements, and deliver value to users continuously. This is particularly important for our Hiking Logbook project, where user feedback and evolving features will shape the product.
 
 **Why Agile (Scrum)?**
 - Encourages collaboration within the team and with stakeholders.
@@ -219,5 +219,6 @@ The project aligns with:
 *Milestone*: The app is stable, tested, and ready for release.  
 
 ---
+
 
 
