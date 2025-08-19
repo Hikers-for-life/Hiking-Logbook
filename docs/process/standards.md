@@ -143,7 +143,7 @@ We follow [**Conventional Commits**](https://www.conventionalcommits.org/):
 
 ---
 
-## ✅ Purpose
+##  Purpose
 
 These standards ensure that:
 - Code is **clean, consistent, and maintainable**.  
