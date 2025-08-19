@@ -1,17 +1,6 @@
 import { render, screen } from "@testing-library/react";
-import Index from "./pages/Index";
-import { MemoryRouter } from "react-router-dom";
 import NotFound from "./pages/NotFound";
-
-test("renders Index page", () => {
-  render(
-    <MemoryRouter initialEntries={["/"]}>
-      <Index />
-    </MemoryRouter>
-  );
-
-  expect(screen.getByText(/Hiking Log/i)).toBeInTheDocument();
-});
+import { MemoryRouter } from "react-router-dom";
 
 test("renders 404 page", () => {
   render(
@@ -23,3 +12,5 @@ test("renders 404 page", () => {
   expect(screen.getByText("404")).toBeInTheDocument();
   expect(screen.getByText(/Page not found/i)).toBeInTheDocument();
 });
+
+

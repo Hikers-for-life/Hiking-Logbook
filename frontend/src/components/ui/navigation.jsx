@@ -1,34 +1,47 @@
-import { useState } from "react";
-import { Button } from "../ui/button";
-import { Menu, X, Mountain, MapPin, Users, Trophy, Calendar } from "lucide-react";
-import { Link } from "react-router-dom";
-import Login from "../auth/loginPage";
-import { ProfileDropdown } from "../ui/profile-dropdown";
-import { ProfileView } from "../ui/profile-view.jsx";
+import { useState } from 'react';
+import { Button } from '../ui/button';
+import {
+  Menu,
+  X,
+  Mountain,
+  MapPin,
+  Users,
+  Trophy,
+  Calendar,
+} from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext.jsx';
+import { ProfileDropdown } from '../ui/profile-dropdown';
+import { ProfileView } from '../ui/profile-view.jsx';
 
 export const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoginOpen, setIsLoginOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const { currentUser, logout } = useAuth();
+  const navigate = useNavigate();
 
   const navItems = [
-    { name: "Logbook", icon: MapPin, href: "/" },
-    { name: "Plan Hike", icon: Calendar, href: "/plan-hike" },
-    { name: "Friends", icon: Users, href: "/friends" },
-    { name: "Achievements", icon: Trophy, href: "/achievements" },
+    { name: 'Logbook', icon: MapPin, href: '/' },
+    { name: 'Plan Hike', icon: Calendar, href: '/plan-hike' },
+    { name: 'Friends', icon: Users, href: '/friends' },
+    { name: 'Achievements', icon: Trophy, href: '/achievements' },
   ];
 
-  const handleLogin = () => {
-    setIsLoggedIn(true);
-  };
-
-  const handleLogout = () => {
-    setIsLoggedIn(false);
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   const handleViewProfile = () => {
     setIsProfileOpen(true);
+  };
+
+  const handleSignup = () => {
+    navigate('/?auth=login');
   };
 
   return (
@@ -38,7 +51,12 @@ export const Navigation = () => {
           {/* Logo */}
           <div className="flex items-center space-x-2">
             <Mountain className="h-8 w-8 text-forest" />
-            <span className="text-xl font-bold text-foreground">Hiking Log</span>
+            <Link
+              to="/"
+              className="text-xl font-bold text-foreground hover:text-forest transition-colors"
+            >
+              Hiking Log
+            </Link>
           </div>
 
           {/* Desktop Navigation */}
@@ -53,16 +71,31 @@ export const Navigation = () => {
                 <span>{item.name}</span>
               </Link>
             ))}
-            {isLoggedIn ? (
-              <ProfileDropdown onLogout={handleLogout} onViewProfile={handleViewProfile} />
+            {currentUser ? (
+              <div className="flex items-center space-x-4">
+                <Link to="/dashboard">
+                  <Button
+                    variant="outline"
+                    className="bg-gradient-trail text-primary-foreground"
+                  >
+                    Dashboard
+                  </Button>
+                </Link>
+                <ProfileDropdown
+                  onLogout={handleLogout}
+                  onViewProfile={handleViewProfile}
+                />
+              </div>
             ) : (
-              <Button 
-                variant="default" 
-                className="bg-gradient-trail text-primary-foreground"
-                onClick={() => setIsLoginOpen(true)}
-              >
-                Get Started
-              </Button>
+              <div className="flex items-center space-x-3">
+                <Button
+                  variant="default"
+                  className="bg-gradient-trail text-primary-foreground"
+                  onClick={handleSignup}
+                >
+                  Get Started
+                </Button>
+              </div>
             )}
           </div>
 
@@ -74,7 +107,11 @@ export const Navigation = () => {
               onClick={() => setIsOpen(!isOpen)}
               className="text-foreground"
             >
-              {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              {isOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
             </Button>
           </div>
         </div>
@@ -95,36 +132,47 @@ export const Navigation = () => {
                 </Link>
               ))}
               <div className="px-3 py-2">
-                {isLoggedIn ? (
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Logged in as Alex</span>
-                    <ProfileDropdown onLogout={handleLogout} onViewProfile={handleViewProfile} />
+                {currentUser ? (
+                  <div className="space-y-2">
+                    <Link
+                      to="/dashboard"
+                      className="flex items-center space-x-2 px-3 py-2 text-muted-foreground hover:text-forest hover:bg-muted rounded-md transition-colors duration-200"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <span>Dashboard</span>
+                    </Link>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground px-3">
+                        Logged in as{' '}
+                        {currentUser.displayName || currentUser.email}
+                      </span>
+                      <ProfileDropdown
+                        onLogout={handleLogout}
+                        onViewProfile={handleViewProfile}
+                      />
+                    </div>
                   </div>
                 ) : (
-                  <Button 
-                    variant="default" 
-                    className="w-full bg-gradient-trail text-primary-foreground"
-                    onClick={() => setIsLoginOpen(true)}
-                  >
-                    Get Started
-                  </Button>
+                  <div className="space-y-2">
+                    <Button
+                      variant="default"
+                      className="w-full bg-gradient-trail text-primary-foreground"
+                      onClick={() => {
+                        handleSignup();
+                        setIsOpen(false);
+                      }}
+                    >
+                      Get Started
+                    </Button>
+                  </div>
                 )}
               </div>
             </div>
           </div>
         )}
       </div>
-      
-      <Login 
-        open={isLoginOpen} 
-        onOpenChange={setIsLoginOpen}
-        onLogin={handleLogin}
-      />
-      
-      <ProfileView 
-        open={isProfileOpen}
-        onOpenChange={setIsProfileOpen}
-      />
+
+      <ProfileView open={isProfileOpen} onOpenChange={setIsProfileOpen} />
     </nav>
   );
 };

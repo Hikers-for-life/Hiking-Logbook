@@ -1,24 +1,54 @@
 import React, { useState, useEffect } from 'react';
 import mountain from '../assets/forest-waterfall.jpg';
+import { useAuth } from '../../contexts/AuthContext.jsx';
+import { useNavigate } from 'react-router-dom';
 
-export default function Login({ open, onOpenChange, onLogin }) {
+export default function Login({ open, onOpenChange, onLogin, onSignup }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const { login, signInWithGoogle } = useAuth();
+  const navigate = useNavigate();
 
   // Close modal when `open` changes to false
   useEffect(() => {
     if (!open) {
       setEmail('');
       setPassword('');
+      setError('');
     }
   }, [open]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // For demo, just log and call onLogin
-    console.log('Logging in with:', { email, password });
-    onLogin(email); // Pass email for initials
-    onOpenChange(false); // Close modal
+    try {
+      setError('');
+      setLoading(true);
+      await login(email, password);
+      onOpenChange(false); // Close modal
+      navigate('/dashboard'); // Redirect to dashboard
+    } catch (error) {
+      setError('Failed to log in. Please check your credentials.');
+      console.error('Login error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      setError('');
+      setLoading(true);
+      await signInWithGoogle();
+      onOpenChange(false); // Close modal
+      navigate('/dashboard'); // Redirect to dashboard
+    } catch (error) {
+      setError('Failed to sign in with Google. Please try again.');
+      console.error('Google sign-in error:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!open) return null; // Only render when open
@@ -65,24 +95,40 @@ export default function Login({ open, onOpenChange, onLogin }) {
               required
             />
 
-            <button style={styles.button} type="submit">
-              Sign In to Dashboard
+            {error && <div style={styles.error}>{error}</div>}
+
+            <button style={styles.button} type="submit" disabled={loading}>
+              {loading ? 'Signing In...' : 'Sign In to Dashboard'}
             </button>
 
             <h3 style={styles.message2}>
               --------------------- Or Continue With ---------------------
             </h3>
             <div style={styles.socialButtons}>
-              <button style={styles.socialButton} type="button">
+              <button
+                style={styles.socialButton}
+                type="button"
+                onClick={handleGoogleSignIn}
+                disabled={loading}
+              >
                 <i className="fa-brands fa-google"></i> Google
               </button>
-              <button style={styles.socialButton} type="button">
+              <button style={styles.socialButton} type="button" disabled>
                 <i className="fa-brands fa-facebook"></i> Facebook
               </button>
             </div>
 
             <p style={styles.signP}>Don't have an account?</p>
-            <button style={styles.signup}>Sign Up</button>
+            <button
+              style={styles.signup}
+              type="button"
+              onClick={() => {
+                if (typeof onOpenChange === 'function') onOpenChange(false);
+                if (typeof onSignup === 'function') onSignup();
+              }}
+            >
+              Sign Up
+            </button>
           </form>
         </div>
       </div>
@@ -104,12 +150,12 @@ const styles = {
 
   container: {
     display: 'flex',
-    inset:'0px',
+    inset: '0px',
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
     height: '100vh',
-    position:'fixed',
+    position: 'fixed',
     fontFamily: 'Arial, sans-serif',
     backgroundColor: 'rgba(17, 16, 16, 0.4)',
   },
@@ -183,7 +229,7 @@ const styles = {
     color: '#333',
     textAlign: 'left',
   },
-//OR CONTINUE WITH
+  //OR CONTINUE WITH
   message2: {
     textAlign: 'center',
     color: '#999',
@@ -213,13 +259,23 @@ const styles = {
     color: '#15803d',
     cursor: 'pointer',
     fontWeight: '600',
-    padding:'3px',
+    padding: '3px',
   },
   //DON'T HAVE AN ACCOUNT?
   signP: {
     color: '#666',
     fontWeight: '600',
     fontSize: '14px',
+  },
+  error: {
+    color: '#dc2626',
+    backgroundColor: '#fef2f2',
+    border: '1px solid #fecaca',
+    borderRadius: '6px',
+    padding: '8px 12px',
+    fontSize: '14px',
+    textAlign: 'center',
+    margin: '0 20px',
   },
 
   gradientOverlay: {

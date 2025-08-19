@@ -49,16 +49,28 @@ All colors MUST be HSL.
     --forest: 140 45% 25%; /* Deep forest green */
     --meadow: 85 40% 75%; /* Soft meadow green */
     --stone: 25 10% 65%; /* Mountain stone gray */
-    
+
     /* Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(var(--summit)), hsl(var(--forest)));
-    --gradient-card: linear-gradient(180deg, hsl(var(--background)), hsl(var(--muted)));
-    --gradient-trail: linear-gradient(90deg, hsl(var(--trail)), hsl(var(--primary)));
-    
+    --gradient-hero: linear-gradient(
+      135deg,
+      hsl(var(--summit)),
+      hsl(var(--forest))
+    );
+    --gradient-card: linear-gradient(
+      180deg,
+      hsl(var(--background)),
+      hsl(var(--muted))
+    );
+    --gradient-trail: linear-gradient(
+      90deg,
+      hsl(var(--trail)),
+      hsl(var(--primary))
+    );
+
     /* Shadows */
     --shadow-mountain: 0 10px 30px -10px hsl(var(--primary) / 0.3);
     --shadow-elevation: 0 4px 20px -5px hsl(var(--summit) / 0.2);
-    
+
     /* Animations */
     --transition-nature: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
@@ -110,18 +122,30 @@ All colors MUST be HSL.
     --border: 140 15% 20%;
     --input: 140 15% 20%;
     --ring: 140 35% 70%;
-    
+
     /* Dark theme custom colors */
     --trail: 30 55% 60%;
     --summit: 210 70% 65%;
     --forest: 140 35% 70%;
     --meadow: 85 30% 65%;
     --stone: 25 10% 50%;
-    
+
     /* Dark gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(var(--summit) / 0.8), hsl(var(--forest) / 0.8));
-    --gradient-card: linear-gradient(180deg, hsl(var(--background)), hsl(var(--muted)));
-    --gradient-trail: linear-gradient(90deg, hsl(var(--trail) / 0.8), hsl(var(--primary) / 0.8));
+    --gradient-hero: linear-gradient(
+      135deg,
+      hsl(var(--summit) / 0.8),
+      hsl(var(--forest) / 0.8)
+    );
+    --gradient-card: linear-gradient(
+      180deg,
+      hsl(var(--background)),
+      hsl(var(--muted))
+    );
+    --gradient-trail: linear-gradient(
+      90deg,
+      hsl(var(--trail) / 0.8),
+      hsl(var(--primary) / 0.8)
+    );
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -140,5 +164,91 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  /* Animation classes for the new components */
+  .animate-fade-in {
+    animation: fadeIn 1s ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.8s ease-out 0.3s both;
+  }
+
+  /* Custom utility classes */
+  .bg-gradient-trail {
+    background: var(--gradient-trail);
+  }
+
+  .bg-gradient-card {
+    background: var(--gradient-card);
+  }
+
+  .shadow-mountain {
+    box-shadow: var(--shadow-mountain);
+  }
+
+  .shadow-elevation {
+    box-shadow: var(--shadow-elevation);
+  }
+
+  .text-forest {
+    color: hsl(var(--forest));
+  }
+
+  .text-summit {
+    color: hsl(var(--summit));
+  }
+
+  .text-trail {
+    color: hsl(var(--trail));
+  }
+
+  .text-meadow {
+    color: hsl(var(--meadow));
+  }
+
+  .text-stone {
+    color: hsl(var(--stone));
+  }
+
+  /* Background color classes */
+  .bg-meadow {
+    background-color: hsl(var(--meadow));
+  }
+
+  .bg-trail {
+    background-color: hsl(var(--trail));
+  }
+
+  .bg-stone {
+    background-color: hsl(var(--stone));
+  }
+}
+
+@layer utilities {
+  /* Keyframe animations */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }

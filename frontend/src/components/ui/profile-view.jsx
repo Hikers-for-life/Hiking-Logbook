@@ -1,28 +1,28 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
-import { Button } from "../ui/button";
-import { Label } from "../ui/label";
-import { Badge } from "../ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Calendar, MapPin, Mountain, Trophy, Clock } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
+import { Button } from '../ui/button';
+import { Label } from '../ui/label';
+import { Badge } from '../ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { Calendar, MapPin, Mountain, Trophy, Clock } from 'lucide-react';
 
 export const ProfileView = ({ open, onOpenChange }) => {
   const user = {
-    name: "Alex Johnson",
-    email: "alex@example.com",
-    joinDate: "March 2024",
-    location: "Colorado, USA",
-    bio: "Passionate hiker exploring mountain trails and connecting with nature. Always seeking new adventures!",
+    name: 'Alex Johnson',
+    email: 'alex@example.com',
+    joinDate: 'March 2024',
+    location: 'Colorado, USA',
+    bio: 'Passionate hiker exploring mountain trails and connecting with nature. Always seeking new adventures!',
     stats: {
       totalHikes: 47,
-      totalDistance: "312 miles",
-      totalElevation: "45,230 ft",
+      totalDistance: '312 miles',
+      totalElevation: '45,230 ft',
       achievements: 12,
     },
     recentHikes: [
-      { name: "Rocky Mountain Trail", date: "Dec 8, 2024", difficulty: "Hard" },
-      { name: "Forest Loop", date: "Dec 5, 2024", difficulty: "Medium" },
-      { name: "Summit Peak", date: "Dec 1, 2024", difficulty: "Hard" },
+      { name: 'Rocky Mountain Trail', date: 'Dec 8, 2024', difficulty: 'Hard' },
+      { name: 'Forest Loop', date: 'Dec 5, 2024', difficulty: 'Medium' },
+      { name: 'Summit Peak', date: 'Dec 1, 2024', difficulty: 'Hard' },
     ],
   };
 
@@ -39,7 +39,10 @@ export const ProfileView = ({ open, onOpenChange }) => {
             <Avatar className="h-20 w-20">
               <AvatarImage src="" alt={user.name} />
               <AvatarFallback className="bg-gradient-trail text-white text-xl">
-                {user.name.split(" ").map((n) => n[0]).join("")}
+                {user.name
+                  .split(' ')
+                  .map((n) => n[0])
+                  .join('')}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">
@@ -70,7 +73,9 @@ export const ProfileView = ({ open, onOpenChange }) => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{user.stats.totalHikes}</div>
+                <div className="text-2xl font-bold">
+                  {user.stats.totalHikes}
+                </div>
               </CardContent>
             </Card>
 
@@ -82,7 +87,9 @@ export const ProfileView = ({ open, onOpenChange }) => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{user.stats.totalDistance}</div>
+                <div className="text-2xl font-bold">
+                  {user.stats.totalDistance}
+                </div>
               </CardContent>
             </Card>
 
@@ -94,7 +101,9 @@ export const ProfileView = ({ open, onOpenChange }) => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{user.stats.totalElevation}</div>
+                <div className="text-2xl font-bold">
+                  {user.stats.totalElevation}
+                </div>
               </CardContent>
             </Card>
 
@@ -106,7 +115,9 @@ export const ProfileView = ({ open, onOpenChange }) => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{user.stats.achievements}</div>
+                <div className="text-2xl font-bold">
+                  {user.stats.achievements}
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -129,11 +140,11 @@ export const ProfileView = ({ open, onOpenChange }) => {
                   </div>
                   <Badge
                     variant={
-                      hike.difficulty === "Hard"
-                        ? "destructive"
-                        : hike.difficulty === "Medium"
-                        ? "default"
-                        : "secondary"
+                      hike.difficulty === 'Hard'
+                        ? 'destructive'
+                        : hike.difficulty === 'Medium'
+                          ? 'default'
+                          : 'secondary'
                     }
                   >
                     {hike.difficulty}
