@@ -263,7 +263,7 @@ npm run test:watch    # Run tests in watch mode
 
 For issues and questions:
 
-1. Check the documentation in the `docs/` folder
+1. Check the documentation [here](https://hikers-for-life.github.io/Hiking-Logbook/)
 2. Review the backend and frontend README files
 3. Check existing issues
 4. Create a new issue with detailed description
@@ -283,5 +283,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **Happy Hiking! 🏔️🥾**
+
 
 *Built with ❤️ for the hiking community*
