@@ -1,15 +1,22 @@
 import { render, screen } from "@testing-library/react";
 import Signup from "./Signup";
 import { BrowserRouter } from "react-router-dom";
-import { AuthProvider } from "../contexts/AuthContext";
+
+// Mock Firebase to avoid CI authentication errors
+jest.mock('../contexts/AuthContext', () => ({
+  useAuth: () => ({
+    signup: jest.fn(),
+    signInWithGoogle: jest.fn(),
+    error: null,
+    loading: false
+  })
+}));
 
 test("signup component renders without crashing", () => {
   render(
-    <AuthProvider>
-      <BrowserRouter>
-        <Signup />
-      </BrowserRouter>
-    </AuthProvider>
+    <BrowserRouter>
+      <Signup />
+    </BrowserRouter>
   );
   
   // Basic test that the component renders without errors
