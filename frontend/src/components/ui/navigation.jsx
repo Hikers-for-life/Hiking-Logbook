@@ -14,10 +14,13 @@ import { useAuth } from '../../contexts/AuthContext.jsx';
 import { ProfileDropdown } from '../ui/profile-dropdown';
 import { ProfileView } from '../ui/profile-view.jsx';
 
+
 export const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+
   const { currentUser, logout } = useAuth();
+
   const navigate = useNavigate();
 
   const navItems = [
@@ -40,8 +43,13 @@ export const Navigation = () => {
     setIsProfileOpen(true);
   };
 
+  const handleEditProfile = () => {
+    navigate("/edit-profile");
+  };
+
   const handleSignup = () => {
     navigate('/?auth=login');
+
   };
 
   return (
@@ -84,6 +92,7 @@ export const Navigation = () => {
                 <ProfileDropdown
                   onLogout={handleLogout}
                   onViewProfile={handleViewProfile}
+                  onEditProfile={handleEditProfile}
                 />
               </div>
             ) : (

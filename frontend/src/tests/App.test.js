@@ -1,4 +1,8 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen } from "@testing-library/react";
+import Index from "../pages/Index";
+import { MemoryRouter } from "react-router-dom";
+import NotFound from "../pages/NotFound";
+
 
 // Simple test that doesn't require complex component rendering
 describe('App Component', () => {

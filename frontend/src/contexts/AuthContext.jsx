@@ -23,11 +23,18 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+let app;
+let auth;
 
 // Initialize Google Auth Provider
-const googleProvider = new GoogleAuthProvider();
+let googleProvider;
+
+if (process.env.NODE_ENV !== "test") {
+  app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  googleProvider = new GoogleAuthProvider();
+}
+export { app, auth, googleProvider };
 
 const AuthContext = createContext();
 

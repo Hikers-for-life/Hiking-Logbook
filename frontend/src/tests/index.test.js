@@ -5,12 +5,11 @@ import { createRoot } from 'react-dom/client';
 jest.mock('react-dom/client', () => ({
   createRoot: jest.fn()
 }));
-
 // Mock the App component
-jest.mock('./App.js', () => () => <div data-testid="app">App Component</div>);
+jest.mock('../App.js', () => () => <div data-testid="app">App Component</div>);
 
 // Mock reportWebVitals
-jest.mock('./reportWebVitals.js', () => ({
+jest.mock('../reportWebVitals.js', () => ({
   __esModule: true,
   default: jest.fn()
 }));

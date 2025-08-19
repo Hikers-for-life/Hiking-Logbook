@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import Signup from "./Signup";
+import Signup from "../pages/Signup";
 import { BrowserRouter } from "react-router-dom";
 
 // Mock Firebase to avoid CI authentication errors
