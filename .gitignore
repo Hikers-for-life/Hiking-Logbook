@@ -17,10 +17,25 @@ firebase-debug.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Environment Variables - CRITICAL: Never commit these!
 .env
 .env.local
 .env.development
 .env.production
+.env.test
+.env.*.local
+.env.*.development
+.env.*.production
+
+# Firebase Service Account Keys
+serviceAccountKey.json
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
+!tailwind.config.js
+!postcss.config.js
 
 # Editor files
 .DS_Store
@@ -31,3 +46,9 @@ backend/node_modules/
 frontend/node_modules/
 
 
+# Test coverage
+coverage/
+backend/coverage/
+
+# /backend/.gitignore
+serviceAccountKey.json
