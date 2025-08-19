@@ -19,7 +19,7 @@ This document outlines the release strategy for our software project, with versi
 ### Version 0.1.0 (Current Release)
 - **Release Date**: 19 August 2025
 - **Sprint**: Sprint 1
-- **Status**: ✅ Released
+- **Status**:  Released
 - **Key Features**:
   - **Authentication System**: Complete user authentication with Firebase integration
   - **UI/UX Design Implementation**:
@@ -38,7 +38,7 @@ This document outlines the release strategy for our software project, with versi
 ### Version 0.2.0 (Next Release)
 - **Target Release**: 2 September 2025
 - **Sprint**: Sprint 2
-- **Status**: 🔄 Planned
+- **Status**:  Planned
 - **Milestone**: Core Features & Database Integration
 - **Planned Features**:
   - **New Page Designs**:
@@ -63,7 +63,7 @@ This document outlines the release strategy for our software project, with versi
 ### Version 0.3.0
 - **Target Release**: 29 September 2025
 - **Sprint**: Sprint 3
-- **Status**: 📋 In Planning
+- **Status**:  In Planning
 - **Milestone**: Social Features & Advanced Functionality
 - **Planned Features**:
   - **Enhanced Friends System**:
@@ -85,7 +85,7 @@ This document outlines the release strategy for our software project, with versi
 ### Version 1.0 (Final Release)
 - **Target Release**: 19 October 2025
 - **Sprint**: Sprint 4
-- **Status**: 📋 In Planning
+- **Status**:  In Planning
 - **Milestone**: Platform Completion & Launch Ready
 - **Final Features**:
   - **Advanced User Features**:
@@ -114,7 +114,7 @@ This document outlines the release strategy for our software project, with versi
 
 | Sprint | Version | Duration | Key Focus | Release Date |
 |--------|---------|----------|-----------|--------------|
-| Sprint 1 | v0.1.0 | 2 weeks | Authentication & Core UI | ✅ Completed |
+| Sprint 1 | v0.1.0 | 2 weeks | Authentication & Core UI |  Completed |
 | Sprint 2 | v0.2.0 | 2 weeks | Core Features & Database | 2 September 2025 |
 | Sprint 3 | v0.3.0 | 4 weeks | Social & Hiking Features | 29 September 2025 |
 | Sprint 4 | v1.0 | 3 weeks | Final Polish & Launch Prep | 19 October 2025 |
