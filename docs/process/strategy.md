@@ -5,7 +5,7 @@ This document aligns our vision, process, and delivery for the Hiking Logbook. I
 Our structure is designed to support **clarity, scalability, collaboration, and maintainability**.
 ---
 
-### 🖥️ `frontend/`
+###  `frontend/`
 
 - Contains the **React.js frontend application**.
 - All user-facing code lives here (UI components, routing, styling, state management).
@@ -16,7 +16,7 @@ Our structure is designed to support **clarity, scalability, collaboration, and 
 
 ---
 
-### ⚙️ `backend/`
+###  `backend/`
 
 - Contains the **Firebase backend application** (Cloud Functions, server logic, API endpoints).
 - Responsible for:
@@ -30,7 +30,7 @@ Our structure is designed to support **clarity, scalability, collaboration, and 
 
 ---
 
-### 📖 `docs/`
+###  `docs/`
 
 - Dedicated space for **project documentation**.
 - Includes:
@@ -40,7 +40,7 @@ Our structure is designed to support **clarity, scalability, collaboration, and 
 
 ---
 
-### ✅ Benefits of This Structure
+###  Benefits of This Structure
 
 1. **Clarity** → Clear separation of concerns (frontend, backend, docs, tests).  
 2. **Scalability** → Each part can grow independently .  
@@ -158,23 +158,23 @@ The project aligns with:
 - **Technology Choices**: React.js frontend with Firebase backend ensures scalability and real-time capabilities.  
 - **Agile Values**: Focuses on working software, responding to change, and customer collaboration. 
 
-🧱 Scope & Key Features
+ Scope & Key Features
 
-🗺️ Plan Your Adventures – schedule hikes, view weather, set start times & itineraries.
+ Plan Your Adventures – schedule hikes, view weather, set start times & itineraries.
 
-🤝 Connect with Friends – invite friends, share hikes, activity feed.
+ Connect with Friends – invite friends, share hikes, activity feed.
 
-🏅 Track Achievements – goals, badges, milestones, streaks.
+ Track Achievements – goals, badges, milestones, streaks.
 
-📸 Capture Memories – photos, notes, detailed logs.
+ Capture Memories – photos, notes, detailed logs.
 
-📡 GPS Integration – live route tracking, waypoints, map navigation.
+ GPS Integration – live route tracking, waypoints, map navigation.
 
-📊 Progress Analytics – charts for distance, elevation, duration, trends.
+ Progress Analytics – charts for distance, elevation, duration, trends.
 
-👤 User Profile – history, badges, preferences, privacy.
+ User Profile – history, badges, preferences, privacy.
 
-🚀 Start Your Journey – central CTA to plan/log/track a hike.
+ Start Your Journey – central CTA to plan/log/track a hike.
 
 ---
 
@@ -219,4 +219,5 @@ The project aligns with:
 *Milestone*: The app is stable, tested, and ready for release.  
 
 ---
+
 
