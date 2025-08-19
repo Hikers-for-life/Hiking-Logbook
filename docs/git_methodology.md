@@ -101,8 +101,8 @@ We follow [**Conventional Commits**](https://www.conventionalcommits.org/):
 - File naming: lowercase with underscores (e.g., `architecture_design.md`).  
 - Each doc must have:
   - **Title** at top.  
-  - **Table of Contents** if >1 page.  
-  - **Diagrams/screenshots** stored in `/docs/assets/`.  
+  - **Table of Contents** if >1 page.//Not important for all docs at the moment  
+  - **Diagrams/screenshots** stored in `/docs/`.  
 
 ### GitHub Pages
 - Documentation is deployed via **GitHub Pages** from the `/docs` folder.  
