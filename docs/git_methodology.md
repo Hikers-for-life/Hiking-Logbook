@@ -9,17 +9,6 @@ It serves as the **“How We Work” manual** for all contributors.
 
 ---
 
-## 📑 Table of Contents
-1. [Coding Standards](#coding-standards)
-2. [Commit Conventions](#commit-conventions)
-3. [Git Methodology](#git-methodology)
-4. [Testing Standards](#testing-standards)
-5. [Documentation Standards](#documentation-standards)
-6. [Branch Rules & CI Pipeline](#branch-rules--ci-pipeline)
-7. [Developer Setup](#developer-setup)
-
----
-
 ## 1. Coding Standards
 
 ### Language Style
