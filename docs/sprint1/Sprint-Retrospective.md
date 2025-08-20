@@ -42,7 +42,7 @@
 - Initial test cases were created for some frontend components.  
 - Project board helped in tracking tasks and responsibilities.  
 
-## What Can Be Improved 🔧
+## What Can Be Improved 
 - Commit messages must strictly follow the agreed Standards.  
 - Some tasks were delayed, affecting dependent tasks — deadlines need to be respected.  
 - Frontend folder structure requires cleanup (tests should not be inside `pages`).  
@@ -54,4 +54,5 @@
 ---
 **Next Steps:**  
 Ensure that the above points are followed in the upcoming sprint to improve efficiency, maintain code quality, and support team collaboration.  
+
 
