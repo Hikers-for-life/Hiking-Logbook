@@ -41,18 +41,19 @@
 ---
 
 ## Action Items
-- [ ] Remove Facebook button (frontend + backend cleanup if necessary).  
-- [ ] Rename Logbook page to Homepage in all places (UI + navigation + docs).  
-- [ ] Redesign Login page (create mockups, review, then implement).  
-- [ ] Add flash/animation feature to Signup/Login buttons.  
-- [ ] Assign story points and update GitHub Project board.  
-- [ ] Break down large tasks into smaller subtasks.  
-- [ ] Review dependencies and adjust sprint plan if needed.  
+-  Remove Facebook button (frontend + backend cleanup if necessary).  
+-  Rename Logbook page to Homepage in all places (UI + navigation + docs).  
+-  Redesign Login page (create mockups, review, then implement).  
+-  Add flash/animation feature to Signup/Login buttons.  
+-  Assign story points and update GitHub Project board.  
+-  Break down large tasks into smaller subtasks.  
+-  Review dependencies and adjust sprint plan if needed.  
 
 ---
 
 **Next Steps:**  
 Finalized backlog items will be moved into the upcoming sprint, with clear acceptance criteria, estimations, and priorities.  
+
 
 
 
