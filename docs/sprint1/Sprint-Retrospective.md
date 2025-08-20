@@ -35,14 +35,23 @@
 
 ---
 
-## Action Items
+## What Went Well 
+- Team collaboration.  
+- Clearer understanding of Git workflows (branches, pull requests, merging).  
+- Most members contributed commits to the repository.  
+- Initial test cases were created for some frontend components.  
+- Project board helped in tracking tasks and responsibilities.  
 
-- All team members to strictly follow commit conventions.  
-- Tasks must be completed on time, especially when dependencies exist.  
-- Restructure the `frontend` folder and create a dedicated **tests** directory.  
-- Ensure **PRs** are raised and reviewed before merging.  
-- Write **tests** for each page worked on.  
-- Follow consistent **file naming standards**.  
-- Keep **GitHub Projects** updated with progress and move blocked tasks to **Bugs**.
+## What Can Be Improved 🔧
+- Commit messages must strictly follow the agreed Standards.  
+- Some tasks were delayed, affecting dependent tasks — deadlines need to be respected.  
+- Frontend folder structure requires cleanup (tests should not be inside `pages`).  
+- Tests are not consistently written for all pages.  
+- File naming conventions are not always followed.  
+- Some pull requests were skipped, and code was pushed directly to `dev`.  
+- GitHub Projects updates were inconsistent, and bugs were not always tracked in the **Bugs** column.  
 
 ---
+**Next Steps:**  
+Ensure that the above points are followed in the upcoming sprint to improve efficiency, maintain code quality, and support team collaboration.  
+
