@@ -3,7 +3,7 @@
 **Date:** 20 August 2025
 **Time:** 41 Minutes
 **Platform:** In person meeting  
-**Attendees:** Jane, Risuna, Ntokozo, Naledi, Annah  
+**Attendees:** Ntokozo, Risuna, Jane, Naledi, Annah  
 
 ---
 
@@ -53,5 +53,6 @@
 
 **Next Steps:**  
 Finalized backlog items will be moved into the upcoming sprint, with clear acceptance criteria, estimations, and priorities.  
+
 
 
