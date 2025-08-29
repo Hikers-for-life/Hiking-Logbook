@@ -71,15 +71,26 @@ jobs:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
         run: |
+          # Show current directory and files
+          echo "Current directory:"
+          pwd
+          echo "Files in current directory:"
+          ls -la
+          
           # Create service account key file
           echo "$FIREBASE_SERVICE_ACCOUNT" > $HOME/service-account-key.json
           
           # Set Google Application Credentials
           export GOOGLE_APPLICATION_CREDENTIALS="$HOME/service-account-key.json"
           
-          # Verify the service account file
-          echo "Service account file created:"
-          ls -la $HOME/service-account-key.json
+          # Verify firebase.json exists in current directory
+          if [ ! -f firebase.json ]; then
+            echo "ERROR: firebase.json not found in current directory!"
+            exit 1
+          fi
+          
+          echo "firebase.json found, contents:"
+          cat firebase.json
           
           # Check if .firebaserc exists, if not create it
           if [ ! -f .firebaserc ]; then
@@ -87,8 +98,8 @@ jobs:
             echo '{"projects":{"default":"'$FIREBASE_PROJECT_ID'"}}' > .firebaserc
           fi
           
-          # Show current project setup
+          echo "Current project setup (.firebaserc):"
           cat .firebaserc
           
-          # Deploy to Firebase Hosting with explicit project
+          # Deploy to Firebase Hosting with explicit project and config
           firebase deploy --only hosting --project $FIREBASE_PROJECT_ID --non-interactive
