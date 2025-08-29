@@ -8,6 +8,7 @@ import NotFound from './pages/NotFound.jsx';
 import Signup from './pages/Signup.jsx';
 import Login from './pages/Login.jsx';
 import Dashboard from './pages/Dashboard.jsx';
+import Friends from './pages/Friends.jsx';
 
 const App = () => {
   useEffect(() => {
@@ -26,6 +27,15 @@ const App = () => {
           <Route path="/edit-profile" element={<EditProfile />} />
 
           {/* Protected Routes */}
+
+          <Route
+          path="/activity-feed"
+          element={
+            <ProtectedRoute>
+              <Friends />
+            </ProtectedRoute>
+          }
+        />
           <Route
             path="/dashboard"
             element={

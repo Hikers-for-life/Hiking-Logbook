@@ -26,7 +26,7 @@ export const Navigation = () => {
   const navItems = [
     { name: 'Logbook', icon: MapPin, href: '/' },
     { name: 'Plan Hike', icon: Calendar, href: '/plan-hike' },
-    { name: 'Friends', icon: Users, href: '/friends' },
+    { name: 'Activity Feed', icon: Users, href: '/activity-feed' },
     { name: 'Achievements', icon: Trophy, href: '/achievements' },
   ];
 
