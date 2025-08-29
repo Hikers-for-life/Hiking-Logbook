@@ -47,9 +47,11 @@
     "cmdk": "^1.1.1",
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.6.0",
+    "firebase": "^12.1.0",
     "hiking-logbook-root": "file:..",
     "input-otp": "^1.4.2",
-    "lucide-react": "^0.539.0",
+    "jest": "^27.5.1",
+    "lucide-react": "^0.263.1",
     "next-themes": "^0.3.0",
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
@@ -84,6 +86,11 @@
       "react-app/jest"
     ]
   },
+  "jest": {
+    "moduleNameMapper": {
+      "^firebase/(.*)$": "<rootDir>/src/mocks/firebase/$1.js"
+    }
+  },
   "browserslist": {
     "production": [
       ">0.2%",
@@ -102,6 +109,7 @@
     "autoprefixer": "^10.4.21",
     "eslint-config-react-app": "^7.0.1",
     "eslint-plugin-react": "^7.37.5",
+    "identity-obj-proxy": "^3.0.0",
     "postcss": "^8.5.6",
     "prettier": "^3.6.2",
     "tailwindcss": "^3.4.17"

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Button } from "../ui/button";
+import { useState } from 'react';
+import { Button } from '../ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,15 +7,15 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { User, Settings, LogOut, Trash2 } from "lucide-react";
+} from '../ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { User, Settings, LogOut, Trash2 } from 'lucide-react';
 
-export const ProfileDropdown = ({ onLogout, onViewProfile }) => {
+export const ProfileDropdown = ({ onLogout, onViewProfile, onEditProfile}) => {
   const [user] = useState({
-    name: "Alex Johnson",
-    email: "alex@example.com",
-    avatar: "", // Empty for now, will show initials
+    name: 'Alex Johnson',
+    email: 'alex@example.com',
+    avatar: '', // Empty for now, will show initials
   });
 
   return (
@@ -25,7 +25,10 @@ export const ProfileDropdown = ({ onLogout, onViewProfile }) => {
           <Avatar className="h-10 w-10">
             <AvatarImage src={user.avatar} alt={user.name} />
             <AvatarFallback className="bg-gradient-trail text-white">
-              {user.name.split(" ").map((n) => n[0]).join("")}
+              {user.name
+                .split(' ')
+                .map((n) => n[0])
+                .join('')}
             </AvatarFallback>
           </Avatar>
         </Button>
@@ -51,10 +54,13 @@ export const ProfileDropdown = ({ onLogout, onViewProfile }) => {
           <User className="mr-2 h-4 w-4" />
           <span>View Profile</span>
         </DropdownMenuItem>
-        <DropdownMenuItem className="cursor-pointer hover:bg-muted">
-          <Settings className="mr-2 h-4 w-4" />
-          <span>Edit Profile</span>
-        </DropdownMenuItem>
+          <DropdownMenuItem
+            className="cursor-pointer hover:bg-muted"
+            onClick={onEditProfile}
+          >
+            <Settings className="mr-2 h-4 w-4" />
+            <span>Edit Profile</span>
+          </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem className="cursor-pointer text-destructive hover:bg-destructive/10 hover:text-destructive">
           <Trash2 className="mr-2 h-4 w-4" />

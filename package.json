@@ -12,7 +12,7 @@
     ],
     "backend/**/*.js": [
       "npm run lint --prefix backend",
-      "npm test --prefix backend -- --findRelatedTests"
+      "npm test --prefix backend -- --findRelatedTests --passWithNoTests"
     ]
   },
 
