@@ -1,24 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import mountain from '../assets/forest-waterfall.jpg';
 import { useAuth } from '../../contexts/AuthContext.jsx';
+
 import { ArrowLeft } from 'lucide-react';
 import "@fortawesome/fontawesome-free/css/all.min.css";
 
 import { useNavigate} from 'react-router-dom';
 
 export default function LoginPage({ open, onOpenChange, onLogin, onSignup }) {
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { login, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
+
   const [hoverStates, setHoverStates] = useState({
     backButton: false,
     submitButton: false,
     signupButton: false,
     socialButtons: [false, false],
   });
+
 
   // Close modal when `open` changes to false
   useEffect(() => {
@@ -58,6 +62,7 @@ export default function LoginPage({ open, onOpenChange, onLogin, onSignup }) {
     } finally {
       setLoading(false);
     }
+
   };
 
    const handleMouseEnter = (buttonType, index = null) => {
@@ -84,6 +89,7 @@ export default function LoginPage({ open, onOpenChange, onLogin, onSignup }) {
     } else {
       setHoverStates((prev) => ({ ...prev, [buttonType]: false }));
     }
+
   };
 
   if (!open) return null; // Only render when open

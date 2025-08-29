@@ -1,0 +1,65 @@
+name: Deploy to Firebase
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Check out the repo
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Set up Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+          
+      # 3. Install root dependencies
+      - name: Install root dependencies
+        run: npm install
+
+      # ---- FRONTEND ----
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Lint frontend
+        working-directory: frontend
+        run: npm run lint 
+
+      - name: Run frontend tests
+        working-directory: frontend
+        run: npm test -- --coverage --watchAll=false
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+
+      # ---- BACKEND ----
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Lint backend
+        working-directory: backend
+        run: npm run lint 
+
+      - name: Run backend tests
+        working-directory: backend
+        run: npm test -- --coverage
+
+      # ---- FIREBASE DEPLOYMENT ----
+      - name: Deploy to Firebase
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: ${{ secrets.FIREBASE_PROJECT_ID }}
+          channelId: live

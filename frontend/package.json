@@ -50,8 +50,10 @@
     "firebase": "^12.1.0",
     "hiking-logbook-root": "file:..",
     "input-otp": "^1.4.2",
+
     "jest": "^27.5.1",
     "lucide-react": "^0.263.1",
+
     "next-themes": "^0.3.0",
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
@@ -105,8 +107,13 @@
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.28.0",
+
+    "@babel/plugin-transform-runtime": "^7.28.3",
+    "@babel/preset-env": "^7.28.3",
     "@babel/preset-react": "^7.27.1",
     "autoprefixer": "^10.4.21",
+    "babel-jest": "^29.7.0",
+
     "eslint-config-react-app": "^7.0.1",
     "eslint-plugin-react": "^7.37.5",
     "identity-obj-proxy": "^3.0.0",
