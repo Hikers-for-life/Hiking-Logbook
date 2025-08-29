@@ -270,9 +270,7 @@ For issues and questions:
 3. Check existing issues
 4. Create a new issue with detailed description
 
-##  License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ##  Acknowledgments
 
@@ -288,5 +286,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 
 *Built with ❤️ for the hiking community*
+
 
 
