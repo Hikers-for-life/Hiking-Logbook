@@ -8,6 +8,8 @@ import {
   Users,
   Trophy,
   Calendar,
+  Book,
+  Activity,
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext.jsx';
@@ -23,12 +25,21 @@ export const Navigation = () => {
 
   const navigate = useNavigate();
 
-  const navItems = [
-    { name: 'Logbook', icon: MapPin, href: '/' },
-    { name: 'Plan Hike', icon: Calendar, href: '/plan-hike' },
-    { name: 'Friends', icon: Users, href: '/friends' },
+  // Define navigation items based on authentication state
+  const publicNavItems = [
+    { name: 'Home', icon: MapPin, href: '/' },
+  ];
+
+  const authenticatedNavItems = [
+    { name: 'Home', icon: MapPin, href: '/' },
+    { name: 'Logbook', icon: Book, href: '/logbook' },
+    { name: 'Hike Planner', icon: Calendar, href: '/hike-planner' },
+    { name: 'Activity Feed', icon: Activity, href: '/activity-feed' },
     { name: 'Achievements', icon: Trophy, href: '/achievements' },
   ];
+
+  // Choose navigation items based on authentication state
+  const navItems = currentUser ? authenticatedNavItems : publicNavItems;
 
   const handleLogout = async () => {
     try {
