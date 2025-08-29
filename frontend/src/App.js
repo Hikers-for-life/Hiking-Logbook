@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { useEffect } from 'react';
 import { AuthProvider } from './contexts/AuthContext.jsx';
 import ProtectedRoute from './components/auth/ProtectedRoute.jsx';
 import Index from './pages/Index.jsx';
@@ -9,16 +10,24 @@ import NotFound from './pages/NotFound.jsx';
 import Signup from './pages/Signup.jsx';
 import Login from './pages/Login.jsx';
 import Dashboard from './pages/Dashboard.jsx';
+import Friends from './pages/Friends.jsx';
 
-const App = () => (
-  <AuthProvider>
-    <BrowserRouter>
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<Index />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/edit-profile" element={<EditProfile />} />
+const App = () => {
+  useEffect(() => {
+    // Set default title
+    document.title = 'Hiking Logbook';
+  }, []);
+
+
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<Index />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/edit-profile" element={<EditProfile />} />
 
         {/* Protected Routes */}
         <Route
@@ -41,13 +50,7 @@ const App = () => (
           path="/activity-feed"
           element={
             <ProtectedRoute>
-              <div className="min-h-screen bg-background flex items-center justify-center">
-                <div className="text-center">
-                  <h1 className="text-4xl font-bold text-foreground mb-4">Activity Feed</h1>
-                  <p className="text-muted-foreground">View recent activity and achievements from friends and self</p>
-                  <p className="text-muted-foreground mt-2">Coming soon in next sprint!</p>
-                </div>
-              </div>
+              <Friends/>
             </ProtectedRoute>
           }
         />
@@ -69,16 +72,25 @@ const App = () => (
           path="/dashboard"
           element={
             <ProtectedRoute>
-              <Dashboard />
+              <Friends />
             </ProtectedRoute>
           }
         />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
 
-        {/* Catch-all route */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </BrowserRouter>
-  </AuthProvider>
-);
+          {/* Catch-all route */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
+  );
+};
 
 export default App;

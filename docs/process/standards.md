@@ -57,10 +57,13 @@ We follow [**Conventional Commits**](https://www.conventionalcommits.org/):
 ## 3. Git Methodology
 
 ### Branching Strategy
+
+We are using Gitflow branching model which contains:
 - **Main branch** = Production-ready code (protected).  
 - **Dev branch** = Integration branch for ongoing work.  
 - **Feature branches** = `feature/short-description` (merged via PR).  
-- **Hotfix branches** = `hotfix/short-description`.  
+- **Hotfix branches** = `hotfix/short-description`.  //Is going to be added as we move with this project
+
 
 ### Pull Requests (PRs)
 - All PRs must:
@@ -139,11 +142,12 @@ We follow [**Conventional Commits**](https://www.conventionalcommits.org/):
 - Extensions:  
   - ESLint  
   - Prettier  
-  - GitLens (for Git history)  
+  - Husky
 
 ---
 
-## ✅ Purpose
+##  Purpose
+
 
 These standards ensure that:
 - Code is **clean, consistent, and maintainable**.  
