@@ -1,10 +1,12 @@
-#  Hiking Logbook
+# Hiking Logbook
+
 
 [![codecov](https://codecov.io/gh/Hikers-for-life/Hiking-Logbook/graph/badge.svg?token=HFZWUVB49J)](https://codecov.io/gh/Hikers-for-life/Hiking-Logbook)
 
 A comprehensive hiking application that allows users to track their hiking adventures, plan trips, and connect with fellow hikers. Built with modern web technologies and a robust authentication system.
 
 ##  Features
+
 
 - **User Authentication** - Secure Firebase-based authentication system
 - **Hike Logging** - Record and track your hiking adventures
@@ -95,7 +97,7 @@ npm start
 
 The frontend will run on `http://localhost:3000`
 
-## 🔧 Configuration
+## Configuration
 
 ### Firebase Setup
 
@@ -268,6 +270,10 @@ For issues and questions:
 3. Check existing issues
 4. Create a new issue with detailed description
 
+##  License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
 ##  Acknowledgments
 
 - **Firebase** - Authentication and database services
@@ -282,6 +288,5 @@ For issues and questions:
 
 
 *Built with ❤️ for the hiking community*
-
 
 

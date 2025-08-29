@@ -1,0 +1,113 @@
+import React from 'react';
+import { render, screen, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom';
+import { MemoryRouter } from 'react-router-dom';
+import Logbook from '../pages/Logbook';
+
+// Mock the AuthContext
+jest.mock('../contexts/AuthContext.jsx', () => ({
+  useAuth: () => ({
+    currentUser: { uid: 'test-user', email: 'test@example.com' },
+    logout: jest.fn(),
+  }),
+}));
+
+// Mock the components to avoid complex rendering
+jest.mock('../components/ui/navigation', () => ({
+  Navigation: () => <nav data-testid="navigation">Navigation</nav>
+}));
+
+jest.mock('../components/NewHikeEntryForm', () => {
+  return function MockNewHikeEntryForm({ open, onOpenChange, onSubmit }) {
+    return open ? (
+      <div data-testid="new-hike-form">
+        <button onClick={() => onSubmit({ id: 1, title: 'Test Hike' })}>
+          Submit
+        </button>
+        <button onClick={() => onOpenChange(false)}>Close</button>
+      </div>
+    ) : null;
+  };
+});
+
+describe('Logbook Component', () => {
+  const renderLogbook = () => {
+    return render(
+      <MemoryRouter>
+        <Logbook />
+      </MemoryRouter>
+    );
+  };
+
+  test('renders logbook page with navigation', () => {
+    renderLogbook();
+    
+    expect(screen.getByTestId('navigation')).toBeInTheDocument();
+    expect(screen.getByText('My Hiking')).toBeInTheDocument();
+    expect(screen.getByText('Logbook')).toBeInTheDocument();
+  });
+
+  test('displays hike entries', () => {
+    renderLogbook();
+    
+    expect(screen.getByText('Sunrise at Eagle Peak')).toBeInTheDocument();
+    expect(screen.getByText('Wildflower Meadow Adventure')).toBeInTheDocument();
+  });
+
+  test('has search functionality', () => {
+    renderLogbook();
+    
+    const searchInput = screen.getByPlaceholderText(/search hikes/i);
+    expect(searchInput).toBeInTheDocument();
+    
+    fireEvent.change(searchInput, { target: { value: 'Eagle' } });
+    expect(searchInput.value).toBe('Eagle');
+  });
+
+  test('has difficulty filter buttons', () => {
+    renderLogbook();
+    
+    expect(screen.getByText('All')).toBeInTheDocument();
+    // Use getAllByText since difficulty appears in both buttons and badges
+    expect(screen.getAllByText('Easy').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Moderate').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Hard').length).toBeGreaterThan(0);
+  });
+
+  test('opens new entry form when button clicked', () => {
+    renderLogbook();
+    
+    const newEntryButton = screen.getByText('New Entry');
+    fireEvent.click(newEntryButton);
+    
+    expect(screen.getByTestId('new-hike-form')).toBeInTheDocument();
+  });
+
+  test('displays stats cards', () => {
+    renderLogbook();
+    
+    expect(screen.getByText('Total Hikes')).toBeInTheDocument();
+    expect(screen.getByText('Miles Hiked')).toBeInTheDocument();
+    expect(screen.getByText('Elevation Gained')).toBeInTheDocument();
+    expect(screen.getByText('States Explored')).toBeInTheDocument();
+  });
+
+  test('shows route map button for hike entries', () => {
+    renderLogbook();
+    
+    const routeMapButtons = screen.getAllByText('Route Map');
+    expect(routeMapButtons.length).toBeGreaterThan(0);
+  });
+
+  test('handles difficulty filter changes', () => {
+    renderLogbook();
+    
+    // Get the first Easy button (filter button, not badge)
+    const easyButtons = screen.getAllByText('Easy');
+    const easyFilterButton = easyButtons[0]; // Assume first one is the filter button
+    fireEvent.click(easyFilterButton);
+    
+    // Should still show the Easy hike
+    expect(screen.getByText('Wildflower Meadow Adventure')).toBeInTheDocument();
+  });
+});
