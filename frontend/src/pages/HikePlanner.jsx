@@ -5,10 +5,10 @@ import { Badge } from "../components/ui/badge";
 import { Navigation } from "../components/ui/navigation";
 import { Input } from "../components/ui/input";
 import NewHikePlanForm from "../components/NewHikePlanForm";
-import { Calendar, MapPin, Users, Backpack, Clock, Mountain, Plus, X } from "lucide-react";
+import { Calendar, MapPin, Users, Backpack, Mountain, Plus, X } from "lucide-react";
 
 const HikePlanner = () => {
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  /*const [selectedDate, setSelectedDate] = useState(new Date()); */
   const [isNewPlanOpen, setIsNewPlanOpen] = useState(false);
   const [newGearItem, setNewGearItem] = useState("");
 

@@ -121,7 +121,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Create user profile in backend
-  const createUserProfile = async (uid, userData) => {
+  /* const createUserProfile = async (uid, userData) => {
     try {
       const response = await fetch(
         `${process.env.REACT_APP_API_URL}/api/users/profile`,
@@ -146,7 +146,7 @@ export const AuthProvider = ({ children }) => {
       console.error('Error creating user profile:', error);
       throw error;
     }
-  };
+  }; */
 
   // Get user profile from backend
   const getUserProfile = async () => {

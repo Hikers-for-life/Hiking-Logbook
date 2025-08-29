@@ -6,7 +6,7 @@ import { Navigation } from "../components/ui/navigation";
 import { Input } from "../components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
 import NewHikeEntryForm from "../components/NewHikeEntryForm";
-import { Camera, MapPin, Clock, Mountain, Thermometer, Plus, Search, Filter, Map, Eye } from "lucide-react";
+import { Camera, MapPin, Clock, Mountain, Thermometer, Plus, Search, Map, Eye } from "lucide-react";
 
 const Logbook = () => {
   const [searchTerm, setSearchTerm] = useState("");

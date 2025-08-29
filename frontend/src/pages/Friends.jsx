@@ -11,7 +11,6 @@ import {
   Search, 
   UserPlus, 
   MapPin, 
-  Calendar,
   TrendingUp,
   Mountain,
   Clock,
