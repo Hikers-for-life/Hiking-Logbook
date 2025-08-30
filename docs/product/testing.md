@@ -1,7 +1,7 @@
 # Testing Strategy - Hiking Logbook
 This document describes the testing approach for the Hiking Logbook Project, covering test plan, methodologies, and how test results are recorded.
 
-## 🎯 Test Plan
+##  Test Plan
 
 The goal of our testing strategy is to ensure that all components of the Hiking Logbook application (frontend and backend) work correctly, reliably, and as expected. Our test plan covers:
 
@@ -26,7 +26,7 @@ The goal of our testing strategy is to ensure that all components of the Hiking 
 
 ---
 
-## ⚙️ Testing Approach
+##  Testing Approach
 
 1. ### Unit Testing
 **Backend:**
@@ -71,5 +71,5 @@ All PRs must pass:
 
 ---
 
-📊 Test Records
+## Test Records
 We will maintain a Test Records Log in this document to track test results. Each test cycle will include test case ID, description, status, and remarks.

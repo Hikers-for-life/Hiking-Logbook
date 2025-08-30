@@ -1,4 +1,3 @@
-// __mocks__/firebase/auth.js
 
 export const getAuth = jest.fn(() => ({}));
 
@@ -27,3 +26,4 @@ export const sendPasswordResetEmail = jest.fn(() => Promise.resolve());
 export const signInWithPopup = jest.fn(() =>
   Promise.resolve({ user: { uid: "mockUid", email: "test@example.com" } })
 );
+
