@@ -11,8 +11,6 @@ import {
   MapPin, 
   Clock, 
   Mountain, 
-  Thermometer,
-  Camera,
   Save,
   Navigation,
   Plus
@@ -119,7 +117,7 @@ const ActiveHike = ({ hikeId, onComplete, onSave }) => {
         clearInterval(autoSaveRef.current);
       }
     };
-  }, [isActive, hikeData, currentDistance, currentElevation, elapsedTime]);
+  }, [isActive, hikeData, currentDistance, currentElevation, elapsedTime, handleAutoSave]);
 
   const handleStartHike = () => {
     setIsActive(true);

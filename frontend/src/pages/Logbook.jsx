@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/
 import NewHikeEntryForm from "../components/NewHikeEntryForm";
 import ActiveHike from "../components/ActiveHike";
 import ActiveHikeStatus from "../components/ActiveHikeStatus";
-import { Camera, MapPin, Clock, Mountain, Thermometer, Plus, Search, Map, Eye, Play, Edit } from "lucide-react";
+import { Camera, MapPin, Clock, Mountain, Thermometer, Plus, Search, Map, Eye, Play } from "lucide-react";
 
 const Logbook = () => {
   const [searchTerm, setSearchTerm] = useState("");
