@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+
 import { useEffect } from 'react';
 import { AuthProvider } from './contexts/AuthContext.jsx';
 import ProtectedRoute from './components/auth/ProtectedRoute.jsx';
@@ -8,7 +9,7 @@ import HikePlanner from './pages/HikePlanner.jsx';
 import EditProfile from "./pages/EditProfile.jsx";
 import NotFound from './pages/NotFound.jsx';
 import Signup from './pages/Signup.jsx';
-import Login from './pages/Login.jsx';
+import LoginPage from './components/auth/loginPage.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Friends from './pages/Friends.jsx';
 
@@ -25,7 +26,7 @@ const App = () => {
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Index />} />
-          <Route path="/login" element={<Login />} />
+          <Route path = "/loginPage" element ={<LoginPage/>}/>
           <Route path="/signup" element={<Signup />} />
           <Route path="/edit-profile" element={<EditProfile />} />
 
@@ -92,5 +93,6 @@ const App = () => {
     </AuthProvider>
   );
 };
+
 
 export default App;

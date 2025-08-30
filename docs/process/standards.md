@@ -56,7 +56,6 @@ We follow [**Conventional Commits**](https://www.conventionalcommits.org/):
 
 ## 3. Git Methodology
 
-### Branching Strategy
 
 We are using Gitflow branching model which contains:
 - **Main branch** = Production-ready code (protected).  
@@ -142,6 +141,7 @@ We are using Gitflow branching model which contains:
 - Extensions:  
   - ESLint  
   - Prettier  
+
   - Husky
 
 ---

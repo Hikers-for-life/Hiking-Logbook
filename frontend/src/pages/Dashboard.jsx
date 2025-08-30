@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { Navigation } from '../components/ui/navigation';
+
 import { usePageTitle } from '../hooks/usePageTitle';
+
 import {
   Card,
   CardContent,
@@ -26,9 +28,10 @@ const Dashboard = () => {
   const { currentUser, getUserProfile } = useAuth();
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-  
+
   // Set page title
   usePageTitle('Dashboard');
+
 
   useEffect(() => {
     const loadProfile = async () => {
