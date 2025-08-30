@@ -233,7 +233,7 @@ const NewHikeEntryForm = ({ open, onOpenChange, onSubmit }) => {
                     </FormLabel>
                     <FormControl>
                       <Input 
-                        placeholder="e.g., Clear, 45°F" 
+                        placeholder="e.g., Clear, 7°C" 
                         className="border-border"
                         {...field} 
                       />

@@ -332,7 +332,7 @@ const ActiveHike = ({ hikeId, onComplete, onSave }) => {
                 <Input
                   value={hikeData.weather}
                   onChange={(e) => handleDataChange('weather', e.target.value)}
-                  placeholder="Sunny, 72°F"
+                                        placeholder="Sunny, 22°C"
                 />
               </div>
               <div>
