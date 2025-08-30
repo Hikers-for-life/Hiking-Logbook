@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
@@ -100,6 +100,21 @@ const ActiveHike = ({ hikeId, onComplete, onSave }) => {
     };
   }, [isActive, isPaused]);
 
+  // Auto-save function wrapped in useCallback
+  const handleAutoSave = useCallback(() => {
+    const saveData = {
+      ...hikeData,
+      currentDistance,
+      currentElevation,
+      elapsedTime,
+      isActive,
+      isPaused,
+      lastSaved: new Date()
+    };
+    
+    onSave(saveData);
+  }, [hikeData, currentDistance, currentElevation, elapsedTime, isActive, isPaused, onSave]);
+
   // Auto-save functionality
   useEffect(() => {
     if (isActive) {
@@ -155,19 +170,7 @@ const ActiveHike = ({ hikeId, onComplete, onSave }) => {
     }));
   };
 
-  const handleAutoSave = () => {
-    const saveData = {
-      ...hikeData,
-      currentDistance,
-      currentElevation,
-      elapsedTime,
-      isActive,
-      isPaused,
-      lastSaved: new Date()
-    };
-    
-    onSave(saveData);
-  };
+
 
   const addWaypoint = () => {
     if (currentLocation) {
