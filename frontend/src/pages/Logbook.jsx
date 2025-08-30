@@ -6,7 +6,9 @@ import { Navigation } from "../components/ui/navigation";
 import { Input } from "../components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
 import NewHikeEntryForm from "../components/NewHikeEntryForm";
-import { Camera, MapPin, Clock, Mountain, Thermometer, Plus, Search, Map, Eye } from "lucide-react";
+import ActiveHike from "../components/ActiveHike";
+import ActiveHikeStatus from "../components/ActiveHikeStatus";
+import { Camera, MapPin, Clock, Mountain, Thermometer, Plus, Search, Map, Eye, Play, Edit } from "lucide-react";
 
 const Logbook = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -14,6 +16,8 @@ const Logbook = () => {
   const [isNewEntryOpen, setIsNewEntryOpen] = useState(false);
   const [selectedHike, setSelectedHike] = useState(null);
   const [isRouteMapOpen, setIsRouteMapOpen] = useState(false);
+  const [activeHikeMode, setActiveHikeMode] = useState(false);
+  const [currentActiveHike, setCurrentActiveHike] = useState(null);
   // Mock data for hike entries - converted to state for adding new entries
   const [hikeEntries, setHikeEntries] = useState([
     {
@@ -81,6 +85,47 @@ const Logbook = () => {
     setIsRouteMapOpen(true);
   };
 
+  // Handler for starting active hike tracking
+  const handleStartActiveHike = () => {
+    setActiveHikeMode(true);
+    setCurrentActiveHike({
+      id: Date.now(),
+      startTime: new Date(),
+      status: 'active'
+    });
+  };
+
+  // Handler for completing active hike
+  const handleCompleteActiveHike = (hikeData) => {
+    const completedHike = {
+      ...hikeData,
+      id: currentActiveHike.id,
+      photos: 0, // Will be updated when photo upload is implemented
+    };
+    
+    setHikeEntries(prev => [completedHike, ...prev]);
+    setActiveHikeMode(false);
+    setCurrentActiveHike(null);
+  };
+
+  // Handler for saving active hike progress
+  const handleSaveActiveHike = (hikeData) => {
+    // Auto-save functionality - would integrate with backend
+    console.log('Auto-saving hike progress:', hikeData);
+    localStorage.setItem('activeHike', JSON.stringify(hikeData));
+    
+    // Update current active hike state for status display
+    setCurrentActiveHike(prev => ({
+      ...prev,
+      ...hikeData
+    }));
+  };
+
+  // Handler for resuming active hike
+  const handleResumeActiveHike = () => {
+    setActiveHikeMode(true);
+  };
+
   // Filter hikes based on search term and difficulty
   const filteredHikes = hikeEntries.filter(hike => {
     const matchesSearch = hike.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -90,29 +135,60 @@ const Logbook = () => {
     return matchesSearch && matchesDifficulty;
   });
 
+  // Show active hike interface if in active mode
+  if (activeHikeMode) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <ActiveHike 
+          hikeId={currentActiveHike?.id}
+          onComplete={handleCompleteActiveHike}
+          onSave={handleSaveActiveHike}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
       <div className="py-8 px-4">
       <div className="max-w-4xl mx-auto">
+        {/* Active Hike Status */}
+        <ActiveHikeStatus 
+          activeHike={currentActiveHike} 
+          onResume={handleResumeActiveHike}
+        />
+
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-4xl font-bold text-foreground mb-2">
-              My Hiking <span className="text-forest">Logbook</span>
+              Track Your <span className="text-forest">Hikes</span>
             </h1>
             <p className="text-muted-foreground text-lg">
-              Every trail has a story to tell
+              Keep notes on location, weather, elevation, and route - along the way
             </p>
           </div>
-          <Button 
-            className="bg-gradient-trail text-primary-foreground shadow-mountain hover:shadow-elevation hover:scale-105 transition-all duration-300"
-            size="lg"
-            onClick={() => setIsNewEntryOpen(true)}
-          >
-            <Plus className="h-5 w-5 mr-2" />
-            New Entry
-          </Button>
+          <div className="flex gap-3">
+            <Button 
+              className="bg-green-600 hover:bg-green-700 text-white shadow-mountain hover:shadow-elevation hover:scale-105 transition-all duration-300"
+              size="lg"
+              onClick={handleStartActiveHike}
+            >
+              <Play className="h-5 w-5 mr-2" />
+              Start Hike
+            </Button>
+            <Button 
+              className="bg-gradient-trail text-primary-foreground shadow-mountain hover:shadow-elevation hover:scale-105 transition-all duration-300"
+              size="lg"
+              onClick={() => setIsNewEntryOpen(true)}
+              variant="outline"
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              Add Past Hike
+            </Button>
+          </div>
         </div>
 
         {/* Search and Filter */}

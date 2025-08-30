@@ -43,8 +43,8 @@ describe('Logbook Component', () => {
     renderLogbook();
     
     expect(screen.getByTestId('navigation')).toBeInTheDocument();
-    expect(screen.getByText('My Hiking')).toBeInTheDocument();
-    expect(screen.getByText('Logbook')).toBeInTheDocument();
+    expect(screen.getByText('Track Your')).toBeInTheDocument();
+    expect(screen.getByText('Hikes')).toBeInTheDocument();
   });
 
   test('displays hike entries', () => {
@@ -77,7 +77,7 @@ describe('Logbook Component', () => {
   test('opens new entry form when button clicked', () => {
     renderLogbook();
     
-    const newEntryButton = screen.getByText('New Entry');
+    const newEntryButton = screen.getByText('Add Past Hike');
     fireEvent.click(newEntryButton);
     
     expect(screen.getByTestId('new-hike-form')).toBeInTheDocument();
