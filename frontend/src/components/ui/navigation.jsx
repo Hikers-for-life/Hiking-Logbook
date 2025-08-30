@@ -5,7 +5,6 @@ import {
   X,
   Mountain,
   MapPin,
-  Users,
   Trophy,
   Calendar,
 

@@ -1,16 +1,44 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Navigation } from "../components/ui/navigation";
 import { Input } from "../components/ui/input";
 import NewHikePlanForm from "../components/NewHikePlanForm";
-import { Calendar, MapPin, Users, Backpack, Clock, Mountain, Plus, X } from "lucide-react";
+import { Calendar, MapPin, Users, Backpack, Mountain, Plus, X } from "lucide-react";
 
 const HikePlanner = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isNewPlanOpen, setIsNewPlanOpen] = useState(false);
   const [newGearItem, setNewGearItem] = useState("");
+
+  // Dynamic calendar calculations
+  const currentCalendar = useMemo(() => {
+    const today = new Date();
+    const currentMonth = selectedDate.getMonth();
+    const currentYear = selectedDate.getFullYear();
+    const firstDay = new Date(currentYear, currentMonth, 1);
+    const lastDay = new Date(currentYear, currentMonth + 1, 0);
+    const startDate = new Date(firstDay);
+    startDate.setDate(startDate.getDate() - firstDay.getDay()); // Start from Sunday
+    
+    const monthNames = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+    
+    return {
+      monthName: monthNames[currentMonth],
+      year: currentYear,
+      today: today.getDate(),
+      todayMonth: today.getMonth(),
+      todayYear: today.getFullYear(),
+      isCurrentMonth: currentMonth === today.getMonth() && currentYear === today.getFullYear(),
+      firstDay: firstDay.getDay(),
+      daysInMonth: lastDay.getDate(),
+      startDate
+    };
+  }, [selectedDate]);
 
   // State for hike plans (will be replaced with backend data)
   const [upcomingTrips, setUpcomingTrips] = useState([
@@ -118,9 +146,34 @@ const HikePlanner = () => {
               {/* Calendar View */}
               <Card className="bg-gradient-card border-border">
                 <CardHeader>
-                  <CardTitle className="text-xl text-foreground flex items-center">
-                    <Calendar className="h-5 w-5 mr-2 text-forest" />
-                    March 2024
+                  <CardTitle className="text-xl text-foreground flex items-center justify-between">
+                    <div className="flex items-center">
+                      <Calendar className="h-5 w-5 mr-2 text-forest" />
+                      {currentCalendar.monthName} {currentCalendar.year}
+                    </div>
+                    <div className="flex gap-1">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1, 1))}
+                      >
+                        ←
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => setSelectedDate(new Date())}
+                      >
+                        Today
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1))}
+                      >
+                        →
+                      </Button>
+                    </div>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -130,11 +183,21 @@ const HikePlanner = () => {
                     ))}
                   </div>
                   <div className="grid grid-cols-7 gap-2 text-center">
-                    {Array.from({ length: 35 }, (_, i) => {
-                      const day = i - 4; // March 2024 starts on Friday
-                      const isCurrentMonth = day > 0 && day <= 31;
-                      const isUpcomingHike = day === 22 || day === 23;
-                      const isToday = day === 15;
+                    {Array.from({ length: 42 }, (_, i) => {
+                      const cellDate = new Date(currentCalendar.startDate);
+                      cellDate.setDate(currentCalendar.startDate.getDate() + i);
+                      
+                      const day = cellDate.getDate();
+                      const month = cellDate.getMonth();
+                      const year = cellDate.getFullYear();
+                      const isCurrentMonth = month === selectedDate.getMonth() && year === selectedDate.getFullYear();
+                      const isToday = currentCalendar.isCurrentMonth && 
+                                     day === currentCalendar.today && 
+                                     month === currentCalendar.todayMonth && 
+                                     year === currentCalendar.todayYear;
+                      
+                      // Check for upcoming hikes (you can make this dynamic later)
+                      const isUpcomingHike = isCurrentMonth && (day === 22 || day === 23);
                       
                       return (
                         <div 
@@ -142,11 +205,12 @@ const HikePlanner = () => {
                           className={`
                             p-2 rounded-lg cursor-pointer transition-all duration-200 text-sm
                             ${!isCurrentMonth ? 'text-muted-foreground/50' : 'text-foreground hover:bg-muted'}
-                            ${isToday ? 'bg-forest text-primary-foreground font-semibold' : ''}
+                            ${isToday ? 'bg-forest text-primary-foreground font-semibold ring-2 ring-forest/50' : ''}
                             ${isUpcomingHike ? 'bg-trail/20 text-foreground font-medium border border-trail/30' : ''}
                           `}
+                          onClick={() => isCurrentMonth && console.log('Selected date:', cellDate)}
                         >
-                          {isCurrentMonth ? day : ''}
+                          {day}
                         </div>
                       );
                     })}
@@ -317,7 +381,7 @@ const HikePlanner = () => {
               <Card className="bg-gradient-card border-border">
                 <CardHeader>
                   <CardTitle className="text-xl text-foreground">
-                    This Month
+                    {currentCalendar.monthName} {currentCalendar.year}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
