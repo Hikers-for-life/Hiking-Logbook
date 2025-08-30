@@ -9,7 +9,7 @@ import HikePlanner from './pages/HikePlanner.jsx';
 import EditProfile from "./pages/EditProfile.jsx";
 import NotFound from './pages/NotFound.jsx';
 import Signup from './pages/Signup.jsx';
-import LoginPage from './components/auth/loginPage.jsx';
+import LoginPage from '../components/auth/loginPage.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Friends from './pages/Friends.jsx';
 
