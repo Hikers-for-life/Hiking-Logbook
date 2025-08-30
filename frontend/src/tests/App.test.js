@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
-import Index from "../pages/Index";
+import Login from '../components/auth/loginPage.jsx';
+
 import { MemoryRouter } from "react-router-dom";
 import NotFound from "../pages/NotFound";
 
