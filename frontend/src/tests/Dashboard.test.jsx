@@ -42,9 +42,7 @@ describe('Dashboard Component', () => {
       preferences: { difficulty: 'easy', terrain: 'forest' },
       stats: { totalHikes: 0, totalDistance: 0, totalElevation: 0, achievements: [] },
     });
-    
     renderDashboard();
-    
     await waitFor(() => {
       expect(screen.getByTestId('navigation')).toBeInTheDocument();
     });
@@ -58,9 +56,7 @@ describe('Dashboard Component', () => {
       preferences: { difficulty: 'easy', terrain: 'forest' },
       stats: { totalHikes: 0, totalDistance: 0, totalElevation: 0, achievements: [] },
     });
-    
     renderDashboard();
-    
     await waitFor(() => {
       expect(screen.getByText(/Welcome back, Test User!/)).toBeInTheDocument();
     });
@@ -74,9 +70,7 @@ describe('Dashboard Component', () => {
       preferences: { difficulty: 'easy', terrain: 'forest' },
       stats: { totalHikes: 0, totalDistance: 0, totalElevation: 0, achievements: [] },
     });
-    
     renderDashboard();
-    
     await waitFor(() => {
       expect(screen.getByText('Total Hikes')).toBeInTheDocument();
       expect(screen.getByText('Total Distance')).toBeInTheDocument();
@@ -93,9 +87,7 @@ describe('Dashboard Component', () => {
       preferences: { difficulty: 'easy', terrain: 'forest' },
       stats: { totalHikes: 0, totalDistance: 0, totalElevation: 0, achievements: [] },
     });
-    
     renderDashboard();
-    
     await waitFor(() => {
       expect(screen.getByText('Log New Hike')).toBeInTheDocument();
       expect(screen.getByText('Plan Hike')).toBeInTheDocument();
@@ -111,9 +103,7 @@ describe('Dashboard Component', () => {
       preferences: { difficulty: 'easy', terrain: 'forest' },
       stats: { totalHikes: 0, totalDistance: 0, totalElevation: 0, achievements: [] },
     });
-    
     renderDashboard();
-    
     await waitFor(() => {
       expect(screen.getByText('Recent Hikes')).toBeInTheDocument();
       expect(screen.getByText('Your latest hiking adventures')).toBeInTheDocument();
@@ -128,9 +118,7 @@ describe('Dashboard Component', () => {
       preferences: { difficulty: 'easy', terrain: 'forest' },
       stats: { totalHikes: 0, totalDistance: 0, totalElevation: 0, achievements: [] },
     });
-    
     renderDashboard();
-    
     await waitFor(() => {
       expect(screen.getByText('Profile Information')).toBeInTheDocument();
       expect(screen.getByText('Your hiking preferences and details')).toBeInTheDocument();
@@ -145,9 +133,7 @@ describe('Dashboard Component', () => {
       preferences: { difficulty: 'easy', terrain: 'forest' },
       stats: { totalHikes: 0, totalDistance: 0, totalElevation: 0, achievements: [] },
     });
-    
     renderDashboard();
-    
     await waitFor(() => {
       expect(screen.getAllByText('Achievements')).toHaveLength(2); // One in stats, one in section header
       expect(screen.getByText('Badges and milestones you\'ve earned')).toBeInTheDocument();
@@ -157,14 +143,12 @@ describe('Dashboard Component', () => {
   it('shows loading state initially', () => {
     mockUseAuth.getUserProfile.mockImplementation(() => new Promise(() => {}));
     renderDashboard();
-    
     expect(screen.getByText('Loading your dashboard...')).toBeInTheDocument();
   });
 
   it('shows fallback profile when getUserProfile fails', async () => {
     mockUseAuth.getUserProfile.mockRejectedValue(new Error('Failed to load profile'));
     renderDashboard();
-    
     await waitFor(() => {
       expect(screen.getByText('Passionate hiker exploring new trails')).toBeInTheDocument();
       expect(screen.getByText('Mountain View, CA')).toBeInTheDocument();
@@ -174,7 +158,6 @@ describe('Dashboard Component', () => {
   it('shows fallback profile when getUserProfile returns null', async () => {
     mockUseAuth.getUserProfile.mockResolvedValue(null);
     renderDashboard();
-    
     await waitFor(() => {
       expect(screen.getByText('Passionate hiker exploring new trails')).toBeInTheDocument();
       expect(screen.getByText('Mountain View, CA')).toBeInTheDocument();
@@ -194,10 +177,8 @@ describe('Dashboard Component', () => {
         achievements: ['First Hike', 'Mountain Climber'],
       },
     };
-    
     mockUseAuth.getUserProfile.mockResolvedValue(mockProfile);
     renderDashboard();
-    
     await waitFor(() => {
       expect(screen.getByText('5')).toBeInTheDocument(); // Total Hikes
       expect(screen.getByText('25 km')).toBeInTheDocument(); // Total Distance
