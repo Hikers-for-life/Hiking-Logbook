@@ -35,7 +35,7 @@ jest.mock('../components/auth/ProtectedRoute.jsx', () => {
 jest.mock('../pages/Index.jsx', () => () => <div data-testid="index-page">Index Page</div>);
 jest.mock('../pages/Logbook.jsx', () => () => <div data-testid="logbook-page">Logbook Page</div>);
 jest.mock('../pages/HikePlanner.jsx', () => () => <div data-testid="hike-planner-page">Hike Planner Page</div>);
-jest.mock('../pages/Login.jsx', () => () => <div data-testid="login-page">Login Page</div>);
+jest.mock('../components/auth/loginPage.jsx', () => () => <div data-testid="login-page">Login Page</div>);
 jest.mock('../pages/Signup.jsx', () => () => <div data-testid="signup-page">Signup Page</div>);
 jest.mock('../pages/EditProfile.jsx', () => () => <div data-testid="edit-profile-page">Edit Profile Page</div>);
 jest.mock('../pages/Dashboard.jsx', () => () => <div data-testid="dashboard-page">Dashboard Page</div>);
@@ -61,7 +61,7 @@ describe('App Component', () => {
     expect(() => require('../pages/Index.jsx')).not.toThrow();
     expect(() => require('../pages/Logbook.jsx')).not.toThrow();
     expect(() => require('../pages/HikePlanner.jsx')).not.toThrow();
-    expect(() => require('../pages/Login.jsx')).not.toThrow();
+    expect(() => require('../components/auth/loginPage.jsx')).not.toThrow();
     expect(() => require('../pages/Signup.jsx')).not.toThrow();
     expect(() => require('../pages/Dashboard.jsx')).not.toThrow();
     expect(() => require('../components/auth/ProtectedRoute.jsx')).not.toThrow();
