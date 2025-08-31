@@ -3,7 +3,7 @@ import { Navigation } from '../components/ui/navigation';
 import { HeroSection } from '../components/hero-section';
 import { FeaturesSection } from '../components/features-section';
 import { LogbookSection } from '../components/logbook-section';
-import LoginModal from '../components/auth/loginPage.jsx';
+import Login from '../components/auth/loginPage.jsx';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const Index = () => {
@@ -44,7 +44,7 @@ const Index = () => {
       {/* Features Section - Now comes after logbook */}
       <FeaturesSection />
 
-      <LoginModal
+      <Login
         open={isLoginOpen}
         onOpenChange={handleLoginClose}
         onLogin={(email) => console.log('Logged in as', email)} // Placeholder

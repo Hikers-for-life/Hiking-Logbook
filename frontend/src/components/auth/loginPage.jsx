@@ -1,15 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import mountain from '../assets/forest-waterfall.jpg';
 import { useAuth } from '../../contexts/AuthContext.jsx';
-import { useNavigate } from 'react-router-dom';
 
-export default function Login({ open, onOpenChange, onLogin, onSignup }) {
+import { ArrowLeft } from 'lucide-react';
+import "@fortawesome/fontawesome-free/css/all.min.css";
+
+import { useNavigate} from 'react-router-dom';
+
+export default function LoginPage({ open, onOpenChange, onLogin, onSignup }) {
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { login, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
+
+  const [hoverStates, setHoverStates] = useState({
+    backButton: false,
+    submitButton: false,
+    signupButton: false,
+    socialButtons: [false, false],
+  });
+
 
   // Close modal when `open` changes to false
   useEffect(() => {
@@ -49,6 +62,34 @@ export default function Login({ open, onOpenChange, onLogin, onSignup }) {
     } finally {
       setLoading(false);
     }
+
+  };
+
+   const handleMouseEnter = (buttonType, index = null) => {
+    if (index !== null) {
+      setHoverStates((prev) => ({
+        ...prev,
+        [buttonType]: prev[buttonType].map((_, i) =>
+          i === index ? true : false
+        ),
+      }));
+    } else {
+      setHoverStates((prev) => ({ ...prev, [buttonType]: true }));
+    }
+  };
+
+  const handleMouseLeave = (buttonType, index = null) => {
+    if (index !== null) {
+      setHoverStates((prev) => ({
+        ...prev,
+        [buttonType]: prev[buttonType].map((_, i) =>
+          i === index ? false : false
+        ),
+      }));
+    } else {
+      setHoverStates((prev) => ({ ...prev, [buttonType]: false }));
+    }
+
   };
 
   if (!open) return null; // Only render when open
@@ -56,14 +97,34 @@ export default function Login({ open, onOpenChange, onLogin, onSignup }) {
   return (
     <div style={styles.overlay}>
       <div style={styles.container}>
+        <div style={styles.backButtonContainer}>
+                  <button
+                    style={{
+                      ...styles.backButton,
+                      ...(hoverStates.backButton && styles.backButtonHover),
+                    }}
+                  onClick={() => {
+                      if (typeof onOpenChange === 'function') onOpenChange(false);
+                      navigate('/');
+                    }}
+                    onMouseEnter={() => handleMouseEnter('backButton')}
+                    onMouseLeave={() => handleMouseLeave('backButton')}
+                    type="button"
+                  >
+                    <ArrowLeft size={16} />
+                    Back to Home
+                  </button>
+                </div>
         <div style={styles.formContainer}>
           <form style={styles.form} onSubmit={handleSubmit}>
             <div
+            
               style={{
                 ...styles.banner,
                 backgroundImage: `url(${mountain})`,
               }}
             >
+              
               <div style={styles.gradientOverlay} />
               <div style={styles.headerText}>
                 <h2 style={styles.title}>Welcome Back</h2>
@@ -113,9 +174,7 @@ export default function Login({ open, onOpenChange, onLogin, onSignup }) {
               >
                 <i className="fa-brands fa-google"></i> Google
               </button>
-              <button style={styles.socialButton} type="button" disabled>
-                <i className="fa-brands fa-facebook"></i> Facebook
-              </button>
+
             </div>
 
             <p style={styles.signP}>Don't have an account?</p>
@@ -167,7 +226,7 @@ const styles = {
     color: 'white',
     left: '24px',
   },
-  //cCONTINUE YOUR JOURNEY
+  //CONTINUE YOUR JOURNEY
   message: {
     fontSize: '14px',
     marginTop: '4px',
@@ -175,32 +234,46 @@ const styles = {
   },
   //THE IMAGE
   banner: {
-    height: '500px',
-    width: '494px',
-    position: 'relative',
-    padding: '0px',
-    boxShadow: '0 2px 8px black',
+    height: '200px',
     backgroundSize: 'cover',
-    borderRadius: '8px',
-    border: 'white',
     backgroundPosition: 'center',
-    right: '3%',
-    bottom: '3.9%',
-    left: '-4.8%',
+    position: 'relative',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   //THE WHITE BOX
   form: {
     display: 'flex',
     flexDirection: 'column',
     backgroundPosition: 'center',
-    width: '450px',
-    height: '560px',
-    padding: '24px',
+    width: '400px',
+    height: '550px',
+    padding: '40px',
     overflow: 'hidden',
     backgroundColor: '#fff',
     borderRadius: '8px',
     boxShadow: '0 2px 8px black',
   },
+  //Go back Home Nav
+  backButton: {
+  display: "flex",
+  alignItems: "center",
+  gap: "6px",
+  background: "transparent",
+  border: "none",
+  color: "#fff",
+  fontSize: "14px",
+  cursor: "pointer",
+  position: "absolute",
+  top: "20px",
+  left: "20px",
+},
+
+backButtonHover: {
+  color: "#16a34a", 
+},
+
   input: {
     marginBottom: '15px',
     padding: '10px',
