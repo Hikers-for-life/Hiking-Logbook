@@ -239,7 +239,7 @@ export default function Signup() {
               >
                 <i className="fa-brands fa-google"></i> Google
               </button>
-              <button
+              {/*<button
                 style={{
                   ...styles.socialButton,
                   ...(hoverStates.socialButtons[1] && styles.socialButtonHover),
@@ -250,7 +250,7 @@ export default function Signup() {
                 disabled
               >
                 <i className="fa-brands fa-facebook"></i> Facebook
-              </button>
+              </button>*/}
             </div>
 
             <p style={styles.signP}>Already have an account?</p>
