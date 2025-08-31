@@ -26,7 +26,7 @@ const App = () => {
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Index />} />
-          <Route path = "/loginPage" element ={<LoginPage/>}/>
+          <Route path="/loginPage" element={<LoginPage />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/edit-profile" element={<EditProfile />} />
 
