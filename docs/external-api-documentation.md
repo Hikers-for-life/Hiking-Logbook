@@ -4,7 +4,6 @@
 This document details the external API usage implemented in the Hiking Logbook application to meet the sprint requirements for external API integration.
 
 ---
-e commitin
 ## API Used: Web Geolocation API
 
 ### **What is it?**
