@@ -109,7 +109,7 @@ npm start
 The frontend will run on `http://localhost:3000`
 
 
-## 🔧 Configuration
+##  Configuration
 
 
 ### Firebase Setup
@@ -313,6 +313,7 @@ For issues and questions:
 
 
 *Built with ❤️ for the hiking community*
+
 
 
 
