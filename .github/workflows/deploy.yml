@@ -26,6 +26,20 @@ jobs:
         run: npm install
 
       # ---- FRONTEND ----
+      - name: Debug frontend directory
+        working-directory: frontend
+        run: |
+          echo "Current directory:"
+          pwd
+          echo "Files in frontend directory:"
+          ls -la
+          echo "Checking for package-lock.json:"
+          ls -la package-lock.json || echo "package-lock.json not found"
+          echo "Git status:"
+          git status
+          echo "Git log:"
+          git log --oneline -3
+
       - name: Install frontend dependencies
         working-directory: frontend
         run: npm ci
