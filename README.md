@@ -26,6 +26,7 @@ Hiking-Logbook/
 │   ├── src/
 │   │   ├── config/         # Configuration files
 │   │   ├── middleware/     # Express middleware
+|   |   ├── models/         # Database Schema
 │   │   ├── routes/         # API route handlers
 │   │   ├── services/       # Business logic services
 │   │   ├── utils/          # Utility functions
@@ -313,6 +314,7 @@ For issues and questions:
 
 
 *Built with ❤️ for the hiking community*
+
 
 
 
