@@ -29,9 +29,6 @@ This file serves as a **table of contents** and guide to navigate both **product
 8. [Metrics](https://hikers-for-life.github.io/Hiking-Logbook/process/metrics.html)
 9. [Standards](https://hikers-for-life.github.io/Hiking-Logbook/process/standards.html) : Coding standards, commit conventions, Git           methodology, testing standards, documentation standards, branch rules and CI pipeline, Developer setup.
 10. **Development guides**
-
-      - [Contributing](https://hikers-for-life.github.io/Hiking-Logbook/process/development/contributing.html)
-
       - [API setup](https://hikers-for-life.github.io/Hiking-Logbook/process/development/api_setup.html)
       - [Database setup](https://hikers-for-life.github.io/Hiking-Logbook/process/development/database_setup.html)
       - [Site setup](https://hikers-for-life.github.io/Hiking-Logbook/process/development/site_setup.html)
@@ -80,6 +77,13 @@ To measure project quality and progress, we track:
 ##  Purpose of this Documentation
 
 This documentation is designed not just to explain the final product but to demonstrate the **process, quality standards, and intentionality** behind its development. It reflects both the *engineering mindset* and *collaborative teamwork* that went into the Hiking Logbook project.
+
+
+
+
+
+
+
 
 
 

@@ -1,7 +1,5 @@
 import React from 'react';
-
-import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
-
+import { render, screen, fireEvent } from '@testing-library/react';
 import { useForm } from 'react-hook-form';
 import '@testing-library/jest-dom';
 import {
@@ -15,7 +13,7 @@ import {
   useFormField,
 } from '../components/ui/form';
 
-
+// Mock the utilities and dependencies
 jest.mock('../lib/utils', () => ({
   cn: (...classes) => classes.filter(Boolean).join(' '),
 }));
@@ -103,7 +101,6 @@ const TestFormComponent = ({ onSubmit, defaultValues = {}, validationSchema }) =
             <FormItem>
               <FormLabel>Test Label</FormLabel>
               <FormControl>
-
                 <input
                   {...field}
                   placeholder="Enter text"
@@ -113,23 +110,17 @@ const TestFormComponent = ({ onSubmit, defaultValues = {}, validationSchema }) =
               <FormDescription>
                 This is a test description
               </FormDescription>
-
               <FormMessage />
             </FormItem>
           )}
         />
-
-
         <button type="submit" data-testid="submit-button">
           Submit
         </button>
-
-
       </form>
     </Form>
   );
 };
-
 
 // Component to test useFormField hook outside of FormField context
 const TestUseFormFieldComponent = () => {
@@ -188,7 +179,7 @@ describe('Form Components', () => {
       
       // Wait for validation to process
       await new Promise(resolve => setTimeout(resolve, 100));
-
+      
       expect(screen.getByText('This field is required')).toBeInTheDocument();
     });
   });
@@ -219,7 +210,6 @@ describe('Form Components', () => {
       
       const formItem = screen.getByTestId('form-item');
       expect(formItem).toHaveClass('space-y-2', 'custom-class');
-
     });
   });
 
@@ -409,4 +399,3 @@ describe('Form Components', () => {
     });
   });
 });
-

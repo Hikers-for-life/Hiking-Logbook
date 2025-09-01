@@ -12,7 +12,6 @@ import {
   signInWithPopup,
 } from 'firebase/auth';
 
-
 // Firebase configuration - you'll need to add this to your .env file
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_FIREBASE_API_KEY,

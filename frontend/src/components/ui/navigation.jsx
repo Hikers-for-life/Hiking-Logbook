@@ -7,10 +7,8 @@ import {
   MapPin,
   Trophy,
   Calendar,
-
   Book,
   Activity,
-
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext.jsx';
@@ -25,7 +23,6 @@ export const Navigation = () => {
   const { currentUser, logout } = useAuth();
 
   const navigate = useNavigate();
-
 
   // Define navigation items based on authentication state
   const publicNavItems = [

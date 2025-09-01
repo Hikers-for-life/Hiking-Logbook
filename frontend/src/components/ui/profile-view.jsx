@@ -1,6 +1,5 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Button } from '../ui/button';
-
 import { Badge } from '../ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Avatar, AvatarFallback } from '../ui/avatar';
@@ -17,18 +16,17 @@ import {
   TrendingUp 
 } from 'lucide-react';
 
-
 export const ProfileView = ({ open, onOpenChange, showAddFriend = false }) => {
   const user = {
-    name: 'Alex Johnson',
-    email: 'alex@example.com',
-    joinDate: 'March 2024',
-    location: 'Colorado, USA',
-    bio: 'Passionate hiker exploring mountain trails and connecting with nature. Always seeking new adventures!',
+    name: "Alex Johnson",
+    email: "alex@example.com",
+    joinDate: "March 2024",
+    location: "Colorado, USA",
+    bio: "Passionate hiker exploring mountain trails and connecting with nature. Always seeking new adventures!",
     stats: {
       totalHikes: 47,
-      totalDistance: '312 miles',
-      totalElevation: '45,230 ft',
+      totalDistance: "312 miles",
+      totalElevation: "45,230 ft",
       achievements: 12,
     },
     achievements: [
@@ -38,11 +36,9 @@ export const ProfileView = ({ open, onOpenChange, showAddFriend = false }) => {
       { name: "Endurance Champion", description: "Hiked 100+ km in a month", earned: "3 months ago" }
     ],
     recentHikes: [
-
       { name: "Rocky Mountain Trail", date: "Dec 8, 2024", distance: "8.5 km", duration: "4h 23m", difficulty: "Hard" },
       { name: "Forest Loop", date: "Dec 5, 2024", distance: "5.2 km", duration: "2h 15m", difficulty: "Medium" },
       { name: "Summit Peak", date: "Dec 1, 2024", distance: "6.8 km", duration: "3h 45m", difficulty: "Hard" }
-
     ],
     goals: [
       { name: "Complete Pacific Crest Trail section", progress: 65, target: "End of year" },
@@ -59,12 +55,10 @@ export const ProfileView = ({ open, onOpenChange, showAddFriend = false }) => {
         
         <div className="space-y-6">
           {/* Profile Header */}
-
           <div className="flex flex-col sm:flex-row gap-6 items-start">
             <Avatar className="h-24 w-24">
               <AvatarFallback className="text-2xl">
                 {user.name[0]}
-
               </AvatarFallback>
             </Avatar>
             
@@ -103,35 +97,27 @@ export const ProfileView = ({ open, onOpenChange, showAddFriend = false }) => {
           {/* Stats Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Card>
-
               <CardContent className="p-4 text-center">
                 <p className="text-2xl font-bold text-summit">{user.stats.totalHikes}</p>
                 <p className="text-sm text-muted-foreground">Total Hikes</p>
-
               </CardContent>
             </Card>
             <Card>
-
               <CardContent className="p-4 text-center">
                 <p className="text-2xl font-bold text-forest">{user.stats.totalDistance}</p>
                 <p className="text-sm text-muted-foreground">Distance</p>
-
               </CardContent>
             </Card>
             <Card>
-
               <CardContent className="p-4 text-center">
                 <p className="text-2xl font-bold text-sky">{user.stats.totalElevation}</p>
                 <p className="text-sm text-muted-foreground">Elevation</p>
-
               </CardContent>
             </Card>
             <Card>
-
               <CardContent className="p-4 text-center">
                 <p className="text-2xl font-bold text-trail">{user.achievements?.length || 0}</p>
                 <p className="text-sm text-muted-foreground">Achievements</p>
-
               </CardContent>
             </Card>
           </div>
@@ -157,9 +143,7 @@ export const ProfileView = ({ open, onOpenChange, showAddFriend = false }) => {
                       style={{ width: `${goal.progress}%` }}
                     />
                   </div>
-
                   <p className="text-xs text-muted-foreground">Target: {goal.target}</p>
-
                 </div>
               ))}
             </CardContent>

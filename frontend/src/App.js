@@ -1,5 +1,4 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-
 import { useEffect } from 'react';
 import { AuthProvider } from './contexts/AuthContext.jsx';
 import ProtectedRoute from './components/auth/ProtectedRoute.jsx';
@@ -26,9 +25,7 @@ const App = () => {
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Index />} />
-
           <Route path="/loginPage" element={<LoginPage />} />
-
           <Route path="/signup" element={<Signup />} />
           <Route path="/edit-profile" element={<EditProfile />} />
 
@@ -87,6 +84,5 @@ const App = () => {
     </AuthProvider>
   );
 };
-
 
 export default App;

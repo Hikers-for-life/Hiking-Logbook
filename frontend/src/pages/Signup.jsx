@@ -1,7 +1,5 @@
 import { useState } from 'react';
-
-import { useNavigate, Link } from 'react-router-dom';
-
+import { useNavigate } from 'react-router-dom';
 import mountain from '../components/assets/forest-waterfall.jpg';
 import { ArrowLeft } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
@@ -130,9 +128,7 @@ export default function Signup() {
               Full Name
             </label>
             <input
-
               id = "name"
-
               style={{
                 ...styles.input,
                 ...(focusStates.name && styles.inputFocus),
@@ -155,9 +151,7 @@ export default function Signup() {
               Email
             </label>
             <input
-
               id="email"
-
               style={{
                 ...styles.input,
                 ...(focusStates.email && styles.inputFocus),
@@ -180,9 +174,7 @@ export default function Signup() {
               Password
             </label>
             <input
-
               id="password"
-
               style={{
                 ...styles.input,
                 ...(focusStates.password && styles.inputFocus),
@@ -247,9 +239,7 @@ export default function Signup() {
               >
                 <i className="fa-brands fa-google"></i> Google
               </button>
-
               {/*<button
-
                 style={{
                   ...styles.socialButton,
                   ...(hoverStates.socialButtons[1] && styles.socialButtonHover),
@@ -260,9 +250,7 @@ export default function Signup() {
                 disabled
               >
                 <i className="fa-brands fa-facebook"></i> Facebook
-
               </button>*/}
-
             </div>
 
             <p style={styles.signP}>Already have an account?</p>
