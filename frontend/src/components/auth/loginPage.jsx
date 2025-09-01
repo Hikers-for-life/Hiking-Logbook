@@ -1,11 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
+
 import mountain from '../assets/forest-waterfall.jpg';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 
 import { ArrowLeft } from 'lucide-react';
 import "@fortawesome/fontawesome-free/css/all.min.css";
 
-import { useNavigate} from 'react-router-dom';
 
 export default function LoginPage({ open, onOpenChange, onLogin, onSignup }) {
 

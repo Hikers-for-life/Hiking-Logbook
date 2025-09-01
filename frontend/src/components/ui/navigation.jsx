@@ -14,8 +14,6 @@ import {
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext.jsx';
-import { ProfileDropdown } from '../ui/profile-dropdown';
-import { ProfileView } from '../ui/profile-view.jsx';
 
 
 export const Navigation = () => {
