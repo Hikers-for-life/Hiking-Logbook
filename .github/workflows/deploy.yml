@@ -51,6 +51,8 @@ jobs:
           REACT_APP_NAME: Hiking Logbook
           REACT_APP_VERSION: 1.0.0
           REACT_APP_DESCRIPTION: Track your hiking adventures
+          CI: false
+          GENERATE_SOURCEMAP: false
         run: npm run build
 
       # ---- BACKEND ----
