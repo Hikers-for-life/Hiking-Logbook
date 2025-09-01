@@ -1,12 +1,12 @@
-import { getAuth } from '../config/firebase.js';
+import { getAuth, getDatabase } from '../config/firebase.js';
+
 import { collections, dbUtils } from '../config/database.js';
-
-
 export class AuthService {
   // Create a new user account
   static async createUser(userData) {
     try {
       const auth = getAuth();
+
       const { email, password, displayName, bio, location } = userData;
 
       // Create user in Firebase Authentication
@@ -68,9 +68,7 @@ export class AuthService {
   static async updateUserProfile(uid, updateData) {
     try {
       // Remove sensitive fields that shouldn't be updated
-      const safeUpdateData = { ...updateData };
-      delete safeUpdateData.email;
-      delete safeUpdateData.uid;
+      const { email, uid: _, ...safeUpdateData } = updateData;
 
       await dbUtils.update(collections.USERS, uid, safeUpdateData);
       return { success: true };
@@ -117,6 +115,67 @@ export class AuthService {
       return { success: true, uid: userRecord.uid };
     } catch (error) {
       throw new Error(`Failed to reset password: ${error.message}`);
+    }
+  }
+
+  static async getUserAchievements(userId) {
+    try {
+      const db = getDatabase();
+      // Subcollection version:
+      const snapshot = await db.collection('users')
+        .doc(userId)
+        .collection('achievements')
+        .get();
+
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      // If you used array field instead, then:
+      // const userDoc = await db.collection('users').doc(userId).get();
+      // return userDoc.data().achievements || [];
+    } catch (error) {
+      console.error("Error fetching achievements:", error);
+      throw error;
+    }
+  }
+  // 🔹 Get all hikes for a user
+  static async getUserHikes(userId) {
+    try {
+      const db = getDatabase();
+      // Subcollection version:
+      const snapshot = await db.collection('users')
+        .doc(userId)
+        .collection('hikes')
+        .get();
+
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      // If you used array field instead, then:
+      // const userDoc = await db.collection('users').doc(userId).get();
+      // return userDoc.data().achievements || [];
+    } catch (error) {
+      console.error("Error fetching hikes:", error);
+      throw error;
+    }
+  }
+
+  // 🔹 Get all goals for a user
+  static async getUserGoals(userId) {
+    try {
+      const db = getDatabase();
+      // Subcollection version:
+      const snapshot = await db.collection('users')
+        .doc(userId)
+        .collection('goals')
+        .get();
+
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      // If you used array field instead, then:
+      // const userDoc = await db.collection('users').doc(userId).get();
+      // return userDoc.data().achievements || [];
+    } catch (error) {
+      console.error("Error fetching goals:", error);
+      throw error;
     }
   }
 }
