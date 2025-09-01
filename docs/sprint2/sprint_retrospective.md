@@ -2,7 +2,7 @@
 
 **Date:** 29 August 2025 
 **Platform:** Google Meet
-**Attendees:** Naledi, Risuna, Annah, Naledi, Jane
+**Attendees:** Naledi, Risuna, Ntokozo, Annah, Jane
 
 ## Sprint Goal
 The goal of this sprint was to continue building the **Hiking Logbook** system, focusing on the Logbook page, its functionality, and related integrations.
@@ -32,4 +32,5 @@ During this sprint retrospective, we reallocated tasks to improve workflow and b
 2. Create clearer documentation for API endpoints and database schema.
 3. Work on integration between backend and frontend so that all features connect smoothly.
 5. Continue improving team collaboration and task distribution.
+
 
