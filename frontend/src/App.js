@@ -6,6 +6,7 @@ import Index from './pages/Index.jsx';
 import Logbook from './pages/Logbook.jsx';
 import HikePlanner from './pages/HikePlanner.jsx';
 import EditProfile from "./pages/EditProfile.jsx";
+import ProfileView from "./components/ui/profile-view.jsx";
 import NotFound from './pages/NotFound.jsx';
 import Signup from './pages/Signup.jsx';
 import LoginPage from './components/auth/loginPage.jsx';
@@ -28,6 +29,8 @@ const App = () => {
           <Route path="/loginPage" element={<LoginPage />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/edit-profile" element={<EditProfile />} />
+          <Route path="/profile" element={<ProfileView />} />
+          
 
         {/* Protected Routes */}
         <Route

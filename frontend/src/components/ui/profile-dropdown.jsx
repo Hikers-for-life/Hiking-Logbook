@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Button } from '../ui/button';
+import { useAuth } from '../../contexts/AuthContext.jsx';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,9 +13,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { User, Settings, LogOut, Trash2 } from 'lucide-react';
 
 export const ProfileDropdown = ({ onLogout, onViewProfile, onEditProfile}) => {
+
+  const { currentUser, getUserProfile } = useAuth();
   const [user] = useState({
-    name: 'Alex Johnson',
-    email: 'alex@example.com',
+    name: currentUser.displayName,
+    email: currentUser.email,
     avatar: '', // Empty for now, will show initials
   });
 

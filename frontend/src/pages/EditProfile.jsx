@@ -11,6 +11,8 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { ArrowLeft, Camera, MapPin, User, Lock, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "../hooks/use-toast";
+import { useAuth } from '../contexts/AuthContext.jsx';
+import { useEffect} from "react";
 
 const profileSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -23,17 +25,43 @@ const profileSchema = z.object({
 
 const EditProfile = () => {
   const [profileImage, setProfileImage] = useState("/placeholder.svg");
+  const { currentUser } = useAuth();        // ✅ get currentUser
+  const [profile, setProfile] = useState(null); // ✅ profile state
   const { toast } = useToast();
-
   const form = useForm({
-    resolver: zodResolver(profileSchema),
-    defaultValues: {
-      name: "Trail Explorer",
-      password: "",
-      bio: "Passionate hiker exploring mountain trails and sharing adventures with fellow outdoor enthusiasts.",
-      location: "Colorado, USA",
-    },
-  });
+  resolver: zodResolver(profileSchema),
+  defaultValues: {
+    name: currentUser.displayName || "No name",
+    password: "",
+    bio: "No bio yet",
+    location: "Not set",
+  },
+});
+
+useEffect(() => {
+  if (!currentUser) return;
+
+  const fetchProfile = async () => {
+    try {
+      const res = await fetch(`http://localhost:3001/api/users/${currentUser.uid}`);
+      if (!res.ok) throw new Error("Failed to fetch profile");
+      const data = await res.json();
+      setProfile(data);
+
+      // ✅ Update form values when profile loads
+      form.reset({
+        name: data.displayName || currentUser.displayName || "No name",
+        password: "",
+        bio: data.bio || "No bio yet",
+        location: data.location || "Not set",
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  fetchProfile();
+}, [currentUser, form]);
 
   const handleImageUpload = (event) => {
     const file = event.target.files?.[0];
@@ -74,7 +102,13 @@ const EditProfile = () => {
             <div className="relative mx-auto mb-4">
               <Avatar className="h-32 w-32 border-4 border-background shadow-lg">
                 <AvatarImage src={profileImage} alt="Profile picture" />
-                <AvatarFallback className="bg-muted text-2xl">TE</AvatarFallback>
+              <AvatarFallback className="text-2xl">
+                {form.defaultValues?.name 
+                  .split('')
+                  .map((n) => n[0])
+                  .join('')}
+              </AvatarFallback>
+
               </Avatar>
               <label className="absolute bottom-0 right-0 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full p-3 cursor-pointer transition-colors shadow-lg">
                 <Camera className="h-5 w-5" />

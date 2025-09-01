@@ -1,4 +1,5 @@
 import { db } from './firebase.js';
+import admin from "firebase-admin";
 
 // Database collections
 export const collections = {
