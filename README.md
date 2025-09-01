@@ -1,5 +1,5 @@
 
-# 🏔️ Hiking Logbook
+#  Hiking Logbook
 
 
 [![codecov](https://codecov.io/gh/Hikers-for-life/Hiking-Logbook/graph/badge.svg?token=HFZWUVB49J)](https://codecov.io/gh/Hikers-for-life/Hiking-Logbook)
@@ -7,7 +7,7 @@
 A comprehensive hiking application that allows users to track their hiking adventures, plan trips, and connect with fellow hikers. Built with modern web technologies and a robust authentication system.
 
 
-## ✨ Features
+##  Features
 
 
 - **User Authentication** - Secure Firebase-based authentication system
@@ -17,7 +17,7 @@ A comprehensive hiking application that allows users to track their hiking adven
 - **Social Features** - Connect with other hikers and share experiences
 - **Responsive Design** - Works seamlessly on desktop and mobile devices
 
-## 🏗️ Project Structure
+##  Project Structure
 
 
 ```
@@ -45,7 +45,7 @@ Hiking-Logbook/
 └── README.md               # This file
 ```
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Prerequisites
 
@@ -60,7 +60,15 @@ git clone <your-repo-url>
 cd Hiking-Logbook
 ```
 
-### 2. Backend Setup
+### 2. Main Folder Setup
+```bash
+cd Hiking-Logbook
+
+# Install dependencies
+npm install
+```
+
+### 3. Backend Setup
 
 ```bash
 cd backend
@@ -80,7 +88,7 @@ npm run dev
 
 The backend will run on `http://localhost:3001`
 
-### 3. Frontend Setup
+### 4. Frontend Setup
 
 ```bash
 cd frontend
@@ -101,7 +109,7 @@ npm start
 The frontend will run on `http://localhost:3000`
 
 
-## 🔧 Configuration
+##  Configuration
 
 
 ### Firebase Setup
@@ -145,7 +153,7 @@ REACT_APP_FIREBASE_PROJECT_ID=your-project-id
 ```
 
 
-## 📚 API Documentation
+##  API Documentation
 
 
 ### Authentication Endpoints
@@ -165,7 +173,7 @@ REACT_APP_FIREBASE_PROJECT_ID=your-project-id
 For detailed API documentation, see [backend/README.md](backend/README.md)
 
 
-## 🛡️ Authentication Flow
+##  Authentication Flow
 
 
 1. **Frontend** handles user login/signup with Firebase Client SDK
@@ -185,7 +193,7 @@ const response = await fetch('/api/auth/profile', {
 ```
 
 
-## 🧪 Testing
+##  Testing
 
 
 ### Backend Tests
@@ -206,7 +214,7 @@ npm run test:watch    # Run tests in watch mode
 ```
 
 
-## 📝 Development
+##  Development
 
 
 ### Available Scripts
@@ -231,7 +239,7 @@ npm run test:watch    # Run tests in watch mode
 - **TypeScript** - Type safety (can be added)
 
 
-## 🔒 Security Features
+##  Security Features
 
 
 - **Firebase Authentication** - Secure user authentication
@@ -242,7 +250,7 @@ npm run test:watch    # Run tests in watch mode
 - **Helmet.js** - Security headers
 
 
-## 🚀 Deployment
+##  Deployment
 
 
 ### Backend Deployment
@@ -259,7 +267,7 @@ npm run test:watch    # Run tests in watch mode
 2. Deploy the `build` folder to your hosting service
 3. Configure environment variables for production
 
-## 🤝 Contributing
+##  Contributing
 
 
 1. Fork the repository
@@ -279,7 +287,7 @@ npm run test:watch    # Run tests in watch mode
 - Follow ESLint and Prettier rules
 - Use conventional commit messages
 
-## 📞 Support
+##  Support
 
 For issues and questions:
 
@@ -289,11 +297,7 @@ For issues and questions:
 4. Create a new issue with detailed description
 
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
+##  Acknowledgments
 
 
 - **Firebase** - Authentication and database services
@@ -305,8 +309,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 
-**Happy Hiking! 🏔️🥾**
+**Happy Hiking! **
 
 
 *Built with ❤️ for the hiking community*
+
+
+
+
 

@@ -30,12 +30,6 @@ yarn-error.log*
 
 # Firebase Service Account Keys
 serviceAccountKey.json
-*.json
-!package.json
-!package-lock.json
-!tsconfig.json
-!tailwind.config.js
-!postcss.config.js
 
 # Editor files
 .DS_Store
@@ -44,7 +38,6 @@ serviceAccountKey.json
 # Leave for now
 backend/node_modules/
 frontend/node_modules/
-
 
 # Test coverage
 coverage/

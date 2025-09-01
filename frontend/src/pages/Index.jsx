@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Navigation } from '../components/ui/navigation';
 import { HeroSection } from '../components/hero-section';
-import { FeaturesSection } from '../components/features-section';
 import { LogbookSection } from '../components/logbook-section';
 import Login from '../components/auth/loginPage.jsx';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -42,7 +41,7 @@ const Index = () => {
       <LogbookSection />
 
       {/* Features Section - Now comes after logbook */}
-      <FeaturesSection />
+      {/* <FeaturesSection /> */}
 
       <Login
         open={isLoginOpen}

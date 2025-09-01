@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import mountain from '../assets/forest-waterfall.jpg';
 import { useAuth } from '../../contexts/AuthContext.jsx';
-
 import { ArrowLeft } from 'lucide-react';
 import "@fortawesome/fontawesome-free/css/all.min.css";
 
-import { useNavigate} from 'react-router-dom';
 
 export default function LoginPage({ open, onOpenChange, onLogin, onSignup }) {
 

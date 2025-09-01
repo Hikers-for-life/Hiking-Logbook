@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import mountain from '../components/assets/forest-waterfall.jpg';
 import { ArrowLeft } from 'lucide-react';
@@ -51,7 +51,7 @@ export default function Signup() {
     navigate('/?auth=login');
   };
 
-  const handleGoogleSignIn = async () => {
+  /* const handleGoogleSignIn = async () => {
     try {
       setError('');
       setLoading(true);
@@ -63,7 +63,7 @@ export default function Signup() {
     } finally {
       setLoading(false);
     }
-  };
+  }; */
 
   const handleMouseEnter = (buttonType, index = null) => {
     if (index !== null) {
