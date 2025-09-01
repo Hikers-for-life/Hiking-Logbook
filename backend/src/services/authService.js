@@ -1,5 +1,5 @@
 import { auth } from '../config/firebase.js';
-import { collections, dbUtils } from '../config/database.js';
+import { dbUtils } from '../config/database.js';
 
 export class AuthService {
   // Create a new user account
@@ -36,7 +36,7 @@ export class AuthService {
         },
       };
 
-      await dbUtils.create(collections.USERS, userRecord.uid, profileData);
+      await dbUtils.updateUserProfile(userRecord.uid, profileData);
 
       return {
         success: true,
@@ -52,7 +52,7 @@ export class AuthService {
   // Get user profile by UID
   static async getUserProfile(uid) {
     try {
-      const profile = await dbUtils.getById(collections.USERS, uid);
+      const profile = await dbUtils.getUserProfile(uid);
       if (!profile) {
         throw new Error('User profile not found');
       }
@@ -70,7 +70,7 @@ export class AuthService {
       delete safeUpdateData.email;
       delete safeUpdateData.uid;
 
-      await dbUtils.update(collections.USERS, uid, safeUpdateData);
+      await dbUtils.updateUserProfile(uid, safeUpdateData);
       return { success: true };
     } catch (error) {
       throw new Error(`Failed to update user profile: ${error.message}`);
@@ -81,7 +81,7 @@ export class AuthService {
   static async deleteUser(uid) {
     try {
       // Delete from Firestore first
-      await dbUtils.delete(collections.USERS, uid);
+      await dbUtils.deleteUser(uid);
 
       // Delete from Firebase Authentication
       await auth.deleteUser(uid);
@@ -96,7 +96,7 @@ export class AuthService {
   static async verifyEmail(uid) {
     try {
       await auth.updateUser(uid, { emailVerified: true });
-      await dbUtils.update(collections.USERS, uid, { emailVerified: true });
+      await dbUtils.updateUserProfile(uid, { emailVerified: true });
       return { success: true };
     } catch (error) {
       throw new Error(`Failed to verify email: ${error.message}`);
