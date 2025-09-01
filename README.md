@@ -60,7 +60,15 @@ git clone <your-repo-url>
 cd Hiking-Logbook
 ```
 
-### 2. Backend Setup
+### 2. Main Folder Setup
+```bash
+cd Hiking-Logbook
+
+# Install dependencies
+npm install
+```
+
+### 3. Backend Setup
 
 ```bash
 cd backend
@@ -80,7 +88,7 @@ npm run dev
 
 The backend will run on `http://localhost:3001`
 
-### 3. Frontend Setup
+### 4. Frontend Setup
 
 ```bash
 cd frontend
@@ -289,10 +297,6 @@ For issues and questions:
 4. Create a new issue with detailed description
 
 
-##  License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ##  Acknowledgments
 
 
@@ -309,5 +313,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 
 *Built with ❤️ for the hiking community*
+
+
 
 

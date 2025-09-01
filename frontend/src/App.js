@@ -26,7 +26,9 @@ const App = () => {
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Index />} />
-          <Route path = "/loginPage" element ={<LoginPage/>}/>
+
+          <Route path="/loginPage" element={<LoginPage />} />
+
           <Route path="/signup" element={<Signup />} />
           <Route path="/edit-profile" element={<EditProfile />} />
 
@@ -66,14 +68,6 @@ const App = () => {
                   <p className="text-muted-foreground mt-2">Coming soon in next sprint!</p>
                 </div>
               </div>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Friends />
             </ProtectedRoute>
           }
         />

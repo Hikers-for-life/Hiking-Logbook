@@ -1,8 +1,8 @@
-import { useLocation } from 'react-router-dom';
+/* import { useLocation } from 'react-router-dom'; */
 
 
 const NotFound = () => {
-  const location = useLocation();
+  /* const location = useLocation(); */
 
   // Removed console.error to prevent CI pipeline failures
 

@@ -215,4 +215,6 @@ describe("LoginPage Component (full coverage)", () => {
     // Just ensure no crash
     expect(backBtn).toBeInTheDocument();
   });
+
 });
+

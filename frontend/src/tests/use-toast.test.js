@@ -28,6 +28,13 @@ describe("toast reducer", () => {
     const state = reducer(initial, action)
     expect(state.toasts).toHaveLength(0)
   })
+
+  it("should return current state for unknown action type (default case)", () => {
+  const initial = { toasts: [{ id: "1", message: "Hello" }] }
+  const action = { type: "UNKNOWN_ACTION" }
+  const state = reducer(initial, action)
+  expect(state).toBe(initial) 
+  })
 })
 
 describe("toast function", () => {

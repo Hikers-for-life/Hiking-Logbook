@@ -36,6 +36,7 @@ serviceAccountKey.json
 !tsconfig.json
 !tailwind.config.js
 !postcss.config.js
+!firebase.json
 
 # Editor files
 .DS_Store
