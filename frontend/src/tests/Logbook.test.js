@@ -11,7 +11,7 @@ jest.mock('../contexts/AuthContext.jsx', () => ({
     logout: jest.fn(),
   }),
 }));
-
+//BEGINNING OF ANNAH 
 // Mock Firestore
 jest.mock('firebase/firestore', () => ({
   getFirestore: jest.fn(() => ({})),
@@ -72,6 +72,7 @@ beforeEach(() => {
     })),
   });
 });
+//END OF ANNAH
 
 // Mock other components
 jest.mock('../components/ui/navigation', () => ({

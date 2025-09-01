@@ -9,7 +9,7 @@ import NewHikeEntryForm from "../components/NewHikeEntryForm";
 import ActiveHike from "../components/ActiveHike";
 import ActiveHikeStatus from "../components/ActiveHikeStatus";
 import { Camera, MapPin, Clock, Mountain, Thermometer, Plus, Search, Map, Eye, Play } from "lucide-react";
-import { StatsCards } from "../components/StatsCards";
+import { StatsCards } from "../components/ui/StatsCards";//ANNAH
 
 import { collection, query, where, orderBy, getDocs } from "firebase/firestore";
 import { db } from "../config/firebase";
@@ -26,6 +26,7 @@ const Logbook = () => {
   const [hikeEntries, setHikeEntries] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  {/*BEGINNING OF ANNAH */}
   //Fetch hikes from Firestore whenever filter/search changes
   useEffect(() => {
     const fetchHikes = async () => {
@@ -69,6 +70,7 @@ const Logbook = () => {
 
     fetchHikes();
   }, [searchTerm, difficultyFilter]);
+    {/*END OF ANNAH */}
 
   // Add new hike (manual past entry)
   const handleAddNewHike = (newHike) => {
@@ -169,7 +171,7 @@ const Logbook = () => {
               </Button>
             </div>
           </div>
-
+        
           {/* Search and Filter */}
           <div className="flex flex-col sm:flex-row gap-4 mb-8">
             <div className="relative flex-1">
@@ -196,7 +198,7 @@ const Logbook = () => {
             </div>
           </div>
           <StatsCards />
-
+        
 
           {/* Hike Entries */}
           <div className="space-y-6">
