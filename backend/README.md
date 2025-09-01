@@ -1,11 +1,11 @@
 # Hiking Logbook Backend
 
-## 🏔️ What's Set Up
+## What's Set Up
 
 ### **Firestore Structure**
-- ✅ `users` collection with subcollections
-- ✅ `users/{userId}/hikes` for storing hike data
-- ✅ Existing data structure preserved
+- `users` collection with subcollections
+- `users/{userId}/hikes` for storing hike data
+- Existing data structure preserved
 
 ### **Hike Schema** (`src/models/logbookSchema.js`)
 - **Basic info**: title, location, route, difficulty, weather
@@ -22,7 +22,7 @@
 - `completeHike()` - Finish hike tracking
 - `getUserHikeStats()` - Calculate statistics
 
-## 🚀 Available Scripts
+## Available Scripts
 
 ```bash
 # Check Firestore structure
@@ -32,14 +32,14 @@ npm run check-firestore
 npm run check-hike-structure
 ```
 
-## 📝 Next Steps
+## Next Steps
 
 1. **Update your routes** to use `dbUtils.addHike()` instead of local state
 2. **Test with existing data** - the functions handle field mapping automatically
 3. **Add GPS tracking** to your active hikes
 4. **Enjoy your comprehensive hiking logbook!**
 
-## 🔧 Key Features
+## Key Features
 
 - **Field mapping**: Works with existing data structure
 - **GPS support**: Waypoints, coordinates, route tracking
