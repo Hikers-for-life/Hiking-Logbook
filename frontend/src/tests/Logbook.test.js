@@ -43,8 +43,8 @@ describe('Logbook Component', () => {
     renderLogbook();
     
     expect(screen.getByTestId('navigation')).toBeInTheDocument();
-    expect(screen.getByText('My Hiking')).toBeInTheDocument();
-    expect(screen.getByText('Logbook')).toBeInTheDocument();
+    expect(screen.getByText('Track Your')).toBeInTheDocument();
+    expect(screen.getByText('Hikes')).toBeInTheDocument();
   });
 
   test('displays hike entries', () => {
@@ -77,10 +77,43 @@ describe('Logbook Component', () => {
   test('opens new entry form when button clicked', () => {
     renderLogbook();
     
-    const newEntryButton = screen.getByText('New Entry');
+    const newEntryButton = screen.getByText('Add Past Hike');
     fireEvent.click(newEntryButton);
     
     expect(screen.getByTestId('new-hike-form')).toBeInTheDocument();
+  });
+
+  test('starts active hike when Start Hike button clicked', () => {
+    renderLogbook();
+    
+    const startHikeButton = screen.getByText('Start Hike');
+    fireEvent.click(startHikeButton);
+    
+    // Should switch to active hike mode
+    expect(screen.getByText('Start Your Hike')).toBeInTheDocument();
+  });
+
+  test('displays both Start Hike and Add Past Hike buttons', () => {
+    renderLogbook();
+    
+    expect(screen.getByText('Start Hike')).toBeInTheDocument();
+    expect(screen.getByText('Add Past Hike')).toBeInTheDocument();
+  });
+
+  test('shows updated header text from brief', () => {
+    renderLogbook();
+    
+    expect(screen.getByText('Track Your')).toBeInTheDocument();
+    expect(screen.getByText('Hikes')).toBeInTheDocument();
+    expect(screen.getByText('Keep notes on location, weather, elevation, and route - along the way')).toBeInTheDocument();
+  });
+
+  test('does not show active hike status when no active hike', () => {
+    renderLogbook();
+    
+    // ActiveHikeStatus should not be visible when there's no active hike
+    expect(screen.queryByText('Active Hike in Progress')).not.toBeInTheDocument();
+    expect(screen.queryByText('Hike Paused')).not.toBeInTheDocument();
   });
 
   test('displays stats cards', () => {

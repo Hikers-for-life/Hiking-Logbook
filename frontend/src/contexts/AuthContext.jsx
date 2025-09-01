@@ -12,6 +12,7 @@ import {
   signInWithPopup,
 } from 'firebase/auth';
 
+
 // Firebase configuration - you'll need to add this to your .env file
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
@@ -37,6 +38,8 @@ if (process.env.NODE_ENV !== "test") {
 export { app, auth, googleProvider };
 
 const AuthContext = createContext();
+
+export { AuthContext };
 
 export const useAuth = () => {
   const context = useContext(AuthContext);

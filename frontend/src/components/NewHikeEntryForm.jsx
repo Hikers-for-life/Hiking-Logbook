@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import { z } from "zod";
 import {
   Dialog,
   DialogContent,
@@ -81,8 +81,11 @@ const NewHikeEntryForm = ({ open, onOpenChange, onSubmit }) => {
       <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl text-foreground">
-            Add New Hike Entry
+            Add Past Hike Entry
           </DialogTitle>
+          <p className="text-muted-foreground">
+            Record a hike you completed before using real-time tracking
+          </p>
         </DialogHeader>
 
         <Form {...form}>
@@ -230,7 +233,7 @@ const NewHikeEntryForm = ({ open, onOpenChange, onSubmit }) => {
                     </FormLabel>
                     <FormControl>
                       <Input 
-                        placeholder="e.g., Clear, 45°F" 
+                        placeholder="e.g., Clear, 7°C" 
                         className="border-border"
                         {...field} 
                       />
@@ -326,7 +329,7 @@ const NewHikeEntryForm = ({ open, onOpenChange, onSubmit }) => {
                 type="submit"
                 className="bg-gradient-trail text-primary-foreground"
               >
-                Add Hike Entry
+                Add Past Hike
               </Button>
             </DialogFooter>
           </form>

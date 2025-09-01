@@ -12,8 +12,8 @@ import {
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext.jsx';
-import { ProfileDropdown } from '../ui/profile-dropdown';
-import { ProfileView } from '../ui/profile-view.jsx';
+import { ProfileDropdown } from './profile-dropdown.jsx';
+import { ProfileView } from './profile-view.jsx';
 
 
 export const Navigation = () => {
@@ -23,6 +23,7 @@ export const Navigation = () => {
   const { currentUser, logout } = useAuth();
 
   const navigate = useNavigate();
+
 
   // Define navigation items based on authentication state
   const publicNavItems = [
