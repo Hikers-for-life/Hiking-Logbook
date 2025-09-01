@@ -1,4 +1,4 @@
-import { db } from './firebase.js';
+import { getDatabase } from './firebase.js';
 
 // Database collections
 export const collections = {
@@ -13,6 +13,7 @@ export const dbUtils = {
   // Create a new document
   async create(collection, docId, data) {
     try {
+      const db = getDatabase();
       await db
         .collection(collection)
         .doc(docId)
@@ -30,6 +31,7 @@ export const dbUtils = {
   // Get a document by ID
   async getById(collection, docId) {
     try {
+      const db = getDatabase();
       const doc = await db.collection(collection).doc(docId).get();
       if (!doc.exists) {
         return null;
@@ -43,6 +45,7 @@ export const dbUtils = {
   // Update a document
   async update(collection, docId, data) {
     try {
+      const db = getDatabase();
       await db
         .collection(collection)
         .doc(docId)
@@ -59,6 +62,7 @@ export const dbUtils = {
   // Delete a document
   async delete(collection, docId) {
     try {
+      const db = getDatabase();
       await db.collection(collection).doc(docId).delete();
       return { success: true };
     } catch (error) {
@@ -69,6 +73,7 @@ export const dbUtils = {
   // Query documents
   async query(collection, conditions = []) {
     try {
+      const db = getDatabase(); 
       let query = db.collection(collection);
 
       conditions.forEach(({ field, operator, value }) => {
@@ -89,4 +94,3 @@ export const dbUtils = {
   },
 };
 
-export default db;
