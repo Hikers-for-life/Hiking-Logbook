@@ -1,4 +1,4 @@
-import { auth, db } from '../config/firebase.js';
+import { auth } from '../config/firebase.js';
 import { collections, dbUtils } from '../config/database.js';
 
 export class AuthService {
@@ -66,7 +66,9 @@ export class AuthService {
   static async updateUserProfile(uid, updateData) {
     try {
       // Remove sensitive fields that shouldn't be updated
-      const { email, uid: _, ...safeUpdateData } = updateData;
+      const safeUpdateData = { ...updateData };
+      delete safeUpdateData.email;
+      delete safeUpdateData.uid;
 
       await dbUtils.update(collections.USERS, uid, safeUpdateData);
       return { success: true };
