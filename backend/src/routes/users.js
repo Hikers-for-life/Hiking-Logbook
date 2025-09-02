@@ -19,12 +19,12 @@ router.get('/:uid', async (req, res) => {
     const userData = userDoc.data();
 
     // Fetch subcollections
-    const achievementsSnap = await db.collection('users').doc(uid).collection('achievements').get();
-    const goalsSnap = await db.collection('users').doc(uid).collection('goals').get();
+  //  const achievementsSnap = await db.collection('users').doc(uid).collection('achievements').get();
+  //  const goalsSnap = await db.collection('users').doc(uid).collection('goals').get();
     const hikesSnap = await db.collection('users').doc(uid).collection('hikes').get();
 
-    const achievements = achievementsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    const goals = goalsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  //  const achievements = achievementsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  //  const goals = goalsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     const hikes = hikesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
     // Construct response
@@ -39,8 +39,8 @@ router.get('/:uid', async (req, res) => {
       stats: userData.stats || null,
       createdAt: userData.createdAt || null,
 
-      achievements,
-      goals,
+     // achievements,
+     // goals,
       hikes,
     };
 
@@ -165,6 +165,25 @@ router.post('/:uid/follow', verifyAuth, async (req, res) => {
     });
   }
 });
+router.patch('/:uid', async (req, res) => {
+  try {
+    const { uid } = req.params;
+    const { displayName, bio, location, password } = req.body;
+
+    const updatedProfile = await AuthService.updateUserProfile(uid, {
+      displayName,
+      bio,
+      location,
+
+    });
+
+    res.json(updatedProfile);
+  } catch (error) {
+    console.error(error);
+    res.status(400).json({ error: "Failed to update profile" });
+  }
+});
+
 
 // Unfollow user (protected route)
 router.delete('/:uid/follow', verifyAuth, async (req, res) => {

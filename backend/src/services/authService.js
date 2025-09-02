@@ -49,6 +49,25 @@ export class AuthService {
     }
   }
 
+  static async  updateUserProfile(uid, data) {
+  const userRef = firestore.collection('users').doc(uid);
+
+  const updateData = {
+    ...(data.displayName && { displayName: data.displayName }),
+    ...(data.bio && { bio: data.bio }),
+    ...(data.location && { location: data.location }),
+  };
+
+  await userRef.set(updateData, { merge: true });
+
+  // Optionally update Firebase Auth
+  
+
+  const updatedDoc = await userRef.get();
+  return updatedDoc.data();
+}
+
+
   // Get user profile by UID
   static async getUserProfile(uid) {
     try {
@@ -150,7 +169,7 @@ export class AuthService {
       throw error;
     }
   }
-
+  
   // 🔹 Get all goals for a user
   static async getUserGoals(userId) {
     try {

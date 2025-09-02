@@ -42,9 +42,9 @@ function formatDate(date) {
 
 export const ProfileView = ({ open, onOpenChange, showAddFriend = false }) => {
   const { currentUser } = useAuth();
-  const [achievements, setAchievements] = useState([]);
+
   const [recentHikes, setRecentHikes] = useState([]);
-  const [goals, setGoals] = useState([]);
+  
   const [profile, setProfile] = useState(null);
 
 useEffect(() => {
@@ -57,8 +57,8 @@ useEffect(() => {
       if (!res.ok) throw new Error("Failed to fetch profile");
       const data = await res.json();
       setProfile(data);  // now profile has bio, location, createdAt
-      setAchievements(data.achievements || []);
-      setGoals(data.goals || []);
+    
+      
       setRecentHikes(data.hikes || []);
     } catch (err) {
       console.error(err);
@@ -86,8 +86,8 @@ if (profile?.createdAt) {
 
 
   const user = {
-    name: currentUser.displayName || "No name",
-    email: currentUser.email || "No email",
+    name: profile?.displayName || "No name",
+    email: profile?.email || "No email",
     joinDate: joinDate,
     location: profile?.location || "Not set",
     bio: profile?.bio || "No bio yet",
@@ -95,13 +95,13 @@ if (profile?.createdAt) {
     totalHikes: profile?.stats?.totalHikes || 0,
     totalDistance: profile?.stats?.totalDistance || 0,
     totalElevation: profile?.stats?.totalElevation || 0,
-    achievements: achievements.length || profile?.stats?.achievementsCount || 0,
+   // achievements: achievements.length || profile?.stats?.achievementsCount || 0,
   },
 
 
-    achievements: achievements, // from state
+   
     recentHikes: recentHikes, // from state
-    goals: goals, // from state
+   
   };
 
   return (
@@ -178,7 +178,7 @@ if (profile?.createdAt) {
             </Card>
             <Card>
               <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-foreground">{user.stats.achievements}</p>
+              <p className="text-2xl font-bold text-foreground">0</p>
                 <p className="text-sm text-muted-foreground">Achievements</p>
               </CardContent>
             </Card>
@@ -193,25 +193,9 @@ if (profile?.createdAt) {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-            {user.goals && user.goals.length > 0 ? (
-              user.goals.map((goal, index) => (
-                <div key={index} className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium">{goal.title}</span>
-                    <span className="text-sm text-muted-foreground">{goal.currentValue}%</span>
-                  </div>
-                  <div className="w-full bg-muted rounded-full h-2">
-                    <div 
-                      className="bg-gradient-trail h-2 rounded-full transition-all duration-300" 
-                      style={{ width: `${goal.currentValue}%` }}
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground">Target: {goal.targetValue}</p>
-                </div>
-              ))
-            ) : (
+        
               <p className="text-muted-foreground">No goals set yet</p>
-            )}
+            
           </CardContent>
 
           </Card>
@@ -226,20 +210,9 @@ if (profile?.createdAt) {
             </CardHeader>
             <CardContent>
             <div className="grid md:grid-cols-2 gap-4">
-              {user.achievements && user.achievements.length > 0 ? (
-                user.achievements.slice(0, 4).map((achievements, index) => (
-                  <div key={index} className="flex items-center gap-3 p-3 rounded-lg bg-muted">
-                    <Medal className="h-8 w-8 text-summit" />
-                    <div>
-                      <h4 className="font-medium">{achievements.title}</h4>
-                      <p className="text-sm text-muted-foreground">{achievements.description}</p>
-                      <p className="text-xs text-muted-foreground">Earned {achievements.earnedAt}</p>
-                    </div>
-                  </div>
-                ))
-              ) : (
+              
                 <p className="text-muted-foreground col-span-2">No achievements to display</p>
-              )}
+              
             </div>
           </CardContent>
 
@@ -255,41 +228,9 @@ if (profile?.createdAt) {
             </CardHeader>
             <CardContent>
             <div className="space-y-4">
-              {user.recentHikes && user.recentHikes.length > 0 ? (
-                user.recentHikes.map((hikes, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-muted">
-                    <div className="flex-1">
-                      <h4 className="font-medium">{hikes.trailName}</h4>
-                      <div className="flex items-center gap-4 mt-1">
-                        <span className="text-sm text-muted-foreground flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          {hikes.date}
-                        </span>
-                        <span className="text-sm text-muted-foreground flex items-center gap-1">
-                          <TrendingUp className="h-3 w-3" />
-                          {hikes.distanceKm}
-                        </span>
-                        <span className="text-sm text-muted-foreground flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {hikes.duration}
-                        </span>
-                      </div>
-                    </div>
-                    <Badge 
-                      variant={
-                        hikes.difficulty === 'Hard' ? 'destructive' :
-                        hikes.difficulty === 'Medium' ? 'default' :
-                        'secondary'
-                      }
-                      className="text-xs"
-                    >
-                      {hikes.difficulty}
-                    </Badge>
-                  </div>
-                ))
-              ) : (
+           
                 <p className="text-muted-foreground">No recent hikes completed</p>
-              )}
+             
             </div>
           </CardContent>
 

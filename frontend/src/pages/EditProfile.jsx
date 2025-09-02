@@ -25,8 +25,8 @@ const profileSchema = z.object({
 
 const EditProfile = () => {
   const [profileImage, setProfileImage] = useState("/placeholder.svg");
-  const { currentUser } = useAuth();        // ✅ get currentUser
-  const [profile, setProfile] = useState(null); // ✅ profile state
+  const { currentUser } = useAuth();        //  get currentUser
+  const [profile, setProfile] = useState(null); //  profile state
   const { toast } = useToast();
   const form = useForm({
   resolver: zodResolver(profileSchema),
@@ -48,10 +48,10 @@ useEffect(() => {
       const data = await res.json();
       setProfile(data);
 
-      // ✅ Update form values when profile loads
+      //  Update form values when profile loads
       form.reset({
         name: data.displayName || currentUser.displayName || "No name",
-        password: "",
+       
         bio: data.bio || "No bio yet",
         location: data.location || "Not set",
       });
@@ -74,13 +74,40 @@ useEffect(() => {
     }
   };
 
-  const onSubmit = (data) => {
-    console.log("Profile updated:", data);
+  const onSubmit = async (data) => {
+  try {
+     console.log("Submitting form data:", data);
+    const res = await fetch(`http://localhost:3001/api/users/${currentUser.uid}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        displayName: data.name,
+        bio: data.bio,
+        location: data.location,
+        
+      }),
+    });
+
+    if (!res.ok) throw new Error("Failed to update profile");
+    const updatedProfile = await res.json();
+    setProfile(updatedProfile);
+
     toast({
       title: "Profile Updated",
       description: "Your hiking profile has been successfully updated!",
     });
-  };
+  } catch (err) {
+    console.error(err);
+    toast({
+      title: "Error",
+      description: "Unable to update profile. Try again.",
+      variant: "destructive",
+    });
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -183,30 +210,7 @@ useEffect(() => {
                 </div>
 
                 {/* Password Field */}
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-2">
-                        <Lock className="h-4 w-4 text-destructive" />
-                        New Password
-                      </FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="password" 
-                          placeholder="Leave blank to keep current password" 
-                          className="focus:ring-primary" 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Only fill this out if you want to change your password
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              
 
                 {/* Bio Field */}
                 <FormField
@@ -235,20 +239,24 @@ useEffect(() => {
 
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row gap-4 pt-6">
-                  <Button 
-                    type="submit" 
-                    className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground shadow-md"
-                  >
-                    Save Changes
-                  </Button>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    className="flex-1 border-border hover:bg-accent hover:text-accent-foreground"
-                    asChild
-                  >
-                    <Link to="/">Cancel</Link>
-                  </Button>
+                 
+                    {/* fields... */}
+                    <div className="flex flex-col sm:flex-row gap-4 pt-6">
+                      <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-md">
+                        Save Changes
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full border-border hover:bg-accent hover:text-accent-foreground"
+                        asChild
+                      >
+                        <Link to="/">Cancel</Link>
+                      </Button>
+                    </div>
+                  
+
+                  
                 </div>
               </form>
             </Form>
