@@ -180,9 +180,7 @@ router.get('/:uid/hikes', async (req, res) => {
     const { limit = 10, offset = 0 } = req.query;
 
     // Query hikes for this user
-    const hikes = await dbUtils.query(collections.HIKES, [
-      { field: 'userId', operator: '==', value: uid },
-    ]);
+    const hikes = await dbUtils.getUserHikes(uid);
 
     // Sort by date and apply pagination
     const sortedHikes = hikes

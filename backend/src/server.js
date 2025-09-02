@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 // Import routes
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
+import hikeRoutes from './routes/hikes.js';
 
 // Load environment variables
 dotenv.config();
@@ -18,9 +19,26 @@ const PORT = process.env.PORT || 3001;
 app.use(helmet());
 
 // CORS configuration
+const allowedOrigins = [
+  'http://localhost:3000', // Development
+  process.env.FRONTEND_URL, // Production frontend URL
+  'https://your-app.netlify.app', // Replace with your actual frontend URL
+  'https://your-app.vercel.app'   // Replace with your actual frontend URL
+].filter(Boolean); // Remove undefined values
+
 app.use(
   cors({
-    origin: 'http://localhost:3000', // Frontend URL
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+      
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        console.log('CORS blocked origin:', origin);
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
@@ -49,6 +67,7 @@ app.get('/health', (req, res) => {
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/hikes', hikeRoutes);
 
 // 404 handler for undefined routes
 app.use('*', (req, res) => {
@@ -98,6 +117,7 @@ const server = app.listen(PORT, () => {
   console.log(`Health check: http://localhost:${PORT}/health`);
   console.log(`Auth API: http://localhost:${PORT}/api/auth`);
   console.log(`Users API: http://localhost:${PORT}/api/users`);
+  console.log(`Hikes API: http://localhost:${PORT}/api/hikes`);
 });
 
 // Graceful shutdown

@@ -54,6 +54,16 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Check if environment variables are set correctly
+  useEffect(() => {
+    if (!process.env.REACT_APP_API_URL || process.env.REACT_APP_API_URL.includes('your-backend-api-url.com')) {
+      console.error('❌ Environment Error: REACT_APP_API_URL is not set correctly!');
+      console.error('Current value:', process.env.REACT_APP_API_URL);
+      console.error('Please set REACT_APP_API_URL to your actual backend URL');
+      setError('Backend API URL not configured. Please contact support.');
+    }
+  }, []);
+
 
 
   // Sign up function
@@ -62,7 +72,7 @@ export const AuthProvider = ({ children }) => {
       setError(null);
       
       // Call backend signup route to create both Auth user and Firestore document
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/auth/signup`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/auth/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -155,7 +165,7 @@ export const AuthProvider = ({ children }) => {
       
       // For Google sign-in, directly create the profile
       // This avoids the 500 error when profile doesn't exist
-      const apiUrl = `${process.env.REACT_APP_API_URL}/api/users/create-profile`;
+      const apiUrl = `${process.env.REACT_APP_API_URL}/users/create-profile`;
       console.log('Calling API:', apiUrl);
       console.log('Environment variable:', process.env.REACT_APP_API_URL);
       
@@ -213,7 +223,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const token = await currentUser.getIdToken();
       const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/auth/profile`,
+        `${process.env.REACT_APP_API_URL}/auth/profile`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -244,7 +254,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const token = await currentUser.getIdToken();
       const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/auth/profile`,
+        `${process.env.REACT_APP_API_URL}/auth/profile`,
         {
           method: 'PUT',
           headers: {
