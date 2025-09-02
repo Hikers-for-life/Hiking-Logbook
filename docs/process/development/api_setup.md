@@ -419,4 +419,4 @@ If you encounter issues:
 
 ---
 
-_This guide covers Sprint 1 backend API setup. For additional features, check the main [README](../README.md)._
+_This guide covers Sprint 1 and sprint 2 backend API setup. For additional features, check the main [README](../README.md)._

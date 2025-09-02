@@ -16,7 +16,7 @@ This document outlines the release strategy for our software project, with versi
 
 ## Version History & Current Status
 
-### Version 0.1.0 (Current Release)
+### Version 0.1.0 (Released)
 - **Release Date**: 19 August 2025
 - **Sprint**: Sprint 1
 - **Status**:  Released
@@ -35,20 +35,19 @@ This document outlines the release strategy for our software project, with versi
 
 ## Upcoming Releases
 
-### Version 0.2.0 (Next Release)
+### Version 0.2.0 (Current Release)
 - **Target Release**: 2 September 2025
 - **Sprint**: Sprint 2
 - **Status**:  Planned
-- **Milestone**: Core Features & Database Integration
+- **Milestone**: Core Feature(Hiking-Logbook) & Database Integration
 - **Planned Features**:
   - **New Page Designs**:
-    - Achievements page design and implementation
-    - Friends page with user connections interface
-    - Plan Hike page for hiking trip planning
+    - Improved UI/UX for the Hiking Logbook application
+    - Mobile-friendly and responsive design. 
   - **Database Architecture**:
-    - User profile data structure setup
-    - Profile edit persistence (save changes to database)
-    - Real-time profile data integration
+    - Integration of a robust backend database to support the Hiking-Logbook.
+    - Models created for users, hikes, logs, weather data, and search filters.
+    - Ensure scalability and optimized queries for faster data retrieval.
   - **Profile System Enhancement**:
     - Dynamic profile information display from database
     - Profile data synchronization across all views
@@ -57,7 +56,7 @@ This document outlines the release strategy for our software project, with versi
 **Success Metrics**:
 - Profile edit-save success rate of 95%+
 - Real-time profile data updates within 2 seconds
-- All new pages fully functional with responsive design
+- Hiking-Logbook functional with responsive design
 - Database queries optimized for sub-500ms response times
 
 ### Version 0.3.0
@@ -114,7 +113,7 @@ This document outlines the release strategy for our software project, with versi
 | Sprint | Version | Duration | Key Focus | Release Date |
 |--------|---------|----------|-----------|--------------|
 | Sprint 1 | v0.1.0 | 2 weeks | Authentication & Core UI |  Completed |
-| Sprint 2 | v0.2.0 | 2 weeks | Core Features & Database | 2 September 2025 |
+| Sprint 2 | v0.2.0 | 2 weeks | Hiking-Logbook & Database | 2 September 2025 |
 | Sprint 3 | v0.3.0 | 4 weeks | Social & Hiking Features | 29 September 2025 |
 | Sprint 4 | v1.0 | 3 weeks | Final Polish & Launch Prep | 19 October 2025 |
 
@@ -188,8 +187,8 @@ This roadmap is reviewed and updated every sprint. Changes may occur based on:
 
 ### Version Control
 - Document version: 1.0
-- Last updated: 19 August 2025
-- Next review: 30 August 2025
+- Last updated: 01 September 2025
+- Next review: 02 September 2025
 
 ---
 

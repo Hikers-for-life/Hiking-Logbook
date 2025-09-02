@@ -54,22 +54,38 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+
+
   // Sign up function
   const signup = async (email, password, displayName) => {
     try {
       setError(null);
-      const result = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
+      
+      // Call backend signup route to create both Auth user and Firestore document
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/auth/signup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          displayName,
+          bio: '',
+          location: null,
+        }),
+      });
 
-      // Update profile with display name
-      await updateProfile(result.user, { displayName });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Signup failed');
+      }
 
-      // Note: Backend profile creation is handled separately
-      // The user is now authenticated and can access the dashboard
-
+      const result = await response.json();
+      
+      // Sign in the user after successful signup
+      await signInWithEmailAndPassword(auth, email, password);
+      
       return result.user;
     } catch (error) {
       setError(error.message);
@@ -94,6 +110,15 @@ export const AuthProvider = ({ children }) => {
     try {
       setError(null);
       const result = await signInWithPopup(auth, googleProvider);
+      
+      // After successful Google sign-in, ensure user profile exists in Firestore
+      try {
+        await createUserProfileIfNeeded(result.user);
+      } catch (profileError) {
+        console.warn('Profile creation warning:', profileError.message);
+        // Don't fail the sign-in if profile creation fails
+      }
+      
       return result.user;
     } catch (error) {
       setError(error.message);
@@ -123,33 +148,63 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Create user profile in backend
-  /* const createUserProfile = async (uid, userData) => {
+  // Create user profile in backend if it doesn't exist
+  const createUserProfileIfNeeded = async (user) => {
     try {
-      const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/users/profile`,
+      const token = await user.getIdToken();
+      
+      // For Google sign-in, directly create the profile
+      // This avoids the 500 error when profile doesn't exist
+      const apiUrl = `${process.env.REACT_APP_API_URL}/api/users/create-profile`;
+      console.log('Calling API:', apiUrl);
+      console.log('Environment variable:', process.env.REACT_APP_API_URL);
+      
+      const createResponse = await fetch(
+        apiUrl,
         {
           method: 'POST',
           headers: {
+            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            uid,
-            ...userData,
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName || 'Google User',
+            bio: '',
+            location: null,
+            photoURL: user.photoURL || '',
           }),
         }
       );
 
-      if (!response.ok) {
-        throw new Error('Failed to create user profile');
+      if (!createResponse.ok) {
+        // Log the response details for debugging
+        console.log('Profile creation failed:', createResponse.status, createResponse.statusText);
+        
+        // If profile already exists, that's fine
+        if (createResponse.status === 409) {
+          console.log('User profile already exists');
+          return { message: 'Profile already exists' };
+        }
+        
+        // Try to get error details
+        try {
+          const errorText = await createResponse.text();
+          console.log('Error response:', errorText);
+          throw new Error(`Failed to create user profile: ${createResponse.status} ${createResponse.statusText}`);
+        } catch (parseError) {
+          throw new Error(`Failed to create user profile: ${createResponse.status} ${createResponse.statusText}`);
+        }
       }
 
-      return await response.json();
+      console.log('User profile created successfully');
+      return await createResponse.json();
     } catch (error) {
-      console.error('Error creating user profile:', error);
+      console.error('Error handling user profile:', error);
       throw error;
     }
-  }; */
+  };
 
   // Get user profile from backend
   const getUserProfile = async () => {

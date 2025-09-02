@@ -197,7 +197,7 @@ const Logbook = () => {
               ))}
             </div>
           </div>
-          <StatsCards />
+          <StatsCards />{/*  TO COMMIT , UNCOMMENT THIS LINE, TO RUN, COMMENT IT*/}
         
 
           {/* Hike Entries */}
