@@ -36,6 +36,9 @@ Each document represents a logged hike.
 | userId      | String   | Reference to users.uid who logged the hike|
 | createdAt   | Date     | Timestamp when entry was created      |
 | updatedAt   | Date     | Last update timestamp                 |
+| difficulty  | String   | Easy / Moderate / Hard                |
+| status      | String   | In Progress / Completed               |
+| Weather     | Number   | Climate                               |
 
 ### trails collection (future-ready)
 
