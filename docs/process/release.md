@@ -16,7 +16,7 @@ This document outlines the release strategy for our software project, with versi
 
 ## Version History & Current Status
 
-### Version 0.1.0 (Current Release)
+### Version 0.1.0 (Released)
 - **Release Date**: 19 August 2025
 - **Sprint**: Sprint 1
 - **Status**:  Released
@@ -35,7 +35,7 @@ This document outlines the release strategy for our software project, with versi
 
 ## Upcoming Releases
 
-### Version 0.2.0 (Next Release)
+### Version 0.2.0 (Current Release)
 - **Target Release**: 2 September 2025
 - **Sprint**: Sprint 2
 - **Status**:  Planned
