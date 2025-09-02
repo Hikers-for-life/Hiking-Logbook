@@ -21,7 +21,9 @@ Each document ID = user `uid`.
 | createdAt   | Date     | Timestamp of account creation         |
 
 ---
-#### hikes collection (new for Sprint 2)
+### hikes collection (new for Sprint 2)
+
+Each document represents a logged hike.
 
 | Field       | Type     | Description                           |
 | ----------- | -------- | ------------------------------------- |
@@ -34,6 +36,30 @@ Each document ID = user `uid`.
 | userId      | String   | Reference to users.uid who logged the hike|
 | createdAt   | Date     | Timestamp when entry was created      |
 | updatedAt   | Date     | Last update timestamp                 |
+
+### trails collection (future-ready)
+
+Each document represents a reusable trail entry that users can log against.
+
+| Field       | Type     | Description                           |
+| ----------- | -------- | ------------------------------------- |
+| name        | String   | Trail name                            |
+| location    | String   | General location of the trail         |
+| description | String   | Optional description                  |
+| difficulty  | String   | Easy / Moderate / Hard                |
+| distance    | Number   | Trail length in kilometers            |
+| createdAt   | Date     | Timestamp                             |
+
+### achievements collection (future-ready)
+
+achievements system for users.
+
+| Field       | Type     | Description                           |
+| ----------- | -------- | ------------------------------------- |
+| userId      | String   | Reference to users.uid                |
+| badge       | String   | Name of achievement/badge             |
+| description | String   | What the badge means                  |
+| earnedAt    | Date     | Timestamp when badge was awarded      |
 
 ##### Choice Justification
 We are using **Firebase Firestore (NoSQL)** as our database because:
