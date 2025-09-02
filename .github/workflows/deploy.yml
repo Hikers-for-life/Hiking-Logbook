@@ -55,7 +55,7 @@ jobs:
       - name: Build frontend
         working-directory: frontend
         env:
-          REACT_APP_API_URL: https://your-backend-api-url.com
+          REACT_APP_API_URL: https://hiking-logbook-hezw.onrender.com
           REACT_APP_FIREBASE_API_KEY: ${{ secrets.REACT_APP_FIREBASE_API_KEY }}
           REACT_APP_FIREBASE_AUTH_DOMAIN: hiking-logbook.firebaseapp.com
           REACT_APP_FIREBASE_PROJECT_ID: hiking-logbook
