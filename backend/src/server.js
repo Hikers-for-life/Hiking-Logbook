@@ -1,18 +1,16 @@
 import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import morgan from 'morgan';
 import dotenv from 'dotenv';
-
-// Import routes
+import { initializeFirebase, admin } from './config/firebase.js';
+import * as middleware from './middleware/index.js';
+import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
 import hikeRoutes from './routes/hikes.js';
 
-// Load environment variables
 dotenv.config();
 
 const app = express();
+
 const PORT = process.env.PORT || 3001;
 
 // Security middleware
@@ -147,5 +145,6 @@ process.on('SIGINT', () => {
     process.exit(0);
   });
 });
+
 
 export default app;

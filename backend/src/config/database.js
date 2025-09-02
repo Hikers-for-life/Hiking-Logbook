@@ -1,10 +1,11 @@
-import { db } from './firebase.js';
+import { getDatabase } from './firebase.js';
 
 // Database utilities for comprehensive hike management
 export const dbUtils = {
   // Add a new hike with comprehensive data
   async addHike(userId, hikeData) {
     try {
+
       // Map and validate the hike data
       const mappedHikeData = {
         // Basic information
@@ -51,6 +52,7 @@ export const dbUtils = {
         .add(mappedHikeData);
         
       return { success: true, id: docRef.id };
+
     } catch (error) {
       throw new Error(`Failed to add hike: ${error.message}`);
     }
@@ -104,6 +106,7 @@ export const dbUtils = {
         .doc(hikeId)
         .get();
       
+
       if (!doc.exists) {
         return null;
       }
@@ -121,6 +124,7 @@ export const dbUtils = {
         updatedAt: new Date()
       };
       
+
       await db
         .collection('users')
         .doc(userId)
@@ -230,6 +234,7 @@ export const dbUtils = {
   // Complete a hike
   async completeHike(userId, hikeId, endData) {
     try {
+
       const completionData = {
         status: 'completed',
         endTime: endData.endTime || new Date(),
@@ -245,6 +250,7 @@ export const dbUtils = {
         .doc(hikeId)
         .update(completionData);
         
+
       return { success: true };
     } catch (error) {
       throw new Error(`Failed to complete hike: ${error.message}`);
@@ -254,6 +260,7 @@ export const dbUtils = {
   // Get user profile
   async getUserProfile(userId) {
     try {
+
       const doc = await db.collection('users').doc(userId).get();
       if (!doc.exists) {
         return null;
@@ -263,6 +270,8 @@ export const dbUtils = {
       throw new Error(`Failed to get user profile: ${error.message}`);
     }
   },
+
+
 
   // Create user profile
   async createUserProfile(userId, profileData) {
@@ -351,4 +360,3 @@ export const dbUtils = {
   }
 };
 
-export default db;
