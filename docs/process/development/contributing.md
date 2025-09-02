@@ -34,3 +34,5 @@ API Setup
 Running Locally
 
 For Sprint 1, focus is on Authentication and Profile setup. More docs will be added as new features are developed.
+
+For Sprint 2, focus is on Hiking-Logbook and Database Integration.
