@@ -39,16 +39,15 @@ This document outlines the release strategy for our software project, with versi
 - **Target Release**: 2 September 2025
 - **Sprint**: Sprint 2
 - **Status**:  Planned
-- **Milestone**: Core Features & Database Integration
+- **Milestone**: Core Feature(Hiking-Logbook) & Database Integration
 - **Planned Features**:
   - **New Page Designs**:
-    - Achievements page design and implementation
-    - Friends page with user connections interface
-    - Plan Hike page for hiking trip planning
+    - Improved UI/UX for the Hiking Logbook application
+    - Mobile-friendly and responsive design. 
   - **Database Architecture**:
-    - User profile data structure setup
-    - Profile edit persistence (save changes to database)
-    - Real-time profile data integration
+    - Integration of a robust backend database to support the Hiking-Logbook.
+    - Models created for users, hikes, logs, weather data, and search filters.
+    - Ensure scalability and optimized queries for faster data retrieval.
   - **Profile System Enhancement**:
     - Dynamic profile information display from database
     - Profile data synchronization across all views
@@ -57,7 +56,7 @@ This document outlines the release strategy for our software project, with versi
 **Success Metrics**:
 - Profile edit-save success rate of 95%+
 - Real-time profile data updates within 2 seconds
-- All new pages fully functional with responsive design
+- Hiking-Logbook functional with responsive design
 - Database queries optimized for sub-500ms response times
 
 ### Version 0.3.0
