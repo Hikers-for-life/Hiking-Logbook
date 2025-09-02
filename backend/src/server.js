@@ -21,9 +21,17 @@ app.use(helmet());
 // CORS configuration
 const allowedOrigins = [
   'http://localhost:3000', // Development
-  process.env.FRONTEND_URL, // Production frontend URL
-  'https://your-app.netlify.app', // Replace with your actual frontend URL
-  'https://your-app.vercel.app'   // Replace with your actual frontend URL
+  'https://localhost:3000', // Development HTTPS
+  process.env.FRONTEND_URL, // Production frontend URL from environment
+  // Firebase Hosting URLs
+  'https://hiking-logbook.web.app', // Firebase default domain
+  'https://hiking-logbook.firebaseapp.com', // Firebase alternative domain
+  // Add your custom domain if you have one
+  'https://your-custom-domain.com',
+  // Common deployment platforms - update these with your actual URLs
+  'https://your-app.netlify.app', // Replace with your actual Netlify URL
+  'https://your-app.vercel.app',   // Replace with your actual Vercel URL
+  'https://your-app.github.io',    // Replace with your actual GitHub Pages URL
 ].filter(Boolean); // Remove undefined values
 
 app.use(
@@ -32,7 +40,10 @@ app.use(
       // Allow requests with no origin (like mobile apps or curl requests)
       if (!origin) return callback(null, true);
       
-      if (allowedOrigins.indexOf(origin) !== -1) {
+      // For development/testing - allow localhost and any HTTPS origin
+      if (origin.includes('localhost') || origin.startsWith('https://')) {
+        callback(null, true);
+      } else if (allowedOrigins.indexOf(origin) !== -1) {
         callback(null, true);
       } else {
         console.log('CORS blocked origin:', origin);
