@@ -78,8 +78,8 @@ export const dbUtils = {
         query = query.where('date', '<=', filters.dateTo);
       }
       
-      // Order by date (newest first)
-      query = query.orderBy('date', 'desc');
+      // Order by createdAt (newest first) - more reliable than date field
+      query = query.orderBy('createdAt', 'desc');
       
       const snapshot = await query.get();
       
@@ -156,6 +156,7 @@ export const dbUtils = {
       const activeHikeData = {
         ...hikeData,
         status: 'active',
+        date: hikeData.date || new Date(), // Ensure date field exists for ordering
         startTime: new Date(),
         createdAt: new Date(),
         updatedAt: new Date(),
