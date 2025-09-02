@@ -82,62 +82,57 @@ We have chosen **Scrum (Agile-based)** as our project management methodology. Ag
 
 ## 3. User Stories and Acceptance Tests
 
-### User Stories
-1. **Plan Your Adventures**
-   - As a hiker, I want to schedule hikes, check weather conditions, and create itineraries so that I can prepare better for my trips.
-   
-2. **Connect with Friends**
-   - As a user, I want to invite friends and share hiking experiences so that hiking becomes more social and engaging.
-   
-3. **Track Achievements**
-   - As a hiker, I want to set goals, earn badges, and track milestones so that I can stay motivated.
-   
-4. **Capture Memories**
-   - As a user, I want to add photos, notes, and logs for my hikes so that I can document my journey.
-   
-5. **GPS Integration**
-   - As a hiker, I want to track my route, save waypoints, and navigate trails confidently using GPS data.
-   
-6. **Progress Analytics**
-   - As a user, I want to visualize statistics and improvements over time so that I can analyze my outdoor activities.
-   
-7. **User Profile**
-   - As a user, I want to create and manage my profile so that my hikes and achievements are personalized.
-   
-8. **Start Your Journey Button**
-   - As a user, I want a clear entry point to start a new hike so that I can begin quickly and easily.
+### Sprint 1 User Stories and their User Acceptance Tests
+1. **User Story 1: User Registration (SignUp)**
+   - **As a** new user **I want** to create an account with my email and password
+**So that** I can access the Hiking Logbook system securely.
 
----
+**User Acceptance Test**
+- **Given** I am a new user **When** I provide a valid email and password in the sign-up form **Then** my account should be created successfully And I should see a confirmation message.
 
-### User Acceptance Tests
+2. **User Story 2: User Login**
+   - **As a** registered user **I want** to log in using my email and password **So that** I can access my personal Hiking Logbook dashboard.
+  
+**User Acceptance Test**
+- **Given** I already have a registered account **When** I enter a valid email and password in the login form **Then** I should be logged in successfully And redirected to my dashboard.
 
-1. **Plan Your Adventures**
-   - *Given* I am an authenticated user And I am on the Hike Planner page *When* I enter a route, date, start time, and difficulty And I request the weather for the selected date and location *Then* the system fetches and displays the forecast And the planned hike is saved with itinerary details.  
-   - *Given* I have an existing planned hike *When* I update the start time and notes *Then* the changes are saved and visible on my planner.  
-   - *Given* I have an existing planned hike *When* I delete the planned hike *Then* it no longer appears in my upcoming hikes list.  
+3. **Documentation Setup**
+   - **As a** developer or team member **I want** project documentation to be available **So that** I can understand the setup, features, and contribution process.
+  
+**User Acceptance Test**
+- **Given** I am a new team member or contributor **When** I open the documentation in the repo **Then** I should find clear setup instructions, feature explanations, and contribution guidelines.
 
-2. **Connect with Friends**
-   - *Given* I am an authenticated user And I have searched for a friend by email or username *When* I send a friend request *Then* the recipient sees a pending invitation. 
-   - *Given* I am an authenticated user And I have searched for a friend by email or username *When* the recipient accepts the invitation *Then* we both appear in each other's friends list.
-   - *Given* I have a completed hike *When* I set its visibility to "Friends" *Then* it appears in my friends' activity feeds.  
+### Sprint 2 User Stories and their User Acceptance Tests
+1. **Database Schema**
+   - **As a** developer **I want** a well-structured database schema
+**So that** the Hiking Logbook can store and manage data efficiently.
 
-3. **Track Achievements**
-   - *Given* I am on my Achievements page *When* I create a goal of 50 miles for the current month *Then* the goal is saved and visible in my goals list.  
-   - *Given* badges are defined for distance milestones And my total distance reaches 100 miles
-  *When* the system recalculates achievements *Then* I receive the "Century Hiker" badge.  
+**User Acceptance Test**
+- **Given** the schema is defined **When** I run the migration or initialize the database **Then** tables and relationships should be created successfully And data should persist across operations.
 
-4. **Capture Memories**
-   - *Given* I have a completed hike
-  *When* I upload one or more photos and add a note *Then* the media and note are stored and displayed on the hike detail page.  
-   - *Given* I am viewing a hike detail page *When* I edit the notes field *Then* the notes update without a page refresh.  
+2. **User Story 2: Frontend Design**
+   - **As a** user **I want** a visually appealing and user-friendly interface **So that** I can easily navigate and use the Hiking Logbook system.
+  
+   **User Acceptance Test**
+   - **Given** I open the Hiking Logbook in a browser **When** I land on the homepage or dashboard **Then** the design should be responsive, clear, and easy to use.
+  
+3. **User Story 3: Hiking Logbook API**
+   - **As a** user **I want** to add and view my hiking logs **So that** I can keep track of my hiking activities.
+  
+**User Acceptance Test**
+- **Given** I am logged in **When** I create a new hiking log via the API **Then** the log should be saved to the database And retrievable when I request my hiking history.
 
-5. **GPS Integration**  
+4. **User Story 4: Weather API**
+   - **As a** hiker **I want** to see the weather forecast for my hikes **So that** I can plan safely before going hiking.
+  
+**User Acceptance Test**
+- **Given** I search or select a hiking location **When** the weather API is called **Then** I should see the current weather and forecast for that location.
 
-6. **Progress Analytics** 
-
-7. **User Profile** 
-
-8. **Start Your Journey Button** 
+5. **Filter And Search**
+   - **As a** user **I want** to search and filter my hiking logs **So that** I can quickly find specific hikes based on date, location, or conditions.
+  
+**User Acceptance Test**
+- **Given** I have multiple hiking logs **When** I apply a filter or search by keyword **Then** only the matching hikes should be displayed.
 
 ---
 
@@ -219,6 +214,7 @@ The project aligns with:
 *Milestone*: The app is stable, tested, and ready for release.  
 
 ---
+
 
 
 
