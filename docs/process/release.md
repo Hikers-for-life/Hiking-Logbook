@@ -33,33 +33,33 @@ This document outlines the release strategy for our software project, with versi
 
 ---
 
+### Version 0.2.0 (Released)
+
+- **Target Release:** 2 September 2025  
+- **Sprint**: Sprint 2  
+- **Status**: Released 
+- **Milestone:** Core Feature (Hiking-Logbook) & Database Integration  
+- **Key Features**:
+  - Implemented **Logbook for Hikes** with database support.
+  - Designed **Logbook UI** with responsive layouts.
+  - Created **API endpoints** for hikes (Create, Read, Update).  
+    - *Delete functionality still not working*.
+  - Designed and added **Friends Page UI**.
+  - Fixed issues in **Login and Signup** flow.
+  - Backend support for **Profile Edit & Update** created.  
+    - *Not yet integrated into deployed app frontend*.
+
+**Success Metrics (Adjusted for Sprint 2)**
+- Hiking-Logbook functional with database connection.  
+- Profile editing backend exists but lacks full deployment integration.  
+- Authentication (Login/Signup) stable.  
+- Delete operation for hikes pending.  
+
+---
+
 ## Upcoming Releases
 
-### Version 0.2.0 (Current Release)
-- **Target Release**: 2 September 2025
-- **Sprint**: Sprint 2
-- **Status**:  Planned
-- **Milestone**: Core Feature(Hiking-Logbook) & Database Integration
-- **Planned Features**:
-  - **New Page Designs**:
-    - Improved UI/UX for the Hiking Logbook application
-    - Mobile-friendly and responsive design. 
-  - **Database Architecture**:
-    - Integration of a robust backend database to support the Hiking-Logbook.
-    - Models created for users, hikes, logs, weather data, and search filters.
-    - Ensure scalability and optimized queries for faster data retrieval.
-  - **Profile System Enhancement**:
-    - Dynamic profile information display from database
-    - Profile data synchronization across all views
-    - Data validation and error handling for profile updates
-
-**Success Metrics**:
-- Profile edit-save success rate of 95%+
-- Real-time profile data updates within 2 seconds
-- Hiking-Logbook functional with responsive design
-- Database queries optimized for sub-500ms response times
-
-### Version 0.3.0
+### Version 0.3.0 (Current Release)
 - **Target Release**: 29 September 2025
 - **Sprint**: Sprint 3
 - **Status**:  In Planning
@@ -186,9 +186,9 @@ This roadmap is reviewed and updated every sprint. Changes may occur based on:
 - Resource availability changes
 
 ### Version Control
-- Document version: 1.0
-- Last updated: 01 September 2025
-- Next review: 02 September 2025
+- Document version: 2.0
+- Last updated: 02 September 2025
+- Next review: 19 September 2025
 
 ---
 
