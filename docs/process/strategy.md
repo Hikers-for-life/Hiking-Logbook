@@ -87,28 +87,28 @@ We have chosen **Scrum (Agile-based)** as our project management methodology. Ag
    - **As a** new user **I want** to create an account with my email and password
 **So that** I can access the Hiking Logbook system securely.
 
-**User Acceptance Test**
-- **Given** I am a new user **When** I provide a valid email and password in the sign-up form **Then** my account should be created successfully And I should see a confirmation message.
+   **User Acceptance Test**
+   - **Given** I am a new user **When** I provide a valid email and password in the   sign-up form **Then** my account should be created successfully And I should see a confirmation message.
 
 2. **User Story 2: User Login**
    - **As a** registered user **I want** to log in using my email and password **So that** I can access my personal Hiking Logbook dashboard.
   
-**User Acceptance Test**
-- **Given** I already have a registered account **When** I enter a valid email and password in the login form **Then** I should be logged in successfully And redirected to my dashboard.
+   **User Acceptance Test**
+   - **Given** I already have a registered account **When** I enter a valid email and password in the login form **Then** I should be logged in successfully And redirected to my dashboard.
 
 3. **Documentation Setup**
    - **As a** developer or team member **I want** project documentation to be available **So that** I can understand the setup, features, and contribution process.
   
-**User Acceptance Test**
-- **Given** I am a new team member or contributor **When** I open the documentation in the repo **Then** I should find clear setup instructions, feature explanations, and contribution guidelines.
+   **User Acceptance Test**
+   - **Given** I am a new team member or contributor **When** I open the documentation in the repo **Then** I should find clear setup instructions, feature explanations, and contribution guidelines.
 
 ### Sprint 2 User Stories and their User Acceptance Tests
 1. **Database Schema**
    - **As a** developer **I want** a well-structured database schema
 **So that** the Hiking Logbook can store and manage data efficiently.
 
-**User Acceptance Test**
-- **Given** the schema is defined **When** I run the migration or initialize the database **Then** tables and relationships should be created successfully And data should persist across operations.
+   **User Acceptance Test**
+   - **Given** the schema is defined **When** I run the migration or initialize the database **Then** tables and relationships should be created successfully And data should persist across operations.
 
 2. **User Story 2: Frontend Design**
    - **As a** user **I want** a visually appealing and user-friendly interface **So that** I can easily navigate and use the Hiking Logbook system.
@@ -119,20 +119,20 @@ We have chosen **Scrum (Agile-based)** as our project management methodology. Ag
 3. **User Story 3: Hiking Logbook API**
    - **As a** user **I want** to add and view my hiking logs **So that** I can keep track of my hiking activities.
   
-**User Acceptance Test**
-- **Given** I am logged in **When** I create a new hiking log via the API **Then** the log should be saved to the database And retrievable when I request my hiking history.
+   **User Acceptance Test**
+   - **Given** I am logged in **When** I create a new hiking log via the API **Then** the log should be saved to the database And retrievable when I request my hiking history.
 
 4. **User Story 4: Weather API**
    - **As a** hiker **I want** to see the weather forecast for my hikes **So that** I can plan safely before going hiking.
   
-**User Acceptance Test**
-- **Given** I search or select a hiking location **When** the weather API is called **Then** I should see the current weather and forecast for that location.
+   **User Acceptance Test**
+   - **Given** I search or select a hiking location **When** the weather API is called **Then** I should see the current weather and forecast for that location.
 
 5. **Filter And Search**
    - **As a** user **I want** to search and filter my hiking logs **So that** I can quickly find specific hikes based on date, location, or conditions.
   
-**User Acceptance Test**
-- **Given** I have multiple hiking logs **When** I apply a filter or search by keyword **Then** only the matching hikes should be displayed.
+   **User Acceptance Test**
+   - **Given** I have multiple hiking logs **When** I apply a filter or search by keyword **Then** only the matching hikes should be displayed.
 
 ---
 
@@ -214,6 +214,7 @@ The project aligns with:
 *Milestone*: The app is stable, tested, and ready for release.  
 
 ---
+
 
 
 
