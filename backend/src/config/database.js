@@ -137,15 +137,37 @@ export const dbUtils = {
   // Delete a hike
   async deleteHike(userId, hikeId) {
     try {
-      await db
+
+      
+      // Get all hikes and find the one to delete
+      const snapshot = await db
         .collection('users')
         .doc(userId)
         .collection('hikes')
-        .doc(hikeId)
-        .delete();
-        
-      return { success: true };
+        .get();
+      
+      let targetDoc = null;
+      
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        // Match by document ID (for proper Firestore IDs) or by data.id field (for malformed data)
+        if (doc.id == hikeId || data.id == hikeId) {
+
+          targetDoc = doc;
+        }
+      });
+      
+      if (targetDoc) {
+        await targetDoc.ref.delete();
+
+        return { success: true };
+      } else {
+
+        throw new Error('Hike not found');
+      }
+      
     } catch (error) {
+      console.error(`❌ DB: Failed to delete hike ${hikeId}:`, error.message);
       throw new Error(`Failed to delete hike: ${error.message}`);
     }
   },

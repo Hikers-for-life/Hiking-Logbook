@@ -77,9 +77,8 @@ const NewHikeEntryForm = ({ open, onOpenChange, onSubmit, initialData = null, ti
   }, [initialData, form]);
 
   const handleSubmit = (data) => {
-    // Generate a unique ID for the new entry
+    // Don't manually set ID - let Firestore auto-generate document IDs
     const newEntry = {
-      id: Date.now(),
       ...data,
       photos: parseInt(data.photos) || 0,
     };

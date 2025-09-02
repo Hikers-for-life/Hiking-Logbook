@@ -195,13 +195,19 @@ const Logbook = () => {
     setActiveHikeMode(true);
   };
 
+
+
   // Handler for deleting a hike (DELETE)
   const handleDeleteHike = async (hikeId) => {
+    if (!window.confirm('Are you sure you want to delete this hike?')) {
+      return;
+    }
+    
     try {
       const response = await hikeApiService.deleteHike(hikeId);
       if (response.success) {
-        // Remove the hike from the list
         setHikeEntries(prev => prev.filter(hike => hike.id !== hikeId));
+        setError(null);
       }
     } catch (err) {
       console.error('Failed to delete hike:', err);
@@ -217,21 +223,31 @@ const Logbook = () => {
 
   // Handler for submitting hike edits
   const handleSubmitEditHike = async (updatedHikeData) => {
-    if (!editingHike) return;
+    if (!editingHike) {
+      console.log('❌ No editing hike found');
+      return;
+    }
+    
+    console.log('✏️ Edit hike called for ID:', editingHike.id);
+    console.log('📝 Updated data:', updatedHikeData);
     
     try {
+      console.log('🌐 Making update API call...');
       const response = await hikeApiService.updateHike(editingHike.id, updatedHikeData);
+      console.log('🔄 Update API response:', response);
       
       if (response.success) {
+        console.log('✅ Update successful, refreshing data');
         // Refresh the entire list from server to ensure consistency
         await loadHikes();
         setIsEditHikeOpen(false);
         setEditingHike(null);
       } else {
+        console.log('❌ Update failed - response not successful');
         setError('Failed to update hike. Please try again.');
       }
     } catch (err) {
-      console.error('Failed to update hike:', err);
+      console.error('❌ Failed to update hike:', err);
       setError('Failed to update hike. Please try again.');
     }
   };
@@ -305,6 +321,7 @@ const Logbook = () => {
               <Plus className="h-5 w-5 mr-2" />
               Add Past Hike
             </Button>
+            
           </div>
         </div>
 

@@ -75,17 +75,25 @@ export const hikeApiService = {
 
   // Update an existing hike
   async updateHike(hikeId, updateData) {
-    return makeAuthenticatedRequest(`/hikes/${hikeId}`, {
+
+    const result = await makeAuthenticatedRequest(`/hikes/${hikeId}`, {
       method: 'PUT',
       body: JSON.stringify(updateData),
     });
+
+    return result;
   },
 
   // Delete a hike
   async deleteHike(hikeId) {
-    return makeAuthenticatedRequest(`/hikes/${hikeId}`, {
+
+
+    
+    const result = await makeAuthenticatedRequest(`/hikes/${hikeId}`, {
       method: 'DELETE',
     });
+
+    return result;
   },
 
   // Start tracking a new hike

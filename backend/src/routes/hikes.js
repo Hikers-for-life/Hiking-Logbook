@@ -186,9 +186,20 @@ router.delete('/:id', async (req, res) => {
     const userId = req.user.uid;
     const hikeId = req.params.id;
     
+
+
+    
     // Check if hike exists
     const existingHike = await dbUtils.getHike(userId, hikeId);
+
+    
+
+    
     if (!existingHike) {
+
+      
+
+      
       return res.status(404).json({
         success: false,
         error: 'Hike not found'
