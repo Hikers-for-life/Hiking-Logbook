@@ -1,4 +1,4 @@
-import { db } from './firebase.js';
+import { db, FieldValue } from './firebase.js';
 
 // Database utilities for comprehensive hike management
 export const dbUtils = {
@@ -189,15 +189,15 @@ export const dbUtils = {
       };
 
       await db
-        .collection('users')
-        .doc(userId)
-        .collection('hikes')
-        .doc(hikeId)
-        .update({
-          waypoints: db.FieldValue.arrayUnion(waypointData),
-          updatedAt: new Date()
-        });
-        
+      .collection("users")
+      .doc(userId)
+      .collection("hikes")
+      .doc(hikeId)
+      .update({
+        waypoints: FieldValue.arrayUnion(waypointData),
+        updatedAt: new Date(),
+      });
+            
       return { success: true };
     } catch (error) {
       throw new Error(`Failed to add waypoint: ${error.message}`);
@@ -328,4 +328,4 @@ export const dbUtils = {
   }
 };
 
-export default db;
+export { db, FieldValue };

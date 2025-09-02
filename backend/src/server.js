@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 // Import routes
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
+import hikesRouter from "./routes/hikes.js";
 
 // Load environment variables
 dotenv.config();
@@ -49,6 +50,9 @@ app.get('/health', (req, res) => {
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+
+//Naledi: Hikes routes
+app.use("/api/users", hikesRouter);
 
 // 404 handler for undefined routes
 app.use('*', (req, res) => {
