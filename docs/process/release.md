@@ -113,7 +113,7 @@ This document outlines the release strategy for our software project, with versi
 | Sprint | Version | Duration | Key Focus | Release Date |
 |--------|---------|----------|-----------|--------------|
 | Sprint 1 | v0.1.0 | 2 weeks | Authentication & Core UI |  Completed |
-| Sprint 2 | v0.2.0 | 2 weeks | Core Features & Database | 2 September 2025 |
+| Sprint 2 | v0.2.0 | 2 weeks | Hiking-Logbook & Database | 2 September 2025 |
 | Sprint 3 | v0.3.0 | 4 weeks | Social & Hiking Features | 29 September 2025 |
 | Sprint 4 | v1.0 | 3 weeks | Final Polish & Launch Prep | 19 October 2025 |
 
@@ -187,8 +187,8 @@ This roadmap is reviewed and updated every sprint. Changes may occur based on:
 
 ### Version Control
 - Document version: 1.0
-- Last updated: 19 August 2025
-- Next review: 30 August 2025
+- Last updated: 01 September 2025
+- Next review: 02 September 2025
 
 ---
 
