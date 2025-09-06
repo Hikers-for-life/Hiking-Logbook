@@ -35,6 +35,8 @@
 - Track task progress more closely in GitHub Projects to avoid delays.  
 
 ---
+
 **Next Steps:** Sprint 3 will focus on backend stability and frontend integration, with improved planning to ensure all tasks are completed on time.  
+
 
 
