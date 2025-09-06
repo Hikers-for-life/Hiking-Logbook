@@ -1,40 +1,40 @@
 
-import { collections, dbUtils } from "../config/database.js";
+import { dbUtils } from "../config/database.js";
 import { hikeSchema } from "../models/hikeSchema.js";
 
 // Simple validation against schema
 function validateHikeData(hikeData) {
-  Object.keys(hikeSchema).forEach((field) => {
-    if (!(field in hikeData)) {
-      throw new Error(`Missing field: ${field}`);
+  // Only validate required fields
+  const requiredFields = ['title', 'location'];
+  requiredFields.forEach((field) => {
+    if (!hikeData[field]) {
+      throw new Error(`Missing required field: ${field}`);
     }
   });
 }
 
 // Create a hike
-export async function createHike(docId, hikeData) {
+export async function createHike(userId, hikeData) {
   validateHikeData(hikeData);
-  return dbUtils.create(collections.HIKES, docId, hikeData);
+  return dbUtils.addHike(userId, hikeData);
 }
 
 // Get a hike by ID
-export async function getHike(docId) {
-  return dbUtils.getById(collections.HIKES, docId);
+export async function getHike(userId, hikeId) {
+  return dbUtils.getHike(userId, hikeId);
 }
 
 // Update a hike
-export async function updateHike(docId, hikeData) {
-  return dbUtils.update(collections.HIKES, docId, hikeData);
+export async function updateHike(userId, hikeId, hikeData) {
+  return dbUtils.updateHike(userId, hikeId, hikeData);
 }
 
 // Delete a hike
-export async function deleteHike(docId) {
-  return dbUtils.delete(collections.HIKES, docId);
+export async function deleteHike(userId, hikeId) {
+  return dbUtils.deleteHike(userId, hikeId);
 }
 
 // Query hikes (e.g. by userId)
-export async function getUserHikes(userId) {
-  return dbUtils.query(collections.HIKES, [
-    { field: "userId", operator: "==", value: userId },
-  ]);
+export async function getUserHikes(userId, filters = {}) {
+  return dbUtils.getUserHikes(userId, filters);
 }

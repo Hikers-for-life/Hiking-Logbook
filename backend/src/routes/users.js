@@ -1,9 +1,73 @@
 import express from 'express';
 import { AuthService } from '../services/authService.js';
 import { verifyAuth } from '../middleware/auth.js';
-import { dbUtils, collections } from '../config/database.js';
+import { dbUtils } from '../config/database.js';
 
 const router = express.Router();
+
+// Test route to verify router is working
+router.get('/test', (req, res) => {
+  res.json({ message: 'Users router is working!' });
+});
+
+// Create user profile (for Google sign-in users)
+router.post('/create-profile', verifyAuth, async (req, res) => {
+  try {
+    const { uid, email, displayName, bio, location, photoURL } = req.body;
+    
+    // Verify the authenticated user matches the requested UID
+    if (req.user.uid !== uid) {
+      return res.status(403).json({
+        error: 'Unauthorized: Cannot create profile for another user',
+      });
+    }
+
+    // Check if profile already exists
+    const existingProfile = await dbUtils.getUserProfile(uid);
+    if (existingProfile) {
+      return res.status(409).json({
+        message: 'User profile already exists',
+        profile: existingProfile,
+      });
+    }
+
+    // Create the user profile
+    const profileData = {
+      uid,
+      email,
+      displayName,
+      bio: bio || '',
+      location: location || null,
+      photoURL: photoURL || '',
+      preferences: {
+        difficulty: 'beginner',
+        terrain: 'mixed',
+        distance: 'short',
+      },
+      stats: {
+        totalHikes: 0,
+        totalDistance: 0,
+        totalElevation: 0,
+        achievements: [],
+      },
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    await dbUtils.createUserProfile(uid, profileData);
+
+    res.status(201).json({
+      message: 'User profile created successfully',
+      profile: profileData,
+    });
+  } catch (error) {
+    console.error('Create profile error:', error);
+    res.status(500).json({
+      error: 'Failed to create user profile',
+      details: error.message,
+    });
+  }
+});
 
 // Get user by ID (public route, but with optional auth for additional info)
 router.get('/:uid', async (req, res) => {
@@ -62,7 +126,9 @@ router.get('/search', async (req, res) => {
       });
     }
 
-    const users = await dbUtils.query(collections.USERS, conditions);
+    // Note: This search functionality needs to be implemented
+    // For now, return empty array until we implement proper user search
+    const users = [];
 
     // Remove sensitive information
     const publicUsers = users.map((user) => ({
@@ -114,9 +180,7 @@ router.get('/:uid/hikes', async (req, res) => {
     const { limit = 10, offset = 0 } = req.query;
 
     // Query hikes for this user
-    const hikes = await dbUtils.query(collections.HIKES, [
-      { field: 'userId', operator: '==', value: uid },
-    ]);
+    const hikes = await dbUtils.getUserHikes(uid);
 
     // Sort by date and apply pagination
     const sortedHikes = hikes

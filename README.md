@@ -26,6 +26,7 @@ Hiking-Logbook/
 │   ├── src/
 │   │   ├── config/         # Configuration files
 │   │   ├── middleware/     # Express middleware
+|   |   ├── models/         # Database Schema
 │   │   ├── routes/         # API route handlers
 │   │   ├── services/       # Business logic services
 │   │   ├── utils/          # Utility functions
@@ -36,8 +37,13 @@ Hiking-Logbook/
 ├── frontend/               # React frontend application
 │   ├── src/
 │   │   ├── components/     # Reusable UI components
-│   │   ├── contexts/       # React contexts (Auth, etc.)
+|   |   ├── config/         # firebase config
+|   |   ├── contexts/       # React contexts (Auth, etc.)
+|   |   ├── hooks/          # custom React hooks that encapsulate reusable logic
+│   │   ├── lib/            #library for common files, utility classes
+|   |   ├── mocks/          # mock files
 │   │   ├── pages/          # Page components
+|   |   ├── tests/          # frontend tests
 │   │   └── App.js          # Main application component
 │   ├── package.json        # Frontend dependencies
 │   └── README.md           # Frontend documentation
@@ -313,6 +319,8 @@ For issues and questions:
 
 
 *Built with ❤️ for the hiking community*
+
+
 
 
 

@@ -19,7 +19,7 @@ It serves as the **“How We Work” manual** for all contributors.
 ### Naming Conventions
 - **Variables & Functions:** `camelCase`  
 - **Classes & Components:** `PascalCase`  
-- **Files:** `kebab-case.js` (e.g., `user-service.js`)  
+- **Files:** `kebab_case.js` (e.g., `user_service.js`)  
 - **Constants:** `UPPER_CASE_SNAKE`  
 
 ### Error Handling & Logging

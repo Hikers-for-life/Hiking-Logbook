@@ -35,6 +35,7 @@ serviceAccountKey.json
 .DS_Store
 .vscode/
 
+
 # Leave for now
 backend/node_modules/
 frontend/node_modules/
