@@ -35,7 +35,6 @@
 - Track task progress more closely in GitHub Projects to avoid delays.  
 
 ---
-**AND THE TEAM WOULD LIKE TO THANK RISUNA FOR COMING TO THE RESCUE WITH FIXING THE BUG THAT WAS IN THE "START HIKE BOTTON" AND MAKING SURE THAT THE DEPLOYED SITE WORKS.**
-
 **Next Steps:** Sprint 3 will focus on backend stability and frontend integration, with improved planning to ensure all tasks are completed on time.  
+
 
