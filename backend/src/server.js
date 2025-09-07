@@ -1,5 +1,8 @@
 import express from 'express';
 import dotenv from 'dotenv';
+import helmet from 'helmet';
+import cors from 'cors';
+import morgan from 'morgan';
 import { initializeFirebase, admin } from './config/firebase.js';
 import * as middleware from './middleware/index.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
@@ -119,32 +122,48 @@ app.use((error, req, res) => {
   });
 });
 
-// Start server
-const server = app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`Health check: http://localhost:${PORT}/health`);
-  console.log(`Auth API: http://localhost:${PORT}/api/auth`);
-  console.log(`Users API: http://localhost:${PORT}/api/users`);
-  console.log(`Hikes API: http://localhost:${PORT}/api/hikes`);
-});
+// Initialize Firebase and start server
+async function startServer() {
+  try {
+    // Initialize Firebase first
+    await initializeFirebase();
+    console.log('Firebase initialized successfully');
+    
+    // Start the server
+    const server = app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+      console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`Health check: http://localhost:${PORT}/health`);
+      console.log(`Auth API: http://localhost:${PORT}/api/auth`);
+      console.log(`Users API: http://localhost:${PORT}/api/users`);
+      console.log(`Hikes API: http://localhost:${PORT}/api/hikes`);
+    });
 
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully');
-  server.close(() => {
-    console.log('Process terminated');
-    process.exit(0);
-  });
-});
+    // Graceful shutdown
+    process.on('SIGTERM', () => {
+      console.log('SIGTERM received, shutting down gracefully');
+      server.close(() => {
+        console.log('Process terminated');
+        process.exit(0);
+      });
+    });
 
-process.on('SIGINT', () => {
-  console.log('SIGINT received, shutting down gracefully');
-  server.close(() => {
-    console.log('Process terminated');
-    process.exit(0);
-  });
-});
+    process.on('SIGINT', () => {
+      console.log('SIGINT received, shutting down gracefully');
+      server.close(() => {
+        console.log('Process terminated');
+        process.exit(0);
+      });
+    });
+
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+// Start the server
+startServer();
 
 
 export default app;

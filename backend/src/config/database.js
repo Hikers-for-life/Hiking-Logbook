@@ -45,6 +45,7 @@ export const dbUtils = {
         userId: userId
       };
 
+      const db = getDatabase();
       const docRef = await db
         .collection('users')
         .doc(userId)
@@ -61,6 +62,7 @@ export const dbUtils = {
   // Get all hikes for a user with optional filtering
   async getUserHikes(userId, filters = {}) {
     try {
+      const db = getDatabase();
       let query = db
         .collection('users')
         .doc(userId)
@@ -99,6 +101,7 @@ export const dbUtils = {
   // Get a specific hike by ID
   async getHike(userId, hikeId) {
     try {
+      const db = getDatabase();
       const doc = await db
         .collection('users')
         .doc(userId)
@@ -125,6 +128,7 @@ export const dbUtils = {
       };
       
 
+      const db = getDatabase();
       await db
         .collection('users')
         .doc(userId)
@@ -144,6 +148,7 @@ export const dbUtils = {
 
       
       // Get all hikes and find the one to delete
+      const db = getDatabase();
       const snapshot = await db
         .collection('users')
         .doc(userId)
@@ -191,6 +196,7 @@ export const dbUtils = {
         gpsTrack: []
       };
 
+      const db = getDatabase();
       const docRef = await db
         .collection('users')
         .doc(userId)
@@ -206,6 +212,7 @@ export const dbUtils = {
   // Update hike with GPS waypoint
   async addWaypoint(userId, hikeId, waypoint) {
     try {
+      const db = getDatabase();
       const waypointData = {
         latitude: waypoint.latitude,
         longitude: waypoint.longitude,
@@ -243,6 +250,7 @@ export const dbUtils = {
         updatedAt: new Date()
       };
 
+      const db = getDatabase();
       await db
         .collection('users')
         .doc(userId)
@@ -260,7 +268,7 @@ export const dbUtils = {
   // Get user profile
   async getUserProfile(userId) {
     try {
-
+      const db = getDatabase();
       const doc = await db.collection('users').doc(userId).get();
       if (!doc.exists) {
         return null;
@@ -276,6 +284,7 @@ export const dbUtils = {
   // Create user profile
   async createUserProfile(userId, profileData) {
     try {
+      const db = getDatabase();
       await db
         .collection('users')
         .doc(userId)
@@ -294,6 +303,7 @@ export const dbUtils = {
   // Update user profile
   async updateUserProfile(userId, profileData) {
     try {
+      const db = getDatabase();
       await db
         .collection('users')
         .doc(userId)
@@ -341,6 +351,7 @@ export const dbUtils = {
   async deleteUser(userId) {
     try {
       // Delete all hikes first
+      const db = getDatabase();
       const hikesSnapshot = await db
         .collection('users')
         .doc(userId)

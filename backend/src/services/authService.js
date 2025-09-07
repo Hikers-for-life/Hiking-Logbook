@@ -1,5 +1,5 @@
 
-import { auth } from '../config/firebase.js';
+import { getAuth } from '../config/firebase.js';
 import { dbUtils } from '../config/database.js';
 
 

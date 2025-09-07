@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/
 import NewHikeEntryForm from "../components/NewHikeEntryForm";
 import ActiveHike from "../components/ActiveHike";
 import ActiveHikeStatus from "../components/ActiveHikeStatus";
-import { Camera, MapPin, Clock, Mountain, Thermometer, Plus, Search, Map, Eye, Play, Trash2, Edit3 } from "lucide-react";
+import { Camera, MapPin, Clock, Mountain, Thermometer, Plus, Search, Map, Eye, Play, Trash2, Edit3, Pin, PinOff } from "lucide-react";
 import { hikeApiService } from "../services/hikeApiService.js";
 import { useAuth } from "../contexts/AuthContext.jsx";
 
@@ -28,6 +28,8 @@ const Logbook = () => {
   const [error, setError] = useState(null);
   // Hike entries from database
   const [hikeEntries, setHikeEntries] = useState([]);
+  // Pinned hikes state
+  const [pinnedHikes, setPinnedHikes] = useState([]);
 
   // API functions for loading data
   const loadHikes = useCallback(async () => {
@@ -250,6 +252,25 @@ const Logbook = () => {
       console.error('❌ Failed to update hike:', err);
       setError('Failed to update hike. Please try again.');
     }
+  };
+
+  // Handler for pinning/unpinning hikes
+  const handlePinHike = (hikeId) => {
+    setPinnedHikes(prev => {
+      const isPinned = prev.includes(hikeId);
+      if (isPinned) {
+        // Unpin the hike
+        return prev.filter(id => id !== hikeId);
+      } else {
+        // Pin the hike
+        return [...prev, hikeId];
+      }
+    });
+  };
+
+  // Check if a hike is pinned
+  const isHikePinned = (hikeId) => {
+    return pinnedHikes.includes(hikeId);
   };
 
   // Filter hikes based on search term and difficulty
@@ -511,34 +532,60 @@ const Logbook = () => {
                 </div>
 
                 {/* Actions */}
-                <div className="flex justify-end space-x-2 pt-2">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="text-summit hover:text-summit hover:bg-muted"
-                    onClick={() => handleViewRouteMap(hike)}
-                  >
-                    <Map className="h-4 w-4 mr-1" />
-                    Route Map
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="text-forest hover:text-forest hover:bg-muted"
-                    onClick={() => handleEditHike(hike)}
-                  >
-                    <Edit3 className="h-4 w-4 mr-1" />
-                    Edit
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="text-red-600 hover:text-red-600 hover:bg-red-50"
-                    onClick={() => handleDeleteHike(hike.id)}
-                  >
-                    <Trash2 className="h-4 w-4 mr-1" />
-                    Delete
-                  </Button>
+                <div className="flex justify-between items-center pt-2">
+                  <div className="flex items-center space-x-2">
+                    {isHikePinned(hike.id) && (
+                      <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-200">
+                        <Pin className="h-3 w-3 mr-1" />
+                        Pinned
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex space-x-2">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className={`${isHikePinned(hike.id) 
+                        ? 'text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50' 
+                        : 'text-muted-foreground hover:text-yellow-600 hover:bg-yellow-50'
+                      }`}
+                      onClick={() => handlePinHike(hike.id)}
+                    >
+                      {isHikePinned(hike.id) ? (
+                        <PinOff className="h-4 w-4 mr-1" />
+                      ) : (
+                        <Pin className="h-4 w-4 mr-1" />
+                      )}
+                      {isHikePinned(hike.id) ? 'Unpin' : 'Pin'}
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-summit hover:text-summit hover:bg-muted"
+                      onClick={() => handleViewRouteMap(hike)}
+                    >
+                      <Map className="h-4 w-4 mr-1" />
+                      Route Map
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-forest hover:text-forest hover:bg-muted"
+                      onClick={() => handleEditHike(hike)}
+                    >
+                      <Edit3 className="h-4 w-4 mr-1" />
+                      Edit
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-red-600 hover:text-red-600 hover:bg-red-50"
+                      onClick={() => handleDeleteHike(hike.id)}
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      Delete
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
