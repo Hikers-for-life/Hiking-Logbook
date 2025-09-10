@@ -212,7 +212,7 @@ const Friends = () => {
             <TabsTrigger value="activity">Activity Feed</TabsTrigger>
             <TabsTrigger value="discover">Discover</TabsTrigger>
           </TabsList>
-
+{/*MY FRIENDS */}
           <TabsContent value="friends" className="space-y-6">
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {friends.map((friend) => (
@@ -273,7 +273,7 @@ const Friends = () => {
               ))}
             </div>
           </TabsContent>
-
+{/*ACTIVITY FEED*/ }
           <TabsContent value="activity" className="space-y-6">
             <Card className="bg-card border-border shadow-elevation">
               <CardHeader>
@@ -335,7 +335,7 @@ const Friends = () => {
               </CardContent>
             </Card>
           </TabsContent>
-
+{/*DISCOVER */}
           <TabsContent value="discover" className="space-y-6">
             <Card className="bg-card border-border shadow-elevation">
               <CardHeader>

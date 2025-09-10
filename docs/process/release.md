@@ -16,7 +16,7 @@ This document outlines the release strategy for our software project, with versi
 
 ## Version History & Current Status
 
-### Version 0.1.0 (Current Release)
+### Version 0.1.0 (Released)
 - **Release Date**: 19 August 2025
 - **Sprint**: Sprint 1
 - **Status**:  Released
@@ -33,34 +33,33 @@ This document outlines the release strategy for our software project, with versi
 
 ---
 
+### Version 0.2.0 (Released)
+
+- **Target Release:** 2 September 2025  
+- **Sprint**: Sprint 2  
+- **Status**: Released 
+- **Milestone:** Core Feature (Hiking-Logbook) & Database Integration  
+- **Key Features**:
+  - Implemented **Logbook for Hikes** with database support.
+  - Designed **Logbook UI** with responsive layouts.
+  - Created **API endpoints** for hikes (Create, Read, Update).  
+    - *Delete functionality still not working*.
+  - Designed and added **Friends Page UI**.
+  - Fixed issues in **Login and Signup** flow.
+  - Backend support for **Profile Edit & Update** created.  
+    - *Not yet integrated into deployed app frontend*.
+
+**Success Metrics (Adjusted for Sprint 2)**
+- Hiking-Logbook functional with database connection.  
+- Profile editing backend exists but lacks full deployment integration.  
+- Authentication (Login/Signup) stable.  
+- Delete operation for hikes pending.  
+
+---
+
 ## Upcoming Releases
 
-### Version 0.2.0 (Next Release)
-- **Target Release**: 2 September 2025
-- **Sprint**: Sprint 2
-- **Status**:  Planned
-- **Milestone**: Core Features & Database Integration
-- **Planned Features**:
-  - **New Page Designs**:
-    - Achievements page design and implementation
-    - Friends page with user connections interface
-    - Plan Hike page for hiking trip planning
-  - **Database Architecture**:
-    - User profile data structure setup
-    - Profile edit persistence (save changes to database)
-    - Real-time profile data integration
-  - **Profile System Enhancement**:
-    - Dynamic profile information display from database
-    - Profile data synchronization across all views
-    - Data validation and error handling for profile updates
-
-**Success Metrics**:
-- Profile edit-save success rate of 95%+
-- Real-time profile data updates within 2 seconds
-- All new pages fully functional with responsive design
-- Database queries optimized for sub-500ms response times
-
-### Version 0.3.0
+### Version 0.3.0 (Current Release)
 - **Target Release**: 29 September 2025
 - **Sprint**: Sprint 3
 - **Status**:  In Planning
@@ -114,7 +113,7 @@ This document outlines the release strategy for our software project, with versi
 | Sprint | Version | Duration | Key Focus | Release Date |
 |--------|---------|----------|-----------|--------------|
 | Sprint 1 | v0.1.0 | 2 weeks | Authentication & Core UI |  Completed |
-| Sprint 2 | v0.2.0 | 2 weeks | Core Features & Database | 2 September 2025 |
+| Sprint 2 | v0.2.0 | 2 weeks | Hiking-Logbook & Database | 2 September 2025 |
 | Sprint 3 | v0.3.0 | 4 weeks | Social & Hiking Features | 29 September 2025 |
 | Sprint 4 | v1.0 | 3 weeks | Final Polish & Launch Prep | 19 October 2025 |
 
@@ -187,9 +186,9 @@ This roadmap is reviewed and updated every sprint. Changes may occur based on:
 - Resource availability changes
 
 ### Version Control
-- Document version: 1.0
-- Last updated: 19 August 2025
-- Next review: 30 August 2025
+- Document version: 2.0
+- Last updated: 02 September 2025
+- Next review: 19 September 2025
 
 ---
 

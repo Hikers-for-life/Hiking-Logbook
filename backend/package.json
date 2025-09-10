@@ -1,3 +1,4 @@
+
 {
   "name": "hiking-logbook-backend",
   "version": "1.0.0",
@@ -17,8 +18,8 @@
     "build": "echo 'No build step required for Firebase Functions'",
     "serve": "firebase emulators:start --only functions",
     "shell": "firebase functions:shell",
-    "deploy": "firebase deploy --only functions"
-
+    "deploy": "firebase deploy --only functions",
+    "add-test-hike": "node scripts/add-test-hike.js"
   },
   "keywords": [
     "hiking",
@@ -53,3 +54,4 @@
     "npm": ">=8.0.0"
   }
 }
+

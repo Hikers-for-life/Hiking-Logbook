@@ -4,7 +4,6 @@
 This document details the external API usage implemented in the Hiking Logbook application to meet the sprint requirements for external API integration.
 
 ---
-
 ## API Used: Web Geolocation API
 
 ### **What is it?**
@@ -211,30 +210,15 @@ Browser → "Allow location access?" → User grants permission
 
 ---
 
-## Future Enhancements
-
-### **Potential API Expansions**
-1. **Google Maps API**: For route visualization and terrain data
-2. **OpenWeather API**: Weather conditions at GPS coordinates
-3. **Elevation API**: More accurate elevation data
-4. **Geocoding API**: Convert coordinates to readable addresses
-
-### **Advanced GPS Features**
-- Route optimization algorithms
-- Distance calculation between waypoints
-- Speed and pace tracking
-- Geofencing for trail boundaries
-
----
 
 ## Conclusion
 
 The Web Geolocation API successfully fulfills the external API requirement by providing essential GPS functionality that enables:
 
-- ✅ Real-time location tracking during hikes
-- ✅ GPS waypoint creation and storage  
-- ✅ Elevation monitoring from altitude data
-- ✅ Location-based accomplishment tracking
-- ✅ Foundation for future route mapping features
+- Real-time location tracking during hikes
+- GPS waypoint creation and storage  
+- Elevation monitoring from altitude data
+- Location-based accomplishment tracking
+- Foundation for future route mapping features
 
 This API integration is fundamental to the hiking application's core functionality and directly supports the brief's requirements for location tracking and GPS waypoint management.

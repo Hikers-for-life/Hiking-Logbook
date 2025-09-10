@@ -71,5 +71,18 @@ All PRs must pass:
 
 ---
 
-## Test Records
-We will maintain a Test Records Log in this document to track test results. Each test cycle will include test case ID, description, status, and remarks.
+## User Feedback Process
+User feedback is an essential part of our testing cycle.
+
+- **Collection Methods**:
+  - User interviews during sprint reviews.
+  - Ask our classmates to use our features and give feedback.
+  - GitHub Issues for bug reporting.
+
+- **Process**:
+  1. Collect feedback from testers and users.
+  2. Prioritize issues in backlog (based on severity & impact).
+  3. Assign tasks in the next sprint for fixes or enhancements.
+  4. Communicate changes back to users in release notes.
+
+---

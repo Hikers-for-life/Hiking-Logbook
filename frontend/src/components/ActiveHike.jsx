@@ -11,12 +11,12 @@ import {
   MapPin, 
   Clock, 
   Mountain, 
-  Save,
   Navigation,
+  Save,
   Plus
 } from "lucide-react";
 
-const ActiveHike = ({ hikeId, onComplete, onSave }) => {
+const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
   // Hike state
   const [isActive, setIsActive] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -27,11 +27,11 @@ const ActiveHike = ({ hikeId, onComplete, onSave }) => {
   
   // Real-time editable data
   const [hikeData, setHikeData] = useState({
-    title: "",
-    location: "",
-    weather: "",
-    difficulty: "Easy",
-    notes: "",
+    title: initialData?.title || "",
+    location: initialData?.location || "",
+    weather: initialData?.weather || "",
+    difficulty: initialData?.difficulty || "Easy",
+    notes: initialData?.notes || "",
     waypoints: [],
     accomplishments: []
   });
@@ -43,6 +43,7 @@ const ActiveHike = ({ hikeId, onComplete, onSave }) => {
 
   // Auto-save timer
   const autoSaveRef = useRef(null);
+  const hikeDataRef = useRef(hikeData);
 
   // Start tracking GPS location
   useEffect(() => {
@@ -79,7 +80,7 @@ const ActiveHike = ({ hikeId, onComplete, onSave }) => {
         navigator.geolocation.clearWatch(watchId);
       }
     };
-  }, [isActive, isPaused, watchId]);
+  }, [isActive, isPaused]);
 
   // Timer for elapsed time
   useEffect(() => {
@@ -100,10 +101,15 @@ const ActiveHike = ({ hikeId, onComplete, onSave }) => {
     };
   }, [isActive, isPaused]);
 
+  // Update ref when hikeData changes
+  useEffect(() => {
+    hikeDataRef.current = hikeData;
+  }, [hikeData]);
+
   // Auto-save function wrapped in useCallback
   const handleAutoSave = useCallback(() => {
     const saveData = {
-      ...hikeData,
+      ...hikeDataRef.current,
       currentDistance,
       currentElevation,
       elapsedTime,
@@ -113,7 +119,7 @@ const ActiveHike = ({ hikeId, onComplete, onSave }) => {
     };
     
     onSave(saveData);
-  }, [hikeData, currentDistance, currentElevation, elapsedTime, isActive, isPaused, onSave]);
+  }, [currentDistance, currentElevation, elapsedTime, isActive, isPaused, onSave]);
 
   // Auto-save functionality
   useEffect(() => {

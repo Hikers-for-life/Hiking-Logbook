@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import { z } from "zod";
 import {
   Dialog,
   DialogContent,
@@ -61,9 +61,8 @@ const NewHikePlanForm = ({ open, onOpenChange, onSubmit }) => {
   });
 
   const handleSubmit = (data) => {
-    // Generate a unique ID for the new plan
+    // Don't manually set ID - let Firestore auto-generate document IDs
     const newPlan = {
-      id: Date.now(),
       ...data,
       maxParticipants: parseInt(data.maxParticipants) || 1,
       participants: ["You"],

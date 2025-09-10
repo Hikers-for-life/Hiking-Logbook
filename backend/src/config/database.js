@@ -1,92 +1,362 @@
-import { db } from './firebase.js';
+import { getDatabase } from './firebase.js';
 
-// Database collections
-export const collections = {
-  USERS: 'users',
-  HIKES: 'hikes',
-  TRAILS: 'trails',
-  ACHIEVEMENTS: 'achievements',
-};
-
-// Database utility functions
+// Database utilities for comprehensive hike management
 export const dbUtils = {
-  // Create a new document
-  async create(collection, docId, data) {
+  // Add a new hike with comprehensive data
+  async addHike(userId, hikeData) {
     try {
-      await db
-        .collection(collection)
-        .doc(docId)
-        .set({
-          ...data,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        });
-      return { success: true, id: docId };
+
+      // Map and validate the hike data
+      const mappedHikeData = {
+        // Basic information
+        title: hikeData.title || hikeData.trailName || '',
+        location: hikeData.location || '',
+        route: hikeData.route || hikeData.trailName || '',
+        
+        // Timing
+        date: hikeData.date || new Date(),
+        startTime: hikeData.startTime || null,
+        endTime: hikeData.endTime || null,
+        duration: hikeData.duration || 0,
+        
+        // Physical metrics
+        distance: hikeData.distance || hikeData.distanceKm || 0,
+        elevation: hikeData.elevation || 0,
+        difficulty: hikeData.difficulty || 'Easy',
+        
+        // Environmental
+        weather: hikeData.weather || '',
+        
+        // Additional details
+        notes: hikeData.notes || '',
+        photos: hikeData.photos || 0,
+        
+        // GPS and tracking
+        waypoints: hikeData.waypoints || [],
+        startLocation: hikeData.startLocation || null,
+        endLocation: hikeData.endLocation || null,
+        routeMap: hikeData.routeMap || '',
+        gpsTrack: hikeData.gpsTrack || [],
+        
+        // Metadata
+        status: hikeData.status || 'completed',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        userId: userId
+      };
+
+      const docRef = await db
+        .collection('users')
+        .doc(userId)
+        .collection('hikes')
+        .add(mappedHikeData);
+        
+      return { success: true, id: docRef.id };
+
     } catch (error) {
-      throw new Error(`Failed to create document: ${error.message}`);
+      throw new Error(`Failed to add hike: ${error.message}`);
     }
   },
 
-  // Get a document by ID
-  async getById(collection, docId) {
+  // Get all hikes for a user with optional filtering
+  async getUserHikes(userId, filters = {}) {
     try {
-      const doc = await db.collection(collection).doc(docId).get();
+      let query = db
+        .collection('users')
+        .doc(userId)
+        .collection('hikes');
+      
+      // Apply filters
+      if (filters.status) {
+        query = query.where('status', '==', filters.status);
+      }
+      if (filters.difficulty) {
+        query = query.where('difficulty', '==', filters.difficulty);
+      }
+      if (filters.dateFrom) {
+        query = query.where('date', '>=', filters.dateFrom);
+      }
+      if (filters.dateTo) {
+        query = query.where('date', '<=', filters.dateTo);
+      }
+      
+      // Order by createdAt (newest first) - more reliable than date field
+      query = query.orderBy('createdAt', 'desc');
+      
+      const snapshot = await query.get();
+      
+      const hikes = [];
+      snapshot.forEach(doc => {
+        hikes.push({ id: doc.id, ...doc.data() });
+      });
+      
+      return hikes;
+    } catch (error) {
+      throw new Error(`Failed to get user hikes: ${error.message}`);
+    }
+  },
+
+  // Get a specific hike by ID
+  async getHike(userId, hikeId) {
+    try {
+      const doc = await db
+        .collection('users')
+        .doc(userId)
+        .collection('hikes')
+        .doc(hikeId)
+        .get();
+      
+
       if (!doc.exists) {
         return null;
       }
       return { id: doc.id, ...doc.data() };
     } catch (error) {
-      throw new Error(`Failed to get document: ${error.message}`);
+      throw new Error(`Failed to get hike: ${error.message}`);
     }
   },
 
-  // Update a document
-  async update(collection, docId, data) {
+  // Update a hike
+  async updateHike(userId, hikeId, hikeData) {
+    try {
+      const updateData = {
+        ...hikeData,
+        updatedAt: new Date()
+      };
+      
+
+      await db
+        .collection('users')
+        .doc(userId)
+        .collection('hikes')
+        .doc(hikeId)
+        .update(updateData);
+        
+      return { success: true };
+    } catch (error) {
+      throw new Error(`Failed to update hike: ${error.message}`);
+    }
+  },
+
+  // Delete a hike
+  async deleteHike(userId, hikeId) {
+    try {
+
+      
+      // Get all hikes and find the one to delete
+      const snapshot = await db
+        .collection('users')
+        .doc(userId)
+        .collection('hikes')
+        .get();
+      
+      let targetDoc = null;
+      
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        // Match by document ID (for proper Firestore IDs) or by data.id field (for malformed data)
+        if (doc.id == hikeId || data.id == hikeId) {
+
+          targetDoc = doc;
+        }
+      });
+      
+      if (targetDoc) {
+        await targetDoc.ref.delete();
+
+        return { success: true };
+      } else {
+
+        throw new Error('Hike not found');
+      }
+      
+    } catch (error) {
+      console.error(`❌ DB: Failed to delete hike ${hikeId}:`, error.message);
+      throw new Error(`Failed to delete hike: ${error.message}`);
+    }
+  },
+
+  // Start tracking a new hike (for active hikes)
+  async startHike(userId, hikeData) {
+    try {
+      const activeHikeData = {
+        ...hikeData,
+        status: 'active',
+        date: hikeData.date || new Date(), // Ensure date field exists for ordering
+        startTime: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        userId: userId,
+        waypoints: [],
+        gpsTrack: []
+      };
+
+      const docRef = await db
+        .collection('users')
+        .doc(userId)
+        .collection('hikes')
+        .add(activeHikeData);
+        
+      return { success: true, id: docRef.id };
+    } catch (error) {
+      throw new Error(`Failed to start hike: ${error.message}`);
+    }
+  },
+
+  // Update hike with GPS waypoint
+  async addWaypoint(userId, hikeId, waypoint) {
+    try {
+      const waypointData = {
+        latitude: waypoint.latitude,
+        longitude: waypoint.longitude,
+        elevation: waypoint.elevation || 0,
+        timestamp: waypoint.timestamp || new Date(),
+        description: waypoint.description || '',
+        type: waypoint.type || 'milestone'
+      };
+
+      await db
+        .collection('users')
+        .doc(userId)
+        .collection('hikes')
+        .doc(hikeId)
+        .update({
+          waypoints: db.FieldValue.arrayUnion(waypointData),
+          updatedAt: new Date()
+        });
+        
+      return { success: true };
+    } catch (error) {
+      throw new Error(`Failed to add waypoint: ${error.message}`);
+    }
+  },
+
+  // Complete a hike
+  async completeHike(userId, hikeId, endData) {
+    try {
+
+      const completionData = {
+        status: 'completed',
+        endTime: endData.endTime || new Date(),
+        duration: endData.duration || 0,
+        endLocation: endData.endLocation || null,
+        updatedAt: new Date()
+      };
+
+      await db
+        .collection('users')
+        .doc(userId)
+        .collection('hikes')
+        .doc(hikeId)
+        .update(completionData);
+        
+
+      return { success: true };
+    } catch (error) {
+      throw new Error(`Failed to complete hike: ${error.message}`);
+    }
+  },
+
+  // Get user profile
+  async getUserProfile(userId) {
+    try {
+
+      const doc = await db.collection('users').doc(userId).get();
+      if (!doc.exists) {
+        return null;
+      }
+      return { id: doc.id, ...doc.data() };
+    } catch (error) {
+      throw new Error(`Failed to get user profile: ${error.message}`);
+    }
+  },
+
+
+
+  // Create user profile
+  async createUserProfile(userId, profileData) {
     try {
       await db
-        .collection(collection)
-        .doc(docId)
-        .update({
-          ...data,
+        .collection('users')
+        .doc(userId)
+        .set({
+          ...profileData,
+          createdAt: new Date(),
           updatedAt: new Date(),
         });
+        
       return { success: true };
     } catch (error) {
-      throw new Error(`Failed to update document: ${error.message}`);
+      throw new Error(`Failed to create user profile: ${error.message}`);
     }
   },
 
-  // Delete a document
-  async delete(collection, docId) {
+  // Update user profile
+  async updateUserProfile(userId, profileData) {
     try {
-      await db.collection(collection).doc(docId).delete();
+      await db
+        .collection('users')
+        .doc(userId)
+        .update({
+          ...profileData,
+          updatedAt: new Date(),
+        });
+        
       return { success: true };
     } catch (error) {
-      throw new Error(`Failed to delete document: ${error.message}`);
+      throw new Error(`Failed to update user profile: ${error.message}`);
     }
   },
 
-  // Query documents
-  async query(collection, conditions = []) {
+  // Get hike statistics for a user
+  async getUserHikeStats(userId) {
     try {
-      let query = db.collection(collection);
-
-      conditions.forEach(({ field, operator, value }) => {
-        query = query.where(field, operator, value);
-      });
-
-      const snapshot = await query.get();
-      const docs = [];
-
-      snapshot.forEach((doc) => {
-        docs.push({ id: doc.id, ...doc.data() });
-      });
-
-      return docs;
+      const hikes = await this.getUserHikes(userId);
+      
+      const stats = {
+        totalHikes: hikes.length,
+        totalDistance: hikes.reduce((sum, hike) => sum + (hike.distance || 0), 0),
+        totalElevation: hikes.reduce((sum, hike) => sum + (hike.elevation || 0), 0),
+        totalDuration: hikes.reduce((sum, hike) => sum + (hike.duration || 0), 0),
+        byDifficulty: {
+          Easy: hikes.filter(h => h.difficulty === 'Easy').length,
+          Moderate: hikes.filter(h => h.difficulty === 'Moderate').length,
+          Hard: hikes.filter(h => h.difficulty === 'Hard').length,
+          Extreme: hikes.filter(h => h.difficulty === 'Extreme').length
+        },
+        byStatus: {
+          completed: hikes.filter(h => h.status === 'completed').length,
+          active: hikes.filter(h => h.status === 'active').length,
+          paused: hikes.filter(h => h.status === 'paused').length
+        }
+      };
+      
+      return stats;
     } catch (error) {
-      throw new Error(`Failed to query documents: ${error.message}`);
+      throw new Error(`Failed to get hike stats: ${error.message}`);
     }
   },
+
+  // Delete user and all their data
+  async deleteUser(userId) {
+    try {
+      // Delete all hikes first
+      const hikesSnapshot = await db
+        .collection('users')
+        .doc(userId)
+        .collection('hikes')
+        .get();
+      
+      const deletePromises = hikesSnapshot.docs.map(doc => doc.ref.delete());
+      await Promise.all(deletePromises);
+      
+      // Delete the user document
+      await db.collection('users').doc(userId).delete();
+      
+      return { success: true };
+    } catch (error) {
+      throw new Error(`Failed to delete user: ${error.message}`);
+    }
+  }
 };
 
-export default db;

@@ -296,4 +296,4 @@ If you encounter issues:
 
 ---
 
-_This guide covers Sprint 1 frontend setup. For additional features, check the main [README](../README.md)._
+_This guide covers Sprint 1 and Sprint 2 frontend setup. For additional features, check the main [README](../README.md)._

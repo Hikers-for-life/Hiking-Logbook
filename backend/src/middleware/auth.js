@@ -1,7 +1,10 @@
-import { auth } from '../config/firebase.js';
+import { getAuth } from '../config/firebase.js';
+
+
 
 export const verifyAuth = async (req, res, next) => {
   try {
+    const auth = getAuth();
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -13,6 +16,7 @@ export const verifyAuth = async (req, res, next) => {
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
 
     try {
+      const auth = getAuth();
       const decodedToken = await auth.verifyIdToken(token);
       req.user = {
         uid: decodedToken.uid,
@@ -36,6 +40,7 @@ export const verifyAuth = async (req, res, next) => {
 
 export const optionalAuth = async (req, res, next) => {
   try {
+    const auth = getAuth();
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -46,6 +51,7 @@ export const optionalAuth = async (req, res, next) => {
     const token = authHeader.substring(7);
 
     try {
+      const auth = getAuth();
       const decodedToken = await auth.verifyIdToken(token);
       req.user = {
         uid: decodedToken.uid,

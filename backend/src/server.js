@@ -1,26 +1,53 @@
 import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import morgan from 'morgan';
 import dotenv from 'dotenv';
-
-// Import routes
+import { initializeFirebase, admin } from './config/firebase.js';
+import * as middleware from './middleware/index.js';
+import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
+import hikeRoutes from './routes/hikes.js';
 
-// Load environment variables
 dotenv.config();
 
 const app = express();
+
 const PORT = process.env.PORT || 3001;
 
 // Security middleware
 app.use(helmet());
 
 // CORS configuration
+const allowedOrigins = [
+  'http://localhost:3000', // Development
+  'https://localhost:3000', // Development HTTPS
+  process.env.FRONTEND_URL, // Production frontend URL from environment
+  // Firebase Hosting URLs
+  'https://hiking-logbook.web.app', // Firebase default domain
+  'https://hiking-logbook.firebaseapp.com', // Firebase alternative domain
+  // Add your custom domain if you have one
+  'https://your-custom-domain.com',
+  // Common deployment platforms - update these with your actual URLs
+  'https://your-app.netlify.app', // Replace with your actual Netlify URL
+  'https://your-app.vercel.app',   // Replace with your actual Vercel URL
+  'https://your-app.github.io',    // Replace with your actual GitHub Pages URL
+].filter(Boolean); // Remove undefined values
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+      
+      // For development/testing - allow localhost and any HTTPS origin
+      if (origin.includes('localhost') || origin.startsWith('https://')) {
+        callback(null, true);
+      } else if (allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        console.log('CORS blocked origin:', origin);
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
@@ -49,6 +76,7 @@ app.get('/health', (req, res) => {
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/hikes', hikeRoutes);
 
 // 404 handler for undefined routes
 app.use('*', (req, res) => {
@@ -60,7 +88,7 @@ app.use('*', (req, res) => {
 });
 
 // Global error handler
-app.use((error, req, res, next) => {
+app.use((error, req, res) => {
   console.error('Global error handler:', error);
 
   // Default error
@@ -93,11 +121,12 @@ app.use((error, req, res, next) => {
 
 // Start server
 const server = app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📱 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🔗 Health check: http://localhost:${PORT}/health`);
-  console.log(`🔐 Auth API: http://localhost:${PORT}/api/auth`);
-  console.log(`👥 Users API: http://localhost:${PORT}/api/users`);
+  console.log(`Server running on port ${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`Health check: http://localhost:${PORT}/health`);
+  console.log(`Auth API: http://localhost:${PORT}/api/auth`);
+  console.log(`Users API: http://localhost:${PORT}/api/users`);
+  console.log(`Hikes API: http://localhost:${PORT}/api/hikes`);
 });
 
 // Graceful shutdown
@@ -116,5 +145,6 @@ process.on('SIGINT', () => {
     process.exit(0);
   });
 });
+
 
 export default app;
