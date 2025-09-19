@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { ProfileView } from "../components/ui/view-friend-profile";
 import { fetchFeed, likeFeed, commentFeed, shareFeed, fetchComments, deleteCommentFeed,deleteFeed } from "../services/feed";//ANNAH HERE
+import { discoverFriends } from "../services/discover";//ANNAH HERE
 import { getFirestore, collection, query, orderBy, onSnapshot, doc, updateDoc, arrayUnion, arrayRemove, addDoc } from "firebase/firestore";
 import { getAuth } from "firebase/auth";//NOT SURE ABOUT THIS IMPORT//ANNA HERE
 import { 
@@ -32,6 +33,7 @@ const Friends = () => {
   const [recentActivity, setRecentActivity] = useState([]);
   const [commentsMap, setCommentsMap] = useState({});
   const [expandedComments, setExpandedComments] = useState({});
+  const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(true);
 //ANNAH HERE
 
@@ -328,7 +330,7 @@ const handleDeletePost = async (activityId) => {
 };//ANNAH HERE
 
   
-  const suggestions = [
+  /*const suggestions = [
     {
       id: 1,
       name: "Jessica Park",
@@ -350,7 +352,45 @@ const handleDeletePost = async (activityId) => {
       mutualFriends: 4,
       commonTrails: ["Yosemite Valley", "Half Dome"]
     }
-  ];
+  ];*/
+  useEffect(() => {
+    const loadSuggestions = async () => {
+      try {
+        const data = await discoverFriends();
+        setSuggestions(data);
+      } catch (err) {
+        console.error("Failed to fetch suggestions:", err);
+      }
+    };
+
+    loadSuggestions();
+  }, []);
+
+  // ---- Add Friend handler ----
+const handleAddFriend = async (friendId) => {
+  try {
+    const db = getFirestore();
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const userRef = doc(db, "users", user.uid);
+    const friendRef = doc(db, "users", friendId);
+
+    // Add each other
+    await updateDoc(userRef, {
+      friends: arrayUnion(friendId),
+    });
+    await updateDoc(friendRef, {
+      friends: arrayUnion(user.uid),
+    });
+
+    console.log(`Friend ${friendId} added successfully!`);
+  } catch (err) {
+    console.error("Failed to add friend:", err);
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -637,39 +677,52 @@ const handleDeletePost = async (activityId) => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {suggestions.map((suggestion) => (
-                    <div key={suggestion.id} className="flex items-center justify-between p-4 rounded-lg bg-muted hover:bg-muted/80 transition-colors cursor-pointer" onClick={() => handleViewProfile(suggestion, true)}>
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-12 w-12">
-                          <AvatarFallback>{suggestion.avatar}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <h4 className="font-medium text-foreground">{suggestion.name}</h4>
-                          <p className="text-sm text-muted-foreground">
-                            {suggestion.mutualFriends} mutual friends
-                          </p>
-                          <div className="flex gap-1 mt-1">
-                            {suggestion.commonTrails.map((trail) => (
-                              <Badge key={trail} variant="outline" className="text-xs">
-                                {trail}
-                              </Badge>
-                            ))}
+                  {suggestions.length === 0 ? (
+                    <p className="text-muted-foreground text-sm">No suggestions at the moment.</p>
+                  ) : (
+                    suggestions.map((suggestion) => (
+                      <div
+                        key={suggestion.id}
+                        className="flex items-center justify-between p-4 rounded-lg bg-muted hover:bg-muted/80 transition-colors cursor-pointer"
+                        onClick={() => handleViewProfile(suggestion, true)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-12 w-12">
+                            <AvatarFallback>{suggestion.avatar}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <h4 className="font-medium text-foreground">{suggestion.name}</h4>
+                            <p className="text-sm text-muted-foreground">
+                              {suggestion.mutualFriends} mutual friends
+                            </p>
+                            <div className="flex gap-1 mt-1">
+                              {suggestion.commonTrails.map((trail) => (
+                                <Badge key={trail} variant="outline" className="text-xs">
+                                  {trail}
+                                </Badge>
+                              ))}
+                            </div>
                           </div>
                         </div>
+                        <Button
+                          size="sm"
+                          className="bg-gradient-trail text-primary-foreground"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAddFriend(suggestion.id);
+                          }}
+                        >
+                          <UserPlus className="h-4 w-4 mr-1" />
+                          Add Friend
+                        </Button>
                       </div>
-                      <Button size="sm" className="bg-gradient-trail text-primary-foreground" onClick={(e) => {
-                        e.stopPropagation();
-                        // Handle add friend logic here
-                      }}>
-                        <UserPlus className="h-4 w-4 mr-1" />
-                        Add Friend
-                      </Button>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
+
         </Tabs>
       </main>
 
