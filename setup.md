@@ -16,6 +16,7 @@ This guide will help you get the Hiking Logbook application running in under 10 
 # Clone the repository
 git clone <your-repo-url>
 cd Hiking-Logbook
+npm install
 
 # Install backend dependencies
 cd backend

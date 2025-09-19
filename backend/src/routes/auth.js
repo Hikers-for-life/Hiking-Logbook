@@ -121,21 +121,6 @@ router.delete('/profile', verifyAuth, async (req, res) => {
   }
 });
 
-// Verify email (protected route)
-router.post('/verify-email', verifyAuth, async (req, res) => {
-  try {
-    await AuthService.verifyEmail(req.user.uid);
-    res.json({
-      message: 'Email verified successfully',
-    });
-  } catch (error) {
-    console.error('Verify email error:', error);
-    res.status(500).json({
-      error: 'Failed to verify email',
-      details: error.message,
-    });
-  }
-});
 
 // Health check endpoint
 router.get('/health', (req, res) => {

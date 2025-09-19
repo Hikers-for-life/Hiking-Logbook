@@ -19,6 +19,27 @@ export async function initializeFirebase() {
   }
 
   try {
+    // Check if Firebase environment variables are set
+    if (!process.env.FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID === 'your-project-id') {
+      // Create mock instances for development
+      db = {
+        collection: () => ({
+          limit: () => ({
+            get: () => Promise.resolve({ docs: [] })
+          })
+        })
+      };
+      authInstance = {
+        createUser: () => Promise.reject(new Error('Firebase not configured')),
+        getUserByEmail: () => Promise.reject(new Error('Firebase not configured')),
+        deleteUser: () => Promise.reject(new Error('Firebase not configured')),
+        updateUser: () => Promise.reject(new Error('Firebase not configured'))
+      };
+      
+      console.log('Mock Firebase initialized for development');
+      return db;
+    }
+
     // Build service account from .env
     const serviceAccount = {
       type: process.env.FIREBASE_TYPE || 'service_account',
@@ -44,12 +65,9 @@ export async function initializeFirebase() {
       databaseURL: process.env.FIREBASE_DATABASE_URL,
     });
 
-    //Initialize instances 
+    // Initialize instances 
     db = admin.firestore();
     authInstance = admin.auth();
-
-    // Quick health check (optional)
-    await db.collection('_health_check').limit(1).get();
 
     console.log('Firebase initialized');
     return db;
@@ -74,18 +92,6 @@ export function getAuth() {
     throw new Error('Auth not initialized. Call initializeFirebase() first.');
   }
   return authInstance;
-}
-
-/**
- * Convenience: predefined collection references
- */
-export function getCollections() {
-  const database = getDatabase();
-  return {
-    hikes: database.collection('hikes'),
-    users: database.collection('users'),
-    // add more collections here
-  };
 }
 
 // Exports for easy usage
