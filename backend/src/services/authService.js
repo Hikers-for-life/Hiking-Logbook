@@ -1,5 +1,5 @@
 
-import { auth } from '../config/firebase.js';
+import { getAuth } from '../config/firebase.js';
 import { dbUtils } from '../config/database.js';
 
 
@@ -97,28 +97,5 @@ export class AuthService {
     }
   }
 
-  // Verify user email
-  static async verifyEmail(uid) {
-    try {
-      const auth = getAuth();
-      await auth.updateUser(uid, { emailVerified: true });
-      await dbUtils.updateUserProfile(uid, { emailVerified: true });
-      return { success: true };
-    } catch (error) {
-      throw new Error(`Failed to verify email: ${error.message}`);
-    }
-  }
 
-  // Reset user password
-  static async resetPassword(email) {
-    try {
-      const auth = getAuth();
-      const userRecord = await auth.getUserByEmail(email);
-      // Note: Firebase Admin SDK cannot send password reset emails
-      // This would typically be handled by the frontend Firebase Auth
-      return { success: true, uid: userRecord.uid };
-    } catch (error) {
-      throw new Error(`Failed to reset password: ${error.message}`);
-    }
-  }
 }
