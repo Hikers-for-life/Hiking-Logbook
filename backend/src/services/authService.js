@@ -1,5 +1,5 @@
 
-import { auth } from '../config/firebase.js';
+import { getAuth } from '../config/firebase.js';
 import { dbUtils } from '../config/database.js';
 
 
@@ -7,6 +7,7 @@ import { dbUtils } from '../config/database.js';
 export class AuthService {
   // Create a new user account
   static async createUser(userData) {
+    //const auth = getAuth();//ANNAH HERE
     try {
       const auth = getAuth();
       const { email, password, displayName, bio, location } = userData;
@@ -83,6 +84,7 @@ export class AuthService {
 
   // Delete user account
   static async deleteUser(uid) {
+    //const auth = getAuth();//ANNAH HERE
     try {
       const auth = getAuth();
       // Delete from Firestore first
