@@ -15,10 +15,9 @@ export function applySecurityMiddleware(app) {
         process.env.FRONTEND_URL || 'http://localhost:3000',
         'http://localhost:3000', // Development
         'https://localhost:3000', // Development HTTPS
-        // Add your deployed frontend URLs here
         'https://hiking-logbook.web.app',
         'https://hiking-logbook.firebaseapp.com',
-        // Add more production URLs as needed
+        
     ];
     
     app.use(helmet());
