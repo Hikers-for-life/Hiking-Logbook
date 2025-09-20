@@ -1,7 +1,10 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import { initializeFirebase } from './config/firebase.js';
-import { errorHandler } from './middleware/errorHandler.js';
+
+import * as middleware from './middleware/index.js';
+import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
+
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
 import hikeRoutes from './routes/hikes.js';
@@ -14,6 +17,12 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+
+// Apply middleware
+middleware.applySecurityMiddleware(app);
+middleware.applyParsingMiddleware(app);
+middleware.applyLoggingMiddleware(app);
 
 // Security middleware
 app.use(helmet());
@@ -59,6 +68,7 @@ if (process.env.NODE_ENV === 'development') {
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({
@@ -69,47 +79,78 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Initialize Firebase + mount routes
-(async () => {
+
+// API routes
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/hikes', hikeRoutes);
+app.use('/api/feed', feedRoutes);
+
+// 404 handler for undefined routes
+app.use('*', notFoundHandler);
+
+// Global error handler
+app.use(errorHandler);
+
+// Initialize Firebase and start server
+async function startServer() {
   try {
+    // Initialize Firebase
     await initializeFirebase();
-
-    app.use('/api/auth', authRoutes);
-    app.use('/api/users', userRoutes);
-    app.use('/api/hikes', hikeRoutes);
-    app.use('/api/feed', feedRoutes);
-
-    // 404 handler
-    app.use('*', (req, res) => {
-      res.status(404).json({
-        error: 'Route not found',
-        path: req.originalUrl,
-        method: req.method,
-      });
-    });
-
-    // Global error handler
-    app.use(errorHandler);
-
+    console.log('Firebase initialized successfully');
+    
+    // Start server
     const server = app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`Server running on port ${PORT}`);
       console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`Health check: http://localhost:${PORT}/health`);
+      console.log(`Auth API: http://localhost:${PORT}/api/auth`);
+      console.log(`Users API: http://localhost:${PORT}/api/users`);
+      console.log(`Hikes API: http://localhost:${PORT}/api/hikes`);
     });
-
-    // Graceful shutdown
-    process.on('SIGTERM', () => {
-      console.log('SIGTERM received, shutting down gracefully');
-      server.close(() => process.exit(0));
-    });
-    process.on('SIGINT', () => {
-      console.log('SIGINT received, shutting down gracefully');
-      server.close(() => process.exit(0));
-    });
-  } catch (err) {
-    console.error('Firebase failed to initialize:', err);
+    
+    return server;
+  } catch (error) {
+    console.error('Failed to start server:', error);
     process.exit(1);
   }
-})();
+}
+
+// Start the server
+let serverInstance = null;
+
+startServer().then((server) => {
+  serverInstance = server;
+}).catch((error) => {
+  console.error('Failed to start server:', error);
+  process.exit(1);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down gracefully');
+  if (serverInstance) {
+    serverInstance.close(() => {
+      console.log('Process terminated');
+      process.exit(0);
+    });
+  } else {
+    process.exit(0);
+  }
+});
+
+process.on('SIGINT', () => {
+  console.log('SIGINT received, shutting down gracefully');
+  if (serverInstance) {
+    serverInstance.close(() => {
+      console.log('Process terminated');
+      process.exit(0);
+    });
+  } else {
+    process.exit(0);
+  }
+});
+
+
 
 export default app;

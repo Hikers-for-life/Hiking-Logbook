@@ -1,4 +1,4 @@
-
+// Hike schema for validation and type checking
 export const hikeSchema = {
   // Basic hike information
   title: "string",           // Hike name/title
