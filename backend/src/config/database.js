@@ -1,5 +1,8 @@
 import { getDatabase } from './firebase.js';
 
+//const db = getDatabase();
+
+
 // Database utilities for comprehensive hike management
 export const dbUtils = {
   // Helper method to get database instance
@@ -9,7 +12,7 @@ export const dbUtils = {
   // Add a new hike with comprehensive data
   async addHike(userId, hikeData) {
     try {
-
+      //const db = getDatabase();
       // Map and validate the hike data
       const mappedHikeData = {
         // Basic information
@@ -48,6 +51,7 @@ export const dbUtils = {
         updatedAt: new Date(),
         userId: userId
       };
+      const db = getDatabase();
 
       const docRef = await this.getDb()
         .collection('users')

@@ -7,6 +7,10 @@ dotenv.config();
 let db = null;
 let authInstance = null;
 
+//export const db = getDatabase();
+//export const auth = getAuth();
+
+
 /**
  * Initialize Firebase Admin SDK
  */
@@ -94,6 +98,21 @@ export function getAuth() {
   return authInstance;
 }
 
+
+/**
+ * Convenience: predefined collection references
+ */
+export function getCollections() {
+  const database = getDatabase();
+  return {
+    hikes: database.collection('hikes'),
+    users: database.collection('users'),
+    feeds: database.collection('feed_items'),
+    // add more collections here
+  };
+}
+
+
 // Exports for easy usage
-export { admin };
+export { admin};
 
