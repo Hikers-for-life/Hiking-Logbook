@@ -89,7 +89,7 @@ const HikePlanner = () => {
       "02n" : clear,
       "03d" : clear,
       "03n" : clear,
-      "04d" : drizzle,
+      "04d" : clear,
       "04n" : drizzle,
       "09d" : rain,
       "09n" : rain,
