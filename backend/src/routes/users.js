@@ -2,7 +2,7 @@ import express from 'express';
 import { AuthService } from '../services/authService.js';
 import { verifyAuth } from '../middleware/auth.js';
 import { dbUtils } from '../config/database.js';
-
+import { db } from '../config/firebase.js';
 const router = express.Router();
 
 // Test route to verify router is working
@@ -73,26 +73,53 @@ router.post('/create-profile', verifyAuth, async (req, res) => {
 router.get('/:uid', async (req, res) => {
   try {
     const { uid } = req.params;
-    const profile = await AuthService.getUserProfile(uid);
 
-    // Remove sensitive information for public profiles
+    // Get user document
+    const userDoc = await db.collection('users').doc(uid).get();
+    if (!userDoc.exists) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    const userData = userDoc.data();
+
+    // Fetch subcollections
+  //  const achievementsSnap = await db.collection('users').doc(uid).collection('achievements').get();
+  //  const goalsSnap = await db.collection('users').doc(uid).collection('goals').get();
+    const hikesSnap = await db.collection('users').doc(uid).collection('hikes').get();
+
+  //  const achievements = achievementsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  //  const goals = goalsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const hikes = hikesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    // Construct response
     const publicProfile = {
-      uid: profile.uid,
-      displayName: profile.displayName,
-      bio: profile.bio,
-      location: profile.location,
-      photoURL: profile.photoURL,
-      preferences: profile.preferences,
-      stats: profile.stats,
-      createdAt: profile.createdAt,
+      uid: uid,
+      displayName: userData.displayName || null,
+      bio: userData.bio || null,
+      location: userData.location || null,
+      photoURL: userData.photoURL || null,
+      preferences: userData.preferences || null,
+     
+      stats: userData.stats || null,
+      createdAt: userData.createdAt || null,
+
+     // achievements,
+     // goals,
+      hikes,
     };
 
     res.json(publicProfile);
   } catch (error) {
     console.error('Get user error:', error);
-    res.status(404).json({
-      error: 'User not found',
-    });
+    res.status(500).json({ error: 'Something went wrong' });
+  }
+});
+
+router.get("/profile", async (req, res) => {
+  try {
+    const profile = await AuthService.getUserProfile(req.user.uid); 
+    res.json(profile); 
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -128,7 +155,7 @@ router.get('/search', async (req, res) => {
 
     // Note: This search functionality needs to be implemented
     // For now, return empty array until we implement proper user search
-    const users = [];
+   const users = await dbUtils.query(collections.USERS, conditions);
 
     // Remove sensitive information
     const publicUsers = users.map((user) => ({
@@ -201,6 +228,27 @@ router.get('/:uid/hikes', async (req, res) => {
     });
   }
 });
+
+
+router.patch('/:uid', async (req, res) => {
+  try {
+    const { uid } = req.params;
+    const { displayName, bio, location, password } = req.body;
+
+    const updatedProfile = await AuthService.updateUserProfile(uid, {
+      displayName,
+      bio,
+      location,
+
+    });
+
+    res.json(updatedProfile);
+  } catch (error) {
+    console.error(error);
+    res.status(400).json({ error: "Failed to update profile" });
+  }
+});
+
 
 // Follow user (protected route)
 router.post('/:uid/follow', verifyAuth, async (req, res) => {

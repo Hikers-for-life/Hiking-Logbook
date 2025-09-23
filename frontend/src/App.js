@@ -7,10 +7,12 @@ import Logbook from './pages/Logbook.jsx';
 import HikePlanner from './pages/HikePlanner.jsx';
 import EditProfile from "./pages/EditProfile.jsx";
 import NotFound from './pages/NotFound.jsx';
+import ProfileView from "./components/ui/profile-view.jsx";
 import Signup from './pages/Signup.jsx';
 import LoginPage from './components/auth/loginPage.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Friends from './pages/Friends.jsx';
+import  {Toaster}  from "./components/ui/toaster.jsx"
 
 const App = () => {
   useEffect(() => {
@@ -21,16 +23,15 @@ const App = () => {
 
   return (
     <AuthProvider>
+      <Toaster />
       <BrowserRouter>
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Index />} />
-
           <Route path="/loginPage" element={<LoginPage />} />
-
           <Route path="/signup" element={<Signup />} />
           <Route path="/edit-profile" element={<EditProfile />} />
-
+          <Route path="/profile" element={<ProfileView />} />
         {/* Protected Routes */}
         <Route
           path="/logbook"

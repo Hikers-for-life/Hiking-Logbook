@@ -1,16 +1,18 @@
 import express from 'express';
 import dotenv from 'dotenv';
-import { initializeFirebase, admin } from './config/firebase.js';
+import { initializeFirebase } from './config/firebase.js';
 import * as middleware from './middleware/index.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
 import hikeRoutes from './routes/hikes.js';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
 
 dotenv.config();
 
 const app = express();
-
 const PORT = process.env.PORT || 3001;
 
 // Security middleware
@@ -18,27 +20,21 @@ app.use(helmet());
 
 // CORS configuration
 const allowedOrigins = [
-  'http://localhost:3000', // Development
-  'https://localhost:3000', // Development HTTPS
-  process.env.FRONTEND_URL, // Production frontend URL from environment
-  // Firebase Hosting URLs
-  'https://hiking-logbook.web.app', // Firebase default domain
-  'https://hiking-logbook.firebaseapp.com', // Firebase alternative domain
-  // Add your custom domain if you have one
+  'http://localhost:3000',
+  'https://localhost:3000',
+  process.env.FRONTEND_URL,
+  'https://hiking-logbook.web.app',
+  'https://hiking-logbook.firebaseapp.com',
   'https://your-custom-domain.com',
-  // Common deployment platforms - update these with your actual URLs
-  'https://your-app.netlify.app', // Replace with your actual Netlify URL
-  'https://your-app.vercel.app',   // Replace with your actual Vercel URL
-  'https://your-app.github.io',    // Replace with your actual GitHub Pages URL
-].filter(Boolean); // Remove undefined values
+  'https://your-app.netlify.app',
+  'https://your-app.vercel.app',
+  'https://your-app.github.io',
+].filter(Boolean);
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps or curl requests)
       if (!origin) return callback(null, true);
-      
-      // For development/testing - allow localhost and any HTTPS origin
       if (origin.includes('localhost') || origin.startsWith('https://')) {
         callback(null, true);
       } else if (allowedOrigins.indexOf(origin) !== -1) {
@@ -49,7 +45,7 @@ app.use(
       }
     },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   })
 );
@@ -78,7 +74,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/hikes', hikeRoutes);
 
-// 404 handler for undefined routes
+// 404 handler
 app.use('*', (req, res) => {
   res.status(404).json({
     error: 'Route not found',
@@ -91,11 +87,9 @@ app.use('*', (req, res) => {
 app.use((error, req, res) => {
   console.error('Global error handler:', error);
 
-  // Default error
   let statusCode = 500;
   let message = 'Internal server error';
 
-  // Handle specific error types
   if (error.name === 'ValidationError') {
     statusCode = 400;
     message = error.message;
@@ -119,32 +113,42 @@ app.use((error, req, res) => {
   });
 });
 
-// Start server
-const server = app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`Health check: http://localhost:${PORT}/health`);
-  console.log(`Auth API: http://localhost:${PORT}/api/auth`);
-  console.log(`Users API: http://localhost:${PORT}/api/users`);
-  console.log(`Hikes API: http://localhost:${PORT}/api/hikes`);
-});
+// ✅ Wrap server startup in async function
+const startServer = async () => {
+  try {
+   
+    await initializeFirebase();
+    const server = app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+      console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`Health check: http://localhost:${PORT}/health`);
+      console.log(`Auth API: http://localhost:${PORT}/api/auth`);
+      console.log(`Users API: http://localhost:${PORT}/api/users`);
+      console.log(`Hikes API: http://localhost:${PORT}/api/hikes`);
+    });
 
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully');
-  server.close(() => {
-    console.log('Process terminated');
-    process.exit(0);
-  });
-});
+    // Graceful shutdown
+    process.on('SIGTERM', () => {
+      console.log('SIGTERM received, shutting down gracefully');
+      server.close(() => {
+        console.log('Process terminated');
+        process.exit(0);
+      });
+    });
 
-process.on('SIGINT', () => {
-  console.log('SIGINT received, shutting down gracefully');
-  server.close(() => {
-    console.log('Process terminated');
-    process.exit(0);
-  });
-});
+    process.on('SIGINT', () => {
+      console.log('SIGINT received, shutting down gracefully');
+      server.close(() => {
+        console.log('Process terminated');
+        process.exit(0);
+      });
+    });
+  } catch (err) {
+    console.error('Failed to start server:', err);
+    process.exit(1);
+  }
+};
 
+startServer();
 
 export default app;
