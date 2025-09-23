@@ -9,16 +9,17 @@ import hikeRoutes from './routes/hikes.js';
 import plannedHikeRoutes from './routes/plannedHikes.js';
 import gearRoutes from './routes/gear.js';
 
+
 dotenv.config();
 
 const app = express();
-
 const PORT = process.env.PORT || 3001;
 
 // Apply middleware
 middleware.applySecurityMiddleware(app);
 middleware.applyParsingMiddleware(app);
 middleware.applyLoggingMiddleware(app);
+
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -36,7 +37,6 @@ app.use('/api/users', userRoutes);
 app.use('/api/hikes', hikeRoutes);
 app.use('/api/planned-hikes', plannedHikeRoutes); 
 app.use('/api/gear', gearRoutes);
-
 
 // 404 handler for undefined routes
 app.use('*', notFoundHandler);
@@ -105,5 +105,7 @@ process.on('SIGINT', () => {
   }
 });
 
+
+startServer();
 
 export default app;
