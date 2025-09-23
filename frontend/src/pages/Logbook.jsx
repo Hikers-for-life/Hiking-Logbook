@@ -39,7 +39,7 @@ const Logbook = () => {
       setIsLoading(true);
       setError(null);
       const response = await hikeApiService.getHikes();
-      
+      console.log("📦 API Response:", response);
       if (response.success) {
         
         // Convert Firestore timestamps to readable dates and ensure all fields are safe for React

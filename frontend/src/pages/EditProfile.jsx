@@ -74,9 +74,34 @@ useEffect(() => {
     }
   };
 
-  const onSubmit = async (data) => {
+const onSubmit = async (data) => {
   try {
-     console.log("Submitting form data:", data);
+    console.log("Submitting form data:", data);
+
+    // Step 1: Check if latitude and longitude exist in current profile
+    let latitude = profile?.latitude;
+    let longitude = profile?.longitude;
+
+    // Step 2: If location changed or coordinates missing, fetch from Geocoding API
+    if (!latitude || !longitude || data.location !== profile?.location) {
+      const geoRes = await fetch(
+        `http://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(data.location)}&limit=1&appid=${process.env.REACT_APP_OPENWEATHER_API_KEY}`
+      );
+      const geoData = await geoRes.json();
+      if (!geoData || geoData.length === 0) {
+        toast({
+          title: "Invalid location",
+          description: "Could not find coordinates for the specified location.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      latitude = geoData[0].lat;
+      longitude = geoData[0].lon;
+    }
+
+    // Step 3: Update Firestore with location + coordinates
     const res = await fetch(`http://localhost:3001/api/users/${currentUser.uid}`, {
       method: "PATCH",
       headers: {
@@ -86,7 +111,8 @@ useEffect(() => {
         displayName: data.name,
         bio: data.bio,
         location: data.location,
-        
+        latitude,
+        longitude,
       }),
     });
 
@@ -107,6 +133,7 @@ useEffect(() => {
     });
   }
 };
+
 
 
   return (

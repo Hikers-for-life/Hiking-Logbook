@@ -36,8 +36,8 @@ const Dashboard = () => {
   useEffect(() => {
     const loadProfile = async () => {
       try {
-        const profile = await getUserProfile();
-        if (!profile) {
+        const res = await fetch(`http://localhost:3001/api/users/${currentUser.uid}`);
+        if (!res.ok) {
           // Fallback to basic user info if profile not found
           const fallbackProfile = {
             displayName: currentUser.displayName || 'Hiker',
@@ -53,6 +53,7 @@ const Dashboard = () => {
           };
           setUserProfile(fallbackProfile);
         } else {
+          const profile = await res.json();
           setUserProfile(profile);
         }
       } catch (error) {

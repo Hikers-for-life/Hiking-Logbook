@@ -23,8 +23,9 @@ const App = () => {
 
   return (
     <AuthProvider>
-      <Toaster />
+      
       <BrowserRouter>
+      <Toaster />
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Index />} />

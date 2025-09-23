@@ -1,16 +1,171 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo,useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Navigation } from "../components/ui/navigation";
 import { Input } from "../components/ui/input";
 import NewHikePlanForm from "../components/NewHikePlanForm";
-import { Calendar, MapPin, Users, Backpack, Mountain, Plus, X } from "lucide-react";
+import { useAuth } from '../contexts/AuthContext.jsx';
+import { Calendar, MapPin, Users, Backpack, Mountain, Plus, X, Search } from "lucide-react";
+import clear from '../components/assets/clear.jpg';
+import sunny from '../components/assets/sunny.jpg';
+import snow from '../components/assets/snow.jpg';
+import rain from '../components/assets/rain.jpg';
+import drizzle from '../components/assets/drizzle.jpg';
+import wind from '../components/assets/wind.png';
+import humidity from '../components/assets/humidity.png';
+import { Description } from "@radix-ui/react-dialog";
+import { useToast } from "../hooks/use-toast";
 
+const sampleWeather = [
+  {
+    id: '1',
+    name: 'Mount Washington Summit',
+    location: 'White Mountains, NH',
+    date: '2024-08-05',
+    duration: '6h 30m',
+    distance: '12.4 mi',
+    difficulty: 'Hard',
+    elevation: '4,322 ft',
+    rating: 5,
+    notes:
+      'Incredible views from the summit! Weather was perfect, saw amazing sunrise.',
+  }
+]
 const HikePlanner = () => {
+  const inputRef = useRef()
+  const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isNewPlanOpen, setIsNewPlanOpen] = useState(false);
   const [newGearItem, setNewGearItem] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [weather] = useState(sampleWeather);
+  const { currentUser } = useAuth();
+  const [profile, setProfile] = useState(null);
+  const [weatherData, setWeatherData] = useState(false);
+  const filteredHikes = weather.filter(
+      (hike) =>
+        hike.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        hike.location.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    useEffect(() => {
+      if (!currentUser) return;
+
+      const fetchProfile = async () => {
+        try {
+          const res = await fetch(`http://localhost:3001/api/users/${currentUser.uid}`);
+          if (!res.ok) throw new Error("Failed to fetch profile");
+          const data = await res.json();
+          setProfile(data);  // now profile has bio, location, createdAt
+        } catch (err) {
+          console.error(err);
+        }
+      };
+
+      fetchProfile();
+    }, [currentUser]);
+
+
+    const [location, setLocation] = useState({
+      location: profile?.location || "Location not yet set",
+      latitude: profile?.latitude || "not set",
+      longitude: profile?.longitude || "not set",
+    });
+
+    useEffect(() => {
+      if (profile) {
+        setLocation({
+          location: profile.location || "Location not yet set",
+          latitude: profile.latitude || "not set",
+          longitude: profile.longitude || "not set",
+        });
+      }
+    }, [profile]);
+    const allIcons = {
+      "01d": sunny,
+      "O1n": sunny,
+      "02d" : clear,
+      "02n" : clear,
+      "03d" : clear,
+      "03n" : clear,
+      "04d" : drizzle,
+      "04n" : drizzle,
+      "09d" : rain,
+      "09n" : rain,
+      "10d" : rain,
+      "10n" : rain,
+      "13d" : snow,
+      "13d": snow,
+
+    }
+    
+    useEffect(() => {
+      if (profile?.latitude && profile?.longitude) {
+        search(profile.latitude, profile.longitude);
+      }
+    }, [profile]);
+      
+    
+    const search = async (latitude, longitude) => {
+      try {
+        const url = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&units=metric&appid=${
+          process.env.REACT_APP_OPENWEATHER_API_KEY
+        }`;
+
+        const response = await fetch(url);
+        const data = await response.json();
+        console.log("Weather data:", data);
+
+        // guard against missing weather data
+        if (!data.weather || !data.weather[0]) {
+          console.error("No weather data available:", data);
+          return;
+        }
+
+    const icon = allIcons[data.weather[0].icon] || clear;
+
+    setWeatherData({
+      humidity: data.main.humidity,
+      windSpeed: data.wind.speed,
+      temperature: Math.floor(data.main.temp),
+      minTemp: Math.floor(data.main.temp_min),
+      maxTemp: Math.floor(data.main.temp_max),
+      feelsLike: Math.floor(data.main.feels_like),
+      description: data.weather[0].description,
+      icon: icon,
+    });
+  } catch (error) {
+    console.error("Error fetching weather:", error);
+  }
+};
+   const search2 = async (query) => {
+        try {
+          const geoUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${query}&limit=1&appid=${process.env.REACT_APP_OPENWEATHER_API_KEY}`;
+          const response = await fetch(geoUrl);
+          const data = await response.json();
+
+          if (data && data.length > 0) {
+            const { name, lat, lon } = data[0];
+
+           
+            setLocation({
+              location: name,
+              latitude: lat,
+              longitude: lon,
+            });
+
+            // Fetch weather with new lat/lon
+            search(lat, lon);
+          }
+        } catch (error) {
+          console.error("Error searching location:", error);
+        }
+      };
+      
+  
+  
+
 
   // Dynamic calendar calculations
   const currentCalendar = useMemo(() => {
@@ -347,58 +502,113 @@ const HikePlanner = () => {
               </Card>
 
               {/* Weather Widget */}
-              <Card className="bg-gradient-card border-border">
-                <CardHeader>
-                  <CardTitle className="text-xl text-foreground">
-                    Weather Forecast
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center space-y-4">
-                    <div>
-                      <div className="text-3xl font-bold text-forest">20°C</div>
-                      <div className="text-muted-foreground">Partly Cloudy</div>
-                    </div>
-                    <div className="grid grid-cols-3 gap-2 text-xs">
-                      <div className="text-center p-2 rounded-lg bg-muted/50">
-                        <div className="font-medium text-foreground">Fri</div>
-                        <div className="text-muted-foreground">18°C</div>
-                      </div>
-                      <div className="text-center p-2 rounded-lg bg-muted/50">
-                        <div className="font-medium text-foreground">Sat</div>
-                        <div className="text-muted-foreground">22°C</div>
-                      </div>
-                      <div className="text-center p-2 rounded-lg bg-muted/50">
-                        <div className="font-medium text-foreground">Sun</div>
-                        <div className="text-muted-foreground">21°C</div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+             
+                      <Card className="relative bg-gradient-card border-border overflow-hidden"> 
+                        {/* Background Image */}
+                        <div
+                          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                          style={{ backgroundImage: `url(${weatherData.icon})` }}
+                        >
+                          {/* Strong dark overlay */}
+                          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black/70" />
+                        </div>
 
-              {/* Quick Stats */}
-              <Card className="bg-gradient-card border-border">
-                <CardHeader>
-                  <CardTitle className="text-xl text-foreground">
-                    {currentCalendar.monthName} {currentCalendar.year}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Planned Hikes</span>
-                    <span className="font-semibold text-forest">3</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Total Distance</span>
-                    <span className="font-semibold text-trail">28.9 mi</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Friends Invited</span>
-                    <span className="font-semibold text-summit">8</span>
-                  </div>
-                </CardContent>
-              </Card>
+                        {/* Put content above overlay */}
+                        <CardHeader className="relative z-10">
+                          <CardTitle className="text-xl text-foreground">
+                            <div className="relative flex-1 w-full">
+                              <Input
+                                ref = {inputRef}
+                                type="text"
+                                placeholder="Search location..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="pl-10 bg-background/80 text-black placeholder:text-black-300"
+                              />
+                              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" onClick={()=> search2(inputRef.current.value)} />
+                            </div>
+                          </CardTitle>
+                        </CardHeader>
+
+                        <CardContent className="relative z-10">
+                          <div className="text-center space-y-4">
+                            <div
+                              className="text-3xl font-bold text-white mb-6"
+                              style={{ textShadow: "2px 2px 6px rgba(0,0,0,0.8)" }}
+                            >
+                              {location.location}
+                            </div>
+                             <div className="grid grid-cols-3 items-center text-center gap-2">
+                                {/* Left - Humidity */}
+                                <div className="flex flex-col items-center justify-center p-2">
+                                  <div className="flex items-center gap-1">
+                                    <img src={humidity} alt="" className="h-3 w-3" />
+                                    <span className="font-medium text-white text-xs">{weatherData.humidity}%</span>
+                                  </div>
+                                  <div className="text-gray-300 text-xs">Humidity</div>
+                                </div>
+
+                                {/* Middle - Temp */}
+                                <div className="flex flex-col items-center justify-center p-2">
+                                  <div
+                                    className="text-2xl font-bold text-white"
+                                    style={{ textShadow: "2px 2px 6px rgba(0,0,0,0.8)" }}
+                                  >
+                                    {weatherData.temperature}°C
+                                  </div>
+                                  <div className="text-gray-100 text-xs">{weatherData.description}</div>
+                                </div>
+
+                                {/* Right - Wind */}
+                                <div className="flex flex-col items-center justify-center p-2">
+                                  <div className="flex items-center gap-1">
+                                    <img src={wind} alt="" className="h-3 w-3" />
+                                    <span className="font-medium text-white text-xs">{weatherData.windSpeed}Km/h</span>
+                                  </div>
+                                  <div className="text-gray-300 text-xs">Wind Speed</div>
+                                </div>
+                              </div>
+                            <div className="grid grid-cols-3 gap-2 text-xs">
+                              <div className="text-center p-2 rounded-lg bg-white/10">
+                                <div className="font-medium text-white">Feels Like</div>
+                                <div className="text-gray-300">{weatherData.feelsLike}°C</div>
+                              </div>
+                              <div className="text-center p-2 rounded-lg bg-white/10">
+                                <div className="font-medium text-white">Lowest</div>
+                                <div className="text-gray-300">{weatherData.minTemp}°C</div>
+                              </div>
+                              <div className="text-center p-2 rounded-lg bg-white/10">
+                                <div className="font-medium text-white">Highest </div>
+                                <div className="text-gray-300">{weatherData.maxTemp}°C</div>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                       {/* Quick Stats */}
+                      <Card className="bg-gradient-card border-border">
+                        <CardHeader>
+                          <CardTitle className="text-xl text-foreground">
+                            {currentCalendar.monthName} {currentCalendar.year}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Planned Hikes</span>
+                            <span className="font-semibold text-forest">3</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Total Distance</span>
+                            <span className="font-semibold text-trail">28.9 mi</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Friends Invited</span>
+                            <span className="font-semibold text-summit">8</span>
+                          </div>
+                        </CardContent>
+                      </Card>
+
             </div>
           </div>
         </div>

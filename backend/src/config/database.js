@@ -9,7 +9,10 @@ export const collections = {
   ACHIEVEMENTS: 'achievements',
 };
 export const dbUtils = {
-
+  // Helper method to get database instance
+  getDb() {
+    return getDatabase();
+  },
 
   async create(collection, docId, data) {
     try {
@@ -38,7 +41,6 @@ export const dbUtils = {
       throw new Error(`Failed to get document: ${error.message}`);
     }
   },
-
   async update(collection, docId, data) {
     try {
       await db
@@ -74,7 +76,6 @@ export const dbUtils = {
       throw new Error(`Failed to query documents: ${error.message}`);
     }
   },
-
 
 
   // Add a new hike with comprehensive data
@@ -120,7 +121,7 @@ export const dbUtils = {
         userId: userId
       };
 
-      const docRef = await db
+      const docRef = await this.getDb()
         .collection('users')
         .doc(userId)
         .collection('hikes')
@@ -136,7 +137,7 @@ export const dbUtils = {
   // Get all hikes for a user with optional filtering
   async getUserHikes(userId, filters = {}) {
     try {
-      let query = db
+      let query = this.getDb()
         .collection('users')
         .doc(userId)
         .collection('hikes');
@@ -155,7 +156,7 @@ export const dbUtils = {
         query = query.where('date', '<=', filters.dateTo);
       }
       
-      // Order by createdAt (newest first) - more reliable than date field
+      // Order by createdAt (newest first) 
       query = query.orderBy('createdAt', 'desc');
       
       const snapshot = await query.get();
@@ -174,7 +175,7 @@ export const dbUtils = {
   // Get a specific hike by ID
   async getHike(userId, hikeId) {
     try {
-      const doc = await db
+      const doc = await this.getDb()
         .collection('users')
         .doc(userId)
         .collection('hikes')
@@ -200,7 +201,7 @@ export const dbUtils = {
       };
       
 
-      await db
+      await this.getDb()
         .collection('users')
         .doc(userId)
         .collection('hikes')
@@ -219,7 +220,7 @@ export const dbUtils = {
 
       
       // Get all hikes and find the one to delete
-      const snapshot = await db
+      const snapshot = await this.getDb()
         .collection('users')
         .doc(userId)
         .collection('hikes')
@@ -229,7 +230,7 @@ export const dbUtils = {
       
       snapshot.forEach(doc => {
         const data = doc.data();
-        // Match by document ID (for proper Firestore IDs) or by data.id field (for malformed data)
+        // Match by document ID 
         if (doc.id == hikeId || data.id == hikeId) {
 
           targetDoc = doc;
@@ -246,7 +247,7 @@ export const dbUtils = {
       }
       
     } catch (error) {
-      console.error(`❌ DB: Failed to delete hike ${hikeId}:`, error.message);
+      console.error(`DB: Failed to delete hike ${hikeId}:`, error.message);
       throw new Error(`Failed to delete hike: ${error.message}`);
     }
   },
@@ -266,7 +267,7 @@ export const dbUtils = {
         gpsTrack: []
       };
 
-      const docRef = await db
+      const docRef = await this.getDb()
         .collection('users')
         .doc(userId)
         .collection('hikes')
@@ -278,33 +279,6 @@ export const dbUtils = {
     }
   },
 
-  // Update hike with GPS waypoint
-  async addWaypoint(userId, hikeId, waypoint) {
-    try {
-      const waypointData = {
-        latitude: waypoint.latitude,
-        longitude: waypoint.longitude,
-        elevation: waypoint.elevation || 0,
-        timestamp: waypoint.timestamp || new Date(),
-        description: waypoint.description || '',
-        type: waypoint.type || 'milestone'
-      };
-
-      await db
-        .collection('users')
-        .doc(userId)
-        .collection('hikes')
-        .doc(hikeId)
-        .update({
-          waypoints: db.FieldValue.arrayUnion(waypointData),
-          updatedAt: new Date()
-        });
-        
-      return { success: true };
-    } catch (error) {
-      throw new Error(`Failed to add waypoint: ${error.message}`);
-    }
-  },
 
   // Complete a hike
   async completeHike(userId, hikeId, endData) {
@@ -318,7 +292,7 @@ export const dbUtils = {
         updatedAt: new Date()
       };
 
-      await db
+      await this.getDb()
         .collection('users')
         .doc(userId)
         .collection('hikes')
@@ -333,7 +307,7 @@ export const dbUtils = {
   },
 
   // Get user profile
-  async getUserProfile(userId) {
+   async getUserProfile(userId) {
     try {
 
       const doc = await db.collection('users').doc(userId).get();
@@ -349,7 +323,7 @@ export const dbUtils = {
 
 
   // Create user profile
-  async createUserProfile(userId, profileData) {
+   async createUserProfile(userId, profileData) {
     try {
       await db
         .collection('users')
@@ -367,7 +341,7 @@ export const dbUtils = {
   },
 
   // Update user profile
-
+  
 
   // Get hike statistics for a user
   async getUserHikeStats(userId) {
@@ -399,7 +373,7 @@ export const dbUtils = {
   },
 
   // Delete user and all their data
-  async deleteUser(userId) {
+ async deleteUser(userId) {
     try {
       // Delete all hikes first
       const hikesSnapshot = await db

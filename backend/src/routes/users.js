@@ -38,6 +38,8 @@ router.post('/create-profile', verifyAuth, async (req, res) => {
       displayName,
       bio: bio || '',
       location: location || null,
+      latitude: latitude || null,
+      longitude: longitude || null,
       photoURL: photoURL || '',
       preferences: {
         difficulty: 'beginner',
@@ -96,6 +98,8 @@ router.get('/:uid', async (req, res) => {
       displayName: userData.displayName || null,
       bio: userData.bio || null,
       location: userData.location || null,
+      latitude: userData.latitude || null,
+      longitude: userData.longitude || null,
       photoURL: userData.photoURL || null,
       preferences: userData.preferences || null,
      
@@ -233,14 +237,22 @@ router.get('/:uid/hikes', async (req, res) => {
 router.patch('/:uid', async (req, res) => {
   try {
     const { uid } = req.params;
-    const { displayName, bio, location, password } = req.body;
+    const { displayName, bio, location, latitude, longitude, password } = req.body;
 
-    const updatedProfile = await AuthService.updateUserProfile(uid, {
+    // Build update object
+    const updateData = {
       displayName,
       bio,
       location,
+    };
 
-    });
+    // Only include latitude and longitude if provided
+    if (latitude !== undefined && longitude !== undefined) {
+      updateData.latitude = latitude;
+      updateData.longitude = longitude;
+    }
+
+    const updatedProfile = await AuthService.updateUserProfile(uid, updateData);
 
     res.json(updatedProfile);
   } catch (error) {
@@ -248,6 +260,7 @@ router.patch('/:uid', async (req, res) => {
     res.status(400).json({ error: "Failed to update profile" });
   }
 });
+
 
 
 // Follow user (protected route)
