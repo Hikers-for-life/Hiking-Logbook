@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Navigation } from "../components/ui/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import GoalForm from "../components/GoalForm";
 import ProgressCharts from "../components/ProgressCharts";
 import PinnedHikes from "../components/PinnedHikes";
+import { goalsApi } from "../services/goalsApiService";
 import { 
   Trophy, 
   Target, 
@@ -150,30 +151,96 @@ const Achievements = () => {
     return colors[category] || "text-foreground";
   };
 
-  // Goal management functions
-  const handleCreateGoal = (goalData) => {
-    const newGoal = {
-      ...goalData,
-      id: Date.now(), // Simple ID generation
-      currentProgress: 0,
-      status: "active"
+  // Load goals from API on component mount
+  useEffect(() => {
+    const loadGoals = async () => {
+      try {
+        const goals = await goalsApi.getGoals();
+        // Transform API goals to match the expected format
+        const transformedGoals = goals.map(goal => ({
+          id: goal.id,
+          title: goal.title,
+          description: goal.description,
+          category: goal.category,
+          progress: goal.currentProgress || 0,
+          maxProgress: goal.targetValue,
+          completed: goal.status === 'completed',
+          earnedDate: goal.status === 'completed' ? goal.updatedAt : null,
+          icon: Target, // Default icon for custom goals
+          status: goal.status
+        }));
+        setCustomGoals(transformedGoals);
+      } catch (error) {
+        console.error('Failed to load goals:', error);
+        // You might want to show a toast notification here
+      }
     };
-    setCustomGoals(prev => [...prev, newGoal]);
+    
+    loadGoals();
+  }, []);
+
+  // Goal management functions
+  const handleCreateGoal = async (goalData) => {
+    try {
+      const newGoal = await goalsApi.createGoal(goalData);
+      // Transform the API response to match the expected format
+      const transformedGoal = {
+        id: newGoal.id,
+        title: newGoal.title,
+        description: newGoal.description,
+        category: newGoal.category,
+        progress: newGoal.currentProgress || 0,
+        maxProgress: newGoal.targetValue,
+        completed: newGoal.status === 'completed',
+        earnedDate: newGoal.status === 'completed' ? newGoal.updatedAt : null,
+        icon: Target, // Default icon for custom goals
+        status: newGoal.status
+      };
+      setCustomGoals(prev => [...prev, transformedGoal]);
+    } catch (error) {
+      console.error('Failed to create goal:', error);
+      // You might want to show a toast notification here
+    }
   };
 
-  const handleEditGoal = (goalData) => {
-    setCustomGoals(prev => 
-      prev.map(goal => 
-        goal.id === editingGoal.id 
-          ? { ...goal, ...goalData }
-          : goal
-      )
-    );
-    setEditingGoal(null);
+  const handleEditGoal = async (goalData) => {
+    try {
+      const updatedGoal = await goalsApi.updateGoal(editingGoal.id, goalData);
+      // Transform the API response to match the expected format
+      const transformedGoal = {
+        id: updatedGoal.id,
+        title: updatedGoal.title,
+        description: updatedGoal.description,
+        category: updatedGoal.category,
+        progress: updatedGoal.currentProgress || 0,
+        maxProgress: updatedGoal.targetValue,
+        completed: updatedGoal.status === 'completed',
+        earnedDate: updatedGoal.status === 'completed' ? updatedGoal.updatedAt : null,
+        icon: Target, // Default icon for custom goals
+        status: updatedGoal.status
+      };
+      setCustomGoals(prev => 
+        prev.map(goal => 
+          goal.id === editingGoal.id 
+            ? transformedGoal
+            : goal
+        )
+      );
+      setEditingGoal(null);
+    } catch (error) {
+      console.error('Failed to update goal:', error);
+      // You might want to show a toast notification here
+    }
   };
 
-  const handleDeleteGoal = (goalId) => {
-    setCustomGoals(prev => prev.filter(goal => goal.id !== goalId));
+  const handleDeleteGoal = async (goalId) => {
+    try {
+      await goalsApi.deleteGoal(goalId);
+      setCustomGoals(prev => prev.filter(goal => goal.id !== goalId));
+    } catch (error) {
+      console.error('Failed to delete goal:', error);
+      // You might want to show a toast notification here
+    }
   };
 
   const handleUnpinHike = (hikeId) => {

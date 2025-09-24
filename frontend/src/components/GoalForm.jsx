@@ -67,7 +67,7 @@ const GoalForm = ({
       title: initialData?.title || "",
       description: initialData?.description || "",
       category: initialData?.category || "",
-      target: initialData?.target?.toString() || "",
+      target: (initialData?.targetValue || initialData?.maxProgress || 0).toString(),
       targetDate: initialData?.targetDate || "",
       unit: initialData?.unit || "",
     },
@@ -80,7 +80,7 @@ const GoalForm = ({
         title: initialData.title || "",
         description: initialData.description || "",
         category: initialData.category || "",
-        target: initialData.target?.toString() || "",
+        target: (initialData.targetValue || initialData.maxProgress || 0).toString(),
         targetDate: initialData.targetDate || "",
         unit: initialData.unit || "",
       });
@@ -96,13 +96,12 @@ const GoalForm = ({
 
   const handleSubmit = (data) => {
     const goalData = {
-      ...data,
-      target: parseFloat(data.target),
+      title: data.title,
+      description: data.description || '',
+      category: data.category,
+      targetValue: parseFloat(data.target),
+      unit: data.unit,
       targetDate: data.targetDate || null,
-      createdAt: initialData?.createdAt || new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      currentProgress: initialData?.currentProgress || 0,
-      status: initialData?.status || "active",
     };
     
     onSubmit(goalData);

@@ -86,6 +86,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/hikes', hikeRoutes);
+app.use('/api/goals', goalsRoutes);
 
 // 404 handler for undefined routes
 app.use('*', (req, res) => {
@@ -143,6 +144,7 @@ async function startServer() {
       console.log(`Auth API: http://localhost:${PORT}/api/auth`);
       console.log(`Users API: http://localhost:${PORT}/api/users`);
       console.log(`Hikes API: http://localhost:${PORT}/api/hikes`);
+      console.log(`Goals API: http://localhost:${PORT}/api/goals`);
     });
 
     // Graceful shutdown
