@@ -37,6 +37,9 @@ export const hikeSchema = {
   updatedAt: "timestamp",    // When the hike was last updated
   userId: "string",          // User who logged the hike
   status: "string",          // Active, completed, paused
+
+   //New field for pinning
+  pinned: "boolean",         // Whether the hike is pinned (favorite)
 };
 
 // GPS waypoint structure

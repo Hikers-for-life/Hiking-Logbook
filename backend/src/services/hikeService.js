@@ -38,3 +38,13 @@ export async function deleteHike(userId, hikeId) {
 export async function getUserHikes(userId, filters = {}) {
   return dbUtils.getUserHikes(userId, filters);
 }
+
+// Pin a hike
+export async function pinHike(userId, hikeId) {
+  return updateHike(userId, hikeId, { pinned: true });
+}
+
+// Unpin a hike
+export async function unpinHike(userId, hikeId) {
+  return updateHike(userId, hikeId, { pinned: false });
+}
