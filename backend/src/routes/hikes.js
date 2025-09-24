@@ -278,4 +278,68 @@ router.post('/:id/waypoint', async (req, res) => {
   }
 });
 
+// PATCH /api/hikes/:id/pin - Pin a hike
+router.patch('/:id/pin', async (req, res) => {
+  try {
+    const userId = req.user.uid;
+    const hikeId = req.params.id;
+
+    // Check if hike exists
+    const existingHike = await dbUtils.getHike(userId, hikeId);
+    if (!existingHike) {
+      return res.status(404).json({
+        success: false,
+        error: 'Hike not found'
+      });
+    }
+
+    const result = await dbUtils.updateHike(userId, hikeId, { pinned: true });
+
+    res.json({
+      success: true,
+      data: result,
+      message: 'Hike pinned successfully'
+    });
+  } catch (error) {
+    console.error('Error pinning hike:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to pin hike',
+      message: error.message
+    });
+  }
+});
+
+// PATCH /api/hikes/:id/unpin - Unpin a hike
+router.patch('/:id/unpin', async (req, res) => {
+  try {
+    const userId = req.user.uid;
+    const hikeId = req.params.id;
+
+    // Check if hike exists
+    const existingHike = await dbUtils.getHike(userId, hikeId);
+    if (!existingHike) {
+      return res.status(404).json({
+        success: false,
+        error: 'Hike not found'
+      });
+    }
+
+    const result = await dbUtils.updateHike(userId, hikeId, { pinned: false });
+
+    res.json({
+      success: true,
+      data: result,
+      message: 'Hike unpinned successfully'
+    });
+  } catch (error) {
+    console.error('Error unpinning hike:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to unpin hike',
+      message: error.message
+    });
+  }
+});
+
 export default router;
