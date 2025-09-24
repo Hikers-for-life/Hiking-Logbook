@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -38,29 +38,47 @@ const hikeSchema = z.object({
   notes: z.string().max(1000, "Notes must be less than 1000 characters").optional(),
 });
 
-const NewHikeEntryForm = ({ open, onOpenChange, onSubmit }) => {
-  const [selectedDifficulty, setSelectedDifficulty] = useState("");
+const NewHikeEntryForm = ({ open, onOpenChange, onSubmit, initialData = null, title = "Add New Hike Entry" }) => {
+  const [selectedDifficulty, setSelectedDifficulty] = useState(initialData?.difficulty || "");
 
   const form = useForm({
     resolver: zodResolver(hikeSchema),
     defaultValues: {
-      title: "",
-      date: "",
-      location: "",
-      distance: "",
-      elevation: "",
-      duration: "",
-      weather: "",
-      difficulty: "",
-      photos: "0",
-      notes: "",
+      title: initialData?.title || "",
+      date: initialData?.date || "",
+      location: initialData?.location || "",
+      distance: initialData?.distance || "",
+      elevation: initialData?.elevation || "",
+      duration: initialData?.duration || "",
+      weather: initialData?.weather || "",
+      difficulty: initialData?.difficulty || "",
+      photos: initialData?.photos?.toString() || "0",
+      notes: initialData?.notes || "",
     },
   });
 
+  // Reset form when initialData changes (for edit mode)
+  useEffect(() => {
+    if (initialData) {
+      form.reset({
+        title: initialData.title || "",
+        date: initialData.date || "",
+        location: initialData.location || "",
+        distance: initialData.distance || "",
+        elevation: initialData.elevation || "",
+        duration: initialData.duration || "",
+        weather: initialData.weather || "",
+        difficulty: initialData.difficulty || "",
+        photos: initialData.photos?.toString() || "0",
+        notes: initialData.notes || "",
+      });
+      setSelectedDifficulty(initialData.difficulty || "");
+    }
+  }, [initialData, form]);
+
   const handleSubmit = (data) => {
-    // Generate a unique ID for the new entry
+    // Don't manually set ID - let Firestore auto-generate document IDs
     const newEntry = {
-      id: Date.now(),
       ...data,
       photos: parseInt(data.photos) || 0,
     };
@@ -81,10 +99,10 @@ const NewHikeEntryForm = ({ open, onOpenChange, onSubmit }) => {
       <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl text-foreground">
-            Add Past Hike Entry
+            {title}
           </DialogTitle>
           <p className="text-muted-foreground">
-            Record a hike you completed before using real-time tracking
+            {initialData ? 'Edit your hike entry details' : 'Record a hike you completed before using real-time tracking'}
           </p>
         </DialogHeader>
 
