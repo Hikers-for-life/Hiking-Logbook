@@ -55,6 +55,7 @@ router.post('/', verifyAuth, async (req, res) => {
       description: description || "",
       stats: stats || "",
       photo: photo || null,
+      time:new Date().toISOString(),
       likes: [],
       created_at: new Date().toISOString(),
     };

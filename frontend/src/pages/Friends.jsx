@@ -8,8 +8,8 @@ import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { ProfileView } from "../components/ui/view-friend-profile";
 import { fetchFeed, likeFeed, commentFeed, shareFeed, fetchComments, deleteCommentFeed,deleteFeed } from "../services/feed";//ANNAH HERE
-import { discoverFriends } from "../services/discover";//ANNAH HERE
-import { getFirestore, collection, query, orderBy, onSnapshot, doc, updateDoc, arrayUnion, arrayRemove, addDoc } from "firebase/firestore";
+import { discoverFriends, addFriend } from "../services/discover";//ANNAH HERE
+import { getFirestore} from "firebase/firestore";
 import { getAuth } from "firebase/auth";//NOT SURE ABOUT THIS IMPORT//ANNA HERE
 import { 
   Search, 
@@ -24,6 +24,7 @@ import {
   Heart,
   MessageSquare
 } from "lucide-react";
+
 
 const Friends = () => {
   const [selectedProfile, setSelectedProfile] = useState(null);
@@ -136,7 +137,8 @@ const auth = getAuth();
 
   // ---- Like handler ----
   const handleLike = async (activity) => {
-    const uid = auth.currentUser.uid;
+    const uid = auth?.currentUser.uid;
+    if (!uid) return; 
 
     // Optimistic UI update
     setRecentActivity(prev => prev.map(a => {
@@ -167,7 +169,7 @@ const auth = getAuth();
   // ---- Comment handler ----
   const handleAddComment = async (activityId, content) => {
     if (!content.trim()) return;
-    const user = auth.currentUser;
+    const user = auth?.currentUser;
 
     // Optimistic UI update
     const tempComment = {
@@ -307,8 +309,8 @@ const handleDeletePost = async (activityId) => {
 };
 
   
-   const handlePostAchievement = async () => {
-  const user = auth.currentUser;
+  const handlePostAchievement = async () => {
+  const user = auth?.currentUser;
   const displayName = user.displayName || user.email.split("@")[0];
 
   const mockedActivity = {
@@ -329,62 +331,29 @@ const handleDeletePost = async (activityId) => {
   setRecentActivity(prev => [mockedActivity, ...prev]);
 };//ANNAH HERE
 
-  
-  /*const suggestions = [
-    {
-      id: 1,
-      name: "Jessica Park",
-      avatar: "JP",
-      mutualFriends: 3,
-      commonTrails: ["Forest Park", "Mount Hood"]
-    },
-    {
-      id: 2,
-      name: "Michael Turner",
-      avatar: "MT",
-      mutualFriends: 2,
-      commonTrails: ["Rocky Mountain", "Bear Lake"]
-    },
-    {
-      id: 3,
-      name: "Sofia Gonzalez",
-      avatar: "SG",
-      mutualFriends: 4,
-      commonTrails: ["Yosemite Valley", "Half Dome"]
-    }
-  ];*/
+
   useEffect(() => {
+    if (!auth?.currentUser) return;
     const loadSuggestions = async () => {
       try {
+        setLoading(true);
         const data = await discoverFriends();
         setSuggestions(data);
       } catch (err) {
         console.error("Failed to fetch suggestions:", err);
+      } finally {
+        setLoading(false);
       }
     };
-
     loadSuggestions();
-  }, []);
+  }, [auth?.currentUser]);
+
 
   // ---- Add Friend handler ----
-const handleAddFriend = async (friendId) => {
+  const handleAddFriend = async (friendId) => {
   try {
-    const db = getFirestore();
-    const auth = getAuth();
-    const user = auth.currentUser;
-    if (!user) return;
-
-    const userRef = doc(db, "users", user.uid);
-    const friendRef = doc(db, "users", friendId);
-
-    // Add each other
-    await updateDoc(userRef, {
-      friends: arrayUnion(friendId),
-    });
-    await updateDoc(friendRef, {
-      friends: arrayUnion(user.uid),
-    });
-
+    await addFriend(friendId); // uses backend API
+    setSuggestions(prev => prev.filter(s => s.id !== friendId)); // remove locally
     console.log(`Friend ${friendId} added successfully!`);
   } catch (err) {
     console.error("Failed to add friend:", err);
@@ -667,6 +636,7 @@ const handleAddFriend = async (friendId) => {
 
 
 {/*DISCOVER */}
+      {/* DISCOVER */}
           <TabsContent value="discover" className="space-y-6">
             <Card className="bg-card border-border shadow-elevation">
               <CardHeader>
@@ -677,7 +647,9 @@ const handleAddFriend = async (friendId) => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {suggestions.length === 0 ? (
+                  {loading ? (
+                    <p className="text-muted-foreground text-sm">Loading suggestions...</p>
+                  ) : suggestions.length === 0 ? (
                     <p className="text-muted-foreground text-sm">No suggestions at the moment.</p>
                   ) : (
                     suggestions.map((suggestion) => (
@@ -705,14 +677,17 @@ const handleAddFriend = async (friendId) => {
                           </div>
                         </div>
                         <Button
-                          size="sm"
-                          className="bg-gradient-trail text-primary-foreground"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleAddFriend(suggestion.id);
+                          onClick={async (e) => {
+                            e.stopPropagation(); // prevent opening profile modal
+                            try {
+                              await addFriend(suggestion.id); // ✅ uses service
+                              setSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
+                              console.log(`Friend ${suggestion.name} added!`);
+                            } catch (err) {
+                              console.error("Failed to add friend:", err);
+                            }
                           }}
                         >
-                          <UserPlus className="h-4 w-4 mr-1" />
                           Add Friend
                         </Button>
                       </div>

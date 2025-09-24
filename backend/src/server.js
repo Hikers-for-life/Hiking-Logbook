@@ -9,6 +9,7 @@ import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
 import hikeRoutes from './routes/hikes.js';
 import feedRoutes from './routes/feed.js';
+import discoverRoutes from './routes/discover.js';
 import helmet from 'helmet';
 import cors from 'cors';
 import morgan from 'morgan';
@@ -85,6 +86,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/hikes', hikeRoutes);
 app.use('/api/feed', feedRoutes);
+app.use('/api/discover', discoverRoutes);
 
 // 404 handler for undefined routes
 app.use('*', notFoundHandler);
@@ -107,6 +109,8 @@ async function startServer() {
       console.log(`Auth API: http://localhost:${PORT}/api/auth`);
       console.log(`Users API: http://localhost:${PORT}/api/users`);
       console.log(`Hikes API: http://localhost:${PORT}/api/hikes`);
+      console.log(`Feed API: http://localhost:${PORT}/api/feed`);
+      console.log(`Discover API: http://localhost:${PORT}/api/discover`);
     });
     
     return server;

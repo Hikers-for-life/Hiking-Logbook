@@ -1,36 +1,37 @@
-import { getFirestore, collection, getDocs } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+import { API_BASE } from "../api/api.js";
 
-const db = getFirestore();
-const auth = getAuth();
+const API_URL = `${API_BASE}/discover`;
 
-export const discoverFriends = async () => {
-  const currentUser = auth.currentUser;
-  if (!currentUser) return [];
+// Get Firebase ID token for authentication
+async function getToken() {
+  const auth = getAuth();
+  const user = auth.currentUser;
+  if (!user) return null;
+  return await user.getIdToken();
+}
 
-  const usersRef = collection(db, "users");
-  const snapshot = await getDocs(usersRef);
+// Fetch suggested friends
+export async function discoverFriends() {
+  const token = await getToken();
+  const res = await fetch(`${API_URL}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error("Failed to fetch suggestions");
+  return res.json(); // returns array of { id, name, avatar, mutualFriends, commonTrails }
+}
 
-  const currentUserData = snapshot.docs.find(doc => doc.id === currentUser.uid)?.data();
-  if (!currentUserData) return [];
-
-  const friendsSet = new Set(currentUserData.friends || []);
-
-  const suggestions = snapshot.docs
-    .filter(doc => doc.id !== currentUser.uid && !friendsSet.has(doc.id))
-    .map(doc => {
-      const data = doc.data();
-      const mutualFriends = data.friends?.filter(f => friendsSet.has(f)).length || 0;
-      return {
-        id: doc.id,
-        name: data.displayName,
-        avatar: data.avatar || data.displayName?.[0] || "?",
-        mutualFriends,
-        commonTrails: (data.trails || []).filter(t => currentUserData.trails?.includes(t)),
-      };
-    })
-    .sort((a, b) => b.mutualFriends - a.mutualFriends) // prioritize mutuals
-    .slice(0, 20); // ✅ apply limit *after* filtering
-
-  return suggestions;
-};
+// Add a friend
+export async function addFriend(friendId) {
+  const token = await getToken();
+  const res = await fetch(`${API_URL}/add`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ friendId }),
+  });
+  if (!res.ok) throw new Error("Failed to add friend");
+  return res.json(); // returns { success: true }
+}

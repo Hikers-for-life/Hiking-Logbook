@@ -28,6 +28,8 @@ export class AuthService {
         bio: bio || '',
         location: location || null,
         photoURL: '',
+        friends: [],     // ✅ initialize
+        trails: [],    
         preferences: {
           difficulty: 'beginner',
           terrain: 'mixed',
