@@ -40,7 +40,7 @@ const samplePinnedHikes = [
   }
 ];
 
-const PinnedHikes = ({ pinnedHikes = samplePinnedHikes, onUnpinHike }) => {
+const PinnedHikes = ({ pinnedHikes = samplePinnedHikes, onUnpinHike, onViewDetails }) => {
   const getDifficultyColor = (difficulty) => {
     const colors = {
       Easy: 'bg-meadow/20 text-forest border-meadow',
@@ -97,7 +97,7 @@ const PinnedHikes = ({ pinnedHikes = samplePinnedHikes, onUnpinHike }) => {
                       {hike.difficulty}
                     </Badge>
                     <span className="text-xs text-muted-foreground">
-                      Pinned {new Date(hike.pinnedAt).toLocaleDateString()}
+                      Pinned {hike.pinnedAt}
                     </span>
                   </div>
                 </div>
@@ -155,6 +155,7 @@ const PinnedHikes = ({ pinnedHikes = samplePinnedHikes, onUnpinHike }) => {
                   variant="ghost"
                   size="sm"
                   className="text-forest hover:text-forest hover:bg-muted"
+                  onClick={() => onViewDetails && onViewDetails(hike)}
                 >
                   <ExternalLink className="h-3 w-3 mr-1" />
                   View Details

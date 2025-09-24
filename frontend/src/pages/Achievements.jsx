@@ -5,10 +5,12 @@ import { Badge } from "../components/ui/badge";
 import { Progress } from "../components/ui/progress";
 import { Button } from "../components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
 import GoalForm from "../components/GoalForm";
 import ProgressCharts from "../components/ProgressCharts";
 import PinnedHikes from "../components/PinnedHikes";
 import { goalsApi } from "../services/goalsApiService";
+import { hikeApiService } from "../services/hikeApiService";
 import { 
   Trophy, 
   Target, 
@@ -21,8 +23,8 @@ import {
   Calendar,
   Award,
   Plus,
-  BarChart3,
-  Pin
+  Pin,
+  Thermometer
 } from "lucide-react";
 
 const Achievements = () => {
@@ -31,33 +33,32 @@ const Achievements = () => {
   const [editingGoal, setEditingGoal] = useState(null);
   const [customGoals, setCustomGoals] = useState([]);
 
-  // Sample pinned hikes data
-  const [pinnedHikes] = useState([
-    {
-      id: 1,
-      title: "Mount Washington Summit",
-      location: "White Mountains, NH",
-      date: "2024-08-05",
-      distance: "12.4 mi",
-      elevation: "4,322 ft",
-      duration: "6h 30m",
-      difficulty: "Hard",
-      notes: "Incredible views from the summit! Weather was perfect, saw amazing sunrise.",
-      pinnedAt: "2024-08-06"
-    },
-    {
-      id: 2,
-      title: "Bear Mountain Trail",
-      location: "Harriman State Park, NY",
-      date: "2024-07-22",
-      distance: "5.8 mi",
-      elevation: "1,284 ft",
-      duration: "3h 45m",
-      difficulty: "Moderate",
-      notes: "Great family-friendly hike. Spotted some wildlife on the way down.",
-      pinnedAt: "2024-07-23"
+  // Pinned hikes data - loaded from API
+  const [pinnedHikes, setPinnedHikes] = useState([]);
+  
+  // View details modal state
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [selectedHike, setSelectedHike] = useState(null);
+
+  // Helper function to safely convert Firestore timestamps to date strings
+  const formatDate = (timestamp) => {
+    if (!timestamp) return new Date().toLocaleDateString();
+    try {
+      // Handle Firestore timestamp objects with toDate method
+      if (timestamp.toDate && typeof timestamp.toDate === 'function') {
+        return timestamp.toDate().toLocaleDateString();
+      }
+      // Handle Firestore timestamp objects with _seconds property
+      if (timestamp._seconds) {
+        return new Date(timestamp._seconds * 1000).toLocaleDateString();
+      }
+      // Handle regular Date objects or date strings
+      return new Date(timestamp).toLocaleDateString();
+    } catch (error) {
+      console.warn('Failed to format date:', timestamp, error);
+      return new Date().toLocaleDateString();
     }
-  ]);
+  };
 
   const achievements = [
     {
@@ -179,6 +180,69 @@ const Achievements = () => {
     loadGoals();
   }, []);
 
+  // Load pinned hikes from API
+  useEffect(() => {
+    const loadPinnedHikes = async () => {
+      try {
+        const response = await hikeApiService.getHikes({ pinned: true });
+        
+        if (response.success) {
+          // Process pinned hikes data
+          const pinnedHikesData = response.data.map(hike => ({
+            ...hike,
+            // Convert dates to readable format
+            date: hike.date ? formatDate(hike.date) : 'No date',
+            pinnedAt: formatDate(hike.updatedAt),
+            // Format distance and elevation
+            distance: hike.distance ? `${hike.distance} mi` : '0 mi',
+            elevation: hike.elevation ? `${hike.elevation} ft` : '0 ft',
+            duration: hike.duration ? `${hike.duration} min` : '0 min'
+          }));
+          
+          setPinnedHikes(pinnedHikesData);
+        }
+      } catch (error) {
+        console.error('Failed to load pinned hikes:', error);
+      }
+    };
+    
+    loadPinnedHikes();
+  }, []);
+
+  // Refresh pinned hikes when component becomes visible
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        // Reload pinned hikes when page becomes visible
+        const loadPinnedHikes = async () => {
+          try {
+            const response = await hikeApiService.getHikes({ pinned: true });
+            
+            if (response.success) {
+              const pinnedHikesData = response.data.map(hike => ({
+                ...hike,
+                date: hike.date ? formatDate(hike.date) : 'No date',
+                pinnedAt: formatDate(hike.updatedAt),
+                distance: hike.distance ? `${hike.distance} mi` : '0 mi',
+                elevation: hike.elevation ? `${hike.elevation} ft` : '0 ft',
+                duration: hike.duration ? `${hike.duration} min` : '0 min'
+              }));
+              
+              setPinnedHikes(pinnedHikesData);
+            }
+          } catch (error) {
+            console.error('Failed to refresh pinned hikes:', error);
+          }
+        };
+        
+        loadPinnedHikes();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
+
   // Goal management functions
   const handleCreateGoal = async (goalData) => {
     try {
@@ -243,9 +307,19 @@ const Achievements = () => {
     }
   };
 
-  const handleUnpinHike = (hikeId) => {
-    // This would typically call an API to unpin the hike
-    console.log('Unpinning hike:', hikeId);
+  const handleUnpinHike = async (hikeId) => {
+    try {
+      await hikeApiService.unpinHike(hikeId);
+      // Remove from local state
+      setPinnedHikes(prev => prev.filter(hike => hike.id !== hikeId));
+    } catch (error) {
+      console.error('Failed to unpin hike:', error);
+    }
+  };
+
+  const handleViewDetails = (hike) => {
+    setSelectedHike(hike);
+    setIsDetailsModalOpen(true);
   };
 
   // Combine predefined achievements with custom goals
@@ -555,7 +629,7 @@ const Achievements = () => {
           </TabsContent>
 
           <TabsContent value="pinned">
-            <PinnedHikes pinnedHikes={pinnedHikes} onUnpinHike={handleUnpinHike} />
+            <PinnedHikes pinnedHikes={pinnedHikes} onUnpinHike={handleUnpinHike} onViewDetails={handleViewDetails} />
           </TabsContent>
         </Tabs>
 
@@ -567,6 +641,150 @@ const Achievements = () => {
           initialData={editingGoal}
           title={editingGoal ? "Edit Goal" : "Create New Goal"}
         />
+
+        {/* Hike Details Modal */}
+        <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
+          <DialogContent className="max-w-4xl w-[90vw] max-h-[90vh] overflow-y-auto">
+            <DialogHeader className="pb-4">
+              <DialogTitle className="flex items-center gap-2 text-xl">
+                <MapPin className="h-6 w-6 text-forest" />
+                Hike Details
+              </DialogTitle>
+            </DialogHeader>
+            {selectedHike && (
+              <div className="space-y-8">
+                {/* Header Section */}
+                <div className="border-b border-border pb-6">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h2 className="text-2xl font-bold text-foreground mb-2">{selectedHike.title}</h2>
+                      <p className="text-lg text-muted-foreground flex items-center gap-2">
+                        <MapPin className="h-5 w-5" />
+                        {selectedHike.location}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Badge 
+                        variant="secondary"
+                        className={`text-sm px-3 py-1 ${
+                          selectedHike.difficulty === 'Easy' ? 'bg-meadow/20 text-forest border-meadow' :
+                          selectedHike.difficulty === 'Moderate' ? 'bg-trail/20 text-foreground border-trail' :
+                          'bg-summit/20 text-foreground border-summit'
+                        }`}
+                      >
+                        {selectedHike.difficulty}
+                      </Badge>
+                      <Badge variant="outline" className="text-sm px-3 py-1">
+                        {selectedHike.status}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Stats Grid */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                  <div className="bg-card border border-border rounded-lg p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-forest/10 rounded-lg">
+                        <Calendar className="h-5 w-5 text-forest" />
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-muted-foreground">Date</div>
+                        <div className="text-lg font-semibold text-foreground">{selectedHike.date}</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-card border border-border rounded-lg p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-trail/10 rounded-lg">
+                        <Mountain className="h-5 w-5 text-trail" />
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-muted-foreground">Distance</div>
+                        <div className="text-lg font-semibold text-foreground">{selectedHike.distance}</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-card border border-border rounded-lg p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-summit/10 rounded-lg">
+                        <Mountain className="h-5 w-5 text-summit" />
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-muted-foreground">Elevation</div>
+                        <div className="text-lg font-semibold text-foreground">{selectedHike.elevation}</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-card border border-border rounded-lg p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-stone/10 rounded-lg">
+                        <Clock className="h-5 w-5 text-stone" />
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-muted-foreground">Duration</div>
+                        <div className="text-lg font-semibold text-foreground">{selectedHike.duration}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Additional Information */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Notes Section */}
+                  {selectedHike.notes && (
+                    <div className="bg-card border border-border rounded-lg p-6">
+                      <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
+                        <Trophy className="h-5 w-5 text-forest" />
+                        Notes & Thoughts
+                      </h3>
+                      <p className="text-foreground leading-relaxed">
+                        {selectedHike.notes}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Weather Section */}
+                  {selectedHike.weather && (
+                    <div className="bg-card border border-border rounded-lg p-6">
+                      <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
+                        <Thermometer className="h-5 w-5 text-trail" />
+                        Weather Conditions
+                      </h3>
+                      <p className="text-foreground text-lg">{selectedHike.weather}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* GPS Information */}
+                {(selectedHike.waypoints && selectedHike.waypoints.length > 0) && (
+                  <div className="bg-card border border-border rounded-lg p-6">
+                    <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
+                      <MapPin className="h-5 w-5 text-summit" />
+                      GPS Tracking
+                    </h3>
+                    <p className="text-foreground">
+                      {selectedHike.waypoints.length} waypoints recorded during this hike
+                    </p>
+                  </div>
+                )}
+
+                {/* Footer */}
+                <div className="border-t border-border pt-6">
+                  <div className="flex items-center justify-center">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Pin className="h-4 w-4 text-yellow-600" />
+                      <span>Pinned on {selectedHike.pinnedAt}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );

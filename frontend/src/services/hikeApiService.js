@@ -53,6 +53,7 @@ export const hikeApiService = {
     if (filters.difficulty) queryParams.append('difficulty', filters.difficulty);
     if (filters.dateFrom) queryParams.append('dateFrom', filters.dateFrom);
     if (filters.dateTo) queryParams.append('dateTo', filters.dateTo);
+    if (filters.pinned !== undefined) queryParams.append('pinned', filters.pinned);
     
     const queryString = queryParams.toString();
     const endpoint = `/hikes${queryString ? `?${queryString}` : ''}`;
@@ -123,6 +124,20 @@ export const hikeApiService = {
   // Get user hike statistics
   async getHikeStats() {
     return makeAuthenticatedRequest('/hikes/stats/overview');
+  },
+
+  // Pin a hike
+  async pinHike(hikeId) {
+    return makeAuthenticatedRequest(`/hikes/${hikeId}/pin`, {
+      method: 'PATCH',
+    });
+  },
+
+  // Unpin a hike
+  async unpinHike(hikeId) {
+    return makeAuthenticatedRequest(`/hikes/${hikeId}/unpin`, {
+      method: 'PATCH',
+    });
   },
 };
 

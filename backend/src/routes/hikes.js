@@ -11,13 +11,14 @@ router.use(verifyAuth);
 router.get('/', async (req, res) => {
   try {
     const userId = req.user.uid;
-    const { status, difficulty, dateFrom, dateTo } = req.query;
+    const { status, difficulty, dateFrom, dateTo, pinned } = req.query;
     
     const filters = {};
     if (status) filters.status = status;
     if (difficulty) filters.difficulty = difficulty;
     if (dateFrom) filters.dateFrom = new Date(dateFrom);
     if (dateTo) filters.dateTo = new Date(dateTo);
+    if (pinned !== undefined) filters.pinned = pinned === 'true';
     
     const hikes = await dbUtils.getUserHikes(userId, filters);
     

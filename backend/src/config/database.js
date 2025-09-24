@@ -29,7 +29,6 @@ export const dbUtils = {
         
         // Additional details
         notes: hikeData.notes || '',
-        photos: hikeData.photos || 0,
         
         // GPS and tracking
         waypoints: hikeData.waypoints || [],
@@ -40,6 +39,7 @@ export const dbUtils = {
         
         // Metadata
         status: hikeData.status || 'completed',
+        pinned: hikeData.pinned || false,
         createdAt: new Date(),
         updatedAt: new Date(),
         userId: userId
@@ -81,9 +81,14 @@ export const dbUtils = {
       if (filters.dateTo) {
         query = query.where('date', '<=', filters.dateTo);
       }
+      if (filters.pinned !== undefined) {
+        query = query.where('pinned', '==', filters.pinned);
+      }
       
-      // Order by createdAt (newest first) - more reliable than date field
-      query = query.orderBy('createdAt', 'desc');
+      // Only add orderBy if we don't have a pinned filter (to avoid composite index requirement)
+      if (filters.pinned === undefined) {
+        query = query.orderBy('createdAt', 'desc');
+      }
       
       const snapshot = await query.get();
       
@@ -91,6 +96,15 @@ export const dbUtils = {
       snapshot.forEach(doc => {
         hikes.push({ id: doc.id, ...doc.data() });
       });
+      
+      // If we filtered by pinned, sort by createdAt on the client side
+      if (filters.pinned !== undefined) {
+        hikes.sort((a, b) => {
+          const aTime = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+          const bTime = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+          return bTime - aTime; // Newest first
+        });
+      }
       
       return hikes;
     } catch (error) {
@@ -189,6 +203,7 @@ export const dbUtils = {
         status: 'active',
         date: hikeData.date || new Date(), // Ensure date field exists for ordering
         startTime: new Date(),
+        pinned: hikeData.pinned || false,
         createdAt: new Date(),
         updatedAt: new Date(),
         userId: userId,

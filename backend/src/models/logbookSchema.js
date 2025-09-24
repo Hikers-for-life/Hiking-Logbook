@@ -21,7 +21,6 @@ export const hikeSchema = {
   
   // Additional details
   notes: "string",           // Optional notes and observations
-  photos: "number",          // Number of photos taken
   
   // GPS and tracking data
   waypoints: "array",        // GPS waypoints array

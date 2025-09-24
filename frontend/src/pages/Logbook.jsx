@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/
 import NewHikeEntryForm from "../components/NewHikeEntryForm";
 import ActiveHike from "../components/ActiveHike";
 import ActiveHikeStatus from "../components/ActiveHikeStatus";
-import { Camera, MapPin, Clock, Mountain, Thermometer, Plus, Search, Map, Eye, Play, Trash2, Edit3, Pin, PinOff } from "lucide-react";
+import { Camera, MapPin, Clock, Mountain, Thermometer, Plus, Search, Map, Play, Trash2, Edit3, Pin, PinOff } from "lucide-react";
 import { hikeApiService } from "../services/hikeApiService.js";
 import { useAuth } from "../contexts/AuthContext.jsx";
 
@@ -28,8 +28,6 @@ const Logbook = () => {
   const [error, setError] = useState(null);
   // Hike entries from database
   const [hikeEntries, setHikeEntries] = useState([]);
-  // Pinned hikes state
-  const [pinnedHikes, setPinnedHikes] = useState([]);
 
   // API functions for loading data
   const loadHikes = useCallback(async () => {
@@ -50,7 +48,7 @@ const Logbook = () => {
           // Convert dates
           date: hike.date ? (hike.date.toDate ? hike.date.toDate().toLocaleDateString() : new Date(hike.date).toLocaleDateString()) : 'No date',
           createdAt: hike.createdAt ? (hike.createdAt.toDate ? hike.createdAt.toDate() : new Date(hike.createdAt)) : null,
-          updatedAt: hike.updatedAt ? (hike.updatedAt.toDate ? hike.updatedAt.toDate() : new Date(hike.updatedAt)) : null,
+          updatedAt: hike.updatedAt ? (hike.updatedAt.toDate ? hike.updatedAt.toDate().toLocaleDateString() : new Date(hike.updatedAt).toLocaleDateString()) : null,
           startTime: hike.startTime ? (hike.startTime.toDate ? hike.startTime.toDate() : new Date(hike.startTime)) : null,
           endTime: hike.endTime ? (hike.endTime.toDate ? hike.endTime.toDate() : new Date(hike.endTime)) : null,
           // Ensure other fields are strings/numbers
@@ -62,7 +60,6 @@ const Logbook = () => {
           weather: hike.weather || 'Unknown',
           difficulty: hike.difficulty || 'Easy',
           notes: hike.notes || '',
-          photos: hike.photos || 0,
           status: hike.status || 'completed'
         }));
         
@@ -122,7 +119,6 @@ const Logbook = () => {
         status: 'active'
       };
       
-      console.log('Starting hike with data:', hikeData);
       
       const response = await hikeApiService.startHike(hikeData);
       if (response.success) {
@@ -153,7 +149,6 @@ const Logbook = () => {
     try {
       const endData = {
         ...hikeData,
-        photos: 0, // Will be updated when photo upload is implemented
       };
       
       const response = await hikeApiService.completeHike(currentActiveHike.id, endData);
@@ -171,7 +166,6 @@ const Logbook = () => {
       const completedHike = {
         ...hikeData,
         id: currentActiveHike.id,
-        photos: 0,
       };
       setHikeEntries(prev => [completedHike, ...prev]);
       setActiveHikeMode(false);
@@ -182,7 +176,6 @@ const Logbook = () => {
   // Handler for saving active hike progress
   const handleSaveActiveHike = (hikeData) => {
     // Auto-save functionality - would integrate with backend
-    console.log('Auto-saving hike progress:', hikeData);
     localStorage.setItem('activeHike', JSON.stringify(hikeData));
     
     // Update current active hike state for status display
@@ -226,51 +219,57 @@ const Logbook = () => {
   // Handler for submitting hike edits
   const handleSubmitEditHike = async (updatedHikeData) => {
     if (!editingHike) {
-      console.log('❌ No editing hike found');
       return;
     }
     
-    console.log('✏️ Edit hike called for ID:', editingHike.id);
-    console.log('📝 Updated data:', updatedHikeData);
-    
     try {
-      console.log('🌐 Making update API call...');
       const response = await hikeApiService.updateHike(editingHike.id, updatedHikeData);
-      console.log('🔄 Update API response:', response);
       
       if (response.success) {
-        console.log('✅ Update successful, refreshing data');
         // Refresh the entire list from server to ensure consistency
         await loadHikes();
         setIsEditHikeOpen(false);
         setEditingHike(null);
       } else {
-        console.log('❌ Update failed - response not successful');
         setError('Failed to update hike. Please try again.');
       }
     } catch (err) {
-      console.error('❌ Failed to update hike:', err);
+      console.error('Failed to update hike:', err);
       setError('Failed to update hike. Please try again.');
     }
   };
 
   // Handler for pinning/unpinning hikes
-  const handlePinHike = (hikeId) => {
-    setPinnedHikes(prev => {
-      const isPinned = prev.includes(hikeId);
+  const handlePinHike = async (hikeId) => {
+    try {
+      const hike = hikeEntries.find(h => h.id === hikeId);
+      const isPinned = hike?.pinned === true;
+      
       if (isPinned) {
         // Unpin the hike
-        return prev.filter(id => id !== hikeId);
+        await hikeApiService.unpinHike(hikeId);
+        // Update local state
+        setHikeEntries(prev => prev.map(h => 
+          h.id === hikeId ? { ...h, pinned: false } : h
+        ));
       } else {
         // Pin the hike
-        return [...prev, hikeId];
+        await hikeApiService.pinHike(hikeId);
+        // Update local state
+        setHikeEntries(prev => prev.map(h => 
+          h.id === hikeId ? { ...h, pinned: true } : h
+        ));
       }
-    });
+    } catch (error) {
+      console.error('Failed to pin/unpin hike:', error);
+      setError('Failed to pin/unpin hike. Please try again.');
+    }
   };
 
   // Check if a hike is pinned
   const isHikePinned = (hikeId) => {
-    return pinnedHikes.includes(hikeId);
+    const hike = hikeEntries.find(h => h.id === hikeId);
+    return hike?.pinned === true;
   };
 
   // Filter hikes based on search term and difficulty
@@ -478,12 +477,6 @@ const Logbook = () => {
                       </Badge>
                     </div>
                   </div>
-                  <div className="text-right text-sm text-muted-foreground">
-                    <div className="flex items-center">
-                      <Camera className="h-4 w-4 mr-1" />
-                      {hike.photos} photos
-                    </div>
-                  </div>
                 </div>
               </CardHeader>
               
@@ -686,7 +679,6 @@ const Logbook = () => {
                       notes: document.getElementById('start-notes').value || '',
                       difficulty: 'Easy'
                     };
-                    console.log('Form data collected:', formData);
                     handleStartActiveHike(formData);
                     setIsStartHikeFormOpen(false);
                   }}
