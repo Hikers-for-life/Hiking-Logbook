@@ -34,7 +34,6 @@ const hikeSchema = z.object({
   difficulty: z.enum(["Easy", "Moderate", "Hard"], {
     required_error: "Please select a difficulty level",
   }),
-  photos: z.string().transform((val) => parseInt(val) || 0),
   notes: z.string().max(1000, "Notes must be less than 1000 characters").optional(),
 });
 
@@ -52,7 +51,6 @@ const NewHikeEntryForm = ({ open, onOpenChange, onSubmit, initialData = null, ti
       duration: initialData?.duration || "",
       weather: initialData?.weather || "",
       difficulty: initialData?.difficulty || "",
-      photos: initialData?.photos?.toString() || "0",
       notes: initialData?.notes || "",
     },
   });
@@ -69,7 +67,6 @@ const NewHikeEntryForm = ({ open, onOpenChange, onSubmit, initialData = null, ti
         duration: initialData.duration || "",
         weather: initialData.weather || "",
         difficulty: initialData.difficulty || "",
-        photos: initialData.photos?.toString() || "0",
         notes: initialData.notes || "",
       });
       setSelectedDifficulty(initialData.difficulty || "");
@@ -80,7 +77,6 @@ const NewHikeEntryForm = ({ open, onOpenChange, onSubmit, initialData = null, ti
     // Don't manually set ID - let Firestore auto-generate document IDs
     const newEntry = {
       ...data,
-      photos: parseInt(data.photos) || 0,
     };
     
     onSubmit(newEntry);
@@ -238,52 +234,27 @@ const NewHikeEntryForm = ({ open, onOpenChange, onSubmit, initialData = null, ti
               />
             </div>
 
-            {/* Weather and Photos Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="weather"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-foreground flex items-center gap-1">
-                      <Thermometer className="h-4 w-4" />
-                      Weather
-                    </FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="e.g., Clear, 7°C" 
-                        className="border-border"
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="photos"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-foreground flex items-center gap-1">
-                      <Camera className="h-4 w-4" />
-                      Photos Count
-                    </FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        min="0" 
-                        placeholder="0" 
-                        className="border-border"
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            {/* Weather Field */}
+            <FormField
+              control={form.control}
+              name="weather"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-foreground flex items-center gap-1">
+                    <Thermometer className="h-4 w-4" />
+                    Weather
+                  </FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="e.g., Clear, 7°C" 
+                      className="border-border"
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             {/* Difficulty Selection */}
             <FormField
