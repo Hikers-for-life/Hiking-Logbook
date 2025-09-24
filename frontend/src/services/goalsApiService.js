@@ -1,5 +1,4 @@
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
-console.log('API_BASE_URL:', API_BASE_URL);
 
 // Helper function to get auth token 
 const getAuthToken = async () => {
@@ -27,7 +26,6 @@ const apiRequest = async (endpoint, options = {}) => {
   };
 
   const fullUrl = `${API_BASE_URL}${endpoint}`;
-  console.log('Making API request to:', fullUrl);
   const response = await fetch(fullUrl, config);
   
   if (!response.ok) {
