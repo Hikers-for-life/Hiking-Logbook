@@ -9,6 +9,7 @@ import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
 import hikeRoutes from './routes/hikes.js';
+import goalsRoutes from './routes/goals.js';
 
 dotenv.config();
 
@@ -16,8 +17,13 @@ const app = express();
 
 const PORT = process.env.PORT || 3001;
 
+//Needed to parse JSON bodies
+app.use(cors());
+app.use(express.json());
+
 // Security middleware
 app.use(helmet());
+app.use('/api/goals', goalsRoutes);
 
 // CORS configuration
 const allowedOrigins = [
