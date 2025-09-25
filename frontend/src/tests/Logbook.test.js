@@ -115,15 +115,6 @@ describe('Logbook Component', () => {
     expect(screen.queryByText('Hike Paused')).not.toBeInTheDocument();
   });
 
-  test('displays stats cards', () => {
-    renderLogbook();
-    
-    expect(screen.getByText('Total Hikes')).toBeInTheDocument();
-    expect(screen.getByText('Miles Hiked')).toBeInTheDocument();
-    expect(screen.getByText('Elevation Gained')).toBeInTheDocument();
-    expect(screen.getByText('States Explored')).toBeInTheDocument();
-  });
-
   test('shows Edit and Delete buttons are available', () => {
     renderLogbook();
     

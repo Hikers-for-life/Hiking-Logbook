@@ -1,13 +1,5 @@
 import { getDatabase } from './firebase.js';
-import { db } from './firebase.js';
-// Database utilities for comprehensive hike management
 
-export const collections = {
-  USERS: 'users',
-  HIKES: 'hikes',
-  TRAILS: 'trails',
-  ACHIEVEMENTS: 'achievements',
-};
 export const dbUtils = {
   // Helper method to get database instance
   getDb() {
@@ -17,23 +9,22 @@ export const dbUtils = {
   //Naledi start
   // PLANNED HIKES METHODS
   // Add a new planned hike
+  // Updated addPlannedHike method 
   async addPlannedHike(userId, plannedHikeData) {
     try {
-      // Map and validate the planned hike data
+      // Map and validate the planned hike data with updated schema
       const mappedPlannedHikeData = {
         title: plannedHikeData.title || '',
         date: plannedHikeData.date || new Date(),
+        startTime: plannedHikeData.startTime || '', // New field
         location: plannedHikeData.location || '',
-        distance: plannedHikeData.distance || 0,
-        estimatedDuration: plannedHikeData.estimatedDuration || '',
+        distance: plannedHikeData.distance || '',
         difficulty: plannedHikeData.difficulty || 'Easy',
-        maxParticipants: plannedHikeData.maxParticipants || 8,
         description: plannedHikeData.description || '',
-        meetingPoint: plannedHikeData.meetingPoint || '',
         notes: plannedHikeData.notes || '',
         
         // Additional metadata
-        status: 'planned',
+        status: 'planning', // Default status
         participants: [userId], // Creator is automatically a participant
         createdBy: userId,
         createdAt: new Date(),
@@ -54,37 +45,55 @@ export const dbUtils = {
     }
   },
 
-  // Get all planned hikes for a user with optional filtering
+  // Updated getUserPlannedHikes to filter out cancelled hikes by default
   async getUserPlannedHikes(userId, filters = {}) {
     try {
-      let query = this.getDb()
+      // Simple query - just get all planned hikes ordered by date
+      const query = this.getDb()
         .collection('users')
         .doc(userId)
-        .collection('plannedHikes');
-      
-      // Apply filters
-      if (filters.status) {
-        query = query.where('status', '==', filters.status);
-      }
-      if (filters.difficulty) {
-        query = query.where('difficulty', '==', filters.difficulty);
-      }
-      if (filters.dateFrom) {
-        query = query.where('date', '>=', filters.dateFrom);
-      }
-      if (filters.dateTo) {
-        query = query.where('date', '<=', filters.dateTo);
-      }
-      
-      // Order by date (upcoming first)
-      query = query.orderBy('date', 'asc');
+        .collection('plannedHikes')
+        .orderBy('date', 'asc');
       
       const snapshot = await query.get();
       
-      const plannedHikes = [];
+      let plannedHikes = [];
       snapshot.forEach(doc => {
         plannedHikes.push({ id: doc.id, ...doc.data() });
       });
+      
+      // Apply filters in JavaScript to avoid complex Firestore indexes
+      if (!filters.includeCancelled) {
+        plannedHikes = plannedHikes.filter(hike => hike.status !== 'cancelled');
+      }
+      
+      if (filters.status) {
+        plannedHikes = plannedHikes.filter(hike => hike.status === filters.status);
+      }
+      
+      if (filters.difficulty) {
+        plannedHikes = plannedHikes.filter(hike => hike.difficulty === filters.difficulty);
+      }
+      
+      if (filters.dateFrom) {
+        const dateFrom = new Date(filters.dateFrom);
+        plannedHikes = plannedHikes.filter(hike => {
+          const hikeDate = hike.date && hike.date._seconds 
+            ? new Date(hike.date._seconds * 1000)
+            : new Date(hike.date);
+          return hikeDate >= dateFrom;
+        });
+      }
+      
+      if (filters.dateTo) {
+        const dateTo = new Date(filters.dateTo);
+        plannedHikes = plannedHikes.filter(hike => {
+          const hikeDate = hike.date && hike.date._seconds 
+            ? new Date(hike.date._seconds * 1000)
+            : new Date(hike.date);
+          return hikeDate <= dateTo;
+        });
+      }
       
       return plannedHikes;
     } catch (error) {
@@ -261,59 +270,122 @@ export const dbUtils = {
   // HIKES METHODS
   // Add a new hike with comprehensive data
   async addHike(userId, hikeData) {
-    try {
+  try {
+    // Map and validate the hike data - supports both planned and direct creation
+    const mappedHikeData = {
+      // Basic information
+      title: hikeData.title || hikeData.trailName || '',
+      location: hikeData.location || '',
+      route: hikeData.route || hikeData.trailName || '',
+      
+      // Timing - support both planned and direct workflows
+      date: hikeData.date || new Date(),
+      startTime: hikeData.startTime || null, // Can be planned time or actual start time
+      actualStartTime: hikeData.actualStartTime || null, // Actual start time for planned hikes
+      endTime: hikeData.endTime || null,
+      duration: hikeData.duration || 0,
+      
+      // Physical metrics
+      distance: hikeData.distance || hikeData.distanceKm || '',
+      elevation: hikeData.elevation || 0,
+      difficulty: hikeData.difficulty || 'Easy',
+      
+      // Environmental
+      weather: hikeData.weather || '',
+      
+      // Additional details
+      notes: hikeData.notes || '',
+      description: hikeData.description || '', // Support planned hike descriptions
+      photos: hikeData.photos || 0,
+      
+      // GPS and tracking
+      waypoints: hikeData.waypoints || [],
+      startLocation: hikeData.startLocation || null,
+      endLocation: hikeData.endLocation || null,
+      routeMap: hikeData.routeMap || '',
+      gpsTrack: hikeData.gpsTrack || [],
+      
+      // Planned hike integration
+      plannedHikeId: hikeData.plannedHikeId || null, // Reference to planned hike if applicable
+      
+      // Metadata
+      status: hikeData.status || 'completed',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      userId: userId
+    };
 
-      // Map and validate the hike data
-      const mappedHikeData = {
-        // Basic information
-        title: hikeData.title || hikeData.trailName || '',
-        location: hikeData.location || '',
-        route: hikeData.route || hikeData.trailName || '',
-        
-        // Timing
-        date: hikeData.date || new Date(),
-        startTime: hikeData.startTime || null,
-        endTime: hikeData.endTime || null,
-        duration: hikeData.duration || 0,
-        
-        // Physical metrics
-        distance: hikeData.distance || hikeData.distanceKm || 0,
-        elevation: hikeData.elevation || 0,
-        difficulty: hikeData.difficulty || 'Easy',
-        
-        // Environmental
-        weather: hikeData.weather || '',
-        
-        // Additional details
-        notes: hikeData.notes || '',
-        photos: hikeData.photos || 0,
-        
-        // GPS and tracking
-        waypoints: hikeData.waypoints || [],
-        startLocation: hikeData.startLocation || null,
-        endLocation: hikeData.endLocation || null,
-        routeMap: hikeData.routeMap || '',
-        gpsTrack: hikeData.gpsTrack || [],
-        
-        // Metadata
-        status: hikeData.status || 'completed',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        userId: userId
-      };
+    const docRef = await this.getDb()
+      .collection('users')
+      .doc(userId)
+      .collection('hikes')
+      .add(mappedHikeData);
+      
+    return { success: true, id: docRef.id };
 
-      const docRef = await this.getDb()
-        .collection('users')
-        .doc(userId)
-        .collection('hikes')
-        .add(mappedHikeData);
-        
-      return { success: true, id: docRef.id };
+  } catch (error) {
+    throw new Error(`Failed to add hike: ${error.message}`);
+  }
+},
 
-    } catch (error) {
-      throw new Error(`Failed to add hike: ${error.message}`);
-    }
-  },
+// Updated startHike method to support both planned and direct starts
+async startHike(userId, hikeData) {
+  try {
+    const activeHikeData = {
+      ...hikeData,
+      status: 'active',
+      date: hikeData.date || new Date(),
+      actualStartTime: new Date(), // Always set actual start time for active hikes
+      startTime: hikeData.startTime || new Date(), // Planned time or current time
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      userId: userId,
+      waypoints: [],
+      gpsTrack: [],
+      // Preserve planned hike reference if it exists
+      plannedHikeId: hikeData.plannedHikeId || null
+    };
+
+    const docRef = await this.getDb()
+      .collection('users')
+      .doc(userId)
+      .collection('hikes')
+      .add(activeHikeData);
+      
+    return { success: true, id: docRef.id };
+  } catch (error) {
+    throw new Error(`Failed to start hike: ${error.message}`);
+  }
+},
+
+// Enhanced completeHike method with better data handling
+async completeHike(userId, hikeId, endData) {
+  try {
+    const completionData = {
+      status: 'completed',
+      endTime: endData.endTime || new Date(),
+      duration: endData.duration || 0,
+      distance: endData.distance || endData.distance, // Allow updating distance
+      elevation: endData.elevation || endData.elevation, // Allow updating elevation
+      weather: endData.weather || endData.weather, // Allow updating weather
+      notes: endData.notes || endData.notes, // Allow updating notes
+      endLocation: endData.endLocation || null,
+      photos: endData.photos || 0,
+      updatedAt: new Date()
+    };
+
+    await this.getDb()
+      .collection('users')
+      .doc(userId)
+      .collection('hikes')
+      .doc(hikeId)
+      .update(completionData);
+        
+    return { success: true };
+  } catch (error) {
+    throw new Error(`Failed to complete hike: ${error.message}`);
+  }
+},
 
   // Get all hikes for a user with optional filtering
   async getUserHikes(userId, filters = {}) {
@@ -432,60 +504,7 @@ export const dbUtils = {
       throw new Error(`Failed to delete hike: ${error.message}`);
     }
   },
-
-  // Start tracking a new hike (for active hikes)
-  async startHike(userId, hikeData) {
-    try {
-      const activeHikeData = {
-        ...hikeData,
-        status: 'active',
-        date: hikeData.date || new Date(), // Ensure date field exists for ordering
-        startTime: new Date(),
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        userId: userId,
-        waypoints: [],
-        gpsTrack: []
-      };
-
-      const docRef = await this.getDb()
-        .collection('users')
-        .doc(userId)
-        .collection('hikes')
-        .add(activeHikeData);
-        
-      return { success: true, id: docRef.id };
-    } catch (error) {
-      throw new Error(`Failed to start hike: ${error.message}`);
-    }
-  },
-
-
-  // Complete a hike
-  async completeHike(userId, hikeId, endData) {
-    try {
-
-      const completionData = {
-        status: 'completed',
-        endTime: endData.endTime || new Date(),
-        duration: endData.duration || 0,
-        endLocation: endData.endLocation || null,
-        updatedAt: new Date()
-      };
-
-      await this.getDb()
-        .collection('users')
-        .doc(userId)
-        .collection('hikes')
-        .doc(hikeId)
-        .update(completionData);
-        
-
-      return { success: true };
-    } catch (error) {
-      throw new Error(`Failed to complete hike: ${error.message}`);
-    }
-  },
+  
 
   // GEAR CHECKLIST METHODS
   // Get user's gear checklist

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -20,62 +20,79 @@ import {
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Button } from "./ui/button";
-import { Badge } from "./ui/badge";
-import { Calendar, MapPin, Mountain, Clock, Users, Plus, X } from "lucide-react";
+import { Calendar, MapPin, Mountain, Clock } from "lucide-react";
 
-// Form validation schema
+// Updated form validation schema
 const hikePlanSchema = z.object({
   title: z.string().min(1, "Title is required").max(100, "Title must be less than 100 characters"),
   date: z.string().min(1, "Date is required"),
+  startTime: z.string().min(1, "Start time is required"),
   location: z.string().min(1, "Location is required").max(200, "Location must be less than 200 characters"),
   distance: z.string().min(1, "Distance is required"),
-  estimatedDuration: z.string().min(1, "Estimated duration is required"),
   difficulty: z.enum(["Easy", "Moderate", "Hard"], {
     required_error: "Please select a difficulty level",
   }),
-  maxParticipants: z.string().transform((val) => parseInt(val) || 1),
   description: z.string().max(500, "Description must be less than 500 characters").optional(),
-  meetingPoint: z.string().min(1, "Meeting point is required"),
   notes: z.string().max(1000, "Notes must be less than 1000 characters").optional(),
 });
 
-const NewHikePlanForm = ({ open, onOpenChange, onSubmit }) => {
+const NewHikePlanForm = ({ open, onOpenChange, onSubmit, editingHike, isEditMode }) => {
   const [selectedDifficulty, setSelectedDifficulty] = useState("");
-  const [inviteEmails, setInviteEmails] = useState([]);
-  const [emailInput, setEmailInput] = useState("");
 
   const form = useForm({
     resolver: zodResolver(hikePlanSchema),
     defaultValues: {
       title: "",
       date: "",
+      startTime: "",
       location: "",
       distance: "",
-      estimatedDuration: "",
       difficulty: "",
-      maxParticipants: "8",
       description: "",
-      meetingPoint: "",
       notes: "",
     },
   });
 
+  // Populate form when editing
+  useEffect(() => {
+    if (isEditMode && editingHike) {
+      form.reset({
+        title: editingHike.title || "",
+        date: editingHike.date || "",
+        startTime: editingHike.startTime || "",
+        location: editingHike.location || "",
+        distance: editingHike.distance || "",
+        difficulty: editingHike.difficulty || "",
+        description: editingHike.description || "",
+        notes: editingHike.notes || "",
+      });
+      setSelectedDifficulty(editingHike.difficulty || "");
+    } else {
+      form.reset({
+        title: "",
+        date: "",
+        startTime: "",
+        location: "",
+        distance: "",
+        difficulty: "",
+        description: "",
+        notes: "",
+      });
+      setSelectedDifficulty("");
+    }
+  }, [isEditMode, editingHike, form]);
+
   const handleSubmit = (data) => {
-    // Don't manually set ID - let Firestore auto-generate document IDs
-    const newPlan = {
+    const planData = {
       ...data,
-      maxParticipants: parseInt(data.maxParticipants) || 1,
       participants: ["You"],
-      invitedEmails: inviteEmails,
       status: "planning",
       createdAt: new Date().toISOString(),
     };
     
-    onSubmit(newPlan);
+    onSubmit(planData);
     form.reset();
     setSelectedDifficulty("");
-    setInviteEmails([]);
-    setEmailInput("");
     onOpenChange(false);
   };
 
@@ -84,55 +101,44 @@ const NewHikePlanForm = ({ open, onOpenChange, onSubmit }) => {
     form.setValue("difficulty", difficulty);
   };
 
-  const addInviteEmail = () => {
-    if (emailInput && emailInput.includes("@") && !inviteEmails.includes(emailInput)) {
-      setInviteEmails([...inviteEmails, emailInput]);
-      setEmailInput("");
-    }
-  };
-
-  const removeInviteEmail = (emailToRemove) => {
-    setInviteEmails(inviteEmails.filter(email => email !== emailToRemove));
-  };
-
-  const handleKeyPress = (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      addInviteEmail();
-    }
+  const handleClose = () => {
+    form.reset();
+    setSelectedDifficulty("");
+    onOpenChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl text-foreground">
-            Plan New Hike
+            {isEditMode ? "Edit Hike Plan" : "Plan New Hike"}
           </DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-            {/* Title and Date Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-foreground">Hike Title</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="e.g., Weekend Warriors: Table Mountain" 
-                        className="border-border"
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            {/* Title */}
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-foreground">Hike Title</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="e.g., Weekend Warriors: Table Mountain" 
+                      className="border-border"
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
+            {/* Date and Start Time Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="date"
@@ -153,9 +159,30 @@ const NewHikePlanForm = ({ open, onOpenChange, onSubmit }) => {
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="startTime"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-foreground flex items-center gap-1">
+                      <Clock className="h-4 w-4" />
+                      Start Time
+                    </FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="time" 
+                        className="border-border"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
-            {/* Location and Meeting Point */}
+            {/* Location and Distance */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -180,27 +207,6 @@ const NewHikePlanForm = ({ open, onOpenChange, onSubmit }) => {
 
               <FormField
                 control={form.control}
-                name="meetingPoint"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-foreground">Meeting Point</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="e.g., Lower Cable Station parking" 
-                        className="border-border"
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {/* Distance, Duration, Max Participants */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <FormField
-                control={form.control}
                 name="distance"
                 render={({ field }) => (
                   <FormItem>
@@ -211,51 +217,6 @@ const NewHikePlanForm = ({ open, onOpenChange, onSubmit }) => {
                     <FormControl>
                       <Input 
                         placeholder="e.g., 8.5 km" 
-                        className="border-border"
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="estimatedDuration"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-foreground flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      Duration
-                    </FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="e.g., 4h 30m" 
-                        className="border-border"
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="maxParticipants"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-foreground flex items-center gap-1">
-                      <Users className="h-4 w-4" />
-                      Max People
-                    </FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        min="1" 
-                        max="20"
-                        placeholder="8" 
                         className="border-border"
                         {...field} 
                       />
@@ -315,48 +276,6 @@ const NewHikePlanForm = ({ open, onOpenChange, onSubmit }) => {
               )}
             />
 
-            {/* Invite Friends */}
-            <div className="space-y-3">
-              <FormLabel className="text-foreground">Invite Friends (Optional)</FormLabel>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Enter email address"
-                  value={emailInput}
-                  onChange={(e) => setEmailInput(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  className="border-border"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={addInviteEmail}
-                  className="border-forest text-forest hover:bg-forest hover:text-primary-foreground"
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-              {inviteEmails.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {inviteEmails.map((email, index) => (
-                    <Badge
-                      key={index}
-                      variant="secondary"
-                      className="bg-forest/10 text-forest border-forest/20"
-                    >
-                      {email}
-                      <button
-                        type="button"
-                        onClick={() => removeInviteEmail(email)}
-                        className="ml-2 hover:text-destructive"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              )}
-            </div>
-
             {/* Notes */}
             <FormField
               control={form.control}
@@ -366,7 +285,7 @@ const NewHikePlanForm = ({ open, onOpenChange, onSubmit }) => {
                   <FormLabel className="text-foreground">Additional Notes (Optional)</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Equipment needed, meeting instructions, special considerations..."
+                      placeholder="Equipment needed, special considerations, meeting instructions..."
                       className="border-border min-h-[80px]"
                       {...field}
                     />
@@ -380,7 +299,7 @@ const NewHikePlanForm = ({ open, onOpenChange, onSubmit }) => {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => onOpenChange(false)}
+                onClick={handleClose}
                 className="border-border"
               >
                 Cancel
@@ -389,7 +308,7 @@ const NewHikePlanForm = ({ open, onOpenChange, onSubmit }) => {
                 type="submit"
                 className="bg-gradient-trail text-primary-foreground"
               >
-                Create Hike Plan
+                {isEditMode ? "Update Hike Plan" : "Create Hike Plan"}
               </Button>
             </DialogFooter>
           </form>

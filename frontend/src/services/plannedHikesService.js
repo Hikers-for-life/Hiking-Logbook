@@ -54,6 +54,7 @@ export const plannedHikeApiService = {
     if (filters.difficulty) queryParams.append('difficulty', filters.difficulty);
     if (filters.dateFrom) queryParams.append('dateFrom', filters.dateFrom);
     if (filters.dateTo) queryParams.append('dateTo', filters.dateTo);
+    if (filters.includeCancelled) queryParams.append('includeCancelled', filters.includeCancelled);
     
     const queryString = queryParams.toString();
     const endpoint = `/planned-hikes${queryString ? `?${queryString}` : ''}`;
@@ -86,7 +87,15 @@ export const plannedHikeApiService = {
     return result.data || result;
   },
 
-  // Delete a planned hike
+  // Cancel a planned hike (soft delete)
+  async cancelPlannedHike(plannedHikeId) {
+    const result = await makeAuthenticatedRequest(`/planned-hikes/${plannedHikeId}/cancel`, {
+      method: 'PUT',
+    });
+    return result.data || result;
+  },
+
+  // Delete a planned hike (hard delete)
   async deletePlannedHike(plannedHikeId) {
     const result = await makeAuthenticatedRequest(`/planned-hikes/${plannedHikeId}`, {
       method: 'DELETE',
@@ -122,26 +131,31 @@ export const plannedHikeApiService = {
 
   // Get planned hike statistics
   async getPlannedHikeStats() {
-    const plannedHikes = await this.getPlannedHikes();
+    const plannedHikes = await this.getPlannedHikes({ includeCancelled: true });
     
     const stats = {
-      totalPlannedHikes: plannedHikes.length,
-      upcomingHikes: plannedHikes.filter(h => new Date(h.date) >= new Date()).length,
+      totalPlannedHikes: plannedHikes.filter(h => h.status !== 'cancelled').length,
+      upcomingHikes: plannedHikes.filter(h => new Date(h.date) >= new Date() && h.status !== 'cancelled').length,
       pastHikes: plannedHikes.filter(h => new Date(h.date) < new Date()).length,
-      totalEstimatedDistance: plannedHikes.reduce((sum, hike) => sum + (parseFloat(hike.distance) || 0), 0),
+      totalEstimatedDistance: plannedHikes
+        .filter(h => h.status !== 'cancelled')
+        .reduce((sum, hike) => sum + (parseFloat(hike.distance) || 0), 0),
       byDifficulty: {
-        Easy: plannedHikes.filter(h => h.difficulty === 'Easy').length,
-        Moderate: plannedHikes.filter(h => h.difficulty === 'Moderate').length,
-        Hard: plannedHikes.filter(h => h.difficulty === 'Hard').length,
-        Extreme: plannedHikes.filter(h => h.difficulty === 'Extreme').length
+        Easy: plannedHikes.filter(h => h.difficulty === 'Easy' && h.status !== 'cancelled').length,
+        Moderate: plannedHikes.filter(h => h.difficulty === 'Moderate' && h.status !== 'cancelled').length,
+        Hard: plannedHikes.filter(h => h.difficulty === 'Hard' && h.status !== 'cancelled').length,
+        Extreme: plannedHikes.filter(h => h.difficulty === 'Extreme' && h.status !== 'cancelled').length
       },
       byStatus: {
-        planned: plannedHikes.filter(h => h.status === 'planned').length,
+        planning: plannedHikes.filter(h => h.status === 'planning').length,
         started: plannedHikes.filter(h => h.status === 'started').length,
         cancelled: plannedHikes.filter(h => h.status === 'cancelled').length
       },
-      averageParticipants: plannedHikes.length > 0 
-        ? plannedHikes.reduce((sum, hike) => sum + (hike.participants?.length || 0), 0) / plannedHikes.length 
+      averageParticipants: plannedHikes.filter(h => h.status !== 'cancelled').length > 0 
+        ? plannedHikes
+            .filter(h => h.status !== 'cancelled')
+            .reduce((sum, hike) => sum + (hike.participants?.length || 0), 0) / 
+          plannedHikes.filter(h => h.status !== 'cancelled').length
         : 0
     };
 
@@ -153,7 +167,7 @@ export const plannedHikeApiService = {
     const today = new Date().toISOString().split('T')[0];
     const filters = {
       dateFrom: today,
-      status: 'planned'
+      status: 'planning' // Only get planning status hikes
     };
     
     return await this.getPlannedHikes(filters);
@@ -163,7 +177,8 @@ export const plannedHikeApiService = {
   async getPastPlannedHikes() {
     const today = new Date().toISOString().split('T')[0];
     const filters = {
-      dateTo: today
+      dateTo: today,
+      includeCancelled: true // Include all past hikes regardless of status
     };
     
     return await this.getPlannedHikes(filters);
@@ -198,7 +213,7 @@ export const plannedHikeUtils = {
   validatePlannedHikeData(data) {
     const errors = [];
 
-    // Required fields validation
+    // Required fields validation (updated schema)
     if (!data.title || data.title.trim() === '') {
       errors.push('Title is required');
     }
@@ -214,20 +229,23 @@ export const plannedHikeUtils = {
       }
     }
 
+    if (!data.startTime || data.startTime.trim() === '') {
+      errors.push('Start time is required');
+    } else {
+      // Validate time format (HH:MM)
+      const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+      if (!timeRegex.test(data.startTime)) {
+        errors.push('Invalid start time format. Use HH:MM format');
+      }
+    }
+
     if (!data.location || data.location.trim() === '') {
       errors.push('Location is required');
     }
 
     // Optional field validations
-    if (data.distance && (isNaN(parseFloat(data.distance)) || parseFloat(data.distance) < 0)) {
-      errors.push('Distance must be a positive number');
-    }
-
-    if (data.maxParticipants) {
-      const maxParticipants = parseInt(data.maxParticipants);
-      if (isNaN(maxParticipants) || maxParticipants < 1 || maxParticipants > 50) {
-        errors.push('Maximum participants must be between 1 and 50');
-      }
+    if (data.distance && typeof data.distance === 'string' && data.distance.trim() === '') {
+      errors.push('Distance cannot be empty if provided');
     }
 
     const validDifficulties = ['Easy', 'Moderate', 'Hard', 'Extreme'];
@@ -250,13 +268,11 @@ export const plannedHikeUtils = {
     return {
       title: formData.title?.trim() || '',
       date: formData.date || '',
+      startTime: formData.startTime?.trim() || '',
       location: formData.location?.trim() || '',
-      distance: formData.distance ? parseFloat(formData.distance) : 0,
-      estimatedDuration: formData.estimatedDuration?.trim() || '',
+      distance: formData.distance?.trim() || '',
       difficulty: formData.difficulty || 'Easy',
-      maxParticipants: formData.maxParticipants ? parseInt(formData.maxParticipants) : 8,
       description: formData.description?.trim() || '',
-      meetingPoint: formData.meetingPoint?.trim() || '',
       notes: formData.notes?.trim() || ''
     };
   },
@@ -271,11 +287,6 @@ export const plannedHikeUtils = {
     // Check if hike is in the past
     if (new Date(plannedHike.date) < new Date()) {
       return { canJoin: false, reason: 'This hike is in the past' };
-    }
-
-    // Check if hike is full
-    if (plannedHike.isFull) {
-      return { canJoin: false, reason: 'This hike is full' };
     }
 
     // Check if user is already a participant
@@ -340,7 +351,7 @@ export const plannedHikeUtils = {
     const daysUntil = this.getDaysUntilHike(plannedHike.date);
 
     if (plannedHike.status === 'cancelled') {
-      return { text: 'Cancelled', color: 'red', icon: '❌' };
+      return { text: 'Cancelled', color: 'red', icon: '⌘' };
     }
 
     if (plannedHike.status === 'started') {

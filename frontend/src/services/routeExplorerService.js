@@ -1,414 +1,165 @@
-// services/routeExplorerService.js
+// src/services/routeExplorerService.js
+
+const ORS_API_KEY = process.env.REACT_APP_OPENROUTESERVICE_API_KEY;
+
+// Helper function to calculate distance (Haversine formula) - no changes needed
+const calculateDistance = (coord1, coord2) => {
+  const R = 6371; // Radius of the Earth in km
+  const dLat = (coord2.lat - coord1.lat) * (Math.PI / 180);
+  const dLon = (coord2.lon - coord1.lon) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(coord1.lat * (Math.PI / 180)) *
+      Math.cos(coord2.lat * (Math.PI / 180)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c; // Distance in km
+};
 
 /**
- * Route Explorer Service - Free hiking route discovery
- * Uses OpenStreetMap, Overpass API, and elevation data
+ * NEW: Transforms the raw GeoJSON data from the ORS POI API into our app-friendly format.
  */
-export class RouteExplorerService {
-  constructor() {
-    this.overpassEndpoint = 'https://overpass-api.de/api/interpreter';
-    this.elevationEndpoint = 'https://api.open-elevation.com/api/v1/lookup';
-  }
+const transformORSData = (orsFeatures) => {
+  const trails = [];
+  
+  orsFeatures.forEach(feature => {
+    const properties = feature.properties;
+    const trailName = properties.osm_tags?.name || 'Unnamed Trail';
+    const coordinates = feature.geometry.coordinates;
 
-  /**
-   * Discover hiking trails near a location
-   * @param {number} lat - Latitude
-   * @param {number} lng - Longitude  
-   * @param {number} radiusKm - Search radius in kilometers
-   * @returns {Promise<Array>} Array of trail data
-   */
-  async discoverNearbyTrails(lat, lng, radiusKm = 25) {
-    try {
-      const radiusMeters = radiusKm * 1000;
-      
-      const overpassQuery = `
-        [out:json][timeout:30];
-        (
-          way["highway"~"^(path|track|footway)$"]["foot"!="no"]["name"](around:${radiusMeters},${lat},${lng});
-          way["highway"="cycleway"]["foot"!="no"]["name"](around:${radiusMeters},${lat},${lng});
-          relation["route"="hiking"]["name"](around:${radiusMeters},${lat},${lng});
-          way["natural"="cliff"]["climbing"!="no"]["name"](around:${radiusMeters},${lat},${lng});
-        );
-        out geom meta;
-      `;
-
-      const response = await fetch(this.overpassEndpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `data=${encodeURIComponent(overpassQuery)}`
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch trail data');
-      }
-
-      const data = await response.json();
-      return this.processTrailData(data.elements);
-
-    } catch (error) {
-      console.error('Error discovering trails:', error);
-      throw new Error('Unable to discover trails at this time');
-    }
-  }
-
-  /**
-   * Get detailed route information
-   * @param {string} routeId - OpenStreetMap way/relation ID
-   * @returns {Promise<Object>} Detailed route information
-   */
-  async getRouteDetails(routeId) {
-    try {
-      const overpassQuery = `
-        [out:json][timeout:25];
-        (
-          way(${routeId});
-          relation(${routeId});
-        );
-        out geom meta tags;
-      `;
-
-      const response = await fetch(this.overpassEndpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `data=${encodeURIComponent(overpassQuery)}`
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch route details');
-      }
-
-      const data = await response.json();
-      if (data.elements.length === 0) {
-        throw new Error('Route not found');
-      }
-
-      return this.processDetailedRoute(data.elements[0]);
-
-    } catch (error) {
-      console.error('Error getting route details:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Search trails by name and location
-   * @param {string} searchTerm - Trail name or keyword
-   * @param {number} lat - Center latitude
-   * @param {number} lng - Center longitude
-   * @param {number} radiusKm - Search radius
-   * @returns {Promise<Array>} Matching trails
-   */
-  async searchTrails(searchTerm, lat, lng, radiusKm = 50) {
-    try {
-      const radiusMeters = radiusKm * 1000;
-      const searchRegex = searchTerm.toLowerCase().replace(/\s+/g, '.*');
-      
-      const overpassQuery = `
-        [out:json][timeout:30];
-        (
-          way["highway"~"^(path|track|footway)$"]["name"~"${searchRegex}",i](around:${radiusMeters},${lat},${lng});
-          relation["route"="hiking"]["name"~"${searchRegex}",i](around:${radiusMeters},${lat},${lng});
-        );
-        out geom meta;
-      `;
-
-      const response = await fetch(this.overpassEndpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `data=${encodeURIComponent(overpassQuery)}`
-      });
-
-      if (!response.ok) {
-        throw new Error('Search failed');
-      }
-
-      const data = await response.json();
-      return this.processTrailData(data.elements);
-
-    } catch (error) {
-      console.error('Error searching trails:', error);
-      throw new Error('Trail search unavailable');
-    }
-  }
-
-  /**
-   * Get elevation profile for a route
-   * @param {Array} coordinates - Array of [lng, lat] coordinates
-   * @returns {Promise<Array>} Elevation profile data
-   */
-  async getElevationProfile(coordinates) {
-    try {
-      // Sample coordinates for elevation (max 100 points for free API)
-      const sampledCoords = this.sampleCoordinates(coordinates, 50);
-      
-      const locations = sampledCoords.map(coord => ({
-        latitude: coord[1],
-        longitude: coord[0]
-      }));
-
-      const response = await fetch(this.elevationEndpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ locations })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to get elevation data');
-      }
-
-      const data = await response.json();
-      return this.processElevationData(data.results, sampledCoords);
-
-    } catch (error) {
-      console.error('Error getting elevation profile:', error);
-      return []; // Return empty array if elevation fails
-    }
-  }
-
-  /**
-   * Discover points of interest along a route
-   * @param {Array} coordinates - Route coordinates
-   * @param {number} bufferKm - Search buffer in kilometers
-   * @returns {Promise<Array>} Points of interest
-   */
-  async getRoutePointsOfInterest(coordinates, bufferKm = 2) {
-    try {
-      // Get bounding box for the route
-      const bbox = this.getBoundingBox(coordinates, bufferKm);
-      
-      const overpassQuery = `
-        [out:json][timeout:25];
-        (
-          node["tourism"~"^(viewpoint|attraction|information)$"](${bbox.south},${bbox.west},${bbox.north},${bbox.east});
-          node["amenity"~"^(shelter|drinking_water|toilets)$"](${bbox.south},${bbox.west},${bbox.north},${bbox.east});
-          node["natural"~"^(peak|waterfall|spring)$"](${bbox.south},${bbox.west},${bbox.north},${bbox.east});
-          node["man_made"~"^(tower|mast)$"]["tower:type"="observation"](${bbox.south},${bbox.west},${bbox.north},${bbox.east});
-        );
-        out meta;
-      `;
-
-      const response = await fetch(this.overpassEndpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `data=${encodeURIComponent(overpassQuery)}`
-      });
-
-      if (!response.ok) {
-        return []; // Return empty if POI search fails
-      }
-
-      const data = await response.json();
-      return this.processPointsOfInterest(data.elements);
-
-    } catch (error) {
-      console.error('Error getting POIs:', error);
-      return [];
-    }
-  }
-
-  // Private helper methods
-
-  processTrailData(elements) {
-    return elements
-      .filter(element => element.tags && element.tags.name)
-      .map(element => {
-        const coords = this.extractCoordinates(element);
-        const distance = coords.length > 1 ? this.calculateDistance(coords) : 0;
-        
-        return {
-          id: element.id,
-          type: element.type,
-          name: element.tags.name,
-          description: element.tags.description || '',
-          difficulty: this.estimateDifficulty(element.tags),
-          surface: element.tags.surface || 'unknown',
-          distance: Math.round(distance * 100) / 100, // Round to 2 decimal places
-          coordinates: coords,
-          tags: element.tags,
-          source: 'OpenStreetMap'
-        };
-      })
-      .filter(trail => trail.distance > 0.5) // Filter out very short segments
-      .sort((a, b) => a.distance - b.distance); // Sort by distance
-  }
-
-  processDetailedRoute(element) {
-    const coords = this.extractCoordinates(element);
-    const distance = this.calculateDistance(coords);
+    // The POI for a trail is often just a point, not the full path.
+    // For now, we will represent it as a starting point.
+    // The details view will still show it correctly on a map.
+    // We will assign a default distance and difficulty for discovered POIs.
     
-    return {
-      id: element.id,
-      type: element.type,
-      name: element.tags.name || 'Unnamed Trail',
-      description: element.tags.description || '',
-      difficulty: this.estimateDifficulty(element.tags),
-      surface: element.tags.surface || 'unknown',
-      distance: Math.round(distance * 100) / 100,
-      coordinates: coords,
-      waypoints: this.extractWaypoints(coords),
-      tags: element.tags,
-      source: 'OpenStreetMap',
-      lastModified: element.timestamp
-    };
-  }
-
-  processElevationData(elevationResults, coordinates) {
-    return elevationResults.map((result, index) => {
-      const distance = index > 0 
-        ? this.calculateDistance(coordinates.slice(0, index + 1))
-        : 0;
-      
-      return {
-        distance: Math.round(distance * 100) / 100,
-        elevation: result.elevation,
-        coordinates: [result.longitude, result.latitude]
-      };
+    trails.push({
+      id: properties.osm_id,
+      name: trailName,
+      description: `A trail discovered near you. The full details will be available upon selection.`,
+      distance: 'N/A', // Distance cannot be calculated from a single POI point
+      difficulty: 'Moderate', // Assign a default difficulty
+      surface: properties.osm_tags?.surface || 'unpaved',
+      // Coordinates are already [lon, lat] from GeoJSON
+      coordinates: coordinates,
+      duration: null,
+      ascent: null,
+      descent: null,
+      source: 'OpenRouteService',
     });
-  }
+  });
+  
+  // Remove duplicates by ID
+  return [...new Map(trails.map(item => [item.id, item])).values()];
+};
 
-  processPointsOfInterest(elements) {
-    return elements
-      .filter(element => element.lat && element.lon)
-      .map(element => ({
-        id: element.id,
-        name: element.tags.name || this.getPoiTypeName(element.tags),
-        type: this.getPoiType(element.tags),
-        coordinates: [element.lon, element.lat],
-        description: element.tags.description || '',
-        tags: element.tags
-      }));
-  }
 
-  extractCoordinates(element) {
-    if (element.type === 'way' && element.geometry) {
-      return element.geometry.map(point => [point.lon, point.lat]);
-    } else if (element.type === 'relation' && element.members) {
-      // For relations, we'd need to fetch member ways - simplified here
-      return [];
-    }
-    return [];
-  }
-
-  calculateDistance(coordinates) {
-    if (coordinates.length < 2) return 0;
+export const routeExplorerService = {
+  /**
+   * MODIFIED: Discovers nearby hiking trails using the OpenRouteService POI API.
+   */
+  async discoverNearbyTrails(lat, lng, radiusKm) {
+    const radiusMeters = radiusKm * 1000;
     
-    let totalDistance = 0;
-    for (let i = 1; i < coordinates.length; i++) {
-      totalDistance += this.haversineDistance(
-        coordinates[i - 1][1], coordinates[i - 1][0],
-        coordinates[i][1], coordinates[i][0]
-      );
-    }
-    return totalDistance;
-  }
+    const response = await fetch('https://api.openrouteservice.org/pois', {
+      method: 'POST',
+      headers: {
+        'Authorization': ORS_API_KEY,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        // Search for OSM features with "route=hiking"
+        "request": "pois",
+        "geometry": {
+          "circle": {
+            "radius": radiusMeters,
+            "coordinates": [lng, lat]
+          }
+        },
+        "filters": {
+          "category_group_ids": [38], // Category Group ID for "Touristic"
+           "category_ids": [7308] // Category ID for "Hiking"
+        },
+        "limit": 50 // Get up to 50 results
+      }),
+    });
 
-  haversineDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371; // Earth's radius in kilometers
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-              Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  }
-
-  estimateDifficulty(tags) {
-    // Simple difficulty estimation based on OSM tags
-    if (tags.sac_scale) {
-      const scale = parseInt(tags.sac_scale);
-      if (scale <= 2) return 'Easy';
-      if (scale <= 4) return 'Moderate';
-      return 'Hard';
+    if (!response.ok) {
+      throw new Error('Failed to fetch data from OpenRouteService.');
     }
-    
-    if (tags.difficulty) {
-      const difficulty = tags.difficulty.toLowerCase();
-      if (difficulty.includes('easy') || difficulty.includes('green')) return 'Easy';
-      if (difficulty.includes('intermediate') || difficulty.includes('blue')) return 'Moderate';
-      if (difficulty.includes('difficult') || difficulty.includes('red')) return 'Hard';
-    }
-    
-    return 'Moderate'; // Default
-  }
 
-  sampleCoordinates(coordinates, maxPoints) {
-    if (coordinates.length <= maxPoints) return coordinates;
-    
-    const step = Math.floor(coordinates.length / maxPoints);
-    const sampled = [];
-    for (let i = 0; i < coordinates.length; i += step) {
-      sampled.push(coordinates[i]);
+    const data = await response.json();
+    return transformORSData(data.features);
+  },
+  
+  /**
+   * NOTE: A nationwide search for POIs is less practical with ORS than with Overpass.
+   * For now, we will return a curated list as a reliable fallback.
+   * If a dynamic nationwide search is critical, we would need a different strategy.
+   */
+  async discoverNationwideHikes() {
+    // Fallback to a curated list for a better user experience
+    return [
+        { id: 'nationwide-1', name: "Lion's Head Summit", description: "Iconic Cape Town hike with 360-degree views.", distance: '5.5', difficulty: 'Moderate', coordinates: [[18.388, -33.935]] },
+        { id: 'nationwide-2', name: 'Platteklip Gorge', description: 'The most direct route to the top of Table Mountain.', distance: '2.9', difficulty: 'Hard', coordinates: [[18.404, -33.963]] },
+        { id: 'nationwide-3', name: 'Tugela Falls Hiking Trail', description: 'Hike to the top of the world\'s second-tallest waterfall.', distance: '13', difficulty: 'Moderate', coordinates: [[28.896, -28.752]] }
+    ];
+  },
+  
+  /**
+   * Enriches a trail with elevation data from OpenRouteService.
+   */
+  async enrichTrailWithElevation(trail) {
+    if (!ORS_API_KEY) {
+      console.warn("OpenRouteService API key is missing. Skipping elevation data.");
+      return { ...trail, ascent: 0, descent: 0, duration: 'N/A' };
     }
     
-    // Always include the last point
-    if (sampled[sampled.length - 1] !== coordinates[coordinates.length - 1]) {
-      sampled.push(coordinates[coordinates.length - 1]);
+    if (!trail.coordinates || trail.coordinates.length < 2) {
+      return trail;
     }
-    
-    return sampled;
-  }
 
-  getBoundingBox(coordinates, bufferKm) {
-    const lats = coordinates.map(coord => coord[1]);
-    const lngs = coordinates.map(coord => coord[0]);
-    
-    const minLat = Math.min(...lats);
-    const maxLat = Math.max(...lats);
-    const minLng = Math.min(...lngs);
-    const maxLng = Math.max(...lngs);
-    
-    // Add buffer (rough conversion: 1 degree ≈ 111 km)
-    const buffer = bufferKm / 111;
-    
+    const response = await fetch('https://api.openrouteservice.org/elevation/line', {
+      method: 'POST',
+      headers: {
+        'Authorization': ORS_API_KEY,
+        'Content-Type': 'application/json',
+      },
+      // The API expects coordinates in [longitude, latitude] format
+      body: JSON.stringify({ format_in: 'geojson', geometry: { coordinates: trail.coordinates } }),
+    });
+
+    if (!response.ok) {
+      console.error("Failed to fetch elevation data.");
+      return trail; // Return original trail on failure
+    }
+
+    const data = await response.json();
+    const elevations = data.geometry.coordinates.map(coord => coord[2]); // Elevation is the 3rd item
+
+    let ascent = 0;
+    let descent = 0;
+    for (let i = 1; i < elevations.length; i++) {
+      const diff = elevations[i] - elevations[i - 1];
+      if (diff > 0) {
+        ascent += diff;
+      } else {
+        descent -= diff;
+      }
+    }
+
+    // Estimate duration based on distance and ascent
+    const timeInMinutes = (trail.distance * 12) + (ascent / 10);
+    const hours = Math.floor(timeInMinutes / 60);
+    const minutes = Math.round(timeInMinutes % 60);
+    const estimatedDuration = `${hours}h ${minutes}m`;
+
     return {
-      south: minLat - buffer,
-      west: minLng - buffer,
-      north: maxLat + buffer,
-      east: maxLng + buffer
+      ...trail,
+      ascent: Math.round(ascent),
+      descent: Math.round(descent),
+      duration: estimatedDuration,
+      elevationProfile: elevations, // For drawing charts
     };
   }
-
-  extractWaypoints(coordinates) {
-    // Extract key waypoints (start, end, and some intermediate points)
-    const waypoints = [coordinates[0]]; // Start
-    
-    // Add some intermediate points
-    const numIntermediate = Math.min(3, Math.floor(coordinates.length / 4));
-    for (let i = 1; i <= numIntermediate; i++) {
-      const index = Math.floor((coordinates.length * i) / (numIntermediate + 1));
-      waypoints.push(coordinates[index]);
-    }
-    
-    waypoints.push(coordinates[coordinates.length - 1]); // End
-    return waypoints;
-  }
-
-  getPoiType(tags) {
-    if (tags.tourism) return tags.tourism;
-    if (tags.amenity) return tags.amenity;
-    if (tags.natural) return tags.natural;
-    if (tags.man_made) return tags.man_made;
-    return 'poi';
-  }
-
-  getPoiTypeName(tags) {
-    const type = this.getPoiType(tags);
-    const typeNames = {
-      viewpoint: 'Viewpoint',
-      attraction: 'Attraction',
-      information: 'Information',
-      shelter: 'Shelter',
-      drinking_water: 'Water Source',
-      toilets: 'Restrooms',
-      peak: 'Peak',
-      waterfall: 'Waterfall',
-      spring: 'Spring',
-      tower: 'Tower'
-    };
-    return typeNames[type] || type.charAt(0).toUpperCase() + type.slice(1);
-  }
-}
-
-// Export singleton instance
-export const routeExplorerService = new RouteExplorerService();
+};

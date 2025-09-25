@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
@@ -6,7 +6,7 @@ import { Navigation } from "../components/ui/navigation";
 import { Input } from "../components/ui/input";
 import NewHikePlanForm from "../components/NewHikePlanForm";
 import RouteExplorer from "../components/RouteExplorer"; 
-import { Calendar, MapPin, Users, Backpack, Mountain, Plus, X, RotateCcw, Search } from "lucide-react";
+import { Calendar, MapPin, Users, Backpack, Mountain, Plus, X, RotateCcw, Search, Trash2, Edit } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext.jsx";
 import { plannedHikeApiService } from "../services/plannedHikesService.js";
 import { useGearChecklist } from "../services/gearService.js";
@@ -17,8 +17,6 @@ import rain from '../components/assets/rain.jpg';
 import drizzle from '../components/assets/drizzle.jpg';
 import wind from '../components/assets/wind.png';
 import humidity from '../components/assets/humidity.png';
-import { Description } from "@radix-ui/react-dialog";
-import { useToast } from "../hooks/use-toast";
 
 
 const sampleWeather = [
@@ -38,12 +36,15 @@ const sampleWeather = [
 ]
 const HikePlanner = () => {
   const { currentUser } = useAuth();
-  const inputRef = useRef()
-  const { toast } = useToast();
+  const inputRef = useRef();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isNewPlanOpen, setIsNewPlanOpen] = useState(false);
-  const [isRouteExplorerOpen, setIsRouteExplorerOpen] = useState(false); // Add route explorer state
+  const [isRouteExplorerOpen, setIsRouteExplorerOpen] = useState(false); 
   const [newGearItem, setNewGearItem] = useState("");
+  
+  // Edit state
+  const [editingHike, setEditingHike] = useState(null);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   // Planned Hikes State
   const [plannedHikes, setPlannedHikes] = useState([]);
@@ -272,6 +273,130 @@ const HikePlanner = () => {
     }
   };
 
+  // Handler to Delete a Planned Hike
+  const handleDeletePlannedHike = async (hikeId) => {
+    if (!window.confirm('Are you sure you want to delete this planned hike? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      setError(null);
+      await plannedHikeApiService.deletePlannedHike(hikeId);
+      loadPlannedHikes(); // Reload the list
+    } catch (err) {
+      console.error("Failed to delete planned hike:", err);
+      setError("Failed to delete the hike plan. Please try again.");
+    }
+  };
+
+  // Handler to Edit a Planned Hike
+  const handleEditPlannedHike = (hike) => {
+    // Convert the hike data to the format expected by the form
+    const formattedHike = {
+      ...hike,
+      // Convert jsDate back to YYYY-MM-DD format for the date input
+      date: hike.jsDate.toISOString().split('T')[0]
+    };
+    
+    setEditingHike(formattedHike);
+    setIsEditMode(true);
+    setIsNewPlanOpen(true);
+  };
+
+  // Handler to Update a Planned Hike
+  const handleUpdatePlannedHike = async (updatedPlanData) => {
+    try {
+      setError(null);
+      await plannedHikeApiService.updatePlannedHike(editingHike.id, updatedPlanData);
+      loadPlannedHikes();
+      setEditingHike(null);
+      setIsEditMode(false);
+    } catch (err) {
+      console.error("Failed to update hike plan:", err);
+      setError("Failed to update the hike plan. Please try again.");
+    }
+  };
+
+  const handleCancelPlannedHike = async (hikeId) => {
+    if (!window.confirm('Are you sure you want to cancel this planned hike? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      setError(null);
+      // Update the status to cancelled instead of deleting
+      await plannedHikeApiService.updatePlannedHike(hikeId, { status: 'cancelled' });
+      loadPlannedHikes(); // Reload the list
+    } catch (err) {
+      console.error("Failed to cancel planned hike:", err);
+      setError("Failed to cancel the hike plan. Please try again.");
+    }
+  };
+
+// Add new function to start a planned hike
+  const handleStartPlannedHike = async (trip) => {
+    if (!window.confirm('Are you sure you want to start this hike? This will convert it to an active hiking session.')) {
+      return;
+    }
+
+    try {
+      setError(null);
+      
+      // Prepare the hike data with planned hike information
+      const hikeData = {
+        title: trip.title,
+        location: trip.location,
+        distance: trip.distance,
+        difficulty: trip.difficulty,
+        description: trip.description,
+        notes: trip.notes,
+        startTime: trip.startTime,
+        plannedHikeId: trip.id, // Store reference to planned hike
+        weather: weatherData ? `${weatherData.description}, ${weatherData.temperature}°C` : 'Unknown',
+        status: 'active'
+      };
+
+      // Start the hike via API
+      const result = await plannedHikeApiService.startPlannedHike(trip.id);
+      
+      if (result.success) {
+        // Navigate to logbook with active hike data
+        // You'll need to pass this data to the Logbook component
+        // This could be done through routing state or a global context
+        
+        // For now, we'll store in localStorage and redirect
+        localStorage.setItem('activeHikeData', JSON.stringify({
+          ...hikeData,
+          activeHikeId: result.id,
+          startedAt: new Date().toISOString()
+        }));
+        
+        // Redirect to logbook
+        window.location.href = '/logbook';
+      }
+      
+    } catch (err) {
+      console.error("Failed to start planned hike:", err);
+      setError("Failed to start the hike. Please try again.");
+    }
+  };
+
+  // Handle form submission (create or update)
+  const handleFormSubmit = async (planData) => {
+    if (isEditMode) {
+      await handleUpdatePlannedHike(planData);
+    } else {
+      await handleAddNewPlan(planData);
+    }
+  };
+
+  // Handle form close
+  const handleFormClose = () => {
+    setIsNewPlanOpen(false);
+    setEditingHike(null);
+    setIsEditMode(false);
+  };
+
   // Calendar and Data Processing
   const currentCalendar = useMemo(() => {
     const today = new Date();
@@ -473,6 +598,7 @@ const HikePlanner = () => {
                             <h3 className="text-lg font-semibold text-foreground mb-1">{trip.title}</h3>
                             <div className="flex items-center text-muted-foreground text-sm space-x-4">
                               <span>{trip.jsDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+                              {trip.startTime && <span>{trip.startTime}</span>}
                               <Badge variant={trip.status === 'confirmed' ? 'default' : 'secondary'} className={trip.status === 'confirmed' ? 'bg-forest text-primary-foreground' : 'bg-trail/20 text-foreground border-trail'}>{trip.status}</Badge>
                             </div>
                           </div>
@@ -481,11 +607,48 @@ const HikePlanner = () => {
                         <div className="space-y-2 text-sm">
                           <div className="flex items-center text-muted-foreground"><MapPin className="h-4 w-4 mr-2 text-forest" />{trip.location}</div>
                           <div className="flex items-center text-muted-foreground"><Mountain className="h-4 w-4 mr-2 text-trail" />{trip.distance}</div>
-                          <div className="flex items-center text-muted-foreground"><Users className="h-4 w-4 mr-2 text-summit" />{trip.participants?.join(', ') || 'Just You'}</div>
+                          {trip.description && (
+                            <div className="text-muted-foreground mt-2">
+                              <p className="text-xs">{trip.description}</p>
+                            </div>
+                          )}
+                          {trip.notes && (
+                            <div className="text-muted-foreground">
+                              <p className="text-xs"><strong>Notes:</strong> {trip.notes}</p>
+                            </div>
+                          )}
                         </div>
                         <div className="flex justify-end space-x-2 mt-4">
-                          <Button size="sm" variant="ghost" className="text-forest hover:text-forest hover:bg-muted">Edit</Button>
-                          <Button size="sm" variant="ghost" className="text-trail hover:text-trail hover:bg-muted">Invite</Button>
+                          {trip.status !== 'cancelled' && trip.status !== 'started' && (
+                            <Button 
+                              size="sm" 
+                              className="bg-green-600 hover:bg-green-700 text-white"
+                              onClick={() => handleStartPlannedHike(trip)}
+                            >
+                              <Mountain className="h-4 w-4 mr-1" />
+                              Start Hike
+                            </Button>
+                          )}
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            className="text-forest hover:text-forest hover:bg-muted"
+                            onClick={() => handleEditPlannedHike(trip)}
+                          >
+                            <Edit className="h-4 w-4 mr-1" />
+                            Edit
+                          </Button>
+                          {trip.status !== 'cancelled' && trip.status !== 'started' && (
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                              onClick={() => handleCancelPlannedHike(trip.id)}
+                            >
+                              <X className="h-4 w-4 mr-1" />
+                              Cancel
+                            </Button>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
@@ -694,8 +857,10 @@ const HikePlanner = () => {
         {/* New Hike Plan Form */}
         <NewHikePlanForm 
           open={isNewPlanOpen}
-          onOpenChange={setIsNewPlanOpen}
-          onSubmit={handleAddNewPlan}
+          onOpenChange={handleFormClose}
+          onSubmit={handleFormSubmit}
+          editingHike={editingHike}
+          isEditMode={isEditMode}
         />
 
         {/* Route Explorer Modal */}

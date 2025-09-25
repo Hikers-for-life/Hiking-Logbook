@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/
 import NewHikeEntryForm from "../components/NewHikeEntryForm";
 import ActiveHike from "../components/ActiveHike";
 import ActiveHikeStatus from "../components/ActiveHikeStatus";
-import { Camera, MapPin, Clock, Mountain, Thermometer, Plus, Search, Map, Eye, Play, Trash2, Edit3 } from "lucide-react";
+import { Camera, MapPin, Clock, Mountain, Thermometer, Plus, Search, Map, Play, Trash2, Edit3 } from "lucide-react";
 import { hikeApiService } from "../services/hikeApiService.js";
 import { useAuth } from "../contexts/AuthContext.jsx";
 
@@ -28,6 +28,15 @@ const Logbook = () => {
   const [error, setError] = useState(null);
   // Hike entries from database
   const [hikeEntries, setHikeEntries] = useState([]);
+
+  // Real-time stats state
+  const [hikeStats, setHikeStats] = useState({
+    totalHikes: 0,
+    totalDistance: 0,
+    totalElevation: 0,
+    statesExplored: 0
+  });
+
 
   // API functions for loading data
   const loadHikes = useCallback(async () => {
@@ -65,6 +74,50 @@ const Logbook = () => {
         }));
         
         setHikeEntries(processedHikes);
+
+        // Calculate real-time statistics from all hikes
+        const stats = {
+          totalHikes: processedHikes.length,
+          totalDistance: 0,
+          totalElevation: 0,
+          statesExplored: 0
+        };
+
+        // Track unique locations for states explored
+        const uniqueLocations = new Set();
+
+        // Calculate totals from all hikes
+        processedHikes.forEach(hike => {
+          // Add distance (handle different field names and formats)
+          const distance = parseFloat(hike.distance) || parseFloat(hike.totalDistance) || 0;
+          stats.totalDistance += distance;
+
+          // Add elevation (handle different field names and formats)
+          const elevation = parseFloat(hike.elevation) || 
+                          parseFloat(hike.totalElevation) || 
+                          parseFloat(hike.elevationGain) || 
+                          parseFloat(hike.totalElevationGain) || 0;
+          stats.totalElevation += elevation;
+
+          // Count unique locations/states
+          if (hike.location && hike.location !== 'Unknown Location') {
+            // Extract potential state/region from location string
+            const locationParts = hike.location.split(',');
+            if (locationParts.length > 1) {
+              const potentialState = locationParts[locationParts.length - 1].trim();
+              uniqueLocations.add(potentialState);
+            } else {
+              uniqueLocations.add(hike.location.trim());
+            }
+          }
+        });
+
+        // Round the totals to reasonable decimal places
+        stats.totalDistance = Math.round(stats.totalDistance * 10) / 10; // 1 decimal place
+        stats.totalElevation = Math.round(stats.totalElevation);
+        stats.statesExplored = uniqueLocations.size;
+
+        setHikeStats(stats);
       } else {
         setError('Failed to load hikes from server.');
       }
@@ -81,6 +134,21 @@ const Logbook = () => {
   useEffect(() => {
     if (user) {
       loadHikes();
+      
+      // Check if we have active hike data from a planned hike
+      const activeHikeData = localStorage.getItem('activeHikeData');
+      if (activeHikeData) {
+        try {
+          const parsedData = JSON.parse(activeHikeData);
+          setActiveHikeMode(true);
+          setCurrentActiveHike(parsedData);
+          // Clear the localStorage data
+          localStorage.removeItem('activeHikeData');
+        } catch (err) {
+          console.error('Failed to parse active hike data:', err);
+          localStorage.removeItem('activeHikeData');
+        }
+      }
     } else {
       setIsLoading(false);
     }
@@ -108,45 +176,7 @@ const Logbook = () => {
     setIsRouteMapOpen(true);
   };
 
-  // Handler for starting active hike tracking
-  const handleStartActiveHike = async (formData) => {
-    try {
-      const hikeData = {
-        title: formData?.title || 'New Hike',
-        location: formData?.location || 'Unknown Location',
-        weather: formData?.weather || '',
-        difficulty: formData?.difficulty || 'Easy',
-        notes: formData?.notes || '',
-        status: 'active'
-      };
-      
-      console.log('Starting hike with data:', hikeData);
-      
-      const response = await hikeApiService.startHike(hikeData);
-      if (response.success) {
-        setActiveHikeMode(true);
-        setCurrentActiveHike({
-          id: response.data.id,
-          startTime: new Date(),
-          status: 'active',
-          ...hikeData  // Include the form data
-        });
-      }
-    } catch (err) {
-      console.error('Failed to start hike:', err);
-      setError('Failed to start hike. Please try again.');
-      // Fallback to local mode if API fails
-      setActiveHikeMode(true);
-      setCurrentActiveHike({
-        id: Date.now(),
-        startTime: new Date(),
-        status: 'active',
-        ...(formData || {})  // Include form data in fallback too
-      });
-    }
-  };
-
-  // Handler for completing active hike
+  // Updated handleCompleteActiveHike to delete planned hike
   const handleCompleteActiveHike = async (hikeData) => {
     try {
       const endData = {
@@ -154,9 +184,22 @@ const Logbook = () => {
         photos: 0, // Will be updated when photo upload is implemented
       };
       
-      const response = await hikeApiService.completeHike(currentActiveHike.id, endData);
+      const response = await hikeApiService.completeHike(currentActiveHike.id || currentActiveHike.activeHikeId, endData);
       
       if (response.success) {
+        // If this hike was started from a planned hike, delete the planned hike
+        if (currentActiveHike.plannedHikeId) {
+          try {
+            // Import the planned hike service
+            const { plannedHikeApiService } = await import('../services/plannedHikesService.js');
+            await plannedHikeApiService.deletePlannedHike(currentActiveHike.plannedHikeId);
+            console.log('Planned hike deleted successfully');
+          } catch (err) {
+            console.error('Failed to delete planned hike:', err);
+            // Don't fail the entire operation if planned hike deletion fails
+          }
+        }
+        
         // Refresh the entire list from server to ensure consistency
         await loadHikes();
         setActiveHikeMode(false);
@@ -168,7 +211,7 @@ const Logbook = () => {
       // Fallback to local completion if API fails
       const completedHike = {
         ...hikeData,
-        id: currentActiveHike.id,
+        id: currentActiveHike.id || currentActiveHike.activeHikeId,
         photos: 0,
       };
       setHikeEntries(prev => [completedHike, ...prev]);
@@ -176,6 +219,45 @@ const Logbook = () => {
       setCurrentActiveHike(null);
     }
   };
+
+// Updated handleStartActiveHike to handle both manual starts and planned hike data
+const handleStartActiveHike = async (formData) => {
+  try {
+    const hikeData = {
+      title: formData?.title || 'New Hike',
+      location: formData?.location || 'Unknown Location',
+      weather: formData?.weather || '',
+      difficulty: formData?.difficulty || 'Easy',
+      notes: formData?.notes || '',
+      status: 'active',
+      ...(formData?.plannedHikeId && { plannedHikeId: formData.plannedHikeId })
+    };
+    
+    console.log('Starting hike with data:', hikeData);
+    
+    const response = await hikeApiService.startHike(hikeData);
+    if (response.success) {
+      setActiveHikeMode(true);
+      setCurrentActiveHike({
+        id: response.data.id,
+        startTime: new Date(),
+        status: 'active',
+        ...hikeData  // Include the form data
+      });
+    }
+  } catch (err) {
+    console.error('Failed to start hike:', err);
+    setError('Failed to start hike. Please try again.');
+    // Fallback to local mode if API fails
+    setActiveHikeMode(true);
+    setCurrentActiveHike({
+      id: Date.now(),
+      startTime: new Date(),
+      status: 'active',
+      ...(formData || {})  // Include form data in fallback too
+    });
+  }
+};
 
   // Handler for saving active hike progress
   const handleSaveActiveHike = (hikeData) => {
@@ -376,26 +458,34 @@ const Logbook = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <Card className="bg-gradient-card text-center border-border">
             <CardContent className="p-4">
-              <div className="text-2xl font-bold text-forest">24</div>
+              <div className="text-2xl font-bold text-forest">
+                {isLoading ? '...' : hikeStats.totalHikes}
+              </div>
               <div className="text-sm text-muted-foreground">Total Hikes</div>
             </CardContent>
           </Card>
           <Card className="bg-gradient-card text-center border-border">
             <CardContent className="p-4">
-              <div className="text-2xl font-bold text-trail">186</div>
-              <div className="text-sm text-muted-foreground">Miles Hiked</div>
+              <div className="text-2xl font-bold text-trail">
+                {isLoading ? '...' : `${hikeStats.totalDistance} km`}
+              </div>
+              <div className="text-sm text-muted-foreground">Kilometres Hiked</div>
             </CardContent>
           </Card>
           <Card className="bg-gradient-card text-center border-border">
             <CardContent className="p-4">
-              <div className="text-2xl font-bold text-summit">47k</div>
+              <div className="text-2xl font-bold text-summit">
+                {isLoading ? '...' : `${hikeStats.totalElevation}m`}
+              </div>
               <div className="text-sm text-muted-foreground">Elevation Gained</div>
             </CardContent>
           </Card>
           <Card className="bg-gradient-card text-center border-border">
             <CardContent className="p-4">
-              <div className="text-2xl font-bold text-forest">8</div>
-              <div className="text-sm text-muted-foreground">States Explored</div>
+              <div className="text-2xl font-bold text-forest">
+                {isLoading ? '...' : hikeStats.statesExplored}
+              </div>
+              <div className="text-sm text-muted-foreground">Locations Explored</div>
             </CardContent>
           </Card>
         </div>

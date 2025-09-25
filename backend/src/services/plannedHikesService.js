@@ -57,10 +57,8 @@ export class PlannedHikesService {
    */
   async getUserPlannedHikes(userId, filters = {}) {
     try {
-      // Process filters
-      const processedFilters = this.processFilters(filters);
-
-      const plannedHikes = await dbUtils.getUserPlannedHikes(userId, processedFilters);
+      // Use the simple query method to avoid Firestore indexing issues
+      const plannedHikes = await dbUtils.getUserPlannedHikes(userId, filters);
 
       // Enhance the data with computed fields
       const enhancedPlannedHikes = plannedHikes.map(hike => this.enhancePlannedHikeData(hike));
@@ -129,7 +127,33 @@ export class PlannedHikesService {
   }
 
   /**
-   * Delete a planned hike
+   * Cancel a planned hike (update status to cancelled)
+   * @param {string} userId - The user's ID
+   * @param {string} plannedHikeId - The planned hike's ID
+   * @returns {Object} Result with success status
+   */
+  async cancelPlannedHike(userId, plannedHikeId) {
+    try {
+      const result = await dbUtils.updatePlannedHike(userId, plannedHikeId, { 
+        status: 'cancelled',
+        updatedAt: new Date()
+      });
+
+      if (result.success) {
+        console.log(`Planned hike ${plannedHikeId} cancelled successfully for user ${userId}`);
+        return result;
+      }
+
+      throw new Error('Failed to cancel planned hike');
+
+    } catch (error) {
+      console.error('PlannedHikesService.cancelPlannedHike error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete a planned hike (hard delete - kept for legacy support)
    * @param {string} userId - The user's ID
    * @param {string} plannedHikeId - The planned hike's ID
    * @returns {Object} Result with success status
@@ -229,11 +253,11 @@ export class PlannedHikesService {
    */
   async getPlannedHikeStats(userId) {
     try {
-      const plannedHikes = await this.getUserPlannedHikes(userId);
+      const plannedHikes = await this.getUserPlannedHikes(userId, { includeCancelled: true });
 
       const stats = {
         totalPlannedHikes: plannedHikes.length,
-        upcomingHikes: plannedHikes.filter(h => new Date(h.date) >= new Date()).length,
+        upcomingHikes: plannedHikes.filter(h => new Date(h.date) >= new Date() && h.status !== 'cancelled').length,
         pastHikes: plannedHikes.filter(h => new Date(h.date) < new Date()).length,
         totalEstimatedDistance: plannedHikes.reduce((sum, hike) => sum + (parseFloat(hike.distance) || 0), 0),
         byDifficulty: {
@@ -243,7 +267,7 @@ export class PlannedHikesService {
           Extreme: plannedHikes.filter(h => h.difficulty === 'Extreme').length
         },
         byStatus: {
-          planned: plannedHikes.filter(h => h.status === 'planned').length,
+          planning: plannedHikes.filter(h => h.status === 'planning').length,
           started: plannedHikes.filter(h => h.status === 'started').length,
           cancelled: plannedHikes.filter(h => h.status === 'cancelled').length
         },
@@ -268,7 +292,7 @@ export class PlannedHikesService {
    * @throws {Error} If validation fails
    */
   validatePlannedHikeData(data) {
-    const requiredFields = ['title', 'date', 'location'];
+    const requiredFields = ['title', 'date', 'location', 'startTime'];
     const missingFields = requiredFields.filter(field => !data[field]);
 
     if (missingFields.length > 0) {
@@ -281,9 +305,10 @@ export class PlannedHikesService {
       throw new Error('Invalid date format');
     }
 
-    // Validate maxParticipants
-    if (data.maxParticipants && (isNaN(data.maxParticipants) || data.maxParticipants < 1)) {
-      throw new Error('maxParticipants must be a positive number');
+    // Validate start time format (HH:MM)
+    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    if (!timeRegex.test(data.startTime)) {
+      throw new Error('Invalid start time format. Use HH:MM format');
     }
 
     // Validate difficulty
@@ -302,13 +327,11 @@ export class PlannedHikesService {
     return {
       title: String(data.title || '').trim(),
       date: new Date(data.date),
+      startTime: String(data.startTime || '').trim(),
       location: String(data.location || '').trim(),
-      distance: data.distance ? parseFloat(data.distance) : 0,
-      estimatedDuration: String(data.estimatedDuration || '').trim(),
+      distance: String(data.distance || '').trim(),
       difficulty: data.difficulty || 'Easy',
-      maxParticipants: parseInt(data.maxParticipants) || 8,
       description: String(data.description || '').trim(),
-      meetingPoint: String(data.meetingPoint || '').trim(),
       notes: String(data.notes || '').trim()
     };
   }
@@ -323,13 +346,11 @@ export class PlannedHikesService {
 
     if (data.title !== undefined) processed.title = String(data.title).trim();
     if (data.date !== undefined) processed.date = new Date(data.date);
+    if (data.startTime !== undefined) processed.startTime = String(data.startTime).trim();
     if (data.location !== undefined) processed.location = String(data.location).trim();
-    if (data.distance !== undefined) processed.distance = parseFloat(data.distance) || 0;
-    if (data.estimatedDuration !== undefined) processed.estimatedDuration = String(data.estimatedDuration).trim();
+    if (data.distance !== undefined) processed.distance = String(data.distance).trim();
     if (data.difficulty !== undefined) processed.difficulty = data.difficulty;
-    if (data.maxParticipants !== undefined) processed.maxParticipants = parseInt(data.maxParticipants) || 8;
     if (data.description !== undefined) processed.description = String(data.description).trim();
-    if (data.meetingPoint !== undefined) processed.meetingPoint = String(data.meetingPoint).trim();
     if (data.notes !== undefined) processed.notes = String(data.notes).trim();
     if (data.status !== undefined) processed.status = data.status;
 
@@ -348,6 +369,7 @@ export class PlannedHikesService {
     if (filters.difficulty) processed.difficulty = filters.difficulty;
     if (filters.dateFrom) processed.dateFrom = new Date(filters.dateFrom);
     if (filters.dateTo) processed.dateTo = new Date(filters.dateTo);
+    if (filters.includeCancelled !== undefined) processed.includeCancelled = filters.includeCancelled;
 
     return processed;
   }
@@ -363,14 +385,15 @@ export class PlannedHikesService {
 
     return {
       ...hike,
-      isUpcoming: hikeDate >= now,
+      isUpcoming: hikeDate >= now && hike.status !== 'cancelled',
       isPast: hikeDate < now,
       daysUntilHike: Math.ceil((hikeDate - now) / (1000 * 60 * 60 * 24)),
       participantCount: hike.participants?.length || 0,
-      spotsRemaining: (hike.maxParticipants || 8) - (hike.participants?.length || 0),
-      isFull: (hike.participants?.length || 0) >= (hike.maxParticipants || 8),
+      isCancelled: hike.status === 'cancelled',
+      isStarted: hike.status === 'started',
       formattedDate: hikeDate.toLocaleDateString(),
-      formattedTime: hikeDate.toLocaleTimeString()
+      formattedTime: hikeDate.toLocaleTimeString(),
+      formattedStartTime: hike.startTime || 'Not specified'
     };
   }
 }

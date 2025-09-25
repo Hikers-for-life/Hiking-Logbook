@@ -18,8 +18,8 @@ router.post('/', async (req, res) => {
     const userId = req.user.uid;
     const plannedHikeData = req.body;
 
-    // Validate required fields
-    const requiredFields = ['title', 'date', 'location'];
+    // Validate required fields with updated schema
+    const requiredFields = ['title', 'date', 'location', 'startTime'];
     const missingFields = requiredFields.filter(field => !plannedHikeData[field]);
     
     if (missingFields.length > 0) {
@@ -142,7 +142,7 @@ router.put('/:id', async (req, res) => {
 
 /**
  * @route   DELETE /api/planned-hikes/:id
- * @desc    Delete a planned hike
+ * @desc    Delete a planned hike (hard delete)
  * @access  Private
  */
 router.delete('/:id', async (req, res) => {
@@ -160,6 +160,33 @@ router.delete('/:id', async (req, res) => {
   } catch (error) {
     console.error('Error deleting planned hike:', error);
     res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * @route   PUT /api/planned-hikes/:id/cancel
+ * @desc    Cancel a planned hike (soft delete)
+ * @access  Private
+ */
+router.put('/:id/cancel', async (req, res) => {
+  try {
+    const userId = req.user.uid;
+    const plannedHikeId = req.params.id;
+
+    const result = await plannedHikesService.cancelPlannedHike(userId, plannedHikeId);
+    
+    res.json({
+      success: true,
+      data: result,
+      message: 'Planned hike cancelled successfully'
+    });
+
+  } catch (error) {
+    console.error('Error cancelling planned hike:', error);
+    res.status(400).json({
       success: false,
       error: error.message
     });
