@@ -48,7 +48,6 @@ const EditProfile = () => {
   };
 
   const onSubmit = (data) => {
-    console.log("Profile updated:", data);
     toast({
       title: "Profile Updated",
       description: "Your hiking profile has been successfully updated!",

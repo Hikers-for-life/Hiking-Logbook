@@ -11,13 +11,15 @@ router.use(verifyAuth);
 router.get('/', async (req, res) => {
   try {
     const userId = req.user.uid;
-    const { status, difficulty, dateFrom, dateTo } = req.query;
+    const { status, difficulty, dateFrom, dateTo, pinned, search } = req.query;
     
     const filters = {};
     if (status) filters.status = status;
     if (difficulty) filters.difficulty = difficulty;
     if (dateFrom) filters.dateFrom = new Date(dateFrom);
     if (dateTo) filters.dateTo = new Date(dateTo);
+    if (pinned !== undefined) filters.pinned = pinned === 'true';
+    if (search) filters.search = search;
     
     const hikes = await dbUtils.getUserHikes(userId, filters);
     
@@ -82,6 +84,87 @@ router.get('/stats/overview', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to fetch hike statistics',
+      message: error.message
+    });
+  }
+});
+
+// GET /api/hikes/stats - Get user hiking statistics
+router.get('/stats', async (req, res) => {
+  try {
+    const userId = req.user.uid;
+    const stats = await dbUtils.getUserStats(userId);
+    
+    res.json({
+      success: true,
+      data: stats
+    });
+  } catch (error) {
+    console.error('Error fetching stats:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch stats',
+      message: error.message
+    });
+  }
+});
+
+// GET /api/hikes/progress - Get progress data for charts
+router.get('/progress', async (req, res) => {
+  try {
+    const userId = req.user.uid;
+    const hikes = await dbUtils.getUserHikes(userId);
+    
+    // Group hikes by month for chart data
+    const hikesPerMonth = {};
+    const distanceOverTime = [];
+    
+    hikes.forEach(hike => {
+      // Use hike.date if available, otherwise use createdAt
+      const hikeDate = hike.date || hike.createdAt;
+      
+      if (hikeDate) {
+        const date = hikeDate.toDate ? hikeDate.toDate() : new Date(hikeDate);
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        
+        if (!hikesPerMonth[monthKey]) {
+          hikesPerMonth[monthKey] = { month: monthKey, count: 0, distance: 0 };
+        }
+        hikesPerMonth[monthKey].count += 1;
+        hikesPerMonth[monthKey].distance += hike.distance || 0;
+        
+        distanceOverTime.push({
+          date: date.toISOString().split('T')[0],
+          distance: hike.distance || 0,
+          elevation: hike.elevation || 0
+        });
+      }
+    });
+    
+    // Convert to arrays and sort
+    const monthlyData = Object.values(hikesPerMonth).sort((a, b) => a.month.localeCompare(b.month));
+    const distanceData = distanceOverTime.sort((a, b) => a.date.localeCompare(b.date));
+    
+    // Calculate streak history (simplified - just current streak for now)
+    const { currentStreak, longestStreak } = dbUtils.calculateStreaks(hikes);
+    
+    res.json({
+      success: true,
+      data: {
+        hikesPerMonth: monthlyData,
+        distanceOverTime: distanceData,
+        streakHistory: [
+          { date: new Date().toISOString().split('T')[0], streak: currentStreak }
+        ],
+        currentStreak,
+        longestStreak
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching progress data:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch progress data',
       message: error.message
     });
   }
@@ -247,5 +330,133 @@ router.post('/:id/complete', async (req, res) => {
   }
 });
 
+
+// PATCH /api/hikes/:id/pin - Pin a hike
+router.patch('/:id/pin', async (req, res) => {
+  try {
+    const userId = req.user.uid;
+    const hikeId = req.params.id;
+
+    // Check if hike exists
+    const existingHike = await dbUtils.getHike(userId, hikeId);
+    if (!existingHike) {
+      return res.status(404).json({
+        success: false,
+        error: 'Hike not found'
+      });
+    }
+
+    const result = await dbUtils.updateHike(userId, hikeId, { pinned: true });
+
+    res.json({
+      success: true,
+      data: result,
+      message: 'Hike pinned successfully'
+    });
+  } catch (error) {
+    console.error('Error pinning hike:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to pin hike',
+      message: error.message
+    });
+  }
+});
+
+// PATCH /api/hikes/:id/unpin - Unpin a hike
+router.patch('/:id/unpin', async (req, res) => {
+  try {
+    const userId = req.user.uid;
+    const hikeId = req.params.id;
+
+    // Check if hike exists
+    const existingHike = await dbUtils.getHike(userId, hikeId);
+    if (!existingHike) {
+      return res.status(404).json({
+        success: false,
+        error: 'Hike not found'
+      });
+    }
+
+    const result = await dbUtils.updateHike(userId, hikeId, { pinned: false });
+
+    res.json({
+      success: true,
+      data: result,
+      message: 'Hike unpinned successfully'
+    });
+  } catch (error) {
+    console.error('Error unpinning hike:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to unpin hike',
+      message: error.message
+    });
+  }
+});
+
+// PATCH /api/hikes/:id/share - Share a hike with friends
+router.patch('/:id/share', async (req, res) => {
+  try {
+    const userId = req.user.uid;
+    const hikeId = req.params.id;
+
+    // Check if hike exists
+    const existingHike = await dbUtils.getHike(userId, hikeId);
+    if (!existingHike) {
+      return res.status(404).json({
+        success: false,
+        error: 'Hike not found'
+      });
+    }
+
+    const result = await dbUtils.updateHike(userId, hikeId, { shared: true });
+
+    res.json({
+      success: true,
+      data: result,
+      message: 'Hike shared with friends successfully'
+    });
+  } catch (error) {
+    console.error('Error sharing hike:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to share hike',
+      message: error.message
+    });
+  }
+});
+
+// PATCH /api/hikes/:id/unshare - Unshare a hike with friends
+router.patch('/:id/unshare', async (req, res) => {
+  try {
+    const userId = req.user.uid;
+    const hikeId = req.params.id;
+
+    // Check if hike exists
+    const existingHike = await dbUtils.getHike(userId, hikeId);
+    if (!existingHike) {
+      return res.status(404).json({
+        success: false,
+        error: 'Hike not found'
+      });
+    }
+
+    const result = await dbUtils.updateHike(userId, hikeId, { shared: false });
+
+    res.json({
+      success: true,
+      data: result,
+      message: 'Hike unshared successfully'
+    });
+  } catch (error) {
+    console.error('Error unsharing hike:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to unshare hike',
+      message: error.message
+    });
+  }
+});
 
 export default router;
