@@ -126,6 +126,11 @@ export const hikeApiService = {
     return makeAuthenticatedRequest('/hikes/stats/overview');
   },
 
+  // Get user hike progress (for charts)
+  async getHikeProgress() {
+    return makeAuthenticatedRequest('/hikes/progress');
+  },
+
   // Pin a hike
   async pinHike(hikeId) {
     return makeAuthenticatedRequest(`/hikes/${hikeId}/pin`, {
