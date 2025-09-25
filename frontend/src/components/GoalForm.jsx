@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -61,6 +61,42 @@ const GoalForm = ({
 }) => {
   const [selectedCategory, setSelectedCategory] = useState(initialData?.category || "");
 
+  // Helper function to format date for HTML date input
+  const formatDateForInput = (date) => {
+    if (!date) return "";
+    
+    console.log('formatDateForInput received:', date, 'type:', typeof date);
+    
+    try {
+      // If it's already in YYYY-MM-DD format, return as is
+      if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        console.log('Date already in correct format:', date);
+        return date;
+      }
+      
+      // If it's a Date object, convert to YYYY-MM-DD
+      if (date instanceof Date) {
+        const formatted = date.toISOString().split('T')[0];
+        console.log('Converted Date object to:', formatted);
+        return formatted;
+      }
+      
+      // If it's a timestamp or other format, try to parse it
+      const parsedDate = new Date(date);
+      if (!isNaN(parsedDate.getTime())) {
+        const formatted = parsedDate.toISOString().split('T')[0];
+        console.log('Parsed date to:', formatted);
+        return formatted;
+      }
+      
+      console.log('Could not parse date:', date);
+      return "";
+    } catch (error) {
+      console.warn('Failed to format date:', date, error);
+      return "";
+    }
+  };
+
   const form = useForm({
     resolver: zodResolver(goalSchema),
     defaultValues: {
@@ -68,20 +104,20 @@ const GoalForm = ({
       description: initialData?.description || "",
       category: initialData?.category || "",
       target: (initialData?.targetValue || initialData?.maxProgress || 0).toString(),
-      targetDate: initialData?.targetDate || "",
+      targetDate: formatDateForInput(initialData?.targetDate),
       unit: initialData?.unit || "",
     },
   });
 
   // Reset form when initialData changes (for edit mode)
-  useState(() => {
+  useEffect(() => {
     if (initialData) {
       form.reset({
         title: initialData.title || "",
         description: initialData.description || "",
         category: initialData.category || "",
         target: (initialData.targetValue || initialData.maxProgress || 0).toString(),
-        targetDate: initialData.targetDate || "",
+        targetDate: formatDateForInput(initialData.targetDate),
         unit: initialData.unit || "",
       });
       setSelectedCategory(initialData.category || "");

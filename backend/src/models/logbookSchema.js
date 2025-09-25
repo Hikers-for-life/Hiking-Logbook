@@ -39,6 +39,9 @@ export const hikeSchema = {
 
    //New field for pinning
   pinned: "boolean",         // Whether the hike is pinned (favorite)
+  
+  //Sharing field
+  shared: "boolean",         // Whether the hike is shared with friends
 };
 
 // GPS waypoint structure

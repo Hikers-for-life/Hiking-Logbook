@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { hikeApiService } from "../services/hikeApiService";
+import { achievementApiService } from "../services/achievementApiService";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer,
   BarChart, Bar
@@ -8,11 +8,27 @@ import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
 
 export default function ProgressCharts() {
   const [progress, setProgress] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    hikeApiService.getHikeProgress()
-      .then((res) => setProgress(res.data)) // res.data again
-      .catch(console.error);
+    const loadProgress = async () => {
+      try {
+        setLoading(true);
+        const response = await achievementApiService.getProgress();
+        setProgress(response.data);
+      } catch (error) {
+        console.error('Error loading progress data:', error);
+        // Set empty data structure on error
+        setProgress({
+          hikesPerMonth: [],
+          distanceOverTime: []
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProgress();
   }, []);
 
   if (!progress) return <p>Loading progress...</p>;

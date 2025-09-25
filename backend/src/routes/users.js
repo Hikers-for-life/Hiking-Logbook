@@ -2,12 +2,90 @@ import express from 'express';
 import { AuthService } from '../services/authService.js';
 import { verifyAuth } from '../middleware/auth.js';
 import { dbUtils } from '../config/database.js';
+import { BADGE_RULES } from '../services/badgeService.js';
 
 const router = express.Router();
 
 // Test route to verify router is working
 router.get('/test', (req, res) => {
   res.json({ message: 'Users router is working!' });
+});
+
+// Simple test route to verify server is running
+router.get('/health', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    message: 'Users API is accessible' 
+  });
+});
+
+// Test route to check database connection (NO AUTH - for debugging only)
+router.get('/debug-db', async (req, res) => {
+  try {
+    console.log('Testing database connection...');
+    // Test by trying to get a user profile (this will test the database connection)
+    const testUserId = 'test-user-123';
+    try {
+      await dbUtils.getUserProfile(testUserId);
+      console.log('Database connection test successful');
+    } catch (error) {
+      console.log('Database connection test successful (user not found is expected):', error.message);
+    }
+    
+    res.json({ 
+      status: 'OK', 
+      message: 'Database connection working',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Database test failed:', error);
+    res.status(500).json({ 
+      status: 'ERROR', 
+      message: 'Database connection failed',
+      error: error.message 
+    });
+  }
+});
+
+// Test route to verify badges data structure
+router.get('/badges-structure', (req, res) => {
+  const testBadges = BADGE_RULES.map(rule => ({
+    id: rule.name.toLowerCase().replace(/\s+/g, '-'),
+    name: rule.name,
+    description: rule.description,
+    progress: 0,
+    progressText: 'Not started',
+    isEarned: false,
+    category: 'test'
+  }));
+  
+  res.json({
+    success: true,
+    data: testBadges,
+    count: testBadges.length,
+    message: 'Badges structure test - no auth required'
+  });
+});
+
+// Test route to verify badges endpoint is working
+router.get('/badges-test', (req, res) => {
+  const testBadges = BADGE_RULES.map(rule => ({
+    id: rule.name.toLowerCase().replace(/\s+/g, '-'),
+    name: rule.name,
+    description: rule.description,
+    progress: 0,
+    progressText: 'Not started',
+    isEarned: false,
+    category: 'test'
+  }));
+  
+  res.json({
+    success: true,
+    data: testBadges,
+    count: testBadges.length,
+    message: 'Badges test endpoint working!'
+  });
 });
 
 // Create user profile (for Google sign-in users)
@@ -66,6 +144,189 @@ router.post('/create-profile', verifyAuth, async (req, res) => {
       error: 'Failed to create user profile',
       details: error.message,
     });
+  }
+});
+
+// Get user stats (must be before /:uid route to avoid conflicts)
+router.get('/stats', verifyAuth, async (req, res) => {
+  try {
+    const userId = req.user.uid;
+    
+    // Get basic hike stats (with fallback to empty stats)
+    let hikeStats;
+    try {
+      hikeStats = await dbUtils.getUserHikeStats(userId);
+    } catch (error) {
+      console.error(`Error getting hike stats for ${userId}:`, error);
+      hikeStats = {
+        totalHikes: 0,
+        totalDistance: 0,
+        totalDuration: 0,
+        totalElevation: 0
+      };
+    }
+    
+    // Try to get user profile, create one if it doesn't exist
+    let profile;
+    try {
+      profile = await dbUtils.getUserProfile(userId);
+      if (!profile) {
+        console.log(`Creating user profile for stats for ${userId}`);
+        const profileData = {
+          displayName: req.user.name || 'Hiker',
+          email: req.user.email || '',
+          bio: '',
+          location: '',
+          joinDate: new Date().toISOString(),
+          badges: [],
+          goals: [],
+          preferences: {
+            units: 'metric',
+            privacy: 'friends'
+          }
+        };
+        await dbUtils.createUserProfile(userId, profileData);
+        profile = profileData;
+      }
+    } catch (error) {
+      console.error(`Error with user profile for stats for ${userId}:`, error);
+      profile = { badges: [], goals: [] };
+    }
+    
+    // Combine hike stats with profile data
+    const stats = {
+      ...hikeStats,
+      badgesEarned: (profile?.badges || []).length,
+      goalsCompleted: (profile?.goals || []).filter(goal => goal.completed).length,
+      goalsInProgress: (profile?.goals || []).filter(goal => !goal.completed).length,
+      joinDate: profile?.joinDate || new Date().toISOString()
+    };
+    
+    res.json({ success: true, data: stats });
+  } catch (error) {
+    console.error('Error fetching user stats:', error);
+    res.status(500).json({ error: 'Failed to fetch user stats', details: error.message });
+  }
+});
+
+// Get user badges (must be before /:uid route to avoid conflicts)
+router.get('/badges', verifyAuth, async (req, res) => {
+  try {
+    const userId = req.user.uid;
+    
+    // Get user stats for progress calculation (with fallback to empty stats)
+    let stats;
+    try {
+      stats = await dbUtils.getUserHikeStats(userId);
+    } catch (error) {
+      console.error(`Error getting hike stats for badges for ${userId}:`, error);
+      stats = {
+        totalHikes: 0,
+        totalDistance: 0,
+        totalDuration: 0,
+        totalPeaks: 0,
+        uniqueTrails: 0,
+        hasEarlyBird: false,
+        hasEndurance: false
+      };
+    }
+    
+    // Try to get user profile, create one if it doesn't exist
+    let profile;
+    try {
+      profile = await dbUtils.getUserProfile(userId);
+      if (!profile) {
+        console.log(`Creating user profile for badges for ${userId}`);
+        const profileData = {
+          displayName: req.user.name || 'Hiker',
+          email: req.user.email || '',
+          bio: '',
+          location: '',
+          joinDate: new Date().toISOString(),
+          badges: [],
+          goals: [],
+          preferences: {
+            units: 'metric',
+            privacy: 'friends'
+          }
+        };
+        await dbUtils.createUserProfile(userId, profileData);
+        profile = profileData;
+      }
+    } catch (error) {
+      console.error(`Error with user profile for badges for ${userId}:`, error);
+      profile = { badges: [] };
+    }
+    
+    const earnedBadges = profile?.badges || [];
+    const allBadges = BADGE_RULES.map(rule => {
+      const isEarned = earnedBadges.some(badge => badge.name === rule.name);
+      
+      // Calculate progress and progress text based on rule type
+      let progress = 0;
+      let progressText = "Not started";
+      
+      if (isEarned) {
+        progress = 100;
+        progressText = "Completed";
+      } else {
+        // Calculate progress based on current stats
+        if (rule.name === "First Steps") {
+          progress = Math.min((stats.totalHikes || 0) * 100, 100);
+          progressText = `${stats.totalHikes || 0}/1 hikes`;
+        } else if (rule.name === "Distance Walker") {
+          progress = Math.min(((stats.totalDistance || 0) / 100) * 100, 100);
+          progressText = `${stats.totalDistance || 0}/100 km`;
+        } else if (rule.name === "Peak Collector") {
+          progress = Math.min(((stats.totalPeaks || 0) / 10) * 100, 100);
+          progressText = `${stats.totalPeaks || 0}/10 peaks`;
+        } else if (rule.name === "Trail Explorer") {
+          progress = Math.min(((stats.uniqueTrails || 0) / 25) * 100, 100);
+          progressText = `${stats.uniqueTrails || 0}/25 trails`;
+        } else {
+          // For binary badges (Early Bird, Endurance Master)
+          progress = rule.check(stats) ? 100 : 0;
+          progressText = rule.check(stats) ? "Completed" : "Not achieved";
+        }
+      }
+      
+      return {
+        id: rule.name.toLowerCase().replace(/\s+/g, '-'),
+        name: rule.name,
+        description: rule.description,
+        icon: rule.icon || "🏆",
+        category: rule.category || "achievement",
+        earned: isEarned,
+        progress: progress,
+        progressText: progressText,
+        earnedDate: isEarned ? (() => {
+          const badge = earnedBadges.find(badge => badge.name === rule.name);
+          if (!badge?.earnedDate) return null;
+          
+          // Convert Firestore Timestamp to ISO string
+          if (badge.earnedDate.toDate && typeof badge.earnedDate.toDate === 'function') {
+            return badge.earnedDate.toDate().toISOString();
+          }
+          // If it's already a Date object
+          else if (badge.earnedDate instanceof Date) {
+            return badge.earnedDate.toISOString();
+          }
+          // If it has seconds property (Firestore Timestamp)
+          else if (badge.earnedDate.seconds) {
+            return new Date(badge.earnedDate.seconds * 1000).toISOString();
+          }
+          // Return as is if it's already a string or other format
+          else {
+            return badge.earnedDate;
+          }
+        })() : null
+      };
+    });
+    
+    res.json({ success: true, data: allBadges, count: allBadges.length });
+  } catch (error) {
+    console.error('Error fetching user badges:', error);
+    res.status(500).json({ error: 'Failed to fetch badges', details: error.message });
   }
 });
 

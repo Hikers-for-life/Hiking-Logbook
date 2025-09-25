@@ -58,6 +58,7 @@ const NewHikeEntryForm = ({ open, onOpenChange, onSubmit, initialData = null, ti
   // Reset form when initialData changes (for edit mode)
   useEffect(() => {
     if (initialData) {
+      // Edit mode - use the hike data
       form.reset({
         title: initialData.title || "",
         date: initialData.date || "",

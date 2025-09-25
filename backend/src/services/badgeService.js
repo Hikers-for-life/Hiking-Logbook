@@ -5,7 +5,7 @@ import { getDatabase, admin } from '../config/firebase.js';
  * Rules and checks.
  * Adjust the checks to match how you store data (distance units, isPeak flag, duration units).
  */
-const BADGE_RULES = [
+export const BADGE_RULES = [
   {
     name: "First Steps",
     description: "Completed your very first hike",
@@ -42,7 +42,25 @@ export async function evaluateAndAwardBadges(userId, stats) {
   const db = getDatabase();
   const userRef = db.collection('users').doc(userId);
   const userSnap = await userRef.get();
-  const currentBadges = (userSnap.exists && userSnap.data().badges) || [];
+  
+  // Initialize user profile if it doesn't exist
+  if (!userSnap.exists) {
+    await userRef.set({
+      uid: userId,
+      badges: [],
+      stats: {
+        totalHikes: 0,
+        totalDistance: 0,
+        totalElevation: 0,
+        achievements: []
+      },
+      createdAt: admin.firestore.Timestamp.now(),
+      updatedAt: admin.firestore.Timestamp.now()
+    });
+  }
+  
+  const userData = userSnap.exists ? userSnap.data() : { badges: [] };
+  const currentBadges = userData.badges || [];
 
   const newBadges = [];
 
@@ -61,8 +79,9 @@ export async function evaluateAndAwardBadges(userId, stats) {
     // Append new badges and update updatedAt
     await userRef.update({
       badges: [...currentBadges, ...newBadges],
-      updatedAt: new Date()
+      updatedAt: admin.firestore.Timestamp.now()
     });
+    console.log(`Awarded ${newBadges.length} new badges to user ${userId}:`, newBadges.map(b => b.name));
   }
 
   return newBadges; // return array to allow logging if desired

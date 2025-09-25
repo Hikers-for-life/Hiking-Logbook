@@ -87,7 +87,22 @@ export async function listGoals(userId) {
       .get();
 
     const goals = [];
-    snap.forEach(doc => goals.push({ id: doc.id, ...doc.data() }));
+    snap.forEach(doc => {
+      const goalData = doc.data();
+      
+      // Convert Firestore timestamps to ISO strings
+      if (goalData.createdAt && goalData.createdAt.toDate) {
+        goalData.createdAt = goalData.createdAt.toDate().toISOString();
+      }
+      if (goalData.updatedAt && goalData.updatedAt.toDate) {
+        goalData.updatedAt = goalData.updatedAt.toDate().toISOString();
+      }
+      if (goalData.targetDate && goalData.targetDate.toDate) {
+        goalData.targetDate = goalData.targetDate.toDate().toISOString();
+      }
+      
+      goals.push({ id: doc.id, ...goalData });
+    });
     return goals;
   } catch (e) {
     throw { status: 500, message: `Failed to list goals: ${e.message}` };
@@ -100,7 +115,21 @@ export async function getGoal(userId, goalId) {
     const docRef = db.collection('users').doc(userId).collection(GOALS_SUBCOL).doc(goalId);
     const snap = await docRef.get();
     if (!snap.exists) throw { status: 404, message: 'Goal not found' };
-    return { id: snap.id, ...snap.data() };
+    
+    const goalData = snap.data();
+    
+    // Convert Firestore timestamps to ISO strings
+    if (goalData.createdAt && goalData.createdAt.toDate) {
+      goalData.createdAt = goalData.createdAt.toDate().toISOString();
+    }
+    if (goalData.updatedAt && goalData.updatedAt.toDate) {
+      goalData.updatedAt = goalData.updatedAt.toDate().toISOString();
+    }
+    if (goalData.targetDate && goalData.targetDate.toDate) {
+      goalData.targetDate = goalData.targetDate.toDate().toISOString();
+    }
+    
+    return { id: snap.id, ...goalData };
   } catch (e) {
     if (e && e.status) throw e;
     throw { status: 500, message: `Failed to get goal: ${e.message}` };
