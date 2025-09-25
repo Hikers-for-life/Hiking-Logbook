@@ -1,4 +1,5 @@
 import { getDatabase } from './firebase.js';
+import { evaluateAndAwardBadges } from '../services/badgeService.js';
 
 // Database utilities for comprehensive hike management
 export const dbUtils = {
@@ -6,6 +7,7 @@ export const dbUtils = {
   async addHike(userId, hikeData) {
     try {
 
+      const uid = userId || "test-user-123"; //temporary
       // Map and validate the hike data
       const mappedHikeData = {
         // Basic information
@@ -52,6 +54,9 @@ export const dbUtils = {
         .collection('hikes')
         .add(mappedHikeData);
         
+      // After saving hike, evaluate badges
+      await evaluateAndAwardBadges(userId);
+
       return { success: true, id: docRef.id };
 
     } catch (error) {
@@ -272,8 +277,10 @@ export const dbUtils = {
         .collection('hikes')
         .doc(hikeId)
         .update(completionData);
-        
 
+       // After marking hike completed, check badges again
+      await evaluateAndAwardBadges(userId);
+        
       return { success: true };
     } catch (error) {
       throw new Error(`Failed to complete hike: ${error.message}`);
