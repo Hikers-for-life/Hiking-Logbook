@@ -1,53 +1,160 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Button } from '../ui/button';
-
 import { Badge } from '../ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Avatar, AvatarFallback } from '../ui/avatar';
+import { useAuth } from '../../contexts/AuthContext.jsx';
+import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { 
-  Calendar, 
   MapPin, 
   Mountain, 
-  Clock, 
   UserPlus, 
-  MessageCircle, 
   Target, 
-  Award, 
-  Medal, 
-  TrendingUp 
+  Award,
+  Calendar,
+  TrendingUp,
 } from 'lucide-react';
 
+function formatDate(date) {
+  if (!(date instanceof Date) || isNaN(date)) return "Unknown";
+
+  const day = date.getDate();
+  const month = date.toLocaleString("en-US", { month: "long" });
+  const year = date.getFullYear();
+
+  // Add ordinal suffix (st, nd, rd, th)
+  const suffix =
+    day % 10 === 1 && day !== 11
+      ? "st"
+      : day % 10 === 2 && day !== 12
+      ? "nd"
+      : day % 10 === 3 && day !== 13
+      ? "rd"
+      : "th";
+
+  return `${month} ${day}${suffix}, ${year}`;
+}
+
+function formatHikeDate(dateString) {
+  const date = new Date(dateString);
+  if (isNaN(date)) return "Unknown date";
+  
+  const month = date.toLocaleString("en-US", { month: "short" });
+  const day = date.getDate();
+  const year = date.getFullYear();
+  
+  return `${month} ${day}, ${year}`;
+}
 
 export const ProfileView = ({ open, onOpenChange, showAddFriend = false }) => {
+  const { currentUser } = useAuth();
+
+  const [recentHikes, setRecentHikes] = useState([]);
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch(`http://localhost:3001/api/users/${currentUser.uid}`);
+        if (!res.ok) throw new Error("Failed to fetch profile");
+        const data = await res.json();
+        setProfile(data);
+        
+        console.log('Profile data:', data); // Debug log
+        console.log('Hikes data:', data.hikes); // Debug log
+        
+        const allHikes = data.hikes || [];
+        
+        // Calculate stats from hikes subcollection
+        const calculatedStats = {
+          totalHikes: allHikes.length,
+          totalDistance: 0,
+          totalElevation: 0
+        };
+
+        // Sum up distance and elevation from all hikes
+        allHikes.forEach(hike => {
+          // Add distance (handle different field names and formats)
+          const distance = parseFloat(hike.distance) || parseFloat(hike.totalDistance) || 0;
+          calculatedStats.totalDistance += distance;
+
+          // Add elevation (handle different field names and formats)
+          const elevation = parseFloat(hike.elevation) || 
+                          parseFloat(hike.elevationGain) || 
+                          parseFloat(hike.totalElevation) || 0;
+          calculatedStats.totalElevation += elevation;
+        });
+
+        // Round the totals
+        calculatedStats.totalDistance = Math.round(calculatedStats.totalDistance * 10) / 10; // 1 decimal place
+        calculatedStats.totalElevation = Math.round(calculatedStats.totalElevation);
+
+        console.log('Calculated stats:', calculatedStats); // Debug log
+
+        // Update the profile data with calculated stats
+        setProfile(prevProfile => ({
+          ...prevProfile,
+          stats: calculatedStats
+        }));
+        
+        // Sort hikes by date (most recent first) and take only the first 2
+        const sortedHikes = allHikes
+          .filter(hike => hike.status === 'completed') // Only show completed hikes
+          .sort((a, b) => {
+            const dateA = new Date(b.endTime || b.startTime || b.date);
+            const dateB = new Date(a.endTime || a.startTime || a.date);
+            return dateA - dateB;
+          })
+          .slice(0, 2);
+        
+        console.log('Sorted hikes:', sortedHikes); // Debug log
+        setRecentHikes(sortedHikes);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchProfile();
+  }, [currentUser]);
+
+  let joinDate = "Unknown";
+
+  if (profile?.createdAt) {
+    const createdAt = profile.createdAt;
+
+    if (createdAt.toDate) {
+      joinDate = formatDate(createdAt.toDate());
+    } else if (createdAt._seconds) {
+      joinDate = formatDate(new Date(createdAt._seconds * 1000));
+    } else {
+      joinDate = formatDate(new Date(createdAt));
+    }
+  }
+
   const user = {
-    name: 'Alex Johnson',
-    email: 'alex@example.com',
-    joinDate: 'March 2024',
-    location: 'Colorado, USA',
-    bio: 'Passionate hiker exploring mountain trails and connecting with nature. Always seeking new adventures!',
+    name: profile?.displayName || "No name",
+    email: profile?.email || "No email",
+    joinDate: joinDate,
+    location: profile?.location || "Not set",
+    bio: profile?.bio || "No bio yet",
     stats: {
-      totalHikes: 47,
-      totalDistance: '312 miles',
-      totalElevation: '45,230 ft',
-      achievements: 12,
+      totalHikes: profile?.stats?.totalHikes || 0,
+      totalDistance: profile?.stats?.totalDistance ? `${profile.stats.totalDistance} km` : "0.0 km",
+      totalElevation: profile?.stats?.totalElevation ? `${profile.stats.totalElevation} m` : "0 m",
     },
-    achievements: [
-      { name: "Peak Collector", description: "Completed 10+ mountain peaks", earned: "2 weeks ago" },
-      { name: "Early Bird", description: "Started 20+ hikes before sunrise", earned: "1 month ago" },
-      { name: "Trail Master", description: "Completed 50+ different trails", earned: "2 months ago" },
-      { name: "Endurance Champion", description: "Hiked 100+ km in a month", earned: "3 months ago" }
-    ],
-    recentHikes: [
+    recentHikes: recentHikes,
+  };
 
-      { name: "Rocky Mountain Trail", date: "Dec 8, 2024", distance: "8.5 km", duration: "4h 23m", difficulty: "Hard" },
-      { name: "Forest Loop", date: "Dec 5, 2024", distance: "5.2 km", duration: "2h 15m", difficulty: "Medium" },
-      { name: "Summit Peak", date: "Dec 1, 2024", distance: "6.8 km", duration: "3h 45m", difficulty: "Hard" }
-
-    ],
-    goals: [
-      { name: "Complete Pacific Crest Trail section", progress: 65, target: "End of year" },
-      { name: "Hike 500km this year", progress: 78, target: "December 2024" }
-    ]
+  const getDifficultyColor = (difficulty) => {
+    switch (difficulty?.toLowerCase()) {
+      case 'easy': return 'bg-green-500';
+      case 'moderate': return 'bg-yellow-500';
+      case 'hard': return 'bg-red-500';
+      default: return 'bg-gray-500';
+    }
   };
 
   return (
@@ -59,12 +166,13 @@ export const ProfileView = ({ open, onOpenChange, showAddFriend = false }) => {
         
         <div className="space-y-6">
           {/* Profile Header */}
-
           <div className="flex flex-col sm:flex-row gap-6 items-start">
             <Avatar className="h-24 w-24">
               <AvatarFallback className="text-2xl">
-                {user.name[0]}
-
+                {user.name
+                .split(' ')
+                .map((n) => n[0])
+                .join('')}
               </AvatarFallback>
             </Avatar>
             
@@ -73,27 +181,23 @@ export const ProfileView = ({ open, onOpenChange, showAddFriend = false }) => {
                 <div className="flex items-center gap-2 mb-2">
                   <h2 className="text-2xl font-bold text-foreground">{user.name}</h2>
                 </div>
+      
                 <p className="text-muted-foreground flex items-center gap-1 mb-2">
                   <MapPin className="h-4 w-4" />
                   {user.location}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Hiking since {user.joinDate}
+                  Joined Since {user.joinDate}
                 </p>
               </div>
               
               <p className="text-foreground">{user.bio}</p>
               
               <div className="flex gap-3">
-                {showAddFriend ? (
+                {showAddFriend && (
                   <Button className="bg-gradient-trail text-primary-foreground">
                     <UserPlus className="h-4 w-4 mr-2" />
                     Add Friend
-                  </Button>
-                ) : (
-                  <Button variant="outline">
-                    <MessageCircle className="h-4 w-4 mr-2" />
-                    Message
                   </Button>
                 )}
               </div>
@@ -103,35 +207,27 @@ export const ProfileView = ({ open, onOpenChange, showAddFriend = false }) => {
           {/* Stats Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Card>
-
               <CardContent className="p-4 text-center">
-                <p className="text-2xl font-bold text-summit">{user.stats.totalHikes}</p>
+                <p className="text-2xl font-bold text-foreground">{user.stats.totalHikes}</p>
                 <p className="text-sm text-muted-foreground">Total Hikes</p>
-
               </CardContent>
             </Card>
             <Card>
-
               <CardContent className="p-4 text-center">
-                <p className="text-2xl font-bold text-forest">{user.stats.totalDistance}</p>
+                <p className="text-2xl font-bold text-foreground">{user.stats.totalDistance}</p>
                 <p className="text-sm text-muted-foreground">Distance</p>
-
               </CardContent>
             </Card>
             <Card>
-
               <CardContent className="p-4 text-center">
-                <p className="text-2xl font-bold text-sky">{user.stats.totalElevation}</p>
+               <p className="text-2xl font-bold text-foreground">{user.stats.totalElevation}</p>
                 <p className="text-sm text-muted-foreground">Elevation</p>
-
               </CardContent>
             </Card>
             <Card>
-
               <CardContent className="p-4 text-center">
-                <p className="text-2xl font-bold text-trail">{user.achievements?.length || 0}</p>
+                <p className="text-2xl font-bold text-foreground">0</p>
                 <p className="text-sm text-muted-foreground">Achievements</p>
-
               </CardContent>
             </Card>
           </div>
@@ -145,23 +241,7 @@ export const ProfileView = ({ open, onOpenChange, showAddFriend = false }) => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {user.goals.map((goal, index) => (
-                <div key={index} className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium">{goal.name}</span>
-                    <span className="text-sm text-muted-foreground">{goal.progress}%</span>
-                  </div>
-                  <div className="w-full bg-muted rounded-full h-2">
-                    <div 
-                      className="bg-gradient-trail h-2 rounded-full transition-all duration-300" 
-                      style={{ width: `${goal.progress}%` }}
-                    />
-                  </div>
-
-                  <p className="text-xs text-muted-foreground">Target: {goal.target}</p>
-
-                </div>
-              ))}
+              <p className="text-muted-foreground">No goals set yet</p>
             </CardContent>
           </Card>
 
@@ -175,16 +255,7 @@ export const ProfileView = ({ open, onOpenChange, showAddFriend = false }) => {
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-2 gap-4">
-                {user.achievements.slice(0, 4).map((achievement, index) => (
-                  <div key={index} className="flex items-center gap-3 p-3 rounded-lg bg-muted">
-                    <Medal className="h-8 w-8 text-summit" />
-                    <div>
-                      <h4 className="font-medium">{achievement.name}</h4>
-                      <p className="text-sm text-muted-foreground">{achievement.description}</p>
-                      <p className="text-xs text-muted-foreground">Earned {achievement.earned}</p>
-                    </div>
-                  </div>
-                ))}
+                <p className="text-muted-foreground col-span-2">No achievements to display</p>
               </div>
             </CardContent>
           </Card>
@@ -199,48 +270,68 @@ export const ProfileView = ({ open, onOpenChange, showAddFriend = false }) => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {user.recentHikes.map((hike, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-muted">
-                    <div className="flex-1">
-                      <h4 className="font-medium">{hike.name}</h4>
-                      <div className="flex items-center gap-4 mt-1">
-                        <span className="text-sm text-muted-foreground flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          {hike.date}
-                        </span>
-                        <span className="text-sm text-muted-foreground flex items-center gap-1">
-                          <TrendingUp className="h-3 w-3" />
-                          {hike.distance}
-                        </span>
-                        <span className="text-sm text-muted-foreground flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {hike.duration}
-                        </span>
+                {user.recentHikes.length > 0 ? (
+                  user.recentHikes.map((hike, index) => (
+                    <Card key={hike.id || index} className="p-4">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h4 className="font-semibold text-foreground">
+                              {hike.name || hike.title || `Hike ${index + 1}`}
+                            </h4>
+                            {hike.difficulty && (
+                              <Badge className={`${getDifficultyColor(hike.difficulty)} text-white text-xs`}>
+                                {hike.difficulty}
+                              </Badge>
+                            )}
+                          </div>
+                          
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
+                            <span className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              {formatHikeDate(hike.endTime || hike.startTime || hike.date)}
+                            </span>
+                            {(hike.distance || hike.totalDistance) && (
+                              <span className="flex items-center gap-1">
+                                <TrendingUp className="h-3 w-3" />
+                                {(parseFloat(hike.distance || hike.totalDistance) || 0).toFixed(1)} km
+                              </span>
+                            )}
+                            {(hike.elevationGain || hike.elevation || hike.totalElevation) && (
+                              <span>
+                                {(parseFloat(hike.elevationGain || hike.elevation || hike.totalElevation) || 0).toFixed(0)} m elevation
+                              </span>
+                            )}
+                          </div>
+                          
+                          {hike.notes && (
+                            <p className="text-sm text-muted-foreground">
+                              {hike.notes}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                    <Badge 
-                      variant={hike.difficulty === 'Hard' ? 'destructive' : hike.difficulty === 'Medium' ? 'default' : 'secondary'}
-                      className="text-xs"
-                    >
-                      {hike.difficulty}
-                    </Badge>
-                  </div>
-                ))}
+                    </Card>
+                  ))
+                ) : (
+                  <p className="text-muted-foreground">No recent hikes completed</p>
+                )}
               </div>
             </CardContent>
           </Card>
 
           {/* Action Buttons */}
-          <div className="flex gap-3 pt-4">
-            <Button className="flex-1 bg-gradient-trail text-primary-foreground">
-              Edit Profile
-            </Button>
-            <Button variant="outline" className="flex-1">
-              View All Hikes
-            </Button>
+          <div className="flex pt-4">
+            <Link to="/edit-profile" className="w-full">
+              <Button className="w-full bg-gradient-trail text-primary-foreground">
+                Edit Profile
+              </Button>
+            </Link>
           </div>
         </div>
       </DialogContent>
     </Dialog>
   );
 };
+
+export default ProfileView;

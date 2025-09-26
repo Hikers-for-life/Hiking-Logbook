@@ -1,208 +1,113 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import '@testing-library/jest-dom';
+import { MemoryRouter } from 'react-router-dom';
 import Dashboard from '../pages/Dashboard';
 
-// Mock useAuth
-const mockUseAuth = {
-  currentUser: {
-    displayName: 'Test User',
-    email: 'test@example.com',
-  },
-  getUserProfile: jest.fn(),
-};
-
-jest.mock('../contexts/AuthContext', () => ({
-  useAuth: () => mockUseAuth,
+// Mock AuthContext
+jest.mock('../contexts/AuthContext.jsx', () => ({
+  useAuth: () => ({
+    currentUser: { uid: 'test-user', displayName: 'Test Hiker' },
+    getUserProfile: jest.fn(),
+  }),
 }));
 
 // Mock Navigation component
 jest.mock('../components/ui/navigation', () => ({
-  Navigation: () => <div data-testid="navigation">Navigation</div>,
+  Navigation: () => <nav data-testid="navigation">Navigation</nav>,
 }));
 
-const renderDashboard = () => {
-  return render(
-    <BrowserRouter>
-      <Dashboard />
-    </BrowserRouter>
-  );
-};
+// Mock hikeApiService
+jest.mock('../services/hikeApiService.js', () => ({
+  hikeApiService: {
+    getHikes: jest.fn(),
+  },
+}));
+
+// Silence console errors for fetch fallback profile
+global.fetch = jest.fn(() =>
+  Promise.resolve({
+    ok: false, // trigger fallback profile
+    json: () => Promise.resolve({}),
+  })
+);
 
 describe('Dashboard Component', () => {
+  const { hikeApiService } = require('../services/hikeApiService.js');
+
+  const renderDashboard = () => {
+    return render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>
+    );
+  };
+
   beforeEach(() => {
-    mockUseAuth.getUserProfile.mockClear();
+    jest.clearAllMocks();
   });
 
-  it('renders navigation', async () => {
-    mockUseAuth.getUserProfile.mockResolvedValue({
-      displayName: 'Test User',
-      bio: 'Test bio',
-      location: 'Test Location',
-      preferences: { difficulty: 'easy', terrain: 'forest' },
-      stats: { totalHikes: 0, totalDistance: 0, totalElevation: 0, achievements: [] },
-    });
-    
+  test('renders loading screen initially', () => {
     renderDashboard();
-    
-    await waitFor(() => {
-      expect(screen.getByTestId('navigation')).toBeInTheDocument();
-    });
+    expect(screen.getByText(/loading your dashboard/i)).toBeInTheDocument();
   });
 
-  it('renders welcome header', async () => {
-    mockUseAuth.getUserProfile.mockResolvedValue({
-      displayName: 'Test User',
-      bio: 'Test bio',
-      location: 'Test Location',
-      preferences: { difficulty: 'easy', terrain: 'forest' },
-      stats: { totalHikes: 0, totalDistance: 0, totalElevation: 0, achievements: [] },
-    });
-    
+  test('renders navigation and welcome message after loading', async () => {
+    hikeApiService.getHikes.mockResolvedValueOnce([]);
+
     renderDashboard();
-    
-    await waitFor(() => {
-      expect(screen.getByText(/Welcome back, Test User!/)).toBeInTheDocument();
-    });
+
+    expect(await screen.findByTestId('navigation')).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Welcome back, Test Hiker!/i)
+    ).toBeInTheDocument();
   });
 
-  it('renders stats overview section', async () => {
-    mockUseAuth.getUserProfile.mockResolvedValue({
-      displayName: 'Test User',
-      bio: 'Test bio',
-      location: 'Test Location',
-      preferences: { difficulty: 'easy', terrain: 'forest' },
-      stats: { totalHikes: 0, totalDistance: 0, totalElevation: 0, achievements: [] },
-    });
-    
+  test('displays stats with total hikes and distance', async () => {
+    hikeApiService.getHikes.mockResolvedValueOnce([
+      { id: 1, name: 'Trail One', distance: 5, date: '2024-01-01' },
+      { id: 2, name: 'Trail Two', distance: 10, date: '2024-02-01' },
+    ]);
+
     renderDashboard();
-    
-    await waitFor(() => {
-      expect(screen.getByText('Total Hikes')).toBeInTheDocument();
-      expect(screen.getByText('Total Distance')).toBeInTheDocument();
-      expect(screen.getByText('Total Elevation')).toBeInTheDocument();
-      expect(screen.getAllByText('Achievements')).toHaveLength(2); // One in stats, one in section header
-    });
+
+    expect(await screen.findByText('2')).toBeInTheDocument(); // Total hikes
+    expect(await screen.findByText('15 km')).toBeInTheDocument(); // Distance
   });
 
-  it('renders quick actions section', async () => {
-    mockUseAuth.getUserProfile.mockResolvedValue({
-      displayName: 'Test User',
-      bio: 'Test bio',
-      location: 'Test Location',
-      preferences: { difficulty: 'easy', terrain: 'forest' },
-      stats: { totalHikes: 0, totalDistance: 0, totalElevation: 0, achievements: [] },
-    });
-    
+
+  test('shows no hikes message when no hikes exist', async () => {
+    hikeApiService.getHikes.mockResolvedValueOnce([]);
+
     renderDashboard();
-    
-    await waitFor(() => {
-      expect(screen.getByText('Log New Hike')).toBeInTheDocument();
-      expect(screen.getByText('Plan Hike')).toBeInTheDocument();
-      expect(screen.getByText('Explore Trails')).toBeInTheDocument();
-    });
+
+    expect(await screen.findByText(/No hikes logged yet/i)).toBeInTheDocument();
   });
 
-  it('renders recent hikes section', async () => {
-    mockUseAuth.getUserProfile.mockResolvedValue({
-      displayName: 'Test User',
-      bio: 'Test bio',
-      location: 'Test Location',
-      preferences: { difficulty: 'easy', terrain: 'forest' },
-      stats: { totalHikes: 0, totalDistance: 0, totalElevation: 0, achievements: [] },
-    });
-    
+  test('quick action buttons are clickable', async () => {
+    hikeApiService.getHikes.mockResolvedValueOnce([]);
+
     renderDashboard();
-    
-    await waitFor(() => {
-      expect(screen.getByText('Recent Hikes')).toBeInTheDocument();
-      expect(screen.getByText('Your latest hiking adventures')).toBeInTheDocument();
-    });
+
+    const logButton = await screen.findByText(/Log New Hike/i);
+    expect(logButton).toBeInTheDocument();
+
+    fireEvent.click(logButton); // navigation is mocked, so just ensure clickable
   });
 
-  it('renders profile information section', async () => {
-    mockUseAuth.getUserProfile.mockResolvedValue({
-      displayName: 'Test User',
-      bio: 'Test bio',
-      location: 'Test Location',
-      preferences: { difficulty: 'easy', terrain: 'forest' },
-      stats: { totalHikes: 0, totalDistance: 0, totalElevation: 0, achievements: [] },
-    });
-    
+  test('displays achievements placeholder', async () => {
+    hikeApiService.getHikes.mockResolvedValueOnce([]);
+
     renderDashboard();
-    
-    await waitFor(() => {
-      expect(screen.getByText('Profile Information')).toBeInTheDocument();
-      expect(screen.getByText('Your hiking preferences and details')).toBeInTheDocument();
-    });
+
+    expect(await screen.findByText(/No recent achievements/i)).toBeInTheDocument();
   });
 
-  it('renders achievements section', async () => {
-    mockUseAuth.getUserProfile.mockResolvedValue({
-      displayName: 'Test User',
-      bio: 'Test bio',
-      location: 'Test Location',
-      preferences: { difficulty: 'easy', terrain: 'forest' },
-      stats: { totalHikes: 0, totalDistance: 0, totalElevation: 0, achievements: [] },
-    });
-    
-    renderDashboard();
-    
-    await waitFor(() => {
-      expect(screen.getAllByText('Achievements')).toHaveLength(2); // One in stats, one in section header
-      expect(screen.getByText('Badges and milestones you\'ve earned')).toBeInTheDocument();
-    });
-  });
+  test('handles API error gracefully', async () => {
+    hikeApiService.getHikes.mockRejectedValueOnce(new Error('API failed'));
 
-  it('shows loading state initially', () => {
-    mockUseAuth.getUserProfile.mockImplementation(() => new Promise(() => {}));
     renderDashboard();
-    
-    expect(screen.getByText('Loading your dashboard...')).toBeInTheDocument();
-  });
 
-  it('shows fallback profile when getUserProfile fails', async () => {
-    mockUseAuth.getUserProfile.mockRejectedValue(new Error('Failed to load profile'));
-    renderDashboard();
-    
-    await waitFor(() => {
-      expect(screen.getByText('Passionate hiker exploring new trails')).toBeInTheDocument();
-      expect(screen.getByText('Mountain View, CA')).toBeInTheDocument();
-    });
-  });
-
-  it('shows fallback profile when getUserProfile returns null', async () => {
-    mockUseAuth.getUserProfile.mockResolvedValue(null);
-    renderDashboard();
-    
-    await waitFor(() => {
-      expect(screen.getByText('Passionate hiker exploring new trails')).toBeInTheDocument();
-      expect(screen.getByText('Mountain View, CA')).toBeInTheDocument();
-    });
-  });
-
-  it('displays user stats correctly', async () => {
-    const mockProfile = {
-      displayName: 'Test User',
-      bio: 'Test bio',
-      location: 'Test Location',
-      preferences: { difficulty: 'easy', terrain: 'forest' },
-      stats: {
-        totalHikes: 5,
-        totalDistance: 25,
-        totalElevation: 1000,
-        achievements: ['First Hike', 'Mountain Climber'],
-      },
-    };
-    
-    mockUseAuth.getUserProfile.mockResolvedValue(mockProfile);
-    renderDashboard();
-    
-    await waitFor(() => {
-      expect(screen.getByText('5')).toBeInTheDocument(); // Total Hikes
-      expect(screen.getByText('25 km')).toBeInTheDocument(); // Total Distance
-      expect(screen.getByText('1000 m')).toBeInTheDocument(); // Total Elevation
-      expect(screen.getByText('2')).toBeInTheDocument(); // Achievements count
-    });
+    expect(await screen.findByText(/No hikes logged yet/i)).toBeInTheDocument();
   });
 });

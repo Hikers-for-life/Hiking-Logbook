@@ -1,4 +1,5 @@
 // firebase.js
+// firebase.js
 import admin from 'firebase-admin';
 import dotenv from 'dotenv';
 
@@ -8,9 +9,9 @@ let db = null;
 let authInstance = null;
 
 /**
- * Initialize Firebase Admin SDK
+ * Initialize Firebase Admin SDK (only once)
  */
-export async function initializeFirebase() {
+export function initializeFirebase() {
   if (admin.apps.length > 0) {
     console.log('Firebase already initialized');
     db = admin.firestore();
@@ -59,13 +60,13 @@ export async function initializeFirebase() {
       client_x509_cert_url: process.env.FIREBASE_CLIENT_X509_CERT_URL,
     };
 
-    // Initialize Firebase Admin SDK
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
       databaseURL: process.env.FIREBASE_DATABASE_URL,
     });
 
     // Initialize instances 
+
     db = admin.firestore();
     authInstance = admin.auth();
 
@@ -78,19 +79,15 @@ export async function initializeFirebase() {
 }
 
 /**
- * Get Firestore and Auth instances after initialization
+ * Helper getters
  */
 export function getDatabase() {
-  if (!db) {
-    throw new Error('Database not initialized. Call initializeFirebase() first.');
-  }
+  if (!db) throw new Error('Database not initialized. Call initializeFirebase() first.');
   return db;
 }
 
 export function getAuth() {
-  if (!authInstance) {
-    throw new Error('Auth not initialized. Call initializeFirebase() first.');
-  }
+  if (!authInstance) throw new Error('Auth not initialized. Call initializeFirebase() first.');
   return authInstance;
 }
 
