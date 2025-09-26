@@ -8,6 +8,11 @@ import { BADGE_RULES } from '../services/badgeService.js';
 const router = express.Router();
 
 
+// Test route to verify router is working
+router.get('/test', (req, res) => {
+  res.json({ message: 'Users router is working!' });
+});
+
 // Create user profile (for Google sign-in users)
 router.post('/create-profile', verifyAuth, async (req, res) => {
   try {

@@ -581,7 +581,148 @@ async addWaypoint(userId, hikeId, waypoint) {
       throw new Error(`Failed to delete hike: ${error.message}`);
     }
   },
-  
+
+  // Get user hiking statistics
+  async getUserStats(userId) {
+    try {
+      const db = getDatabase();
+      // Get all hikes for statistics calculation
+      const snapshot = await db
+        .collection('users')
+        .doc(userId)
+        .collection('hikes')
+        .get();
+      
+      let totalHikes = 0;
+      let totalDistance = 0;
+      let totalElevation = 0;
+      let totalDuration = 0;
+      const locations = new Set();
+      
+      snapshot.forEach(doc => {
+        const hike = doc.data();
+        totalHikes++;
+        
+        // Parse distance (handle different formats like "5 mi", "5 miles", "5")
+        const distanceStr = hike.distance || '0';
+        const distanceMatch = distanceStr.match(/(\d+(?:\.\d+)?)/);
+        if (distanceMatch) {
+          const distance = parseFloat(distanceMatch[1]);
+          totalDistance += distance;
+        }
+        
+        // Parse elevation (handle different formats like "1000 ft", "1000 feet", "1000")
+        const elevationStr = hike.elevation || '0';
+        const elevationMatch = elevationStr.match(/(\d+(?:\.\d+)?)/);
+        if (elevationMatch) {
+          const elevation = parseFloat(elevationMatch[1]);
+          totalElevation += elevation;
+        }
+        
+        // Parse duration (handle different formats like "120 min", "2 hours", "120")
+        const durationStr = hike.duration || '0';
+        const durationMatch = durationStr.match(/(\d+(?:\.\d+)?)/);
+        if (durationMatch) {
+          const duration = parseFloat(durationMatch[1]);
+          totalDuration += duration;
+        }
+        
+        // Track unique locations (extract state/country from location)
+        if (hike.location) {
+          const locationParts = hike.location.split(',').map(part => part.trim());
+          if (locationParts.length > 1) {
+            locations.add(locationParts[locationParts.length - 1]);
+          }
+        }
+      });
+      
+      return {
+        totalHikes,
+        totalDistance: Math.round(totalDistance * 10) / 10, // Round to 1 decimal
+        totalElevation: Math.round(totalElevation),
+        totalDuration: Math.round(totalDuration),
+        statesExplored: locations.size
+      };
+    } catch (error) {
+      throw new Error(`Failed to get user stats: ${error.message}`);
+    }
+  },
+
+  // Calculate hiking streaks based on completed hikes
+  calculateStreaks(hikes) {
+    try {
+      // Filter only completed hikes and sort by date
+      const completedHikes = hikes
+        .filter(hike => {
+          const hasDate = hike.date || hike.createdAt;
+          return hike.status === 'completed' && hasDate;
+        })
+        .map(hike => ({
+          ...hike,
+          hikeDate: new Date(hike.date || hike.createdAt)
+        }))
+        .sort((a, b) => b.hikeDate - a.hikeDate); // Most recent first
+      
+      if (completedHikes.length === 0) {
+        return { currentStreak: 0, longestStreak: 0 };
+      }
+      
+      let currentStreak = 0;
+      let longestStreak = 0;
+      let tempStreak = 0;
+      const today = new Date();
+      today.setHours(23, 59, 59, 999); // End of today
+      
+      // Calculate current streak (consecutive days from today backwards)
+      let checkDate = new Date(today);
+      checkDate.setHours(0, 0, 0, 0); // Start of day
+      
+      for (let i = 0; i < completedHikes.length; i++) {
+        const hikeDate = new Date(completedHikes[i].hikeDate);
+        hikeDate.setHours(0, 0, 0, 0);
+        
+        // If this hike is from the day we're checking
+        if (hikeDate.getTime() === checkDate.getTime()) {
+          currentStreak++;
+          tempStreak++;
+          
+          // Move to previous day
+          checkDate.setDate(checkDate.getDate() - 1);
+        }
+        // If this hike is from an earlier day, we've broken the streak
+        else if (hikeDate.getTime() < checkDate.getTime()) {
+          break;
+        }
+        // If this hike is from a future day (shouldn't happen), skip it
+      }
+      
+      // Calculate longest streak by looking at all consecutive days
+      tempStreak = 1;
+      longestStreak = 1;
+      
+      for (let i = 1; i < completedHikes.length; i++) {
+        const prevHikeDate = new Date(completedHikes[i-1].hikeDate);
+        const currHikeDate = new Date(completedHikes[i].hikeDate);
+        
+        prevHikeDate.setHours(0, 0, 0, 0);
+        currHikeDate.setHours(0, 0, 0, 0);
+        
+        const daysDifference = Math.floor((prevHikeDate.getTime() - currHikeDate.getTime()) / (1000 * 60 * 60 * 24));
+        
+        // If hikes are on consecutive days, continue streak
+        if (daysDifference === 1) {
+          tempStreak++;
+          longestStreak = Math.max(longestStreak, tempStreak);
+        } else {
+          tempStreak = 1; // Reset streak
+        }
+      }
+      
+      return { currentStreak, longestStreak };
+    } catch (error) {
+      throw new Error('Failed to calculate streaks');
+    }
+  },
 
   // GEAR CHECKLIST METHODS
   // Get user's gear checklist
@@ -694,8 +835,6 @@ async addWaypoint(userId, hikeId, waypoint) {
     }
   },
 
-
-
   // Create user profile
    async createUserProfile(userId, profileData) {
     try {
@@ -715,202 +854,7 @@ async addWaypoint(userId, hikeId, waypoint) {
     }
   },
 
-  // Get user hiking statistics
-  async getUserStats(userId) {
-    try {
-      const db = getDatabase();
-      // Get all hikes for statistics calculation
-      const snapshot = await db
-        .collection('users')
-        .doc(userId)
-        .collection('hikes')
-        .get();
-      
-      let totalHikes = 0;
-      let totalDistance = 0;
-      let totalElevation = 0;
-      let totalDuration = 0;
-      const locations = new Set();
-      
-      snapshot.forEach(doc => {
-        const hike = doc.data();
-        totalHikes++;
-        
-        // Parse distance (handle different formats like "5 mi", "5 miles", "5")
-        const distanceStr = hike.distance || '0';
-        const distanceMatch = distanceStr.match(/(\d+(?:\.\d+)?)/);
-        if (distanceMatch) {
-          const distance = parseFloat(distanceMatch[1]);
-          totalDistance += distance;
-        }
-        
-        // Parse elevation (handle different formats like "1000 ft", "1000 feet", "1000")
-        const elevationStr = hike.elevation || '0';
-        const elevationMatch = elevationStr.match(/(\d+(?:\.\d+)?)/);
-        if (elevationMatch) {
-          const elevation = parseFloat(elevationMatch[1]);
-          totalElevation += elevation;
-        }
-        
-        // Parse duration (handle different formats like "120 min", "2 hours", "120")
-        const durationStr = hike.duration || '0';
-        const durationMatch = durationStr.match(/(\d+(?:\.\d+)?)/);
-        if (durationMatch) {
-          const duration = parseFloat(durationMatch[1]);
-          totalDuration += duration;
-        }
-        
-        // Track unique locations (extract state/country from location)
-        if (hike.location) {
-          const locationParts = hike.location.split(',').map(part => part.trim());
-          if (locationParts.length > 1) {
-            locations.add(locationParts[locationParts.length - 1]);
-          }
-        }
-      });
-      
-      return {
-        totalHikes,
-        totalDistance: Math.round(totalDistance * 10) / 10, // Round to 1 decimal
-        totalElevation: Math.round(totalElevation),
-        totalDuration: Math.round(totalDuration),
-        statesExplored: locations.size
-      };
-    } catch (error) {
-      throw new Error(`Failed to get user stats: ${error.message}`);
-    }
-  },
-
-  // Update user profile
-  async updateUserProfile(userId, profileData) {
-    try {
-      const db = getDatabase();
-      await db
-        .collection('users')
-        .doc(userId)
-        .update({
-          ...profileData,
-          updatedAt: new Date(),
-        });
-        
-      return { success: true };
-    } catch (error) {
-      throw new Error(`Failed to update user profile: ${error.message}`);
-    }
-  },
-
-  // Helper function to parse distance string (e.g., "5km" -> 5)
-  parseDistance(distanceStr) {
-    if (!distanceStr || typeof distanceStr !== 'string') return 0;
-    const match = distanceStr.match(/(\d+(?:\.\d+)?)/);
-    return match ? parseFloat(match[1]) : 0;
-  },
-
-  // Helper function to parse elevation string (e.g., "2,400m" -> 2400)
-  parseElevation(elevationStr) {
-    if (!elevationStr || typeof elevationStr !== 'string') return 0;
-    const match = elevationStr.match(/(\d+(?:,\d+)?)/);
-    return match ? parseFloat(match[1].replace(/,/g, '')) : 0;
-  },
-
-  // Helper function to parse duration string (e.g., "1h 30m" -> 90 minutes)
-  parseDuration(durationStr) {
-    if (!durationStr || typeof durationStr !== 'string') return 0;
-    
-    let totalMinutes = 0;
-    
-    // Parse hours (e.g., "1h" or "1h 30m")
-    const hourMatch = durationStr.match(/(\d+)h/);
-    if (hourMatch) {
-      totalMinutes += parseInt(hourMatch[1]) * 60;
-    }
-    
-    // Parse minutes (e.g., "30m" or "1h 30m")
-    const minuteMatch = durationStr.match(/(\d+)m/);
-    if (minuteMatch) {
-      totalMinutes += parseInt(minuteMatch[1]);
-    }
-    
-    return totalMinutes;
-  },
-
-  // Calculate hiking streaks based on completed hikes
-  calculateStreaks(hikes) {
-    try {
-      // Filter only completed hikes and sort by date
-      const completedHikes = hikes
-        .filter(hike => {
-          const hasDate = hike.date || hike.createdAt;
-          return hike.status === 'completed' && hasDate;
-        })
-        .map(hike => ({
-          ...hike,
-          hikeDate: new Date(hike.date || hike.createdAt)
-        }))
-        .sort((a, b) => b.hikeDate - a.hikeDate); // Most recent first
-      
-      if (completedHikes.length === 0) {
-        return { currentStreak: 0, longestStreak: 0 };
-      }
-      
-      let currentStreak = 0;
-      let longestStreak = 0;
-      let tempStreak = 0;
-      const today = new Date();
-      today.setHours(23, 59, 59, 999); // End of today
-      
-      // Calculate current streak (consecutive days from today backwards)
-      let checkDate = new Date(today);
-      checkDate.setHours(0, 0, 0, 0); // Start of day
-      
-      for (let i = 0; i < completedHikes.length; i++) {
-        const hikeDate = new Date(completedHikes[i].hikeDate);
-        hikeDate.setHours(0, 0, 0, 0);
-        
-        // If this hike is from the day we're checking
-        if (hikeDate.getTime() === checkDate.getTime()) {
-          currentStreak++;
-          tempStreak++;
-          
-          // Move to previous day
-          checkDate.setDate(checkDate.getDate() - 1);
-        }
-        // If this hike is from an earlier day, we've broken the streak
-        else if (hikeDate.getTime() < checkDate.getTime()) {
-          break;
-        }
-        // If this hike is from a future day (shouldn't happen), skip it
-      }
-      
-      // Calculate longest streak by looking at all consecutive days
-      tempStreak = 1;
-      longestStreak = 1;
-      
-      for (let i = 1; i < completedHikes.length; i++) {
-        const prevHikeDate = new Date(completedHikes[i-1].hikeDate);
-        const currHikeDate = new Date(completedHikes[i].hikeDate);
-        
-        prevHikeDate.setHours(0, 0, 0, 0);
-        currHikeDate.setHours(0, 0, 0, 0);
-        
-        const daysDifference = Math.floor((prevHikeDate.getTime() - currHikeDate.getTime()) / (1000 * 60 * 60 * 24));
-        
-        // If hikes are on consecutive days, continue streak
-        if (daysDifference === 1) {
-          tempStreak++;
-          longestStreak = Math.max(longestStreak, tempStreak);
-        } else {
-          tempStreak = 1; // Reset streak
-        }
-      }
-      
-      return { currentStreak, longestStreak };
-    } catch (error) {
-      throw new Error('Failed to calculate streaks');
-    }
-  },
-
-  // Get hike statistics for a user
+    // Get hike statistics for a user
   async getUserHikeStats(userId) {
     try {
       const hikes = await this.getUserHikes(userId);
@@ -929,7 +873,6 @@ async addWaypoint(userId, hikeId, waypoint) {
           Easy: hikes.filter(h => h.difficulty === 'Easy').length,
           Moderate: hikes.filter(h => h.difficulty === 'Moderate').length,
           Hard: hikes.filter(h => h.difficulty === 'Hard').length,
-          Extreme: hikes.filter(h => h.difficulty === 'Extreme').length
         },
         byStatus: {
           completed: hikes.filter(h => h.status === 'completed').length,
@@ -975,6 +918,43 @@ async addWaypoint(userId, hikeId, waypoint) {
     } catch (error) {
       throw new Error(`Failed to delete user: ${error.message}`);
     }
+  },
+
+
+  // BADGE METHODS
+  // Helper function to parse distance string (e.g., "5km" -> 5)
+  parseDistance(distanceStr) {
+    if (!distanceStr || typeof distanceStr !== 'string') return 0;
+    const match = distanceStr.match(/(\d+(?:\.\d+)?)/);
+    return match ? parseFloat(match[1]) : 0;
+  },
+
+  // Helper function to parse elevation string (e.g., "2,400m" -> 2400)
+  parseElevation(elevationStr) {
+    if (!elevationStr || typeof elevationStr !== 'string') return 0;
+    const match = elevationStr.match(/(\d+(?:,\d+)?)/);
+    return match ? parseFloat(match[1].replace(/,/g, '')) : 0;
+  },
+
+  // Helper function to parse duration string (e.g., "1h 30m" -> 90 minutes)
+  parseDuration(durationStr) {
+    if (!durationStr || typeof durationStr !== 'string') return 0;
+    
+    let totalMinutes = 0;
+    
+    // Parse hours (e.g., "1h" or "1h 30m")
+    const hourMatch = durationStr.match(/(\d+)h/);
+    if (hourMatch) {
+      totalMinutes += parseInt(hourMatch[1]) * 60;
+    }
+    
+    // Parse minutes (e.g., "30m" or "1h 30m")
+    const minuteMatch = durationStr.match(/(\d+)m/);
+    if (minuteMatch) {
+      totalMinutes += parseInt(minuteMatch[1]);
+    }
+    
+    return totalMinutes;
   }
 };
 
