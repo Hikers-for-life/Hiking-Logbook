@@ -4,10 +4,12 @@ import helmet from 'helmet';
 import cors from 'cors';
 import morgan from 'morgan';
 import { initializeFirebase } from './config/firebase.js';
+import { swaggerUi, specs } from './config/swagger.js';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
 import hikeRoutes from './routes/hikes.js';
 import goalsRoutes from './routes/goals.js';
+import publicRoutes from './routes/public.js';
 
 dotenv.config();
 
@@ -67,6 +69,23 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/hikes', hikeRoutes);
 app.use('/api/goals', goalsRoutes);
+
+// Public API routes (no authentication required)
+app.use('/api/public', publicRoutes);
+
+// API Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'Hiking Logbook API Documentation',
+  swaggerOptions: {
+    persistAuthorization: true,
+  }
+}));
+
+// Redirect root to API documentation
+app.get('/', (req, res) => {
+  res.redirect('/api-docs');
+});
 
 // 404 handler for undefined routes
 app.use('*', (req, res) => {

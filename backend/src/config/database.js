@@ -428,14 +428,47 @@ export const dbUtils = {
 
   // Helper function to parse distance string (e.g., "5km" -> 5)
   parseDistance(distanceStr) {
-    if (!distanceStr || typeof distanceStr !== 'string') return 0;
+    if (!distanceStr) return 0;
+    
+    // If it's already a number, return it
+    if (typeof distanceStr === 'number') return distanceStr;
+    
+    // If it's not a string, return 0
+    if (typeof distanceStr !== 'string') return 0;
+    
+    // Clean up the string - remove extra text and get the first valid number
+    // Handle cases like "04.1 miles000.0 miles05km205km220" by extracting the first number
+    const cleanStr = distanceStr.replace(/[^\d.,]/g, ' ').trim();
+    const numbers = cleanStr.split(/\s+/).filter(n => n && !isNaN(parseFloat(n)));
+    
+    if (numbers.length > 0) {
+      return parseFloat(numbers[0]);
+    }
+    
+    // Fallback to original regex method
     const match = distanceStr.match(/(\d+(?:\.\d+)?)/);
     return match ? parseFloat(match[1]) : 0;
   },
 
   // Helper function to parse elevation string (e.g., "2,400m" -> 2400)
   parseElevation(elevationStr) {
-    if (!elevationStr || typeof elevationStr !== 'string') return 0;
+    if (!elevationStr) return 0;
+    
+    // If it's already a number, return it
+    if (typeof elevationStr === 'number') return elevationStr;
+    
+    // If it's not a string, return 0
+    if (typeof elevationStr !== 'string') return 0;
+    
+    // Clean up the string - remove extra text and get the first valid number
+    const cleanStr = elevationStr.replace(/[^\d.,]/g, ' ').trim();
+    const numbers = cleanStr.split(/\s+/).filter(n => n && !isNaN(parseFloat(n.replace(/,/g, ''))));
+    
+    if (numbers.length > 0) {
+      return parseFloat(numbers[0].replace(/,/g, ''));
+    }
+    
+    // Fallback to original regex method
     const match = elevationStr.match(/(\d+(?:,\d+)?)/);
     return match ? parseFloat(match[1].replace(/,/g, '')) : 0;
   },
@@ -591,6 +624,206 @@ export const dbUtils = {
       return { success: true };
     } catch (error) {
       throw new Error(`Failed to delete user: ${error.message}`);
+    }
+  },
+
+  // Get global statistics across all users (for public API)
+  async getGlobalStats() {
+    try {
+      const db = getDatabase();
+      const usersSnapshot = await db.collection('users').get();
+      
+      let totalUsers = 0;
+      let totalHikes = 0;
+      let totalDistance = 0;
+      let totalElevation = 0;
+      const monthlyActivity = {};
+      const popularDifficulties = { Easy: 0, Moderate: 0, Hard: 0 };
+      
+      for (const userDoc of usersSnapshot.docs) {
+        totalUsers++;
+        const userId = userDoc.id;
+        
+        // Get user's hikes
+        const hikesSnapshot = await db
+          .collection('users')
+          .doc(userId)
+          .collection('hikes')
+          .get();
+          
+        for (const hikeDoc of hikesSnapshot.docs) {
+          const hike = hikeDoc.data();
+          totalHikes++;
+          
+          // Parse distance and elevation properly
+          const distance = this.parseDistance(hike.distance);
+          const elevation = this.parseElevation(hike.elevation);
+          
+          totalDistance += distance;
+          totalElevation += elevation;
+          
+          // Count difficulties
+          const difficulty = hike.difficulty || 'Easy';
+          if (popularDifficulties.hasOwnProperty(difficulty)) {
+            popularDifficulties[difficulty]++;
+          }
+          
+          // Monthly activity - handle date parsing more robustly
+          let hikeDate = null;
+          try {
+            if (hike.date?.toDate) {
+              hikeDate = hike.date.toDate();
+            } else if (hike.date) {
+              hikeDate = new Date(hike.date);
+            } else if (hike.createdAt?.toDate) {
+              hikeDate = hike.createdAt.toDate();
+            } else if (hike.createdAt) {
+              hikeDate = new Date(hike.createdAt);
+            }
+          } catch (dateError) {
+            console.warn('Invalid date for hike:', hikeDoc.id, dateError.message);
+            continue; // Skip this hike if date is invalid
+          }
+          
+          if (hikeDate && !isNaN(hikeDate.getTime())) {
+            const monthKey = `${hikeDate.getFullYear()}-${String(hikeDate.getMonth() + 1).padStart(2, '0')}`;
+            if (!monthlyActivity[monthKey]) {
+              monthlyActivity[monthKey] = { month: monthKey, hikes: 0, distance: 0 };
+            }
+            monthlyActivity[monthKey].hikes++;
+            monthlyActivity[monthKey].distance += distance;
+          }
+        }
+      }
+      
+      return {
+        totalUsers,
+        totalHikes,
+        totalDistance: Math.round(totalDistance * 100) / 100, // Round to 2 decimals
+        totalElevation: Math.round(totalElevation),
+        monthlyActivity: Object.values(monthlyActivity).sort((a, b) => a.month.localeCompare(b.month)),
+        popularDifficulties
+      };
+    } catch (error) {
+      throw new Error(`Failed to get global stats: ${error.message}`);
+    }
+  },
+
+  // Get popular hiking locations (for public API)
+  async getPopularLocations() {
+    try {
+      const db = getDatabase();
+      const usersSnapshot = await db.collection('users').get();
+      
+      const locationStats = {};
+      
+      for (const userDoc of usersSnapshot.docs) {
+        const userId = userDoc.id;
+        
+        // Get user's hikes
+        const hikesSnapshot = await db
+          .collection('users')
+          .doc(userId)
+          .collection('hikes')
+          .get();
+          
+        for (const hikeDoc of hikesSnapshot.docs) {
+          const hike = hikeDoc.data();
+          const location = hike.location;
+          
+          if (location) {
+            if (!locationStats[location]) {
+              locationStats[location] = {
+                name: location,
+                region: this.extractRegion(location),
+                hikesLogged: 0,
+                totalDistance: 0,
+                difficulties: [],
+                lastHiked: null
+              };
+            }
+            
+            locationStats[location].hikesLogged++;
+            locationStats[location].totalDistance += this.parseDistance(hike.distance);
+            locationStats[location].difficulties.push(hike.difficulty || 'Easy');
+            
+            // Handle date parsing more robustly
+            let hikeDate = null;
+            try {
+              if (hike.date?.toDate) {
+                hikeDate = hike.date.toDate();
+              } else if (hike.date) {
+                hikeDate = new Date(hike.date);
+              } else if (hike.createdAt?.toDate) {
+                hikeDate = hike.createdAt.toDate();
+              } else if (hike.createdAt) {
+                hikeDate = new Date(hike.createdAt);
+              }
+            } catch (dateError) {
+              console.warn('Invalid date for hike in location stats:', hikeDoc.id, dateError.message);
+            }
+            
+            if (hikeDate && !isNaN(hikeDate.getTime()) && (!locationStats[location].lastHiked || hikeDate > locationStats[location].lastHiked)) {
+              locationStats[location].lastHiked = hikeDate;
+            }
+          }
+        }
+      }
+      
+      // Process and sort locations
+      const locations = Object.values(locationStats)
+        .map(loc => ({
+          name: loc.name,
+          region: loc.region,
+          hikesLogged: loc.hikesLogged,
+          averageDifficulty: this.getMostCommonDifficulty(loc.difficulties),
+          averageDistance: Math.round((loc.totalDistance / loc.hikesLogged) * 100) / 100,
+          lastHiked: loc.lastHiked?.toISOString() || null
+        }))
+        .sort((a, b) => b.hikesLogged - a.hikesLogged)
+        .slice(0, 20); // Top 20 locations
+        
+      return locations;
+    } catch (error) {
+      throw new Error(`Failed to get popular locations: ${error.message}`);
+    }
+  },
+
+  // Helper function to extract region from location string
+  extractRegion(location) {
+    // Simple region extraction - you can make this more sophisticated
+    const parts = location.split(',');
+    return parts.length > 1 ? parts[parts.length - 1].trim() : 'Unknown';
+  },
+
+  // Helper function to get most common difficulty
+  getMostCommonDifficulty(difficulties) {
+    const counts = {};
+    difficulties.forEach(d => counts[d] = (counts[d] || 0) + 1);
+    return Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b, 'Easy');
+  },
+
+  // Add external hike (for public API submissions)
+  async addExternalHike(hikeData) {
+    try {
+      const db = getDatabase();
+      
+      // Create a special collection for external hikes
+      const externalHikeData = {
+        ...hikeData,
+        source: 'external_api',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        verified: false // Mark as unverified until reviewed
+      };
+      
+      const docRef = await db
+        .collection('external_hikes')
+        .add(externalHikeData);
+        
+      return { success: true, id: docRef.id };
+    } catch (error) {
+      throw new Error(`Failed to add external hike: ${error.message}`);
     }
   }
 };
