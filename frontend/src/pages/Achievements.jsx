@@ -552,10 +552,12 @@ const Achievements = () => {
     } else {
       // Fallback to copying to clipboard
       navigator.clipboard.writeText(shareMessage).then(() => {
-        alert('Achievement copied to clipboard! You can now share it with your friends.');
+        // Use a subtle console log instead of popup
+        console.log('Achievement copied to clipboard! You can now share it with your friends.');
+        // You could also add a toast notification here if you have a toast system
       }).catch(() => {
-        // Final fallback
-        alert(`Share this achievement:\n\n${shareMessage}`);
+        // Final fallback - copy to console instead of popup
+        console.log(`Share this achievement:\n\n${shareMessage}`);
       });
     }
   };

@@ -7,45 +7,22 @@ const options = {
     info: {
       title: 'Hiking Logbook Public API',
       version: '1.0.0',
-      description: `
-# Hiking Logbook Public API
+      description: `Interactive API documentation for the Hiking Logbook Public API.
 
-Welcome to the Hiking Logbook Public API! This API provides access to hiking data and statistics from our platform.
+## Demo API Keys
+- **Full Access**: \`demo-key-12345\` (read + write permissions)
+- **Read Only**: \`readonly-key-67890\` (read permissions only)
 
 ## Getting Started
+1. Click "Authorize" button above
+2. Enter one of the demo API keys
+3. Test the endpoints using the "Try it out" buttons
 
-### Authentication
-Most endpoints are public and don't require authentication. For endpoints that submit data (like POST /api/public/hikes), you'll need an API key.
-
-**Demo API Keys (for testing):**
-- Full Access: \`demo-key-12345\` (read + write permissions)
-- Read Only: \`readonly-key-67890\` (read permissions only)
-
-**To get a production API key:**
-1. Contact our development team
-2. Include your use case and expected usage
-3. We'll provide you with a production API key
-
-**Using your API key:**
-Include it in the request headers:
-\`\`\`
-X-API-Key: demo-key-12345
-\`\`\`
-
-### Base URL
-- **Production**: https://your-render-app.onrender.com
-- **Development**: http://localhost:3001
-
-### Rate Limits
-- 100 requests per minute for public endpoints
-- 50 requests per minute for data submission endpoints
-
-### Support
-For questions or support, contact: your-email@example.com
-      `,
+## Base URLs
+- **Production**: https://hiking-logbook-hezw.onrender.com
+- **Development**: http://localhost:3001`,
       contact: {
         name: 'Hiking Logbook API Support',
-        email: 'support@hikinglogbook.com',
         url: 'https://hiking-logbook-hezw.onrender.com'
       },
       license: {
@@ -69,7 +46,7 @@ For questions or support, contact: your-email@example.com
           type: 'apiKey',
           in: 'header',
           name: 'X-API-Key',
-          description: 'API key for accessing protected endpoints'
+          description: 'API key for accessing protected endpoints. Use demo-key-12345 (full access) or readonly-key-67890 (read-only) for testing.'
         }
       },
       schemas: {
@@ -131,121 +108,6 @@ For questions or support, contact: your-email@example.com
             }
           }
         },
-        Badge: {
-          type: 'object',
-          properties: {
-            name: {
-              type: 'string',
-              description: 'Badge name',
-              example: 'First Steps'
-            },
-            description: {
-              type: 'string',
-              description: 'Badge description',
-              example: 'Completed your very first hike'
-            },
-            category: {
-              type: 'string',
-              description: 'Badge category',
-              example: 'achievement'
-            },
-            difficulty: {
-              type: 'string',
-              description: 'Badge difficulty',
-              example: 'standard'
-            }
-          }
-        },
-        Location: {
-          type: 'object',
-          properties: {
-            name: {
-              type: 'string',
-              description: 'Location name',
-              example: 'Table Mountain Trail'
-            },
-            region: {
-              type: 'string',
-              description: 'Geographic region',
-              example: 'Western Cape'
-            },
-            hikesLogged: {
-              type: 'number',
-              description: 'Number of hikes logged at this location',
-              example: 45
-            },
-            averageDifficulty: {
-              type: 'string',
-              description: 'Average difficulty of hikes at this location',
-              example: 'Moderate'
-            },
-            averageDistance: {
-              type: 'number',
-              description: 'Average distance of hikes at this location (km)',
-              example: 8.5
-            },
-            lastHiked: {
-              type: 'string',
-              format: 'date-time',
-              description: 'Date of most recent hike at this location',
-              example: '2024-01-15T10:30:00Z'
-            }
-          }
-        },
-        GlobalStats: {
-          type: 'object',
-          properties: {
-            totalUsers: {
-              type: 'number',
-              description: 'Total number of registered users',
-              example: 1250
-            },
-            totalHikes: {
-              type: 'number',
-              description: 'Total number of hikes logged',
-              example: 5430
-            },
-            totalDistance: {
-              type: 'number',
-              description: 'Total distance hiked across all users (km)',
-              example: 45230.5
-            },
-            totalElevation: {
-              type: 'number',
-              description: 'Total elevation gained across all hikes (m)',
-              example: 890450
-            },
-            monthlyActivity: {
-              type: 'array',
-              description: 'Monthly hiking activity data',
-              items: {
-                type: 'object',
-                properties: {
-                  month: {
-                    type: 'string',
-                    example: '2024-01'
-                  },
-                  hikes: {
-                    type: 'number',
-                    example: 245
-                  },
-                  distance: {
-                    type: 'number',
-                    example: 1850.5
-                  }
-                }
-              }
-            },
-            popularDifficulties: {
-              type: 'object',
-              properties: {
-                Easy: { type: 'number', example: 1200 },
-                Moderate: { type: 'number', example: 2800 },
-                Hard: { type: 'number', example: 1300 }
-              }
-            }
-          }
-        },
         ApiResponse: {
           type: 'object',
           properties: {
@@ -285,23 +147,23 @@ For questions or support, contact: your-email@example.com
     tags: [
       {
         name: 'Health',
-        description: 'API health and status endpoints'
+        description: 'Check if the API is working and get service status'
       },
       {
         name: 'Statistics',
-        description: 'Global hiking statistics and trends'
+        description: 'Get global hiking statistics, user counts, and activity trends'
       },
       {
         name: 'Badges',
-        description: 'Achievement badges and gamification'
+        description: 'View available achievement badges and their requirements'
       },
       {
         name: 'Locations',
-        description: 'Popular hiking locations and data'
+        description: 'Get popular hiking locations with statistics and data'
       },
       {
         name: 'Data Submission',
-        description: 'Submit hiking data from external systems'
+        description: 'Submit hike data from external systems (requires API key)'
       }
     ]
   },
