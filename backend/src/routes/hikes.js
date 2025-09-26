@@ -247,36 +247,6 @@ router.post('/:id/complete', async (req, res) => {
   }
 });
 
-// POST /api/hikes/:id/waypoint - Add a GPS waypoint to a hike
-router.post('/:id/waypoint', async (req, res) => {
-  try {
-    const userId = req.user.uid;
-    const hikeId = req.params.id;
-    const waypoint = req.body;
-    
-    if (!waypoint.latitude || !waypoint.longitude) {
-      return res.status(400).json({
-        success: false,
-        error: 'Latitude and longitude are required'
-      });
-    }
-    
-    const result = await dbUtils.addWaypoint(userId, hikeId, waypoint);
-    
-    res.json({
-      success: true,
-      data: result,
-      message: 'Waypoint added successfully'
-    });
-  } catch (error) {
-    console.error('Error adding waypoint:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to add waypoint',
-      message: error.message
-    });
-  }
-});
 
 
 

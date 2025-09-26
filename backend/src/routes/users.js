@@ -128,6 +128,7 @@ router.get("/profile", async (req, res) => {
   }
 });
 
+
 // Search users (public route)
 router.get('/search', async (req, res) => {
   try {
@@ -183,27 +184,7 @@ router.get('/search', async (req, res) => {
   }
 });
 
-// Get user achievements (public route)
-router.get('/:uid/achievements', async (req, res) => {
-  try {
-    const { uid } = req.params;
-    const profile = await AuthService.getUserProfile(uid);
 
-    res.json({
-      uid: profile.uid,
-      displayName: profile.displayName,
-      achievements: profile.stats.achievements || [],
-      totalHikes: profile.stats.totalHikes || 0,
-      totalDistance: profile.stats.totalDistance || 0,
-      totalElevation: profile.stats.totalElevation || 0,
-    });
-  } catch (error) {
-    console.error('Get achievements error:', error);
-    res.status(404).json({
-      error: 'User not found',
-    });
-  }
-});
 
 // Get user hiking history (public route)
 
@@ -278,65 +259,5 @@ router.patch('/:uid', async (req, res) => {
 });
 
 
-
-// Follow user (protected route)
-router.post('/:uid/follow', verifyAuth, async (req, res) => {
-  try {
-    const { uid: targetUid } = req.params;
-    const { uid: followerUid } = req.user;
-
-    if (targetUid === followerUid) {
-      return res.status(400).json({
-        error: 'Cannot follow yourself',
-      });
-    }
-
-    // Check if target user exists
-    const targetProfile = await AuthService.getUserProfile(targetUid);
-    if (!targetProfile) {
-      return res.status(404).json({
-        error: 'User not found',
-      });
-    }
-
-    // Add to followers collection (you might want to create a separate collection for this)
-    // For now, we'll just return success
-    res.json({
-      message: 'User followed successfully',
-    });
-  } catch (error) {
-    console.error('Follow user error:', error);
-    res.status(500).json({
-      error: 'Failed to follow user',
-      details: error.message,
-    });
-  }
-});
-
-// Unfollow user (protected route)
-router.delete('/:uid/follow', verifyAuth, async (req, res) => {
-  try {
-    const { uid: targetUid } = req.params;
-    const { uid: followerUid } = req.user;
-
-    if (targetUid === followerUid) {
-      return res.status(400).json({
-        error: 'Cannot unfollow yourself',
-      });
-    }
-
-    // Remove from followers collection
-    // For now, we'll just return success
-    res.json({
-      message: 'User unfollowed successfully',
-    });
-  } catch (error) {
-    console.error('Unfollow user error:', error);
-    res.status(500).json({
-      error: 'Failed to unfollow user',
-      details: error.message,
-    });
-  }
-});
 
 export default router;

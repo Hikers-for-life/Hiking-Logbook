@@ -3,18 +3,29 @@ import dotenv from 'dotenv';
 import { initializeFirebase } from './config/firebase.js';
 import * as middleware from './middleware/index.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
+
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
 import hikeRoutes from './routes/hikes.js';
-import cors from 'cors';
+
+import feedRoutes from './routes/feed.js';
+import discoverRoutes from './routes/discover.js';
 import helmet from 'helmet';
+import cors from 'cors';
 import morgan from 'morgan';
 import friendRoutes from "./routes/friends.js";
+
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+
+// Apply middleware
+middleware.applySecurityMiddleware(app);
+middleware.applyParsingMiddleware(app);
+middleware.applyLoggingMiddleware(app);
 
 // Security middleware
 app.use(helmet());
@@ -60,6 +71,7 @@ if (process.env.NODE_ENV === 'development') {
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({
@@ -70,11 +82,20 @@ app.get('/health', (req, res) => {
   });
 });
 
+
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/hikes', hikeRoutes);
 app.use("/api/friends", friendRoutes);
+app.use('/api/feed', feedRoutes);
+app.use('/api/discover', discoverRoutes);
+// 404 handler for undefined routes
+app.use('*', notFoundHandler);
+// Global error handler
+app.use(errorHandler);
+
+
 
 // 404 handler
 app.use('*', (req, res) => {
@@ -107,15 +128,14 @@ app.use((error, req, res) => {
   } else if (error.code === 'ECONNREFUSED') {
     statusCode = 503;
     message = 'Service unavailable';
+
   }
+})
 
-  res.status(statusCode).json({
-    error: message,
-    ...(process.env.NODE_ENV === 'development' && { stack: error.stack }),
-  });
-});
+// Start the server
+  let serverInstance = null;
 
-// ✅ Wrap server startup in async function
+//  Wrap server startup in async function
 const startServer = async () => {
   try {
    
@@ -152,6 +172,8 @@ const startServer = async () => {
   }
 };
 
+
 startServer();
+
 
 export default app;

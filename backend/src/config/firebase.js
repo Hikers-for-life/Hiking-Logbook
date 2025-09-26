@@ -8,6 +8,10 @@ dotenv.config();
 let db = null;
 let authInstance = null;
 
+//export const db = getDatabase();
+//export const auth = getAuth();
+
+
 /**
  * Initialize Firebase Admin SDK (only once)
  */
@@ -20,6 +24,30 @@ export function initializeFirebase() {
   }
 
   try {
+
+    // Check if Firebase environment variables are set
+    if (!process.env.FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID === 'your-project-id') {
+      // Create mock instances for development
+      db = {
+        collection: () => ({
+          limit: () => ({
+            get: () => Promise.resolve({ docs: [] })
+          })
+        })
+      };
+      authInstance = {
+        createUser: () => Promise.reject(new Error('Firebase not configured')),
+        getUserByEmail: () => Promise.reject(new Error('Firebase not configured')),
+        deleteUser: () => Promise.reject(new Error('Firebase not configured')),
+        updateUser: () => Promise.reject(new Error('Firebase not configured'))
+      };
+      
+      console.log('Mock Firebase initialized for development');
+      return db;
+    }
+
+    // Build service account from .env
+
     const serviceAccount = {
       type: process.env.FIREBASE_TYPE || 'service_account',
       project_id: process.env.FIREBASE_PROJECT_ID,
@@ -42,6 +70,7 @@ export function initializeFirebase() {
       credential: admin.credential.cert(serviceAccount),
       databaseURL: process.env.FIREBASE_DATABASE_URL,
     });
+
 
     db = admin.firestore();
     authInstance = admin.auth();
@@ -67,17 +96,21 @@ export function getAuth() {
   return authInstance;
 }
 
+
 export function getCollections() {
   const database = getDatabase();
   return {
     hikes: database.collection('hikes'),
     users: database.collection('users'),
+    feeds: database.collection('feed_items'),
     // add more collections here
   };
 }
+
 
 /**
  * Direct exports (for convenience in routes like users.js)
  * ⚠️ Make sure you call initializeFirebase() ONCE at app startup
  */
 export { db, authInstance as auth, admin };
+

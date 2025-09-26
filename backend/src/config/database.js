@@ -1,5 +1,7 @@
 import { getDatabase } from './firebase.js';
+
 import { db } from './firebase.js';
+
 // Database utilities for comprehensive hike management
 
 export const collections = {
@@ -13,6 +15,7 @@ export const dbUtils = {
   getDb() {
     return getDatabase();
   },
+
 
   async create(collection, docId, data) {
     try {
@@ -78,10 +81,11 @@ export const dbUtils = {
   },
 
 
+
   // Add a new hike with comprehensive data
   async addHike(userId, hikeData) {
     try {
-
+      //const db = getDatabase();
       // Map and validate the hike data
       const mappedHikeData = {
         // Basic information
@@ -120,6 +124,7 @@ export const dbUtils = {
         updatedAt: new Date(),
         userId: userId
       };
+      const db = getDatabase();
 
       const docRef = await this.getDb()
         .collection('users')
@@ -310,7 +315,7 @@ export const dbUtils = {
    async getUserProfile(userId) {
     try {
 
-      const doc = await db.collection('users').doc(userId).get();
+      const doc = await this.getDb().collection('users').doc(userId).get();
       if (!doc.exists) {
         return null;
       }
@@ -325,7 +330,7 @@ export const dbUtils = {
   // Create user profile
    async createUserProfile(userId, profileData) {
     try {
-      await db
+      await this.getDb()
         .collection('users')
         .doc(userId)
         .set({
@@ -340,8 +345,7 @@ export const dbUtils = {
     }
   },
 
-  // Update user profile
-  
+
 
   // Get hike statistics for a user
   async getUserHikeStats(userId) {
@@ -376,7 +380,7 @@ export const dbUtils = {
  async deleteUser(userId) {
     try {
       // Delete all hikes first
-      const hikesSnapshot = await db
+      const hikesSnapshot = await this.getDb()
         .collection('users')
         .doc(userId)
         .collection('hikes')
@@ -386,7 +390,7 @@ export const dbUtils = {
       await Promise.all(deletePromises);
       
       // Delete the user document
-      await db.collection('users').doc(userId).delete();
+      await this.getDb().collection('users').doc(userId).delete();
       
       return { success: true };
     } catch (error) {

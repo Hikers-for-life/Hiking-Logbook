@@ -13,17 +13,41 @@ export function applySecurityMiddleware(app) {
 
     const allowedOrigins = [
         process.env.FRONTEND_URL || 'http://localhost:3000',
-        // Add more allowed origins here
+        'http://localhost:3000', // Development
+        'https://localhost:3000', // Development HTTPS
+        'https://hiking-logbook.web.app',
+        'https://hiking-logbook.firebaseapp.com',
+        
     ];
+    
     app.use(helmet());
     app.use(
         cors({
             origin: (origin, callback) => {
-            if (!origin || allowedOrigins.includes(origin)) {
-                callback(null, true);
-            } else {
+                // Allow requests with no origin (like mobile apps or curl requests)
+                if (!origin) return callback(null, true);
+                
+                // For development - allow localhost
+                if (origin.includes('localhost')) {
+                    return callback(null, true);
+                }
+                
+                // For production - check against allowed origins
+                if (allowedOrigins.includes(origin)) {
+                    return callback(null, true);
+                }
+                
+                // For deployed apps - allow common deployment platforms
+                if (origin.includes('.web.app') || 
+                    origin.includes('.firebaseapp.com') ||
+                    origin.includes('.netlify.app') ||
+                    origin.includes('.vercel.app') ||
+                    origin.includes('.github.io')) {
+                    return callback(null, true);
+                }
+                
+                console.log('CORS blocked origin:', origin);
                 callback(new Error('Not allowed by CORS'));
-            }
             },
             credentials: true,
             methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],

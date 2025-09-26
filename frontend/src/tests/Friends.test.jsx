@@ -1,73 +1,72 @@
-import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
-import '@testing-library/jest-dom';
+// src/tests/Friends.test.jsx
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import Friends from "../pages/Friends.jsx";
 
-// Mock all components used in Friends page
-jest.mock("../components/ui/navigation", () => ({ Navigation: () => <div data-testid="navigation">Navigation</div> }));
-jest.mock("../components/ui/card", () => ({
-  Card: ({ children }) => <div data-testid="card">{children}</div>,
-  CardContent: ({ children }) => <div>{children}</div>,
-  CardHeader: ({ children }) => <div>{children}</div>,
-  CardTitle: ({ children }) => <div>{children}</div>,
+// at top of Friends.test.jsx
+jest.mock("../contexts/AuthContext", () => {
+  const actual = jest.requireActual("../contexts/AuthContext");
+  return {
+    ...actual,
+    useAuth: () => ({
+      currentUser: { uid: "test-uid", email: "test@example.com" },
+      login: jest.fn(),
+      logout: jest.fn(),
+    }),
+    AuthProvider: ({ children }) => <div>{children}</div>, // dummy
+  };
+});
+// Mock services first
+jest.mock("../services/feed.js", () => ({
+  getFeed: jest.fn(() =>
+    Promise.resolve([{ id: "post1", content: "Trail One", likes: 0 }])
+  ),
+  likeFeed: jest.fn(),
 }));
-jest.mock("../components/ui/input", () => ({ Input: (props) => <input {...props} data-testid="search-input" /> }));
-jest.mock("../components/ui/badge", () => ({ Badge: ({ children }) => <span>{children}</span> }));
-jest.mock("../components/ui/avatar", () => ({
-  Avatar: ({ children }) => <div data-testid="avatar">{children}</div>,
-  AvatarFallback: ({ children }) => <div>{children}</div>,
+
+jest.mock("../services/discover.js", () => ({
+  getSuggestions: jest.fn(() =>
+    Promise.resolve([{ id: "user1", name: "Bob" }])
+  ),
+  addFriend: jest.fn(),
 }));
-jest.mock("../components/ui/tabs", () => ({
-  Tabs: ({ children }) => <div>{children}</div>,
-  TabsList: ({ children }) => <div>{children}</div>,
-  TabsTrigger: ({ children }) => <button>{children}</button>,
-  TabsContent: ({ children }) => <div>{children}</div>,
-}));
-jest.mock("../components/ui/view-friend-profile", () => ({
-  ProfileView: ({ open }) => open ? <div data-testid="profile-view">Profile View</div> : null,
-}));
-jest.mock("lucide-react", () => ({
-  Search: () => <div data-testid="search-icon" />,
-  MapPin: () => <div />,
-  Mountain: () => <div />,
-  Medal: () => <div />,
-  Clock: () => <div />,
-  TrendingUp: () => <div />,
-  Users: () => <div />,
-  Share2: () => <div />,
-  Heart: () => <div />,
-  MessageSquare: () => <div />,
-  UserPlus: () => <div />
-}));
+
+// Import the mocked services to assert calls
+import * as feedService from "../services/feed.js";
+import * as discoverService from "../services/discover.js";
 
 describe("Friends Page", () => {
-  test("renders navigation and main sections", () => {
-    render(<Friends />);
+  it("allows liking a post", async () => {
+  render(
+    <MemoryRouter>
+      <Friends />
+    </MemoryRouter>
+  );
 
-    // Navigation present
-    expect(screen.getByTestId("navigation")).toBeInTheDocument();
+  // More flexible matcher
+  await screen.findByText((_, node) =>
+    node.textContent.includes("Trail One")
+  );
 
-    // Search input present
-    expect(screen.getByTestId("search-input")).toBeInTheDocument();
+  const likeButton = await screen.findByRole("button", { name: /0/i });
+  fireEvent.click(likeButton);
 
-    // Tabs exist
-    expect(screen.getByRole("button", { name: /My Friends/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Activity Feed/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Discover/i })).toBeInTheDocument();
-  });
+  await waitFor(() => expect(feedService.likeFeed).toHaveBeenCalled());
+});
 
-  test("renders friend cards", () => {
-    render(<Friends />);
-    const cards = screen.getAllByTestId("card");
-    expect(cards.length).toBeGreaterThan(0);
-  });
+it("allows adding a friend", async () => {
+  render(
+    <MemoryRouter>
+      <Friends />
+    </MemoryRouter>
+  );
 
-  test("opens profile view when 'View Profile' is clicked", () => {
-    render(<Friends />);
-    const viewButtons = screen.getAllByRole("button", { name: /View Profile/i });
-    expect(viewButtons.length).toBeGreaterThan(0);
+  await screen.findByText(/Bob/i);
 
-    fireEvent.click(viewButtons[0]);
-    expect(screen.getByTestId("profile-view")).toBeInTheDocument();
-  });
+  const addButton = await screen.findByRole("button", { name: /Add Friend/i });
+  fireEvent.click(addButton);
+
+  await waitFor(() => expect(discoverService.addFriend).toHaveBeenCalled());
+});
+
 });

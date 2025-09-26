@@ -1,12 +1,18 @@
 
+
+import { getAuth } from '../config/firebase.js';
+import { dbUtils } from '../config/database.js';
+
 import { auth, db } from '../config/firebase.js';
 import {collections,  dbUtils } from '../config/database.js';
+
 
 
 
 export class AuthService {
   // Create a new user account
   static async createUser(userData) {
+    //const auth = getAuth();//ANNAH HERE
     try {
       
       const { email, password, displayName, bio, location } = userData;
@@ -27,6 +33,8 @@ export class AuthService {
         bio: bio || '',
         location: location || null,
         photoURL: '',
+        friends: [],     // ✅ initialize
+        trails: [],    
         preferences: {
           difficulty: 'beginner',
           terrain: 'mixed',
@@ -106,6 +114,7 @@ export class AuthService {
 
   // Delete user account
   static async deleteUser(uid) {
+    //const auth = getAuth();//ANNAH HERE
     try {
       // Delete from Firestore first
       await dbUtils.delete(collections.USERS, uid);
@@ -118,6 +127,7 @@ export class AuthService {
       throw new Error(`Failed to delete user: ${error.message}`);
     }
   }
+
 
   // Verify user email
   static async verifyEmail(uid) {
@@ -204,4 +214,5 @@ export class AuthService {
       throw new Error(`Failed to reset password: ${error.message}`);
     }
   }
+
 }
