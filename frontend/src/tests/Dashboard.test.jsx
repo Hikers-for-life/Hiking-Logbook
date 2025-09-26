@@ -64,10 +64,13 @@ describe('Dashboard Component', () => {
   });
 
   test('displays stats with total hikes and distance', async () => {
-    hikeApiService.getHikes.mockResolvedValueOnce([
-      { id: 1, name: 'Trail One', distance: 5, date: '2024-01-01' },
-      { id: 2, name: 'Trail Two', distance: 10, date: '2024-02-01' },
-    ]);
+    hikeApiService.getHikes.mockResolvedValueOnce({
+      success: true,
+      data: [
+        { id: 1, name: 'Trail One', distance: 5, date: '2024-01-01' },
+        { id: 2, name: 'Trail Two', distance: 10, date: '2024-02-01' },
+      ]
+    });
 
     renderDashboard();
 
@@ -78,7 +81,10 @@ describe('Dashboard Component', () => {
 
 
   test('shows no hikes message when no hikes exist', async () => {
-    hikeApiService.getHikes.mockResolvedValueOnce([]);
+    hikeApiService.getHikes.mockResolvedValueOnce({
+      success: true,
+      data: []
+    });
 
     renderDashboard();
 
@@ -86,7 +92,10 @@ describe('Dashboard Component', () => {
   });
 
   test('quick action buttons are clickable', async () => {
-    hikeApiService.getHikes.mockResolvedValueOnce([]);
+    hikeApiService.getHikes.mockResolvedValueOnce({
+      success: true,
+      data: []
+    });
 
     renderDashboard();
 
@@ -97,7 +106,10 @@ describe('Dashboard Component', () => {
   });
 
   test('displays achievements placeholder', async () => {
-    hikeApiService.getHikes.mockResolvedValueOnce([]);
+    hikeApiService.getHikes.mockResolvedValueOnce({
+      success: true,
+      data: []
+    });
 
     renderDashboard();
 

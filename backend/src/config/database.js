@@ -17,7 +17,7 @@ export const dbUtils = {
         route: hikeData.route || hikeData.trailName || '',
         
         // Timing
-        date: hikeData.date || new Date(),
+        date: hikeData.date ? (typeof hikeData.date === 'string' ? new Date(hikeData.date) : hikeData.date) : new Date(),
         startTime: hikeData.startTime || null,
         endTime: hikeData.endTime || null,
         duration: hikeData.duration || 0,
@@ -283,6 +283,7 @@ export const dbUtils = {
 
       const completionData = {
         status: 'completed',
+        date: endData.date || new Date().toISOString(), // Update the date field
         endTime: endData.endTime || new Date(),
         duration: endData.duration || 0,
         endLocation: endData.endLocation || null,
@@ -827,7 +828,7 @@ export const dbUtils = {
     }
   },
 
-  // PLANNED HIKES METHODS (from remote branch)
+  // PLANNED HIKES METHODS
   // Add a new planned hike
   async addPlannedHike(userId, plannedHikeData) {
     try {

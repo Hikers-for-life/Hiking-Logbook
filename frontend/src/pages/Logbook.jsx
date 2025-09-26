@@ -58,13 +58,23 @@ const Logbook = () => {
       
       if (response.success) {
         
+        // Helper function to safely format dates
+        const formatDate = (dateValue) => {
+          if (!dateValue) return 'No date';
+          if (dateValue.toDate) {
+            return dateValue.toDate().toLocaleDateString();
+          }
+          const date = new Date(dateValue);
+          return isNaN(date.getTime()) ? 'Invalid date' : date.toLocaleDateString();
+        };
+
         // Convert Firestore timestamps to readable dates and ensure all fields are safe for React
         const processedHikes = response.data.map(hike => ({
           ...hike,
           // Convert dates
-          date: hike.date ? (hike.date.toDate ? hike.date.toDate().toLocaleDateString() : new Date(hike.date).toLocaleDateString()) : 'No date',
-          createdAt: hike.createdAt ? (hike.createdAt.toDate ? hike.createdAt.toDate() : new Date(hike.createdAt)) : null,
-          updatedAt: hike.updatedAt ? (hike.updatedAt.toDate ? hike.updatedAt.toDate().toLocaleDateString() : new Date(hike.updatedAt).toLocaleDateString()) : null,
+          date: formatDate(hike.date),
+          createdAt: formatDate(hike.createdAt),
+          updatedAt: formatDate(hike.updatedAt),
           startTime: hike.startTime ? (hike.startTime.toDate ? hike.startTime.toDate() : new Date(hike.startTime)) : null,
           endTime: hike.endTime ? (hike.endTime.toDate ? hike.endTime.toDate() : new Date(hike.endTime)) : null,
           // Ensure other fields are strings/numbers

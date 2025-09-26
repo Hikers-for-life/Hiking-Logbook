@@ -345,6 +345,7 @@ const HikePlanner = () => {
         difficulty: trip.difficulty,
         description: trip.description,
         notes: trip.notes,
+        date: new Date().toISOString(), // Add the date field
         startTime: trip.startTime,
         plannedHikeId: trip.id, // Store reference to planned hike
         weather: weatherData ? `${weatherData.description}, ${weatherData.temperature}°C` : 'Unknown',
