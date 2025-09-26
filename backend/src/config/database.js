@@ -1,8 +1,88 @@
 ﻿import { getDatabase } from './firebase.js';
-import { evaluateAndAwardBadges } from '../services/badgeService.js';
 
+import { db } from './firebase.js';
+import { evaluateAndAwardBadges } from '../services/badgeService.js';
+//import { collections, dbUtils } from '../config/database.js';
 // Database utilities for comprehensive hike management
+
+export const collections = {
+  USERS: 'users',
+  HIKES: 'hikes',
+  TRAILS: 'trails',
+  ACHIEVEMENTS: 'achievements',
+};
 export const dbUtils = {
+  // Helper method to get database instance
+  getDb() {
+    return getDatabase();
+  },
+
+
+  async create(collection, docId, data) {
+    try {
+      await db
+        .collection(collection)
+        .doc(docId)
+        .set({
+          ...data,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+      return { success: true, id: docId };
+    } catch (error) {
+      throw new Error(`Failed to create document: ${error.message}`);
+    }
+  },
+
+  async getById(collection, docId) {
+    try {
+      const doc = await db.collection(collection).doc(docId).get();
+      if (!doc.exists) {
+        return null;
+      }
+      return { id: doc.id, ...doc.data() };
+    } catch (error) {
+      throw new Error(`Failed to get document: ${error.message}`);
+    }
+  },
+  async update(collection, docId, data) {
+    try {
+      await db
+        .collection(collection)
+        .doc(docId)
+        .update({
+          ...data,
+          updatedAt: new Date(),
+        });
+      return { success: true };
+    } catch (error) {
+      throw new Error(`Failed to update document: ${error.message}`);
+    }
+  },
+
+  async query(collection, conditions = []) {
+    try {
+      let query = db.collection(collection);
+
+      conditions.forEach(({ field, operator, value }) => {
+        query = query.where(field, operator, value);
+      });
+
+      const snapshot = await query.get();
+      const docs = [];
+
+      snapshot.forEach((doc) => {
+        docs.push({ id: doc.id, ...doc.data() });
+      });
+
+      return docs;
+    } catch (error) {
+      throw new Error(`Failed to query documents: ${error.message}`);
+    }
+  },
+
+
+
   // Add a new hike with comprehensive data
   async addHike(userId, hikeData) {
     try {
@@ -308,7 +388,7 @@ export const dbUtils = {
   },
 
   // Get user profile
-  async getUserProfile(userId) {
+   async getUserProfile(userId) {
     try {
       const db = getDatabase();
       const doc = await db.collection('users').doc(userId).get();
@@ -324,7 +404,7 @@ export const dbUtils = {
 
 
   // Create user profile
-  async createUserProfile(userId, profileData) {
+   async createUserProfile(userId, profileData) {
     try {
       const db = getDatabase();
       await db
@@ -572,7 +652,7 @@ export const dbUtils = {
   },
 
   // Delete user and all their data
-  async deleteUser(userId) {
+ async deleteUser(userId) {
     try {
       // Delete all hikes first
       const db = getDatabase();

@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
+import { useAuth } from '../../contexts/AuthContext.jsx';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,11 +13,37 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { User, Settings, LogOut, Trash2 } from 'lucide-react';
 
 export const ProfileDropdown = ({ onLogout, onViewProfile, onEditProfile}) => {
-  const [user] = useState({
-    name: 'Alex Johnson',
-    email: 'alex@example.com',
-    avatar: '', // Empty for now, will show initials
-  });
+const [profile, setProfile] = useState(null);
+ const { currentUser, getUserProfile } = useAuth();
+
+  useEffect(() => {
+  if (!currentUser) return;
+
+
+  const fetchProfile = async () => {
+    try {
+      const res = await fetch(`http://localhost:3001/api/users/${currentUser.uid}`);
+      if (!res.ok) throw new Error("Failed to fetch profile");
+      const data = await res.json();
+      setProfile(data);  // now profile has bio, location, createdAt
+    
+      
+      
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  fetchProfile();
+}, [currentUser]);
+
+
+  
+  const user = {
+    name: profile?.displayName || currentUser?.displayName || "Anonymous",
+    email: profile?.email || currentUser?.email || "No email",
+    avatar: "", // still empty, fallback initials will be shown
+  };
 
   return (
     <DropdownMenu>
@@ -26,10 +53,10 @@ export const ProfileDropdown = ({ onLogout, onViewProfile, onEditProfile}) => {
             <AvatarImage src={user.avatar} alt={user.name} />
             <AvatarFallback className="bg-gradient-trail text-white">
               {user.name
-                .split(' ')
-                .map((n) => n[0])
-                .join('')}
+                ? user.name.split(' ').map((n) => n[0]).join('')
+                : "?"}
             </AvatarFallback>
+
           </Avatar>
         </Button>
       </DropdownMenuTrigger>

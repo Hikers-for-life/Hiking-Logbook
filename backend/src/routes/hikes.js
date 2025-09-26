@@ -331,6 +331,7 @@ router.post('/:id/complete', async (req, res) => {
 });
 
 
+
 // PATCH /api/hikes/:id/pin - Pin a hike
 router.patch('/:id/pin', async (req, res) => {
   try {
@@ -458,5 +459,6 @@ router.patch('/:id/unshare', async (req, res) => {
     });
   }
 });
+
 
 export default router;

@@ -4,16 +4,18 @@ import helmet from 'helmet';
 import cors from 'cors';
 import morgan from 'morgan';
 import { initializeFirebase } from './config/firebase.js';
-
 import * as middleware from './middleware/index.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
 import hikeRoutes from './routes/hikes.js';
+
 import feedRoutes from './routes/feed.js';
 import discoverRoutes from './routes/discover.js';
 import goalsRoutes from './routes/goals.js';
+import friendRoutes from "./routes/friends.js";
+
 
 dotenv.config();
 
@@ -56,7 +58,7 @@ app.use(
       }
     },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   })
 );
@@ -86,18 +88,11 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/hikes', hikeRoutes);
+app.use("/api/friends", friendRoutes);
 app.use('/api/feed', feedRoutes);
 app.use('/api/discover', discoverRoutes);
 app.use('/api/goals', goalsRoutes);
 
-// 404 handler for undefined routes
-app.use('*', (req, res) => {
-  res.status(404).json({
-    error: 'Route not found',
-    path: req.originalUrl,
-    method: req.method,
-  });
-});
 
 // Global error handler
 app.use((error, req, res, next) => {
@@ -110,9 +105,50 @@ app.use((error, req, res, next) => {
   });
 });
 
-// Initialize Firebase and start server
-async function startServer() {
+
+
+// 404 handler
+app.use('*', (req, res) => {
+  res.status(404).json({
+    error: 'Route not found',
+    path: req.originalUrl,
+    method: req.method,
+  });
+});
+
+// Global error handler
+app.use((error, req, res,next) => {
+  console.error('Global error handler:', error);
+
+  let statusCode = 500;
+  let message = 'Internal server error';
+
+  if (error.name === 'ValidationError') {
+    statusCode = 400;
+    message = error.message;
+  } else if (error.name === 'UnauthorizedError') {
+    statusCode = 401;
+    message = 'Unauthorized';
+  } else if (error.name === 'ForbiddenError') {
+    statusCode = 403;
+    message = 'Forbidden';
+  } else if (error.name === 'NotFoundError') {
+    statusCode = 404;
+    message = 'Resource not found';
+  } else if (error.code === 'ECONNREFUSED') {
+    statusCode = 503;
+    message = 'Service unavailable';
+
+  }
+});
+
+// Start the server
+  let serverInstance = null;
+
+//  Wrap server startup in async function
+const startServer = async () => {
   try {
+   
     await initializeFirebase();
     
     const server = app.listen(PORT, () => {
@@ -125,17 +161,33 @@ async function startServer() {
       console.log(`Feed API: http://localhost:${PORT}/api/feed`);
       console.log(`Discover API: http://localhost:${PORT}/api/discover`);
       console.log(`Goals API: http://localhost:${PORT}/api/goals`);
+      console.log(`Friends API: http://localhost:${PORT}/api/friends`);
     });
     
-    return server;
-  } catch (error) {
-    console.error('Failed to start server:', error);
+   process.on('SIGTERM', () => {
+      console.log('SIGTERM received, shutting down gracefully');
+      server.close(() => {
+        console.log('Process terminated');
+        process.exit(0);
+      });
+    });
+
+    process.on('SIGINT', () => {
+      console.log('SIGINT received, shutting down gracefully');
+      server.close(() => {
+        console.log('Process terminated');
+        process.exit(0);
+      });
+    });
+  } catch (err) {
+    console.error('Failed to start server:', err);
     process.exit(1);
   }
-}
+};
 
-// Start the server
+
 startServer();
+
 
 
 

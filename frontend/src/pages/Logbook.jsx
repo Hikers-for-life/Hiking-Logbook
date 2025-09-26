@@ -46,7 +46,7 @@ const Logbook = () => {
       if (difficultyFilter !== 'All') filters.difficulty = difficultyFilter;
       
       const response = await hikeApiService.getHikes(filters);
-      
+      console.log("📦 API Response:", response);
       if (response.success) {
         
         // Convert Firestore timestamps to readable dates and ensure all fields are safe for React

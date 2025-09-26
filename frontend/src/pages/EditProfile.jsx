@@ -5,13 +5,14 @@ import * as z from "zod";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Textarea } from "../components/ui/textarea";
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "../components/ui/form";
 import { ArrowLeft, Camera, MapPin, User, Lock, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "../hooks/use-toast";
+import { useAuth } from '../contexts/AuthContext.jsx';
+import { useEffect} from "react";
 
 const profileSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -24,17 +25,43 @@ const profileSchema = z.object({
 
 const EditProfile = () => {
   const [profileImage, setProfileImage] = useState("/placeholder.svg");
+  const { currentUser } = useAuth();        //  get currentUser
+  const [profile, setProfile] = useState(null); //  profile state
   const { toast } = useToast();
-
   const form = useForm({
-    resolver: zodResolver(profileSchema),
-    defaultValues: {
-      name: "Trail Explorer",
-      password: "",
-      bio: "Passionate hiker exploring mountain trails and sharing adventures with fellow outdoor enthusiasts.",
-      location: "Colorado, USA",
-    },
-  });
+  resolver: zodResolver(profileSchema),
+  defaultValues: {
+    name: currentUser.displayName || "No name",
+    password: "",
+    bio: "No bio yet",
+    location: "Not set",
+  },
+});
+
+useEffect(() => {
+  if (!currentUser) return;
+
+  const fetchProfile = async () => {
+    try {
+      const res = await fetch(`http://localhost:3001/api/users/${currentUser.uid}`);
+      if (!res.ok) throw new Error("Failed to fetch profile");
+      const data = await res.json();
+      setProfile(data);
+
+      //  Update form values when profile loads
+      form.reset({
+        name: data.displayName || currentUser.displayName || "No name",
+       
+        bio: data.bio || "No bio yet",
+        location: data.location || "Not set",
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  fetchProfile();
+}, [currentUser, form]);
 
   const handleImageUpload = (event) => {
     const file = event.target.files?.[0];
@@ -47,12 +74,67 @@ const EditProfile = () => {
     }
   };
 
-  const onSubmit = (data) => {
+const onSubmit = async (data) => {
+  try {
+    console.log("Submitting form data:", data);
+
+    // Step 1: Check if latitude and longitude exist in current profile
+    let latitude = profile?.latitude;
+    let longitude = profile?.longitude;
+
+    // Step 2: If location changed or coordinates missing, fetch from Geocoding API
+    if (!latitude || !longitude || data.location !== profile?.location) {
+      const geoRes = await fetch(
+        `http://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(data.location)}&limit=1&appid=${process.env.REACT_APP_OPENWEATHER_API_KEY}`
+      );
+      const geoData = await geoRes.json();
+      if (!geoData || geoData.length === 0) {
+        toast({
+          title: "Invalid location",
+          description: "Could not find coordinates for the specified location.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      latitude = geoData[0].lat;
+      longitude = geoData[0].lon;
+    }
+
+    // Step 3: Update Firestore with location + coordinates
+    const res = await fetch(`http://localhost:3001/api/users/${currentUser.uid}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        displayName: data.name,
+        bio: data.bio,
+        location: data.location,
+        latitude,
+        longitude,
+      }),
+    });
+
+    if (!res.ok) throw new Error("Failed to update profile");
+    const updatedProfile = await res.json();
+    setProfile(updatedProfile);
+
     toast({
       title: "Profile Updated",
       description: "Your hiking profile has been successfully updated!",
     });
-  };
+  } catch (err) {
+    console.error(err);
+    toast({
+      title: "Error",
+      description: "Unable to update profile. Try again.",
+      variant: "destructive",
+    });
+  }
+};
+
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -74,7 +156,13 @@ const EditProfile = () => {
             <div className="relative mx-auto mb-4">
               <Avatar className="h-32 w-32 border-4 border-background shadow-lg">
                 <AvatarImage src={profileImage} alt="Profile picture" />
-                <AvatarFallback className="bg-muted text-2xl">TE</AvatarFallback>
+              <AvatarFallback className="text-2xl">
+                {form.defaultValues?.name 
+                  .split('')
+                  .map((n) => n[0])
+                  .join('')}
+              </AvatarFallback>
+
               </Avatar>
               <label className="absolute bottom-0 right-0 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full p-3 cursor-pointer transition-colors shadow-lg">
                 <Camera className="h-5 w-5" />
@@ -149,30 +237,7 @@ const EditProfile = () => {
                 </div>
 
                 {/* Password Field */}
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-2">
-                        <Lock className="h-4 w-4 text-destructive" />
-                        New Password
-                      </FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="password" 
-                          placeholder="Leave blank to keep current password" 
-                          className="focus:ring-primary" 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Only fill this out if you want to change your password
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              
 
                 {/* Bio Field */}
                 <FormField
@@ -201,20 +266,24 @@ const EditProfile = () => {
 
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row gap-4 pt-6">
-                  <Button 
-                    type="submit" 
-                    className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground shadow-md"
-                  >
-                    Save Changes
-                  </Button>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    className="flex-1 border-border hover:bg-accent hover:text-accent-foreground"
-                    asChild
-                  >
-                    <Link to="/">Cancel</Link>
-                  </Button>
+                 
+                    {/* fields... */}
+                    <div className="flex flex-col sm:flex-row gap-4 pt-6">
+                      <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-md">
+                        Save Changes
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full border-border hover:bg-accent hover:text-accent-foreground"
+                        asChild
+                      >
+                        <Link to="/">Cancel</Link>
+                      </Button>
+                    </div>
+                  
+
+                  
                 </div>
               </form>
             </Form>

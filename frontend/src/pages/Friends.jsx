@@ -1,4 +1,5 @@
-import { useEffect,useState } from "react";
+
+import { useState , useEffect} from "react";
 import { Navigation } from "../components/ui/navigation";
 import { Button } from "../components/ui/button";
 import { Card,CardHeader,CardFooter,CardTitle,CardDescription,CardContent,} from "../components/ui/card";
@@ -6,17 +7,22 @@ import { Input } from "../components/ui/input";
 import {  Badge, badgeVariants  } from "../components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import {   Tabs, TabsList, TabsTrigger, TabsContent} from "../components/ui/tabs";
+import { searchUsers } from "../services/userServices";
 import { ProfileView } from "../components/ui/view-friend-profile";
 import { fetchFeed, likeFeed, commentFeed, shareFeed, fetchComments, deleteCommentFeed,deleteFeed } from "../services/feed";//ANNAH HERE
 import { discoverFriends, addFriend , getUserDetails  } from "../services/discover";//ANNAH HERE
 import { getFirestore} from "firebase/firestore";
 import { getAuth } from "firebase/auth";//NOT SURE ABOUT THIS IMPORT//ANNA HERE
+import { useAuth } from '../contexts/AuthContext.jsx';
+import { useToast } from "../hooks/use-toast";
+
 import { Search, UserPlus,  MapPin,  TrendingUp, Mountain,Clock,Medal,Users,Share2,Heart,MessageSquare } from "lucide-react";
 
 
 const Friends = () => {
   const [selectedProfile, setSelectedProfile] = useState(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+
 //ANNAH HERE
 
   const [recentActivity, setRecentActivity] = useState([]);
@@ -26,6 +32,64 @@ const Friends = () => {
   const [loading, setLoading] = useState(true);
 //ANNAH HERE
 
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchError, setSearchError] = useState("");
+   const { currentUser } = useAuth(); 
+   const [friends, setFriends] = useState([]); 
+    const { toast } = useToast();
+
+  const handleSearch = async () => {
+    if (!searchTerm.trim()) return;
+    const results = await searchUsers(searchTerm.trim());
+    if (results.length === 0) {
+      setSearchError("No hikers found with that name.");
+      setSearchResults([]);
+    } else {
+      setSearchError("");
+      setSearchResults(results);
+    }
+  };
+
+  useEffect(() => {
+  const fetchFriends = async () => {
+    try {
+      const res = await fetch(`http://localhost:3001/api/friends/${currentUser.uid}`);
+      const data = await res.json();
+      if (data.success) {
+        setFriends(data.data);
+      } else {
+        console.error("Failed to fetch friends:", data.error);
+      }
+    } catch (err) {
+      console.error("Error fetching friends:", err);
+    }
+  };
+
+  if (currentUser) fetchFriends();
+}, [currentUser]);
+
+
+console.log("Fetching friends:", friends);
+const handleBlockFriend = async (fid) => {
+  try {
+    const res = await fetch(`http://localhost:3001/api/friends/${currentUser.uid}/block/${fid}`, {
+      method: "DELETE",
+    });
+    const data = await res.json();
+    if (data.success) {
+      setFriends(prev => prev.filter(f => f.id !== fid)); // update UI
+      toast({
+      title: "User blocked",
+      description: "Friendship removed successfully!",
+    });
+    } else {
+      console.error("Failed to block friend:", data.error);
+    }
+  } catch (err) {
+    console.error("Error blocking friend:", err);
+  }
+};
   const handleViewProfile = async (person, showAddFriend = false) => {
   try {
     let details = person;
@@ -42,71 +106,11 @@ const Friends = () => {
     setSelectedProfile({ ...person, showAddFriend }); // fallback
     setIsProfileOpen(true);
   }
-};
-  const friends = [
-    {
-      id: 1,
-      name: "Sarah Johnson",
-      avatar: "SJ",
-      location: "Seattle, WA",
-      totalHikes: 47,
-      totalDistance: "234 km",
-      lastHike: "Mount Rainier Trail",
-      lastHikeDate: "2 days ago",
-      status: "online",
-      recentAchievement: "100km Milestone"
-    },
-    {
-      id: 2,
-      name: "Marcus Williams",
-      avatar: "MW",
-      location: "Denver, CO",
-      totalHikes: 62,
-      totalDistance: "387 km",
-      lastHike: "Rocky Mountain Loop",
-      lastHikeDate: "1 week ago",
-      status: "offline",
-      recentAchievement: "Peak Collector"
-    },
-    {
-      id: 3,
-      name: "Emma Chen",
-      avatar: "EC",
-      location: "Portland, OR",
-      totalHikes: 33,
-      totalDistance: "156 km",
-      lastHike: "Forest Park Trail",
-      lastHikeDate: "3 days ago",
-      status: "online",
-      recentAchievement: "Early Bird"
-    },
-    {
-      id: 4,
-      name: "David Rodriguez",
-      avatar: "DR",
-      location: "Phoenix, AZ",
-      totalHikes: 55,
-      totalDistance: "298 km",
-      lastHike: "Camelback Mountain",
-      lastHikeDate: "5 days ago",
-      status: "offline",
-      recentAchievement: "Desert Explorer"
-    },
-    {
-      id: 5,
-      name: "Aisha Patel",
-      avatar: "AP",
-      location: "San Francisco, CA",
-      totalHikes: 71,
-      totalDistance: "445 km",
-      lastHike: "Muir Woods Trail",
-      lastHikeDate: "1 day ago",
-      status: "online",
-      recentAchievement: "Trail Master"
-    }
-  ];
+  };
+
   //ANNAH HERE
 const auth = getAuth();
+
 
   useEffect(() => {
     let isMounted = true;
@@ -372,15 +376,63 @@ const handleDeletePost = async (activityId) => {
           <p className="text-muted-foreground">Connect with fellow hikers and share your adventures.</p>
         </div>
 
-        <div className="mb-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input 
-              placeholder="Search for friends or hikers..." 
-              className="pl-10"
-            />
-          </div>
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4 " />
+          <Input
+            placeholder="Search for friends or hikers..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+            className="pl-10"
+          />
         </div>
+
+          {searchError && <p className="text-red-500 mt-2">{searchError}</p>}
+            {searchResults.map((user) => (
+              <Card 
+                key={user.id} 
+                className="relative flex flex-col sm:flex-row gap-3 items-start mt-4 mb-4"
+              >
+                {/* Close button */}
+                <button
+                  onClick={() => setSearchResults(searchResults.filter(u => u.id !== user.id))}
+                  className="absolute top-2 right-2 text-gray-400 hover:text-red-500 transition-colors"
+                >
+                  ✕ 
+                </button>
+
+                <div className="flex items-center gap-2 mb-2">
+                  <CardHeader className="pb-4">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-12 w-12">
+                        <AvatarFallback className="text-xl">
+                          {user.displayName
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="font-semibold text-foreground cursor-pointer hover:underline"
+                            onClick={() => handleViewProfile(user, true)}
+                          >
+                            {user.displayName}
+                          </span>
+                        </div>
+                        <p className="text-sm text-muted-foreground flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          {user.location || "Not yet set"}
+                        </p>
+                      </div>
+                    </div>
+                  </CardHeader>
+                </div>
+              </Card>
+            ))}
+
+
 
         <Tabs defaultValue="friends" className="space-y-6">
           <TabsList className="grid w-full grid-cols-3">
@@ -396,11 +448,16 @@ const handleDeletePost = async (activityId) => {
                   <CardHeader className="pb-4">
                     <div className="flex items-center gap-3">
                       <Avatar className="h-12 w-12">
-                        <AvatarFallback>{friend.avatar}</AvatarFallback>
-                      </Avatar>
+                      <AvatarFallback className="text-l">
+                        {friend.displayName
+                        .split(' ')
+                        .map((n) => n[0])
+                        .join('')}
+                      </AvatarFallback>
+                    </Avatar>
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <h3 className="font-semibold text-foreground">{friend.name}</h3>
+                          <h3 className="font-semibold text-foreground">{friend.displayName}</h3>
                           <div className={`w-2 h-2 rounded-full ${friend.status === 'online' ? 'bg-green-500' : 'bg-gray-400'}`} />
                         </div>
                         <p className="text-sm text-muted-foreground flex items-center gap-1">
@@ -444,6 +501,16 @@ const handleDeletePost = async (activityId) => {
                     >
                       View Profile
                     </Button>
+
+                    <Button 
+                      variant="destructive" 
+                      className="w-full" 
+                      size="sm"
+                      onClick={() => handleBlockFriend(friend.id)}
+                    >
+                      Block Friend
+                    </Button>
+
                   </CardContent>
                 </Card>
               ))}
