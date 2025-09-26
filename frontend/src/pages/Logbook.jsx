@@ -80,50 +80,7 @@ const Logbook = () => {
         }));
         
         setHikeEntries(processedHikes);
-
-        // Calculate real-time statistics from all hikes
-        const stats = {
-          totalHikes: processedHikes.length,
-          totalDistance: 0,
-          totalElevation: 0,
-          statesExplored: 0
-        };
-
-        // Track unique locations for states explored
-        const uniqueLocations = new Set();
-
-        // Calculate totals from all hikes
-        processedHikes.forEach(hike => {
-          // Add distance (handle different field names and formats)
-          const distance = parseFloat(hike.distance) || parseFloat(hike.totalDistance) || 0;
-          stats.totalDistance += distance;
-
-          // Add elevation (handle different field names and formats)
-          const elevation = parseFloat(hike.elevation) || 
-                          parseFloat(hike.totalElevation) || 
-                          parseFloat(hike.elevationGain) || 
-                          parseFloat(hike.totalElevationGain) || 0;
-          stats.totalElevation += elevation;
-
-          // Count unique locations/states
-          if (hike.location && hike.location !== 'Unknown Location') {
-            // Extract potential state/region from location string
-            const locationParts = hike.location.split(',');
-            if (locationParts.length > 1) {
-              const potentialState = locationParts[locationParts.length - 1].trim();
-              uniqueLocations.add(potentialState);
-            } else {
-              uniqueLocations.add(hike.location.trim());
-            }
-          }
-        });
-
-        // Round the totals to reasonable decimal places
-        stats.totalDistance = Math.round(stats.totalDistance * 10) / 10; // 1 decimal place
-        stats.totalElevation = Math.round(stats.totalElevation);
-        stats.statesExplored = uniqueLocations.size;
-
-        setHikeStats(stats);
+        
       } else {
         setError('Failed to load hikes from server.');
       }

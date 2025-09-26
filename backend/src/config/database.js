@@ -316,6 +316,8 @@ export const dbUtils = {
       
       // Metadata
       status: hikeData.status || 'completed',
+      pinned: hikeData.pinned || false,
+      shared: hikeData.shared || false,
       createdAt: new Date(),
       updatedAt: new Date(),
       userId: userId
@@ -326,6 +328,9 @@ export const dbUtils = {
       .doc(userId)
       .collection('hikes')
       .add(mappedHikeData);
+
+    const stats = await this.getUserHikeStats(userId);
+    await evaluateAndAwardBadges(userId, stats);
       
     return { success: true, id: docRef.id };
 
@@ -343,6 +348,7 @@ async startHike(userId, hikeData) {
       date: hikeData.date || new Date(),
       actualStartTime: new Date(), // Always set actual start time for active hikes
       startTime: hikeData.startTime || new Date(), // Planned time or current time
+      pinned: hikeData.pinned || false,
       createdAt: new Date(),
       updatedAt: new Date(),
       userId: userId,
@@ -386,12 +392,43 @@ async completeHike(userId, hikeId, endData) {
       .collection('hikes')
       .doc(hikeId)
       .update(completionData);
+
+    const stats = await this.getUserHikeStats(userId);
+    await evaluateAndAwardBadges(userId, stats);
         
     return { success: true };
   } catch (error) {
     throw new Error(`Failed to complete hike: ${error.message}`);
   }
 },
+
+async addWaypoint(userId, hikeId, waypoint) {
+    try {
+      const db = getDatabase();
+      const waypointData = {
+        latitude: waypoint.latitude,
+        longitude: waypoint.longitude,
+        elevation: waypoint.elevation || 0,
+        timestamp: waypoint.timestamp || new Date(),
+        description: waypoint.description || '',
+        type: waypoint.type || 'milestone'
+      };
+
+      await db
+        .collection('users')
+        .doc(userId)
+        .collection('hikes')
+        .doc(hikeId)
+        .update({
+          waypoints: db.FieldValue.arrayUnion(waypointData),
+          updatedAt: new Date()
+        });
+        
+      return { success: true };
+    } catch (error) {
+      throw new Error(`Failed to add waypoint: ${error.message}`);
+    }
+  },
 
   // Get all hikes for a user with optional filtering
   async getUserHikes(userId, filters = {}) {
