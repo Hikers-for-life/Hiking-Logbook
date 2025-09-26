@@ -37,6 +37,10 @@ export async function addFriend(friendId) {
 }
 
 export const getUserDetails = async (userId) => {
-  const res = await api.get(`/discover/${userId}`);
-  return res.data;
+  const token = await getToken();
+  const res = await fetch(`${API_URL}/${userId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error("Failed to fetch user details");
+  return res.json();
 }
