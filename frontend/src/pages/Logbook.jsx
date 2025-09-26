@@ -8,7 +8,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/
 import NewHikeEntryForm from "../components/NewHikeEntryForm";
 import ActiveHike from "../components/ActiveHike";
 import ActiveHikeStatus from "../components/ActiveHikeStatus";
-import { Camera, MapPin, Clock, Mountain, Thermometer, Plus, Search, Map, Play, Trash2, Edit3 } from "lucide-react";
+import RouteMapModal from "../components/RouteMapModal";
+import { MapPin, Clock, Mountain, Thermometer, Plus, Search, Map, Play, Trash2, Edit3, Pin, PinOff, Share2, Share } from "lucide-react";
 import { hikeApiService } from "../services/hikeApiService.js";
 import { useAuth } from "../contexts/AuthContext.jsx";
 
@@ -39,7 +40,7 @@ const Logbook = () => {
 
 
   // API functions for loading data
-  const loadHikes = useCallback(async () => {
+  const loadHikes = useCallback(async (searchTerm = '', difficultyFilter = 'All') => {
     if (!user) {
       return;
     }
@@ -47,8 +48,14 @@ const Logbook = () => {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await hikeApiService.getHikes();
-      console.log("📦 API Response:", response);
+      
+      // Build filters for API call
+      const filters = {};
+      if (searchTerm) filters.search = searchTerm;
+      if (difficultyFilter !== 'All') filters.difficulty = difficultyFilter;
+      
+      const response = await hikeApiService.getHikes(filters);
+      
       if (response.success) {
         
         // Convert Firestore timestamps to readable dates and ensure all fields are safe for React
@@ -57,7 +64,7 @@ const Logbook = () => {
           // Convert dates
           date: hike.date ? (hike.date.toDate ? hike.date.toDate().toLocaleDateString() : new Date(hike.date).toLocaleDateString()) : 'No date',
           createdAt: hike.createdAt ? (hike.createdAt.toDate ? hike.createdAt.toDate() : new Date(hike.createdAt)) : null,
-          updatedAt: hike.updatedAt ? (hike.updatedAt.toDate ? hike.updatedAt.toDate() : new Date(hike.updatedAt)) : null,
+          updatedAt: hike.updatedAt ? (hike.updatedAt.toDate ? hike.updatedAt.toDate().toLocaleDateString() : new Date(hike.updatedAt).toLocaleDateString()) : null,
           startTime: hike.startTime ? (hike.startTime.toDate ? hike.startTime.toDate() : new Date(hike.startTime)) : null,
           endTime: hike.endTime ? (hike.endTime.toDate ? hike.endTime.toDate() : new Date(hike.endTime)) : null,
           // Ensure other fields are strings/numbers
@@ -69,7 +76,6 @@ const Logbook = () => {
           weather: hike.weather || 'Unknown',
           difficulty: hike.difficulty || 'Easy',
           notes: hike.notes || '',
-          photos: hike.photos || 0,
           status: hike.status || 'completed'
         }));
         
@@ -130,6 +136,7 @@ const Logbook = () => {
     }
   }, [user]);
 
+
   // Load hikes when component mounts or user changes
   useEffect(() => {
     if (user) {
@@ -160,7 +167,7 @@ const Logbook = () => {
       const response = await hikeApiService.createHike(newHike);
       if (response.success) {
         // Refresh the entire list from server to ensure consistency
-        await loadHikes();
+        await loadHikes(searchTerm, difficultyFilter);
       }
     } catch (err) {
       console.error('Failed to create hike:', err);
@@ -176,12 +183,12 @@ const Logbook = () => {
     setIsRouteMapOpen(true);
   };
 
-  // Updated handleCompleteActiveHike to delete planned hike
+  // Handler for completing active hike
+
   const handleCompleteActiveHike = async (hikeData) => {
     try {
       const endData = {
         ...hikeData,
-        photos: 0, // Will be updated when photo upload is implemented
       };
       
       const response = await hikeApiService.completeHike(currentActiveHike.id || currentActiveHike.activeHikeId, endData);
@@ -262,7 +269,6 @@ const handleStartActiveHike = async (formData) => {
   // Handler for saving active hike progress
   const handleSaveActiveHike = (hikeData) => {
     // Auto-save functionality - would integrate with backend
-    console.log('Auto-saving hike progress:', hikeData);
     localStorage.setItem('activeHike', JSON.stringify(hikeData));
     
     // Update current active hike state for status display
@@ -281,10 +287,6 @@ const handleStartActiveHike = async (formData) => {
 
   // Handler for deleting a hike (DELETE)
   const handleDeleteHike = async (hikeId) => {
-    if (!window.confirm('Are you sure you want to delete this hike?')) {
-      return;
-    }
-    
     try {
       const response = await hikeApiService.deleteHike(hikeId);
       if (response.success) {
@@ -306,48 +308,99 @@ const handleStartActiveHike = async (formData) => {
   // Handler for submitting hike edits
   const handleSubmitEditHike = async (updatedHikeData) => {
     if (!editingHike) {
-      console.log('❌ No editing hike found');
       return;
     }
     
-    console.log('✏️ Edit hike called for ID:', editingHike.id);
-    console.log('📝 Updated data:', updatedHikeData);
-    
     try {
-      console.log('🌐 Making update API call...');
       const response = await hikeApiService.updateHike(editingHike.id, updatedHikeData);
-      console.log('🔄 Update API response:', response);
       
       if (response.success) {
-        console.log('✅ Update successful, refreshing data');
         // Refresh the entire list from server to ensure consistency
-        await loadHikes();
+        await loadHikes(searchTerm, difficultyFilter);
         setIsEditHikeOpen(false);
         setEditingHike(null);
       } else {
-        console.log('❌ Update failed - response not successful');
         setError('Failed to update hike. Please try again.');
       }
     } catch (err) {
-      console.error('❌ Failed to update hike:', err);
+      console.error('Failed to update hike:', err);
       setError('Failed to update hike. Please try again.');
     }
   };
 
-  // Filter hikes based on search term and difficulty
-  const filteredHikes = hikeEntries.filter(hike => {
-    if (!hike) return false;
-    
-    const title = hike.title || '';
-    const location = hike.location || '';
-    const notes = hike.notes || '';
-    
-    const matchesSearch = title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         notes.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDifficulty = difficultyFilter === "All" || hike.difficulty === difficultyFilter;
-    return matchesSearch && matchesDifficulty;
-  });
+  // Handler for pinning/unpinning hikes
+  const handlePinHike = async (hikeId) => {
+    try {
+      const hike = hikeEntries.find(h => h.id === hikeId);
+      const isPinned = hike?.pinned === true;
+      
+      if (isPinned) {
+        // Unpin the hike
+        await hikeApiService.unpinHike(hikeId);
+        // Update local state
+        setHikeEntries(prev => prev.map(h => 
+          h.id === hikeId ? { ...h, pinned: false } : h
+        ));
+      } else {
+        // Pin the hike
+        await hikeApiService.pinHike(hikeId);
+        // Update local state
+        setHikeEntries(prev => prev.map(h => 
+          h.id === hikeId ? { ...h, pinned: true } : h
+        ));
+      }
+    } catch (error) {
+      console.error('Failed to pin/unpin hike:', error);
+      setError('Failed to pin/unpin hike. Please try again.');
+    }
+  };
+
+  // Handler for sharing/unsharing hikes
+  const handleShareHike = async (hikeId) => {
+    try {
+      const hike = hikeEntries.find(h => h.id === hikeId);
+      const isShared = hike?.shared === true;
+      
+      if (isShared) {
+        // Unshare the hike
+        await hikeApiService.unshareHike(hikeId);
+        // Update local state
+        setHikeEntries(prev => prev.map(h => 
+          h.id === hikeId ? { ...h, shared: false } : h
+        ));
+      } else {
+        // Share the hike
+        await hikeApiService.shareHike(hikeId);
+        // Update local state
+        setHikeEntries(prev => prev.map(h => 
+          h.id === hikeId ? { ...h, shared: true } : h
+        ));
+      }
+    } catch (error) {
+      console.error('Failed to share/unshare hike:', error);
+      setError('Failed to share/unshare hike. Please try again.');
+    }
+  };
+
+  // Check if a hike is pinned
+  const isHikePinned = (hikeId) => {
+    const hike = hikeEntries.find(h => h.id === hikeId);
+    return hike?.pinned === true;
+  };
+
+  // Handle search and filter changes
+  const handleSearchChange = useCallback((newSearchTerm) => {
+    setSearchTerm(newSearchTerm);
+    loadHikes(newSearchTerm, difficultyFilter);
+  }, [loadHikes, difficultyFilter]);
+
+  const handleDifficultyChange = useCallback((newDifficulty) => {
+    setDifficultyFilter(newDifficulty);
+    loadHikes(searchTerm, newDifficulty);
+  }, [loadHikes, searchTerm]);
+
+  // Since we're now using backend filtering, filteredHikes is just hikeEntries
+  const filteredHikes = hikeEntries;
 
   // Show active hike interface if in active mode
   if (activeHikeMode) {
@@ -414,7 +467,7 @@ const handleStartActiveHike = async (formData) => {
             <Input
               placeholder="Search hikes by title, location, or notes..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className="pl-10"
             />
           </div>
@@ -422,7 +475,7 @@ const handleStartActiveHike = async (formData) => {
             <Button
               variant={difficultyFilter === "All" ? "default" : "outline"}
               size="sm"
-              onClick={() => setDifficultyFilter("All")}
+              onClick={() => handleDifficultyChange("All")}
               className="min-w-[80px]"
             >
               All
@@ -430,7 +483,7 @@ const handleStartActiveHike = async (formData) => {
             <Button
               variant={difficultyFilter === "Easy" ? "default" : "outline"}
               size="sm"
-              onClick={() => setDifficultyFilter("Easy")}
+              onClick={() => handleDifficultyChange("Easy")}
               className="min-w-[80px]"
             >
               Easy
@@ -438,7 +491,7 @@ const handleStartActiveHike = async (formData) => {
             <Button
               variant={difficultyFilter === "Moderate" ? "default" : "outline"}
               size="sm"
-              onClick={() => setDifficultyFilter("Moderate")}
+              onClick={() => handleDifficultyChange("Moderate")}
               className="min-w-[80px]"
             >
               Moderate
@@ -446,48 +499,12 @@ const handleStartActiveHike = async (formData) => {
             <Button
               variant={difficultyFilter === "Hard" ? "default" : "outline"}
               size="sm"
-              onClick={() => setDifficultyFilter("Hard")}
+              onClick={() => handleDifficultyChange("Hard")}
               className="min-w-[80px]"
             >
               Hard
             </Button>
           </div>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <Card className="bg-gradient-card text-center border-border">
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold text-forest">
-                {isLoading ? '...' : hikeStats.totalHikes}
-              </div>
-              <div className="text-sm text-muted-foreground">Total Hikes</div>
-            </CardContent>
-          </Card>
-          <Card className="bg-gradient-card text-center border-border">
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold text-trail">
-                {isLoading ? '...' : `${hikeStats.totalDistance} km`}
-              </div>
-              <div className="text-sm text-muted-foreground">Kilometres Hiked</div>
-            </CardContent>
-          </Card>
-          <Card className="bg-gradient-card text-center border-border">
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold text-summit">
-                {isLoading ? '...' : `${hikeStats.totalElevation}m`}
-              </div>
-              <div className="text-sm text-muted-foreground">Elevation Gained</div>
-            </CardContent>
-          </Card>
-          <Card className="bg-gradient-card text-center border-border">
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold text-forest">
-                {isLoading ? '...' : hikeStats.statesExplored}
-              </div>
-              <div className="text-sm text-muted-foreground">Locations Explored</div>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Hike Entries */}
@@ -547,12 +564,6 @@ const handleStartActiveHike = async (formData) => {
                       </Badge>
                     </div>
                   </div>
-                  <div className="text-right text-sm text-muted-foreground">
-                    <div className="flex items-center">
-                      <Camera className="h-4 w-4 mr-1" />
-                      {hike.photos} photos
-                    </div>
-                  </div>
                 </div>
               </CardHeader>
               
@@ -601,34 +612,82 @@ const handleStartActiveHike = async (formData) => {
                 </div>
 
                 {/* Actions */}
-                <div className="flex justify-end space-x-2 pt-2">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="text-summit hover:text-summit hover:bg-muted"
-                    onClick={() => handleViewRouteMap(hike)}
-                  >
-                    <Map className="h-4 w-4 mr-1" />
-                    Route Map
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="text-forest hover:text-forest hover:bg-muted"
-                    onClick={() => handleEditHike(hike)}
-                  >
-                    <Edit3 className="h-4 w-4 mr-1" />
-                    Edit
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="text-red-600 hover:text-red-600 hover:bg-red-50"
-                    onClick={() => handleDeleteHike(hike.id)}
-                  >
-                    <Trash2 className="h-4 w-4 mr-1" />
-                    Delete
-                  </Button>
+                <div className="flex justify-between items-center pt-2">
+                  <div className="flex items-center space-x-2">
+                    {isHikePinned(hike.id) && (
+                      <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-200">
+                        <Pin className="h-3 w-3 mr-1" />
+                        Pinned
+                      </Badge>
+                    )}
+                    {hike.shared && (
+                      <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800 border-blue-200">
+                        <Share2 className="h-3 w-3 mr-1" />
+                        Shared
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex space-x-2">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className={`${isHikePinned(hike.id) 
+                        ? 'text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50' 
+                        : 'text-muted-foreground hover:text-yellow-600 hover:bg-yellow-50'
+                      }`}
+                      onClick={() => handlePinHike(hike.id)}
+                    >
+                      {isHikePinned(hike.id) ? (
+                        <PinOff className="h-4 w-4 mr-1" />
+                      ) : (
+                        <Pin className="h-4 w-4 mr-1" />
+                      )}
+                      {isHikePinned(hike.id) ? 'Unpin' : 'Pin'}
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className={`${hike.shared 
+                        ? 'text-blue-600 hover:text-blue-700 hover:bg-blue-50' 
+                        : 'text-muted-foreground hover:text-blue-600 hover:bg-blue-50'
+                      }`}
+                      onClick={() => handleShareHike(hike.id)}
+                    >
+                      {hike.shared ? (
+                        <Share2 className="h-4 w-4 mr-1" />
+                      ) : (
+                        <Share className="h-4 w-4 mr-1" />
+                      )}
+                      {hike.shared ? 'Shared' : 'Share'}
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-summit hover:text-summit hover:bg-muted"
+                      onClick={() => handleViewRouteMap(hike)}
+                    >
+                      <Map className="h-4 w-4 mr-1" />
+                      Route Map
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-forest hover:text-forest hover:bg-muted"
+                      onClick={() => handleEditHike(hike)}
+                    >
+                      <Edit3 className="h-4 w-4 mr-1" />
+                      Edit
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-red-600 hover:text-red-600 hover:bg-red-50"
+                      onClick={() => handleDeleteHike(hike.id)}
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      Delete
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -694,6 +753,17 @@ const handleStartActiveHike = async (formData) => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">
+                  Date
+                </label>
+                <Input
+                  id="start-date"
+                  type="date"
+                  className="border-border"
+                  defaultValue={new Date().toISOString().split('T')[0]}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
                   Current Weather (Optional)
                 </label>
                 <Input
@@ -725,11 +795,11 @@ const handleStartActiveHike = async (formData) => {
                     const formData = {
                       title: document.getElementById('start-title').value || 'New Hike',
                       location: document.getElementById('start-location').value || 'Unknown Location',
+                      date: document.getElementById('start-date').value || new Date().toISOString().split('T')[0],
                       weather: document.getElementById('start-weather').value || '',
                       notes: document.getElementById('start-notes').value || '',
                       difficulty: 'Easy'
                     };
-                    console.log('Form data collected:', formData);
                     handleStartActiveHike(formData);
                     setIsStartHikeFormOpen(false);
                   }}
@@ -743,29 +813,12 @@ const handleStartActiveHike = async (formData) => {
           </DialogContent>
         </Dialog>
 
-        {/* Route Map Modal - Placeholder for next sprint */}
-        <Dialog open={isRouteMapOpen} onOpenChange={setIsRouteMapOpen}>
-          <DialogContent className="sm:max-w-[800px] sm:max-h-[600px]">
-            <DialogHeader>
-              <DialogTitle className="text-2xl text-foreground">
-                {selectedHike?.title} - Route Map
-              </DialogTitle>
-            </DialogHeader>
-            <div className="flex flex-col items-center justify-center h-96 bg-muted/20 rounded-lg border-2 border-dashed border-border">
-              <Map className="h-16 w-16 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold text-foreground mb-2">Route Map Coming Soon!</h3>
-              <p className="text-muted-foreground text-center max-w-md">
-                Interactive route maps with elevation profiles, waypoints, and GPS tracks will be available in the next sprint. 
-                This will include integration with popular hiking apps and GPX file support.
-              </p>
-              <div className="mt-6 flex gap-2">
-                <Badge variant="outline" className="text-summit border-summit">GPS Tracking</Badge>
-                <Badge variant="outline" className="text-forest border-forest">Elevation Profile</Badge>
-                <Badge variant="outline" className="text-trail border-trail">Waypoints</Badge>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+        {/* Route Map Modal */}
+        <RouteMapModal 
+          isOpen={isRouteMapOpen} 
+          onClose={() => setIsRouteMapOpen(false)} 
+          hikeData={selectedHike} 
+        />
       </div>
       </div>
     </div>

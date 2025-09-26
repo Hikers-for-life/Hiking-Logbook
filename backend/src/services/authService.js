@@ -48,7 +48,6 @@ export class AuthService {
         user: profileData,
       };
     } catch (error) {
-      console.error('Error creating user:', error);
       throw new Error(`Failed to create user: ${error.message}`);
     }
   }

@@ -53,6 +53,8 @@ export const hikeApiService = {
     if (filters.difficulty) queryParams.append('difficulty', filters.difficulty);
     if (filters.dateFrom) queryParams.append('dateFrom', filters.dateFrom);
     if (filters.dateTo) queryParams.append('dateTo', filters.dateTo);
+    if (filters.pinned !== undefined) queryParams.append('pinned', filters.pinned);
+    if (filters.search) queryParams.append('search', filters.search);
     
     const queryString = queryParams.toString();
     const endpoint = `/hikes${queryString ? `?${queryString}` : ''}`;
@@ -69,6 +71,10 @@ export const hikeApiService = {
       console.error('Failed to start hike from planned:', error);
       throw error;
     }
+  },
+  // Get user hiking statistics
+  async getStats() {
+    return makeAuthenticatedRequest('/hikes/stats');
   },
 
   // Get a specific hike by ID
@@ -134,6 +140,39 @@ export const hikeApiService = {
   // Get user hike statistics
   async getHikeStats() {
     return makeAuthenticatedRequest('/hikes/stats/overview');
+  },
+
+  // Get user hike progress (for charts)
+  async getHikeProgress() {
+    return makeAuthenticatedRequest('/hikes/progress');
+  },
+
+  // Pin a hike
+  async pinHike(hikeId) {
+    return makeAuthenticatedRequest(`/hikes/${hikeId}/pin`, {
+      method: 'PATCH',
+    });
+  },
+
+  // Unpin a hike
+  async unpinHike(hikeId) {
+    return makeAuthenticatedRequest(`/hikes/${hikeId}/unpin`, {
+      method: 'PATCH',
+    });
+  },
+
+  // Share a hike with friends
+  async shareHike(hikeId) {
+    return makeAuthenticatedRequest(`/hikes/${hikeId}/share`, {
+      method: 'PATCH',
+    });
+  },
+
+  // Unshare a hike with friends
+  async unshareHike(hikeId) {
+    return makeAuthenticatedRequest(`/hikes/${hikeId}/unshare`, {
+      method: 'PATCH',
+    });
   },
 };
 
