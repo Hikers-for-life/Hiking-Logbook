@@ -21,7 +21,6 @@ export const hikeSchema = {
   
   // Additional details
   notes: "string",           // Optional notes and observations
-  photos: "number",          // Number of photos taken
   
   // GPS and tracking data
   waypoints: "array",        // GPS waypoints array
@@ -37,6 +36,12 @@ export const hikeSchema = {
   updatedAt: "timestamp",    // When the hike was last updated
   userId: "string",          // User who logged the hike
   status: "string",          // Active, completed, paused
+
+   //New field for pinning
+  pinned: "boolean",         // Whether the hike is pinned (favorite)
+  
+  //Sharing field
+  shared: "boolean",         // Whether the hike is shared with friends
 };
 
 // GPS waypoint structure

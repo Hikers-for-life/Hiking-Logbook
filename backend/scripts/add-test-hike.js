@@ -3,7 +3,7 @@ import { db } from '../src/config/firebase.js';
 const addTestHike = async () => {
   try {
     // Replace this with your actual user ID from Firebase Console
-    const userId = 'Your user ID'; // Your user ID
+    const userId = 'Your user ID'; // Your user ID.
     
     console.log('Adding test hike for user:', userId);
     

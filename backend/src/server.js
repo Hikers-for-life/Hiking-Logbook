@@ -1,5 +1,8 @@
-import express from 'express';
+﻿import express from 'express';
 import dotenv from 'dotenv';
+import helmet from 'helmet';
+import cors from 'cors';
+import morgan from 'morgan';
 import { initializeFirebase } from './config/firebase.js';
 
 import * as middleware from './middleware/index.js';
@@ -10,9 +13,7 @@ import userRoutes from './routes/users.js';
 import hikeRoutes from './routes/hikes.js';
 import feedRoutes from './routes/feed.js';
 import discoverRoutes from './routes/discover.js';
-import helmet from 'helmet';
-import cors from 'cors';
-import morgan from 'morgan';
+import goalsRoutes from './routes/goals.js';
 
 dotenv.config();
 
@@ -87,21 +88,33 @@ app.use('/api/users', userRoutes);
 app.use('/api/hikes', hikeRoutes);
 app.use('/api/feed', feedRoutes);
 app.use('/api/discover', discoverRoutes);
+app.use('/api/goals', goalsRoutes);
 
 // 404 handler for undefined routes
-app.use('*', notFoundHandler);
+app.use('*', (req, res) => {
+  res.status(404).json({
+    error: 'Route not found',
+    path: req.originalUrl,
+    method: req.method,
+  });
+});
 
 // Global error handler
-app.use(errorHandler);
+app.use((error, req, res, next) => {
+  const statusCode = error.statusCode || 500;
+  const message = error.message || 'Internal server error';
+
+  res.status(statusCode).json({
+    error: message,
+    ...(process.env.NODE_ENV === 'development' && { stack: error.stack }),
+  });
+});
 
 // Initialize Firebase and start server
 async function startServer() {
   try {
-    // Initialize Firebase
     await initializeFirebase();
-    console.log('Firebase initialized successfully');
     
-    // Start server
     const server = app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
       console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
@@ -111,6 +124,7 @@ async function startServer() {
       console.log(`Hikes API: http://localhost:${PORT}/api/hikes`);
       console.log(`Feed API: http://localhost:${PORT}/api/feed`);
       console.log(`Discover API: http://localhost:${PORT}/api/discover`);
+      console.log(`Goals API: http://localhost:${PORT}/api/goals`);
     });
     
     return server;
@@ -121,39 +135,7 @@ async function startServer() {
 }
 
 // Start the server
-let serverInstance = null;
-
-startServer().then((server) => {
-  serverInstance = server;
-}).catch((error) => {
-  console.error('Failed to start server:', error);
-  process.exit(1);
-});
-
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully');
-  if (serverInstance) {
-    serverInstance.close(() => {
-      console.log('Process terminated');
-      process.exit(0);
-    });
-  } else {
-    process.exit(0);
-  }
-});
-
-process.on('SIGINT', () => {
-  console.log('SIGINT received, shutting down gracefully');
-  if (serverInstance) {
-    serverInstance.close(() => {
-      console.log('Process terminated');
-      process.exit(0);
-    });
-  } else {
-    process.exit(0);
-  }
-});
+startServer();
 
 
 

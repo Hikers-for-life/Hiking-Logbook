@@ -208,7 +208,7 @@ const HikePlanner = () => {
                             ${isToday ? 'bg-forest text-primary-foreground font-semibold ring-2 ring-forest/50' : ''}
                             ${isUpcomingHike ? 'bg-trail/20 text-foreground font-medium border border-trail/30' : ''}
                           `}
-                          onClick={() => isCurrentMonth && console.log('Selected date:', cellDate)}
+                          onClick={() => isCurrentMonth && setSelectedDate(cellDate)}
                         >
                           {day}
                         </div>
