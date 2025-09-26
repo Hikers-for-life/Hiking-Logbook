@@ -6,17 +6,20 @@ import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
 import hikeRoutes from './routes/hikes.js';
+import plannedHikeRoutes from './routes/plannedHikes.js';
+import gearRoutes from './routes/gear.js';
+
 
 dotenv.config();
 
 const app = express();
-
 const PORT = process.env.PORT || 3001;
 
 // Apply middleware
 middleware.applySecurityMiddleware(app);
 middleware.applyParsingMiddleware(app);
 middleware.applyLoggingMiddleware(app);
+
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -32,6 +35,8 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/hikes', hikeRoutes);
+app.use('/api/planned-hikes', plannedHikeRoutes); 
+app.use('/api/gear', gearRoutes);
 
 // 404 handler for undefined routes
 app.use('*', notFoundHandler);
@@ -54,6 +59,8 @@ async function startServer() {
       console.log(`Auth API: http://localhost:${PORT}/api/auth`);
       console.log(`Users API: http://localhost:${PORT}/api/users`);
       console.log(`Hikes API: http://localhost:${PORT}/api/hikes`);
+      console.log(`Planned Hikes API: http://localhost:${PORT}/api/planned-hikes`); 
+      console.log(`Gear API: http://localhost:${PORT}/api/gear`);
     });
     
     return server;
@@ -97,6 +104,5 @@ process.on('SIGINT', () => {
     process.exit(0);
   }
 });
-
 
 export default app;
