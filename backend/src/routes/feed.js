@@ -8,27 +8,29 @@ const router = express.Router();
 router.get('/', verifyAuth, async (req, res) => {
   try {
     const db = getDatabase();
-    const snapshot = await db.collection('feed_items')
+    const snapshot = await db
+      .collection('feed_items')
       .orderBy('created_at', 'desc')
       .limit(20)
       .get();
 
-    const activities = await Promise.all(snapshot.docs.map(async (doc) => {
-      const data = doc.data();
+    const activities = await Promise.all(
+      snapshot.docs.map(async (doc) => {
+        const data = doc.data();
+        // Fetch comments with user names
+        const commentsSnapshot = await doc.ref
+          .collection('comments')
+          .orderBy('created_at', 'asc')
+          .get();
 
-      // Fetch comments with user names
-      const commentsSnapshot = await doc.ref.collection('comments').orderBy('created_at', 'asc').get();
-      const comments = commentsSnapshot.docs.map(c => ({
-        id: c.id,    
-        ...c.data()
-      }));
+        const comments = commentsSnapshot.docs.map((c) => ({
+          id: c.id,
+          ...c.data(),
+        }));
 
-      return {
-        id: doc.id,
-        ...data,
-        comments
-      };
-    }));
+        return { id: doc.id, ...data, comments };
+      })
+    );
 
     res.json({ activities });
   } catch (error) {
@@ -50,12 +52,12 @@ router.post('/', verifyAuth, async (req, res) => {
     const newActivity = {
       userId: req.user.uid,
       name: req.user.name || req.user.displayName || req.user.email, // will show your name
-      action,           // e.g., "completed", "reached milestone"
-      hike,             // e.g., "Mount Rainier Trail"
-      description: description || "",
-      stats: stats || "",
+      action, // e.g., "completed", "reached milestone"
+      hike, // e.g., "Mount Rainier Trail"
+      description: description || '',
+      stats: stats || '',
       photo: photo || null,
-      time:new Date().toISOString(),
+      time: new Date().toISOString(),
       likes: [],
       created_at: new Date().toISOString(),
     };
@@ -68,7 +70,6 @@ router.post('/', verifyAuth, async (req, res) => {
   }
 });
 
-
 // POST /feed/:id/like
 router.post('/:id/like', verifyAuth, async (req, res) => {
   try {
@@ -78,11 +79,12 @@ router.post('/:id/like', verifyAuth, async (req, res) => {
 
     const ref = db.collection('feed_items').doc(id);
     const doc = await ref.get();
+
     if (!doc.exists) return res.status(404).json({ error: 'Feed item not found' });
 
     let likes = doc.data().likes || [];
     if (likes.includes(uid)) {
-      likes = likes.filter(u => u !== uid);
+      likes = likes.filter((u) => u !== uid);
     } else {
       likes.push(uid);
     }
@@ -145,7 +147,6 @@ router.delete('/:feedId/comments/:commentId', verifyAuth, async (req, res) => {
       .doc(commentId);
 
     const commentDoc = await commentRef.get();
-
     if (!commentDoc.exists) {
       return res.status(404).json({ error: 'Comment not found' });
     }
@@ -158,15 +159,12 @@ router.delete('/:feedId/comments/:commentId', verifyAuth, async (req, res) => {
     }
 
     await commentRef.delete();
-
     res.json({ message: 'Comment deleted' });
   } catch (error) {
     console.error('Error deleting comment:', error);
     res.status(500).json({ error: 'Failed to delete comment' });
   }
 });
-
-
 
 // POST /feed/:id/share
 // Share an activity
@@ -176,7 +174,7 @@ router.post('/:feedId/share', verifyAuth, async (req, res) => {
     const { sharerId, sharerName, sharerAvatar, original } = req.body;
 
     const newActivity = {
-      type: "share",
+      type: 'share',
       original, // embed full original activity
       userId: sharerId,
       name: sharerName,
@@ -186,11 +184,10 @@ router.post('/:feedId/share', verifyAuth, async (req, res) => {
     };
 
     const docRef = await db.collection('feed_items').add(newActivity);
-
     res.json({ newActivityId: docRef.id });
   } catch (err) {
-    console.error("Error sharing activity:", err);
-    res.status(500).json({ error: "Failed to share activity" });
+    console.error('Error sharing activity:', err);
+    res.status(500).json({ error: 'Failed to share activity' });
   }
 });
 
@@ -202,6 +199,7 @@ router.delete('/:id', verifyAuth, async (req, res) => {
 
     const docRef = db.collection('feed_items').doc(id);
     const docSnap = await docRef.get();
+
     if (!docSnap.exists) return res.status(404).json({ error: 'Feed item not found' });
 
     if (docSnap.data().userId !== req.user.uid) {
@@ -215,7 +213,5 @@ router.delete('/:id', verifyAuth, async (req, res) => {
     res.status(500).json({ error: 'Failed to delete post' });
   }
 });
-
-
 
 export default router;

@@ -1,29 +1,17 @@
 import { useEffect,useState } from "react";
 import { Navigation } from "../components/ui/navigation";
 import { Button } from "../components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Card,CardHeader,CardFooter,CardTitle,CardDescription,CardContent,} from "../components/ui/card";
 import { Input } from "../components/ui/input";
-import { Badge } from "../components/ui/badge";
-import { Avatar, AvatarFallback } from "../components/ui/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import {  Badge, badgeVariants  } from "../components/ui/badge";
+import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
+import {   Tabs, TabsList, TabsTrigger, TabsContent} from "../components/ui/tabs";
 import { ProfileView } from "../components/ui/view-friend-profile";
 import { fetchFeed, likeFeed, commentFeed, shareFeed, fetchComments, deleteCommentFeed,deleteFeed } from "../services/feed";//ANNAH HERE
-import { discoverFriends, addFriend } from "../services/discover";//ANNAH HERE
+import { discoverFriends, addFriend , getUserDetails  } from "../services/discover";//ANNAH HERE
 import { getFirestore} from "firebase/firestore";
 import { getAuth } from "firebase/auth";//NOT SURE ABOUT THIS IMPORT//ANNA HERE
-import { 
-  Search, 
-  UserPlus, 
-  MapPin, 
-  TrendingUp,
-  Mountain,
-  Clock,
-  Medal,
-  Users,
-  Share2,
-  Heart,
-  MessageSquare
-} from "lucide-react";
+import { Search, UserPlus,  MapPin,  TrendingUp, Mountain,Clock,Medal,Users,Share2,Heart,MessageSquare } from "lucide-react";
 
 
 const Friends = () => {
@@ -38,10 +26,23 @@ const Friends = () => {
   const [loading, setLoading] = useState(true);
 //ANNAH HERE
 
-  const handleViewProfile = (person, showAddFriend = false) => {
-    setSelectedProfile({ ...person, showAddFriend });
+  const handleViewProfile = async (person, showAddFriend = false) => {
+  try {
+    let details = person;
+
+    // if only id/name provided, fetch full details
+    if (person.id) {
+      details = await getUserDetails(person.id);
+    }
+
+    setSelectedProfile({ ...details, showAddFriend });
     setIsProfileOpen(true);
-  };
+  } catch (err) {
+    console.error("Failed to fetch profile details:", err);
+    setSelectedProfile({ ...person, showAddFriend }); // fallback
+    setIsProfileOpen(true);
+  }
+};
   const friends = [
     {
       id: 1,
@@ -468,25 +469,25 @@ const handleDeletePost = async (activityId) => {
                         {activity.type === "share" ? (
                           <>
                             <div className="flex items-center gap-3">
-                              <Avatar className="h-8 w-8">
+                              <Avatar className="h-8 w-8" onClick={() => handleViewProfile({ id: activity.userId })}>
                                 <AvatarFallback>{activity.name[0]}</AvatarFallback>
                               </Avatar>
                               <p className="text-sm">
-                                <span className="font-medium">{activity.name}</span>{" "}
+                                <span className="font-medium" onClick={() => handleViewProfile({ id: activity.userId })}>{activity.name}</span>{" "}
                                 <span className="text-muted-foreground">shared</span>{" "}
-                                <span className="font-medium">{activity.original.name}</span>’s post
+                                <span className="font-medium"onClick={() => handleViewProfile({ id: activity.userId })}>{activity.original.name}</span>’s post
                               </p>
                             </div>
 
                             {/* Original post preview */}
                             <div className="ml-6 mt-3 p-3 rounded-md border bg-background space-y-3">
                               <div className="flex items-center gap-3">
-                                <Avatar className="h-8 w-8">
+                                <Avatar className="h-8 w-8" onClick={() => handleViewProfile({ id: activity.userId })}>
                                   <AvatarFallback>{activity.original.avatar}</AvatarFallback>
                                 </Avatar>
                                 <div className="flex-1">
                                   <p className="text-sm">
-                                    <span className="font-medium">{activity.original.name}</span>{" "}
+                                    <span className="font-medium" onClick={() => handleViewProfile({ id: activity.userId })}>{activity.original.name}</span>{" "}
                                     <span className="text-muted-foreground">{activity.original.action}</span>{" "}
                                     <span className="font-medium">{activity.original.hike}</span>
                                   </p>
@@ -510,7 +511,7 @@ const handleDeletePost = async (activityId) => {
                           <div className="flex items-center gap-3">
                             <Avatar
                               className="h-10 w-10 cursor-pointer"
-                              onClick={() => handleViewProfile({ name: activity.friend, avatar: activity.avatar })}
+                              onClick={() => handleViewProfile({ name: activity.friend, avatar: activity.avatar, id: activity.userId})}
                             >
                               <AvatarFallback>{activity.avatar}</AvatarFallback>
                             </Avatar>
@@ -518,7 +519,7 @@ const handleDeletePost = async (activityId) => {
                               <p className="text-sm">
                                 <span
                                   className="font-medium cursor-pointer hover:underline"
-                                  onClick={() => handleViewProfile({ name: activity.name, avatar: activity.avatar })}
+                                  onClick={() => handleViewProfile({ name: activity.name, avatar: activity.avatar, id: activity.userId })}
                                 >
                                   {activity.name}
                                 </span>
@@ -663,7 +664,7 @@ const handleDeletePost = async (activityId) => {
                             <AvatarFallback>{suggestion.avatar}</AvatarFallback>
                           </Avatar>
                           <div>
-                            <h4 className="font-medium text-foreground">{suggestion.name}</h4>
+                            <h4 className="font-medium text-foreground" onClick={() => handleViewProfile({ id: suggestion.id })}> {suggestion.name}</h4>
                             <p className="text-sm text-muted-foreground">
                               {suggestion.mutualFriends} mutual friends
                             </p>

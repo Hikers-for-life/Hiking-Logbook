@@ -35,3 +35,8 @@ export async function addFriend(friendId) {
   if (!res.ok) throw new Error("Failed to add friend");
   return res.json(); // returns { success: true }
 }
+
+export const getUserDetails = async (userId) => {
+  const res = await api.get(`/discover/${userId}`);
+  return res.data;
+}
