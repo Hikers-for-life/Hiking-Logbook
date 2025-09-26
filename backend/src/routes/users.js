@@ -3,6 +3,7 @@ import { AuthService } from '../services/authService.js';
 import { verifyAuth } from '../middleware/auth.js';
 import { dbUtils } from '../config/database.js';
 import { db } from '../config/firebase.js';
+import admin from "firebase-admin";
 const router = express.Router();
 
 // Test route to verify router is working
@@ -102,7 +103,7 @@ router.get('/:uid', async (req, res) => {
       longitude: userData.longitude || null,
       photoURL: userData.photoURL || null,
       preferences: userData.preferences || null,
-     
+      friends: userData.friends || null,
       stats: userData.stats || null,
       createdAt: userData.createdAt || null,
 
@@ -205,34 +206,49 @@ router.get('/:uid/achievements', async (req, res) => {
 });
 
 // Get user hiking history (public route)
-router.get('/:uid/hikes', async (req, res) => {
+
+
+router.get("/:uid/hikes", async (req, res) => {
   try {
     const { uid } = req.params;
-    const { limit = 10, offset = 0 } = req.query;
+    const limit = parseInt(req.query.limit || "2", 10);
 
-    // Query hikes for this user
-    const hikes = await dbUtils.getUserHikes(uid);
+    const hikesRef = admin
+      .firestore()
+      .collection("users")
+      .doc(uid)
+      .collection("hikes");
 
-    // Sort by date and apply pagination
-    const sortedHikes = hikes
-      .sort((a, b) => new Date(b.date) - new Date(a.date))
-      .slice(parseInt(offset), parseInt(offset) + parseInt(limit));
-
-    res.json({
-      hikes: sortedHikes,
-      total: hikes.length,
-      limit: parseInt(limit),
-      offset: parseInt(offset),
-    });
-  } catch (error) {
-    console.error('Get hikes error:', error);
-    res.status(500).json({
-      error: 'Failed to get hiking history',
-      details: error.message,
-    });
+    const snap = await hikesRef.orderBy("createdAt", "desc").limit(limit).get();
+    const hikes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    res.json({ success: true, data: hikes });
+  } catch (err) {
+   console.error("Error fetching user hikes:", err.message, err.stack);
+  res.status(500).json({ success: false, error: err.message });
   }
 });
 
+// Get hike count for a user
+router.get("/:uid/hikes/count", async (req, res) => {
+  try {
+    const { uid } = req.params;
+    const hikesRef = admin
+      .firestore()
+      .collection("users")
+      .doc(uid)
+      .collection("hikes");
+
+    // simple (works fine for small/medium collections)
+    const snap = await hikesRef.get();
+    const count = snap.size;
+
+    // If you have very large collections, consider maintaining count on user doc instead.
+    res.json({ success: true, count });
+  } catch (err) {
+    console.error("Error fetching hike count:", err);
+    res.status(500).json({ success: false, error: "Failed to fetch hike count" });
+  }
+});
 
 router.patch('/:uid', async (req, res) => {
   try {

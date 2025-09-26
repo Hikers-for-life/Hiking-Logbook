@@ -278,4 +278,7 @@ router.post('/:id/waypoint', async (req, res) => {
   }
 });
 
+
+
+
 export default router;

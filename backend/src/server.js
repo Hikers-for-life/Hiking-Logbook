@@ -9,6 +9,7 @@ import hikeRoutes from './routes/hikes.js';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import friendRoutes from "./routes/friends.js";
 
 dotenv.config();
 
@@ -73,6 +74,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/hikes', hikeRoutes);
+app.use("/api/friends", friendRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {
@@ -125,6 +127,7 @@ const startServer = async () => {
       console.log(`Auth API: http://localhost:${PORT}/api/auth`);
       console.log(`Users API: http://localhost:${PORT}/api/users`);
       console.log(`Hikes API: http://localhost:${PORT}/api/hikes`);
+       console.log(`Friends API: http://localhost:${PORT}/api/friends`);
     });
 
     // Graceful shutdown

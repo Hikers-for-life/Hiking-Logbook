@@ -8,11 +8,11 @@ export function Toaster() {
 
   const handleClose = (id) => {
     dismiss(id)             // close the toast
-    navigate("/dashboard")    // navigate to your ViewProfile route
+    navigate("/activity-feed")    // navigate to your ViewProfile route
   }
 
   return (
-    <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
+    <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
       {toasts
         .filter((t) => t.open) // only show open toasts
         .map((toast) => (
