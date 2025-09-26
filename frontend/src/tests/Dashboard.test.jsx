@@ -71,6 +71,7 @@ describe('Dashboard Component', () => {
 
     renderDashboard();
 
+    // Wait for loading to complete and stats to be displayed
     expect(await screen.findByText('2')).toBeInTheDocument(); // Total hikes
     expect(await screen.findByText('15 km')).toBeInTheDocument(); // Distance
   });
