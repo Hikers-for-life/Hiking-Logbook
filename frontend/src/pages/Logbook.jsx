@@ -14,7 +14,7 @@ import { hikeApiService } from "../services/hikeApiService.js";
 import { useAuth } from "../contexts/AuthContext.jsx";
 import {  createFeed} from "../services/feed";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
-
+import { useToast } from "../hooks/use-toast";
 
 const Logbook = () => {
   const { currentUser: user } = useAuth();
@@ -32,6 +32,7 @@ const Logbook = () => {
   const [error, setError] = useState(null);
   // Hike entries from database
   const [hikeEntries, setHikeEntries] = useState([]);
+  const { toast } = useToast();
 
   // Real-time stats state
   const [hikeStats, setHikeStats] = useState({
@@ -280,12 +281,17 @@ const handleStartActiveHike = async (formData) => {
         await loadHikes(searchTerm, difficultyFilter);
         setIsEditHikeOpen(false);
         setEditingHike(null);
+        if (updatedHikeData.notes) {
+
+        } 
       } else {
         setError('Failed to update hike. Please try again.');
+
       }
     } catch (err) {
       console.error('Failed to update hike:', err);
       setError('Failed to update hike. Please try again.');
+
     }
   };
 
@@ -348,9 +354,20 @@ const handleShareHike = async (hikeId) => {
     setHikeEntries((prev) =>
       prev.map((h) => (h.id === hikeId ? { ...h, shared: true } : h))
     );
+     toast({
+      title: " ✅ Hike shared!",
+      description: `${hike.title || hike.name || "This hike"} was posted to your feed.`,
+      duration: 3000,
+    });
   } catch (err) {
     console.error("❌ Failed to share hike:", err);
     setError("Failed to share/unshare hike. Please try again.");
+  
+  toast({
+      title: "❌ Share failed",
+      description: "We couldn’t share your hike. Please try again later.",
+         duration: 3000,
+    });
   }
 };
 

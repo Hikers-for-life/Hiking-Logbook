@@ -12,9 +12,10 @@ import { ProfileView } from "../components/ui/view-friend-profile";
 import { fetchFeed, likeFeed, commentFeed, shareFeed, fetchComments, deleteCommentFeed,deleteFeed } from "../services/feed";//ANNAH HERE
 import { discoverFriends, addFriend , getUserDetails  } from "../services/discover";//ANNAH HERE
 import { getFirestore} from "firebase/firestore";
-import { getAuth } from "firebase/auth";//NOT SURE ABOUT THIS IMPORT//ANNA HERE
+import { getAuth } from "firebase/auth";//ANNA HERE
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useToast } from "../hooks/use-toast";
+
 
 import { Search, UserPlus,  MapPin,  TrendingUp, Mountain,Clock,Medal,Users,Share2,Heart,MessageSquare } from "lucide-react";
 
@@ -35,9 +36,9 @@ const Friends = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [searchError, setSearchError] = useState("");
-   const { currentUser } = useAuth(); 
-   const [friends, setFriends] = useState([]); 
-    const { toast } = useToast();
+  const { currentUser } = useAuth(); 
+  const [friends, setFriends] = useState([]); 
+  const { toast } = useToast();
 
   const handleSearch = async () => {
     if (!searchTerm.trim()) return;
@@ -110,7 +111,7 @@ const handleBlockFriend = async (fid) => {
 
   //ANNAH HERE
 const auth = getAuth();
-const user = auth.currentUser;
+
 
 
   useEffect(() => {
@@ -244,9 +245,19 @@ const handleLike = async (activity) => {
 
   try {
     await deleteCommentFeed(activityId, commentId);
+     toast({
+      title: "💬 Comment deleted",
+      description: "Your comment was successfully removed.",
+      duration: 1000, 
+    });
   } catch (err) {
     console.error("Failed to delete comment:", err);
     // Optional: refetch comments here if you want rollback
+    toast({
+      title: "❌ Failed to delete comment",
+      description: "We couldn’t remove the comment. Please try again.",
+      duration: 1000, 
+    });
   }
 };
 
@@ -303,8 +314,18 @@ const handleShare = async (activity) => {
         a.id === tempShare.id ? { ...tempShare, id: data.id } : a
       )
     );
+     toast({
+      title: "✅ Activity shared!",
+      description: `${activity.name} was successfully shared to your feed.`,
+      duration: 1, 
+    });
   } catch (err) {
     console.error("Failed to share:", err);
+    toast({
+      title: "❌ Failed to share",
+      description: "There was an error sharing this activity. Please try again.",
+      duration: 1000, 
+    });
     // rollback optimistic
     setRecentActivity((prev) => prev.filter((a) => a.id !== tempShare.id));
   }
@@ -317,9 +338,19 @@ const handleDeletePost = async (activityId) => {
 
   try {
     // Call a backend/service function to delete the post
-    await deleteFeed(activityId); // <-- you need to implement this in services/feed.js
+    await deleteFeed(activityId); 
+    toast({
+      title: "✅  Post deleted",
+      description: "The post has been removed from your feed.",
+      duration: 3000, 
+    });
   } catch (err) {
     console.error("Failed to delete post:", err);
+    toast({
+      title: "❌ Deletion failed",
+      description: "We couldn't delete the post. Try again later.",
+      duration: 3000, 
+    });
     // Rollback if deletion fails
     setRecentActivity(prevActivity);
   }
@@ -351,8 +382,18 @@ const handleDeletePost = async (activityId) => {
     await addFriend(friendId); // uses backend API
     setSuggestions(prev => prev.filter(s => s.id !== friendId)); // remove locally
     console.log(`Friend ${friendId} added successfully!`);
+    toast({
+      title: "✅  Friend added",
+      description: "You’re now connected!",
+      duration: 4000, 
+    });
   } catch (err) {
     console.error("Failed to add friend:", err);
+     toast({
+      title: "❌ Failed to add friend",
+      description: "Something went wrong. Please try again.",
+      duration: 4000, 
+    });
   }
 };
 

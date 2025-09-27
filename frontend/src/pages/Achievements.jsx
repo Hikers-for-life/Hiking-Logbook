@@ -543,7 +543,8 @@ const Achievements = () => {
 
   // Handler for sharing achievements
 // Handler for sharing achievements
-const handleShareAchievement = async (achievement) => {
+
+/*const handleShareAchievement = async (achievement) => {
   const shareMessage = `🎉 Achievement Unlocked: ${achievement.title}! ${achievement.description || ""}`;
 
   try {
@@ -576,7 +577,7 @@ const handleShareAchievement = async (achievement) => {
     alert("Something went wrong while sharing your achievement. Please try again.");
   }
 };
-
+*/
 
   if (loading) {
     return (
@@ -709,7 +710,7 @@ const handleShareAchievement = async (achievement) => {
                                 <Calendar className="h-3 w-3" />
                                 Earned {formatDate(badge.earnedDate)}
                               </div>
-                              <Button
+                              {/*<Button
                                 variant="ghost"
                                 size="sm"
                                 className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
@@ -717,7 +718,7 @@ const handleShareAchievement = async (achievement) => {
                               >
                                 <Share className="h-3 w-3 mr-1" />
                                 Share
-                              </Button>
+                              </Button>*/}
                             </div>
                           )}
                         </CardContent>
@@ -790,7 +791,7 @@ const handleShareAchievement = async (achievement) => {
                                 <Calendar className="h-3 w-3" />
                                 Completed {formatDate(goal.earnedDate || goal.updatedAt)}
                               </div>
-                              <Button
+                              {/*<Button
                                 variant="ghost"
                                 size="sm"
                                 className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
@@ -798,7 +799,7 @@ const handleShareAchievement = async (achievement) => {
                               >
                                 <Share className="h-3 w-3 mr-1" />
                                 Share
-                              </Button>
+                              </Button>*/}
                             </div>
                           )}
 
@@ -867,6 +868,7 @@ const handleShareAchievement = async (achievement) => {
                         Earned {formatDate(badge.earnedDate)}
                       </div>
                     )}
+                    {/* TODO: Re-enable share button when social features are ready */}
                    <div className="flex justify-end gap-2 pt-2">
                       {/*<Button
                         variant="ghost"
