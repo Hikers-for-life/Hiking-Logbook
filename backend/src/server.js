@@ -130,7 +130,7 @@ app.use((error, req, res) => {
     message = 'Service unavailable';
 
   }
-})
+});
 
 // Start the server
   let serverInstance = null;
