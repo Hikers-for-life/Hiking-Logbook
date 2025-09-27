@@ -8,6 +8,7 @@ import { Badge } from '../ui/badge';
 import { useEffect, useState, useCallback } from "react";
 import { getUserHikeCount } from "../../services/userServices";
 import { hikeApiService } from "../../services/hikeApiService.js";
+import { getUserStats } from "../../services/statistics";
 import { 
   Calendar, 
   MapPin, 
@@ -47,7 +48,10 @@ export const ProfileView = ({ open, onOpenChange, showAddFriend = false }) => {
   const { currentUser } = useAuth();
 
   const [recentHikes, setRecentHikes] = useState([]);
-  
+  const [userStats, setUserStats] = useState({
+    totalDistance: 0,
+    totalElevation: 0,
+  });
   const [profile, setProfile] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -128,6 +132,17 @@ export const ProfileView = ({ open, onOpenChange, showAddFriend = false }) => {
       setIsLoading(false);
     }
   }, [currentUser]);
+
+
+  useEffect(() => {
+    if (!currentUser) return;
+  
+    getUserStats(currentUser.uid).then((stats) => {
+      console.log("User stats:", stats);
+      setUserStats(stats); // { totalDistance: X, totalElevation: Y }
+    });
+  }, [currentUser]);
+  
 
   useEffect(() => {
       if (currentUser) {
@@ -242,19 +257,7 @@ if (profile?.createdAt) {
               
               <p className="text-foreground">{user.bio}</p>
               
-              <div className="flex gap-3">
-                {showAddFriend ? (
-                  <Button className="bg-gradient-trail text-primary-foreground">
-                    <UserPlus className="h-4 w-4 mr-2" />
-                    Add Friend
-                  </Button>
-                ) : (
-                  <Button variant="outline">
-                    <MessageCircle className="h-4 w-4 mr-2" />
-                    Message
-                  </Button>
-                )}
-              </div>
+              
             </div>
           </div>
 
@@ -268,19 +271,19 @@ if (profile?.createdAt) {
             </Card>
             <Card>
               <CardContent className="p-4 text-center">
-                <p className="text-2xl font-bold text-foreground">{user.stats.totalDistance}</p>
+                <p className="text-2xl font-bold text-forest">{userStats.totalDistance} miles</p>
                 <p className="text-sm text-muted-foreground">Distance</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4 text-center">
-               <p className="text-2xl font-bold text-foreground">{user.stats.totalElevation}</p>
+               <p className="text-2xl font-bold text-foreground">{userStats.totalElevation} ft</p>
                 <p className="text-sm text-muted-foreground">Elevation</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-foreground">0</p>
+              <p className="text-2xl font-bold text-trail">0</p>
                 <p className="text-sm text-muted-foreground">Achievements</p>
               </CardContent>
             </Card>

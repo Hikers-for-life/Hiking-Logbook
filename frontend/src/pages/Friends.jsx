@@ -15,6 +15,9 @@ import { getFirestore} from "firebase/firestore";
 import { getAuth } from "firebase/auth";//NOT SURE ABOUT THIS IMPORT//ANNA HERE
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useToast } from "../hooks/use-toast";
+import { getUserStats } from "../services/statistics";
+import { getFriendProfile } from "../services/friendService.js"; 
+
 
 import { 
   Search, 
@@ -49,6 +52,7 @@ const Friends = () => {
   const [searchError, setSearchError] = useState("");
    const { currentUser } = useAuth(); 
    const [friends, setFriends] = useState([]); 
+   const [userStats,setUserStats] = useState([]);
     const { toast } = useToast();
 
   const handleSearch = async () => {
@@ -62,6 +66,43 @@ const Friends = () => {
       setSearchResults(results);
     }
   };
+
+  useEffect(() => {
+  const loadFriendProfiles = async () => {
+    if (!friends.length) return;
+
+    const updatedFriends = await Promise.all(
+      friends.map(async (f) => {
+        const profile = await getFriendProfile(f.id); // pass friend UID
+        if (profile.success) {
+          return {
+            ...f,
+            totalHikes: profile.totalHikes,
+            totalDistance: profile.totalDistance,
+            totalElevation: profile.totalElevation,
+            lastHike: profile.recentHikes[0]?.title || "No hikes yet",
+            lastHikeDate: profile.recentHikes[0]?.date || "",
+          };
+        }
+        return f; // fallback if fetch fails
+      })
+    );
+
+    setFriends(updatedFriends);
+  };
+
+  loadFriendProfiles();
+}, [friends.length]);
+
+
+  useEffect(() => {
+  if (!currentUser) return;
+
+  getUserStats(currentUser.uid).then((stats) => {
+    console.log("User stats:", stats);
+    setUserStats(stats); // { totalDistance: X, totalElevation: Y }
+  });
+}, [currentUser]);
 
   useEffect(() => {
   const fetchFriends = async () => {
@@ -342,6 +383,7 @@ const handleDeletePost = async (activityId) => {
       try {
         setLoading(true);
         const data = await discoverFriends();
+        console.log("suggestion :", data)
         setSuggestions(data);
       } catch (err) {
         console.error("Failed to fetch suggestions:", err);
@@ -353,16 +395,6 @@ const handleDeletePost = async (activityId) => {
   }, [auth?.currentUser]);
 
 
-  // ---- Add Friend handler ----
-  const handleAddFriend = async (friendId) => {
-  try {
-    await addFriend(friendId); // uses backend API
-    setSuggestions(prev => prev.filter(s => s.id !== friendId)); // remove locally
-    console.log(`Friend ${friendId} added successfully!`);
-  } catch (err) {
-    console.error("Failed to add friend:", err);
-  }
-};
 
 
   return (
@@ -415,7 +447,10 @@ const handleDeletePost = async (activityId) => {
                         <div className="flex items-center gap-2">
                           <span
                             className="font-semibold text-foreground cursor-pointer hover:underline"
-                            onClick={() => handleViewProfile(user, true)}
+                            onClick={() => {
+                              const isFriend = friends.some((f) => f.id === user.id); 
+                              handleViewProfile(user, !isFriend); // showAddFriend = false if already friend
+                            }}
                           >
                             {user.displayName}
                           </span>
@@ -439,7 +474,7 @@ const handleDeletePost = async (activityId) => {
             <TabsTrigger value="activity">Activity Feed</TabsTrigger>
             <TabsTrigger value="discover">Discover</TabsTrigger>
           </TabsList>
-{/*MY FRIENDS */}
+          {/*MY FRIENDS */}
           <TabsContent value="friends" className="space-y-6">
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {friends.map((friend) => (
@@ -461,7 +496,7 @@ const handleDeletePost = async (activityId) => {
                         </div>
                         <p className="text-sm text-muted-foreground flex items-center gap-1">
                           <MapPin className="h-3 w-3" />
-                          {friend.location}
+                          {friend.location || "Not yet set"}
                         </p>
                       </div>
                     </div>
@@ -473,7 +508,7 @@ const handleDeletePost = async (activityId) => {
                         <p className="text-xs text-muted-foreground">Hikes</p>
                       </div>
                       <div>
-                        <p className="text-2xl font-bold text-forest">{friend.totalDistance}</p>
+                        <p className="text-2xl font-bold text-forest">{friend.totalDistance} miles</p>
                         <p className="text-xs text-muted-foreground">Distance</p>
                       </div>
                     </div>
@@ -515,7 +550,8 @@ const handleDeletePost = async (activityId) => {
               ))}
             </div>
           </TabsContent>
-{/*ACTIVITY FEED*/ }
+
+          {/*ACTIVITY FEED*/ }
           <TabsContent value="activity" className="space-y-6">
             <Card className="bg-card border-border shadow-elevation">
               <CardHeader>
@@ -702,8 +738,8 @@ const handleDeletePost = async (activityId) => {
           </TabsContent>
 
 
-{/*DISCOVER */}
-      {/* DISCOVER */}
+
+        {/* DISCOVER */}
           <TabsContent value="discover" className="space-y-6">
             <Card className="bg-card border-border shadow-elevation">
               <CardHeader>
@@ -723,7 +759,7 @@ const handleDeletePost = async (activityId) => {
                       <div
                         key={suggestion.id}
                         className="flex items-center justify-between p-4 rounded-lg bg-muted hover:bg-muted/80 transition-colors cursor-pointer"
-                        onClick={() => handleViewProfile(suggestion, true)}
+                        onClick={() => handleViewProfile(suggestion.id, true)}
                       >
                         <div className="flex items-center gap-3">
                           <Avatar className="h-12 w-12">
@@ -747,6 +783,7 @@ const handleDeletePost = async (activityId) => {
                           onClick={async (e) => {
                             e.stopPropagation(); // prevent opening profile modal
                             try {
+                              
                               await addFriend(suggestion.id); // ✅ uses service
                               setSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
                               console.log(`Friend ${suggestion.name} added!`);
@@ -755,7 +792,9 @@ const handleDeletePost = async (activityId) => {
                             }
                           }}
                         >
+                           <UserPlus className="h-4 w-4 mr-2" />
                           Add Friend
+                          
                         </Button>
                       </div>
                     ))

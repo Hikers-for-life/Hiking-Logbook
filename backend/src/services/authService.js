@@ -1,8 +1,6 @@
 
 
 import { getAuth } from '../config/firebase.js';
-import { dbUtils } from '../config/database.js';
-
 import { auth, db } from '../config/firebase.js';
 import {collections,  dbUtils } from '../config/database.js';
 

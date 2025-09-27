@@ -6,6 +6,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { getUserHikeCount } from "../../services/userServices";
 import { hikeApiService } from "../../services/hikeApiService.js";
 import { useEffect, useState, useCallback } from "react";
+import { getUserStats } from "../../services/statistics";
+import { discoverFriends, addFriend } from "../../services/discover";
+import { useToast } from "../../hooks/use-toast";
 import { 
  Calendar, 
   MapPin, 
@@ -13,6 +16,7 @@ import {
   Clock, 
   UserPlus, 
   MessageCircle, 
+  Check, Loader2 ,
   Target, 
   Award, 
   Medal, 
@@ -45,6 +49,13 @@ export const ProfileView = ({ open, onOpenChange, person, showAddFriend = false 
   const [error, setError] = useState(null);
   const [hikeEntries, setHikeEntries] = useState([]);
   const [hikeCount, setHikeCount] = useState(0);
+  const { toast } = useToast();
+  const [isAdding, setIsAdding] = useState(false);
+  const [isFriend, setIsFriend] = useState(false);
+  const [userStats, setUserStats] = useState({
+    totalDistance: 0,
+    totalElevation: 0,
+  });
 
   // replace inside view-friend-profile.jsx
 const loadHikes = useCallback(async () => {
@@ -129,6 +140,27 @@ useEffect(() => {
     }, [person, loadHikes]);
 
     
+ useEffect(() => {
+  if (!person) return;
+
+  const fetchStats = async () => {
+    try {
+      const res = await fetch(`http://localhost:3001/api/users/${person.uid}/stats`);
+      const data = await res.json();
+
+      if (data.success) {
+        setUserStats({
+          totalDistance: data.totalDistance,
+          totalElevation: data.totalElevation,
+        });
+      }
+    } catch (err) {
+      console.error("Failed to fetch stats:", err);
+    }
+  };
+
+  fetchStats();
+}, [person]);
 
   
   if (!person) return null;
@@ -213,10 +245,46 @@ useEffect(() => {
               
               <div className="flex gap-3">
                 {showAddFriend ? (
-                  <Button className="bg-gradient-trail text-primary-foreground">
-                    <UserPlus className="h-4 w-4 mr-2" />
-                    Add Friend
-                  </Button>
+                  <Button
+                  className={`bg-gradient-trail text-primary-foreground hover:bg-gradient-to-r hover:from-green-600 hover:to-green-400 
+                    ${isFriend ? "opacity-50 cursor-not-allowed" : ""}`}
+                  disabled={isFriend || isAdding}
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    if (isFriend) return;
+
+                    try {
+                      setIsAdding(true);
+                      await addFriend(person.uid);
+                      toast({
+                        title: "Friend added",
+                        description: "Friendship created successfully!",
+                      });
+                      setIsFriend(true); // ✅ switch to "already friends"
+                    } catch (err) {
+                      console.error("Failed to add friend:", err);
+                    } finally {
+                      setIsAdding(false);
+                    }
+                  }}
+                >
+                  {isFriend ? (
+                    <>
+                      <Check className="h-4 w-4 mr-2" />
+                      Friend Added
+                    </>
+                  ) : isAdding ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Adding...
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      Add Friend
+                    </>
+                  )}
+                </Button>
                 ) : (
                   <Button variant="outline">
                     <MessageCircle className="h-4 w-4 mr-2" />
@@ -237,13 +305,13 @@ useEffect(() => {
             </Card>
             <Card>
               <CardContent className="p-4 text-center">
-                <p className="text-2xl font-bold text-forest">{profileData.totalDistance}</p>
+                <p className="text-2xl font-bold text-forest">{userStats.totalDistance} miles</p>
                 <p className="text-sm text-muted-foreground">Distance</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4 text-center">
-                <p className="text-2xl font-bold text-sky">{profileData.totalElevation}</p>
+                <p className="text-2xl font-bold text-sky">{userStats.totalElevation} ft</p>
                 <p className="text-sm text-muted-foreground">Elevation</p>
               </CardContent>
             </Card>
