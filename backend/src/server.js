@@ -1,19 +1,23 @@
-import express from 'express';
+﻿import express from 'express';
 import dotenv from 'dotenv';
+import helmet from 'helmet';
+import cors from 'cors';
+import morgan from 'morgan';
 import { initializeFirebase } from './config/firebase.js';
+import { swaggerUi, specs } from './config/swagger.js';
 import * as middleware from './middleware/index.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
 import hikeRoutes from './routes/hikes.js';
-
 import feedRoutes from './routes/feed.js';
 import discoverRoutes from './routes/discover.js';
-import helmet from 'helmet';
-import cors from 'cors';
-import morgan from 'morgan';
+import goalsRoutes from './routes/goals.js';
 import friendRoutes from "./routes/friends.js";
+import plannedHikeRoutes from './routes/plannedHikes.js';
+import gearRoutes from './routes/gear.js';
+import publicRoutes from './routes/public.js';
 
 
 dotenv.config();
@@ -90,24 +94,33 @@ app.use('/api/hikes', hikeRoutes);
 app.use("/api/friends", friendRoutes);
 app.use('/api/feed', feedRoutes);
 app.use('/api/discover', discoverRoutes);
-// 404 handler for undefined routes
-app.use('*', notFoundHandler);
-// Global error handler
-app.use(errorHandler);
+app.use('/api/goals', goalsRoutes);
+app.use('/api/planned-hikes', plannedHikeRoutes); 
+app.use('/api/gear', gearRoutes);
+app.use('/api/goals', goalsRoutes);
 
+// Public API routes (no authentication required)
+app.use('/api/public', publicRoutes);
 
+// API Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'Hiking Logbook API Documentation',
+  swaggerOptions: {
+    persistAuthorization: true,
+  }
+}));
 
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({
-    error: 'Route not found',
-    path: req.originalUrl,
-    method: req.method,
-  });
+// Redirect root to API documentation
+app.get('/', (req, res) => {
+  res.redirect('/api-docs');
 });
 
+// 404 handler for undefined routes
+app.use('*', notFoundHandler);
+
 // Global error handler
-app.use((error, req, res) => {
+app.use((error, req, res,next) => {
   console.error('Global error handler:', error);
 
   let statusCode = 500;
@@ -138,8 +151,9 @@ app.use((error, req, res) => {
 //  Wrap server startup in async function
 const startServer = async () => {
   try {
-   
     await initializeFirebase();
+    
+    
     const server = app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
       console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
@@ -147,11 +161,15 @@ const startServer = async () => {
       console.log(`Auth API: http://localhost:${PORT}/api/auth`);
       console.log(`Users API: http://localhost:${PORT}/api/users`);
       console.log(`Hikes API: http://localhost:${PORT}/api/hikes`);
-       console.log(`Friends API: http://localhost:${PORT}/api/friends`);
+      console.log(`Feed API: http://localhost:${PORT}/api/feed`);
+      console.log(`Discover API: http://localhost:${PORT}/api/discover`);
+      console.log(`Goals API: http://localhost:${PORT}/api/goals`);
+      console.log(`Friends API: http://localhost:${PORT}/api/friends`);
+      console.log(`Planned Hikes API: http://localhost:${PORT}/api/planned-hikes`); 
+      console.log(`Gear API: http://localhost:${PORT}/api/gear`);
     });
-
-    // Graceful shutdown
-    process.on('SIGTERM', () => {
+    
+   process.on('SIGTERM', () => {
       console.log('SIGTERM received, shutting down gracefully');
       server.close(() => {
         console.log('Process terminated');
@@ -174,6 +192,8 @@ const startServer = async () => {
 
 
 startServer();
+
+
 
 
 export default app;

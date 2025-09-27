@@ -13,7 +13,7 @@ import {
 } from 'firebase/auth';
 
 
-// Firebase configuration - you'll need to add this to your .env file
+// Firebase configuration
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
   authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
@@ -57,10 +57,10 @@ export const AuthProvider = ({ children }) => {
   // Check if environment variables are set correctly
   useEffect(() => {
     if (!process.env.REACT_APP_API_URL || process.env.REACT_APP_API_URL.includes('your-backend-api-url.com')) {
-      console.error('❌ Environment Error: REACT_APP_API_URL is not set correctly!');
+      console.error('Environment Error: REACT_APP_API_URL is not set correctly!');
       console.error('Current value:', process.env.REACT_APP_API_URL);
       console.error('Please set REACT_APP_API_URL to your actual backend URL');
-      setError('Backend API URL not configured. Please contact support.');
+      setError('Backend API URL not configured.');
     }
   }, []);
 
@@ -166,8 +166,6 @@ export const AuthProvider = ({ children }) => {
       // For Google sign-in, directly create the profile
       // This avoids the 500 error when profile doesn't exist
       const apiUrl = `${process.env.REACT_APP_API_URL}/users/create-profile`;
-      console.log('Calling API:', apiUrl);
-      console.log('Environment variable:', process.env.REACT_APP_API_URL);
       
       const createResponse = await fetch(
         apiUrl,
@@ -190,25 +188,21 @@ export const AuthProvider = ({ children }) => {
 
       if (!createResponse.ok) {
         // Log the response details for debugging
-        console.log('Profile creation failed:', createResponse.status, createResponse.statusText);
         
         // If profile already exists, that's fine
         if (createResponse.status === 409) {
-          console.log('User profile already exists');
           return { message: 'Profile already exists' };
         }
         
         // Try to get error details
         try {
           const errorText = await createResponse.text();
-          console.log('Error response:', errorText);
           throw new Error(`Failed to create user profile: ${createResponse.status} ${createResponse.statusText}`);
         } catch (parseError) {
           throw new Error(`Failed to create user profile: ${createResponse.status} ${createResponse.statusText}`);
         }
       }
 
-      console.log('User profile created successfully');
       return await createResponse.json();
     } catch (error) {
       console.error('Error handling user profile:', error);

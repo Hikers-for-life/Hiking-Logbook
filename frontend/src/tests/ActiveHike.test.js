@@ -148,9 +148,6 @@ describe('ActiveHike Component', () => {
   });
 
   test('adds accomplishment', async () => {
-    // Mock window.prompt
-    window.prompt = jest.fn().mockReturnValue('Reached the summit!');
-    
     render(<ActiveHike {...mockProps} />);
     
     // Start hike first to make accomplishment button visible
@@ -166,8 +163,23 @@ describe('ActiveHike Component', () => {
       fireEvent.click(addButton);
     });
 
-    expect(screen.getByText('Reached the summit!')).toBeInTheDocument();
-    expect(window.prompt).toHaveBeenCalledWith('What did you accomplish?');
+    // Check if dialog is open by looking for the dialog title
+    expect(screen.getByRole('heading', { name: 'Add Accomplishment' })).toBeInTheDocument();
+    
+    // Find input field and type accomplishment
+    const input = screen.getByPlaceholderText(/e.g., Reached the summit/);
+    await act(async () => {
+      fireEvent.change(input, { target: { value: 'Reached the summit!' } });
+    });
+
+    // Click add button in dialog (the one that's not disabled)
+    const addDialogButton = screen.getByRole('button', { name: 'Add Accomplishment' });
+    await act(async () => {
+      fireEvent.click(addDialogButton);
+    });
+
+    // Wait for the accomplishment to appear in the accomplishments list
+    expect(await screen.findByText('Reached the summit!')).toBeInTheDocument();
   });
 
   test('updates notes in real-time', async () => {

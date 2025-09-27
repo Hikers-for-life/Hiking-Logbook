@@ -1,10 +1,9 @@
 import { getAuth } from "firebase/auth";
 import { API_BASE } from '../api/api.js';
-import { getFirestore, doc, deleteDoc } from "firebase/firestore";
-
 
 const API_URL = API_BASE;
 
+// ---- Get Firebase ID Token ----
 async function getToken() {
   const auth = getAuth();
   const user = auth.currentUser;
@@ -12,6 +11,28 @@ async function getToken() {
   return await user.getIdToken();
 }
 
+// ---- Create a Feed Post ----
+export async function createFeed(postData) {
+  // postData should include at least: { action, hike, description?, stats?, photo? }
+  const token = await getToken();
+  const res = await fetch(`${API_URL}/feed`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: token ? `Bearer ${token}` : "",
+    },
+    body: JSON.stringify(postData),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Failed to create feed: ${res.status} ${errText}`);
+  }
+
+  return res.json(); // returns created activity object (backend returns id + fields)
+}
+
+// ---- Fetch Feed (Unified: posts, hikes, achievements, shares) ----
 export async function fetchFeed(page = 1, limit = 10) {
   const token = await getToken();
   const res = await fetch(`${API_URL}/feed?page=${page}&limit=${limit}`, {
@@ -23,16 +44,18 @@ export async function fetchFeed(page = 1, limit = 10) {
     throw new Error(`Failed to fetch feed: ${res.status} ${errText}`);
   }
 
+  // Return array of activities: type = post | hike | achievement | share
   return res.json();
 }
 
-export async function likeFeed(id, like) {
+// ---- Like / Unlike Feed ----
+export async function likeFeed(feedId, like = true) {
   const token = await getToken();
-  const res = await fetch(`${API_URL}/feed/${id}/like`, {
+  const res = await fetch(`${API_URL}/feed/${feedId}/like`, {
     method: "POST",
-    headers: { 
-      "Content-Type": "application/json", 
-      Authorization: `Bearer ${token}` 
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ like }),
   });
@@ -42,76 +65,84 @@ export async function likeFeed(id, like) {
     throw new Error(`Failed to like feed: ${res.status} ${errText}`);
   }
 
-  return res.json();
+  return res.json(); // returns updated like info
 }
 
-export async function commentFeed(id, content) {
+// ---- Add Comment ----
+export async function commentFeed(feedId, content) {
+  if (!content?.trim()) throw new Error("Comment cannot be empty");
+
   const token = await getToken();
-  const res = await fetch(`${API_URL}/feed/${id}/comment`, {
+  const res = await fetch(`${API_URL}/feed/${feedId}/comment`, {
     method: "POST",
-    headers: { 
-      "Content-Type": "application/json", 
-      Authorization: `Bearer ${token}` 
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ content }),
   });
 
   if (!res.ok) {
     const errText = await res.text();
-    throw new Error(`Failed to comment: ${res.status} ${errText}`);
+    throw new Error(`Failed to add comment: ${res.status} ${errText}`);
   }
 
-  return res.json();
+  return res.json(); // returns the created comment object
 }
 
-export async function deleteCommentFeed(activityId, commentId) {
+// ---- Delete Comment ----
+export async function deleteCommentFeed(feedId, commentId) {
   const token = await getToken();
-
-  const res = await fetch(`${API_URL}/feed/${activityId}/comments/${commentId}`, {
+  const res = await fetch(`${API_URL}/feed/${feedId}/comments/${commentId}`, {
     method: "DELETE",
     headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`
+      Authorization: `Bearer ${token}`,
     },
   });
 
   if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Failed to delete comment: ${res.status} ${errorText}`);
+    const errText = await res.text();
+    throw new Error(`Failed to delete comment: ${res.status} ${errText}`);
   }
 
-  return res.json();
+  return res.json(); // confirmation of deletion
 }
 
-
-
-export const shareFeed = async (feedId, payload) => {
+// ---- Share a Post ----
+export async function shareFeed(feedId, payload) {
+  // payload example: { sharerId, sharerName, sharerAvatar, original }
+  const token = await getToken();
   const res = await fetch(`${API_URL}/feed/${feedId}/share`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${await getToken()}`,
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(payload),
   });
-  if (!res.ok) throw new Error("Failed to share");
-  return res.json();
-};
 
-export const deleteFeed = async (activityId) => {
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Failed to share feed: ${res.status} ${errText}`);
+  }
+
+  return res.json(); // returns new shared activity
+}
+
+// ---- Delete a Feed Post ----
+export async function deleteFeed(feedId) {
   const token = await getToken();
-  const res = await fetch(`${API_URL}/feed/${activityId}`, {
+  const res = await fetch(`${API_URL}/feed/${feedId}`, {
     method: "DELETE",
     headers: {
-      Authorization: token ? `Bearer ${token}` : '',
+      Authorization: `Bearer ${token}`,
     },
   });
 
   if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Failed to delete post: ${res.status} ${errorText}`);
+    const errText = await res.text();
+    throw new Error(`Failed to delete feed: ${res.status} ${errText}`);
   }
 
-  return res.json();
-};
-
+  return res.json(); // confirmation of deletion
+}

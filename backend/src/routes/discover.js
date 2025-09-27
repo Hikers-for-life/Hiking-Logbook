@@ -58,4 +58,22 @@ router.post("/add", verifyAuth, async (req, res) => {
   }
 });
 
+router.get("/:id", verifyAuth, async (req, res) => {
+  try {
+    const db = getDatabase();
+    const userId = req.params.id;
+    const userDoc = await db.collection("users").doc(userId).get();
+
+    if (!userDoc.exists) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const userData = userDoc.data();
+    res.json({ id: userId, ...userData });
+  } catch (err) {
+    console.error("Error fetching user details:", err);
+    res.status(500).json({ error: "Failed to fetch user details" });
+  }
+});
+
 export default router;

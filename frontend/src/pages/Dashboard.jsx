@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { Navigation } from '../components/ui/navigation';
-
+import { useNavigate } from 'react-router-dom';
 import { usePageTitle } from '../hooks/usePageTitle';
+import { hikeApiService } from '../services/hikeApiService.js';
 
 import {
   Card,
@@ -18,38 +19,51 @@ import {
   MapPin,
   Calendar,
   Trophy,
-  TrendingUp,
-  User,
   Plus,
   Map,
+  Clock,
+  Compass,
 } from 'lucide-react';
 
 const Dashboard = () => {
   const { currentUser, getUserProfile } = useAuth();
+  const navigate = useNavigate();
   const [userProfile, setUserProfile] = useState(null);
+  const [recentHikes, setRecentHikes] = useState([]);
+  const [hikeStats, setHikeStats] = useState({
+    totalHikes: 0,
+    totalDistance: 0,
+  });
   const [loading, setLoading] = useState(true);
+  const [hikesLoading, setHikesLoading] = useState(true);
 
   // Set page title
   usePageTitle('Dashboard');
 
+  // Navigation handlers
+  const handleStartLogging = () => {
+    navigate('/logbook');
+  };
 
+  const handlePlanTrip = () => {
+    navigate('/hike-planner');
+  };
+
+  const handleExploreTrails = () => {
+    navigate('/trail-explorer');
+  };
+
+  // Load user profile
   useEffect(() => {
     const loadProfile = async () => {
       try {
         const res = await fetch(`http://localhost:3001/api/users/${currentUser.uid}`);
         if (!res.ok) {
-          // Fallback to basic user info if profile not found
           const fallbackProfile = {
             displayName: currentUser.displayName || 'Hiker',
             bio: 'Passionate hiker exploring new trails',
             location: 'Mountain View, CA',
             preferences: { difficulty: 'intermediate', terrain: 'mountain' },
-            stats: {
-              totalHikes: 0,
-              totalDistance: 0,
-              totalElevation: 0,
-              achievements: [],
-            },
           };
           setUserProfile(fallbackProfile);
         } else {
@@ -58,18 +72,11 @@ const Dashboard = () => {
         }
       } catch (error) {
         console.error('Error loading profile:', error);
-        // Set fallback profile on error
         const fallbackProfile = {
           displayName: currentUser.displayName || 'Hiker',
           bio: 'Passionate hiker exploring new trails',
           location: 'Mountain View, CA',
           preferences: { difficulty: 'intermediate', terrain: 'mountain' },
-          stats: {
-            totalHikes: 0,
-            totalDistance: 0,
-            totalElevation: 0,
-            achievements: [],
-          },
         };
         setUserProfile(fallbackProfile);
       } finally {
@@ -81,6 +88,77 @@ const Dashboard = () => {
       loadProfile();
     }
   }, [currentUser, getUserProfile]);
+
+  // Load recent hikes and calculate statistics
+  useEffect(() => {
+    const loadHikesAndStats = async () => {
+      if (!currentUser) return;
+      
+      try {
+        setHikesLoading(true);
+        
+        const result = await hikeApiService.getHikes();
+        const hikes = result.data || result;
+        
+        // Calculate statistics from all hikes
+        const stats = {
+          totalHikes: hikes.length,
+          totalDistance: 0,
+        };
+
+        // Calculate totals from all hikes
+        hikes.forEach(hike => {
+          const distance = parseFloat(hike.distance) || parseFloat(hike.totalDistance) || 0;
+          stats.totalDistance += distance;
+        });
+
+        // Round the totals to reasonable decimal places
+        stats.totalDistance = Math.round(stats.totalDistance * 10) / 10;
+
+        setHikeStats(stats);
+        
+        // Process the hikes for recent hikes display
+        const processedHikes = hikes
+          .map(hike => {
+            let jsDate;
+            
+            // Handle different date formats
+            if (hike.date?._seconds !== undefined) {
+              jsDate = new Date(hike.date._seconds * 1000);
+            } else if (typeof hike.date === "string") {
+              jsDate = new Date(hike.date);
+            } else if (hike.date instanceof Date) {
+              jsDate = hike.date;
+            } else {
+              jsDate = new Date();
+            }
+
+            return {
+              ...hike,
+              jsDate,
+              formattedDate: jsDate.toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric' 
+              })
+            };
+          })
+          .sort((a, b) => b.jsDate - a.jsDate)
+          .slice(0, 6); // Show more hikes now that we have more space
+
+        setRecentHikes(processedHikes);
+      } catch (error) {
+        console.error('Error loading hikes and stats:', error);
+        setRecentHikes([]);
+      } finally {
+        setHikesLoading(false);
+      }
+    };
+
+    if (currentUser) {
+      loadHikesAndStats();
+    }
+  }, [currentUser, userProfile]);
 
   if (loading) {
     return (
@@ -122,8 +200,8 @@ const Dashboard = () => {
           </p>
         </div>
 
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Stats Overview - Only 2 cards now */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Hikes</CardTitle>
@@ -131,7 +209,7 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {userProfile?.stats?.totalHikes || 0}
+                {hikesLoading ? '...' : hikeStats.totalHikes}
               </div>
               <p className="text-xs text-muted-foreground">Hikes completed</p>
             </CardContent>
@@ -146,46 +224,16 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {userProfile?.stats?.totalDistance || 0} km
+                {hikesLoading ? '...' : `${hikeStats.totalDistance} km`}
               </div>
               <p className="text-xs text-muted-foreground">Distance covered</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Total Elevation
-              </CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {userProfile?.stats?.totalElevation || 0} m
-              </div>
-              <p className="text-xs text-muted-foreground">Elevation gained</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Achievements
-              </CardTitle>
-              <Trophy className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {userProfile?.stats?.achievements?.length || 0}
-              </div>
-              <p className="text-xs text-muted-foreground">Badges earned</p>
             </CardContent>
           </Card>
         </div>
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={handleStartLogging}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Plus className="h-5 w-5 text-green-600" />
@@ -202,7 +250,7 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={handlePlanTrip}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="h-5 w-5 text-blue-600" />
@@ -217,7 +265,7 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={handleExploreTrails}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Map className="h-5 w-5 text-purple-600" />
@@ -233,25 +281,80 @@ const Dashboard = () => {
           </Card>
         </div>
 
-        {/* Recent Activity & Profile Info */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Recent Hikes */}
+        {/* Recent Hikes - Now in row format */}
+        <div className="mb-8">
           <Card>
             <CardHeader>
-              <CardTitle>Recent Hikes</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Mountain className="h-5 w-5 text-forest" />
+                Recent Hikes
+              </CardTitle>
               <CardDescription>Your latest hiking adventures</CardDescription>
             </CardHeader>
             <CardContent>
-              {userProfile?.stats?.totalHikes > 0 ? (
+              {hikesLoading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-4"></div>
+                  <p className="text-muted-foreground">Loading recent hikes...</p>
+                </div>
+              ) : recentHikes.length > 0 ? (
                 <div className="space-y-4">
-                  {/* Placeholder for recent hikes */}
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Mountain className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>No recent hikes to display</p>
-                    <p className="text-sm">
-                      Start logging your hikes to see them here!
-                    </p>
-                  </div>
+                  {recentHikes.map((hike) => {
+                    // Handle date formatting
+                    let formattedDate = 'Unknown date';
+                    if (hike.date?._seconds !== undefined) {
+                      const jsDate = new Date(hike.date._seconds * 1000);
+                      formattedDate = jsDate.toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric', 
+                        year: 'numeric' 
+                      });
+                    } else if (hike.formattedDate) {
+                      formattedDate = hike.formattedDate;
+                    }
+
+                    // Handle difficulty badge variant
+                    const getDifficultyVariant = (difficulty) => {
+                      const diff = difficulty?.toLowerCase();
+                      if (diff === 'hard' || diff === 'difficult') return 'destructive';
+                      if (diff === 'medium' || diff === 'moderate') return 'default';
+                      return 'secondary';
+                    };
+
+                    return (
+                      <div key={hike.id} className="flex items-center justify-between p-3 rounded-lg bg-muted">
+                        <div className="flex-1">
+                          <h4 className="font-medium">{hike.name || hike.title || 'Unnamed Hike'}</h4>
+                          <div className="flex items-center gap-4 mt-1">
+                            <span className="text-sm text-muted-foreground flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              {formattedDate}
+                            </span>
+                            <span className="text-sm text-muted-foreground flex items-center gap-1">
+                              <Compass className="h-3 w-3" />
+                              {(parseFloat(hike.distance || hike.totalDistance) || 0).toFixed(1)} km
+                            </span>
+                            <span className="text-sm text-muted-foreground flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {hike.duration || hike.estimatedDuration || 'N/A'}
+                            </span>
+                            {hike.location && (
+                              <span className="text-sm text-muted-foreground flex items-center gap-1">
+                                <MapPin className="h-3 w-3" />
+                                {hike.location}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <Badge 
+                          variant={getDifficultyVariant(hike.difficulty)}
+                          className="text-xs ml-4"
+                        >
+                          {hike.difficulty || 'Unknown'}
+                        </Badge>
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
@@ -262,106 +365,26 @@ const Dashboard = () => {
               )}
             </CardContent>
           </Card>
-
-          {/* Profile Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Profile Information
-              </CardTitle>
-              <CardDescription>
-                Your hiking preferences and details
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Display Name
-                </label>
-                <p className="text-foreground">
-                  {userProfile?.displayName || 'Not set'}
-                </p>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Location
-                </label>
-                <p className="text-foreground">
-                  {userProfile?.location || 'Not specified'}
-                </p>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Bio
-                </label>
-                <p className="text-foreground">
-                  {userProfile?.bio || 'No bio added yet'}
-                </p>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Difficulty Preference
-                </label>
-                <div className="mt-1">
-                  <Badge variant="secondary">
-                    {userProfile?.preferences?.difficulty || 'Not set'}
-                  </Badge>
-                </div>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Terrain Preference
-                </label>
-                <div className="mt-1">
-                  <Badge variant="secondary">
-                    {userProfile?.preferences?.terrain || 'Not set'}
-                  </Badge>
-                </div>
-              </div>
-
-              <Button variant="outline" className="w-full">
-                Edit Profile
-              </Button>
-            </CardContent>
-          </Card>
         </div>
 
-        {/* Achievements Section */}
+        {/* Recent Achievements Section */}
         <div className="mt-8">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Trophy className="h-5 w-5 text-yellow-600" />
-                Achievements
+                Recent Achievements
               </CardTitle>
               <CardDescription>
-                Badges and milestones you've earned
+                Latest badges and milestones you've earned
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {userProfile?.stats?.achievements?.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {userProfile.stats.achievements.map((achievement, index) => (
-                    <div key={index} className="text-center">
-                      <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                        <Trophy className="h-8 w-8 text-yellow-600" />
-                      </div>
-                      <p className="text-sm font-medium">{achievement}</p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Trophy className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No achievements yet</p>
-                  <p className="text-sm">Complete hikes to earn badges!</p>
-                </div>
-              )}
+              <div className="text-center py-8 text-muted-foreground">
+                <Trophy className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>No recent achievements</p>
+                <p className="text-sm">Complete hikes to earn badges!</p>
+              </div>
             </CardContent>
           </Card>
         </div>

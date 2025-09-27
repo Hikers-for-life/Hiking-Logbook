@@ -46,7 +46,7 @@ const Index = () => {
       <Login
         open={isLoginOpen}
         onOpenChange={handleLoginClose}
-        onLogin={(email) => console.log('Logged in as', email)} // Placeholder
+        onLogin={() => {}} // Placeholder
         onSignup={handleSignupRedirect}
       />
     </div>
