@@ -1,40 +1,49 @@
-import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
-import '@testing-library/jest-dom';
-import { MemoryRouter } from 'react-router-dom';
-import HikePlanner from '../pages/HikePlanner';
+// __tests__/HikePlanner.test.jsx
+import React from "react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import "@testing-library/jest-dom";
+import { MemoryRouter } from "react-router-dom";
+import HikePlanner from "../pages/HikePlanner";
 
-// Mock AuthContext
-jest.mock('../contexts/AuthContext', () => ({
+// --- Mocks ---
+jest.mock("../contexts/AuthContext.jsx", () => ({
   useAuth: () => ({
-    currentUser: { uid: 'test-user', email: 'test@example.com' },
-    logout: jest.fn(),
+    currentUser: { uid: "test-user", displayName: "Test Hiker" },
   }),
 }));
 
 
+jest.mock("../components/ui/navigation", () => ({
 
-
-// Mock navigation component
-jest.mock('../components/ui/navigation', () => ({
   Navigation: () => <nav data-testid="navigation">Navigation</nav>,
 }));
 
-// Mock NewHikePlanForm
-jest.mock('../components/NewHikePlanForm', () => ({
-  __esModule: true,
-  default: ({ open, onOpenChange, onSubmit }) =>
-    open ? (
-      <div data-testid="new-plan-form">
-        <button onClick={() => onSubmit({ id: 1, title: 'Test Plan' })}>
-          Submit
-        </button>
-        <button onClick={() => onOpenChange(false)}>Close</button>
-      </div>
-    ) : null,
+jest.mock("../services/plannedHikesService.js", () => ({
+  plannedHikeApiService: {
+    getPlannedHikes: jest.fn(),
+    createPlannedHike: jest.fn(),
+    deletePlannedHike: jest.fn(),
+    updatePlannedHike: jest.fn(),
+    startPlannedHike: jest.fn(),
+  },
 }));
 
-describe('HikePlanner Component', () => {
+jest.mock("../services/gearService.js", () => ({
+  useGearChecklist: jest.fn(),
+}));
+
+jest.mock("../components/NewHikePlanForm", () => () => (
+  <div data-testid="new-hike-form">Mock NewHikePlanForm</div>
+));
+
+jest.mock("../components/RouteExplorer", () => () => (
+  <div data-testid="route-explorer">Mock RouteExplorer</div>
+));
+
+describe("HikePlanner Component", () => {
+  const { plannedHikeApiService } = require("../services/plannedHikesService.js");
+  const { useGearChecklist } = require("../services/gearService.js");
+
   const renderHikePlanner = () =>
     render(
       <MemoryRouter>
@@ -98,29 +107,38 @@ describe('HikePlanner Component', () => {
 });
 
 
+  beforeEach(() => {
+    jest.clearAllMocks();
 
-  test('opens new plan form when Plan New Hike clicked', () => {
-    renderHikePlanner();
-    fireEvent.click(screen.getByText(/plan new hike/i));
-    expect(screen.getByTestId('new-plan-form')).toBeInTheDocument();
+    useGearChecklist.mockReturnValue({
+      gearChecklist: [{ item: "Water Bottle", checked: false }],
+      isLoading: false,
+      error: null,
+      loadGearChecklist: jest.fn(),
+      addGearItem: jest.fn(),
+      removeGearItem: jest.fn(),
+      toggleGearItem: jest.fn(),
+      resetGearChecklist: jest.fn(),
+      totalItems: 1,
+      checkedItems: 0,
+      completionPercentage: 0,
+    });
   });
 
-  test('handles gear checklist interactions', () => {
+
+  test("shows gear checklist items", async () => {
+    plannedHikeApiService.getPlannedHikes.mockResolvedValueOnce([]);
     renderHikePlanner();
-    const addItemInput = screen.getByPlaceholderText(/add gear item/i);
-    fireEvent.change(addItemInput, { target: { value: 'Test Item' } });
-    expect(addItemInput.value).toBe('Test Item');
+    expect(await screen.findByText("Water Bottle")).toBeInTheDocument();
   });
 
-  test('displays trip status badges', () => {
+  test("opens new hike plan form when button is clicked", async () => {
+    plannedHikeApiService.getPlannedHikes.mockResolvedValueOnce([]);
     renderHikePlanner();
-    expect(screen.getByText(/confirmed/i)).toBeInTheDocument();
-    expect(screen.getByText(/planning/i)).toBeInTheDocument();
-  });
 
-  test('shows difficulty badges for trips', () => {
-    renderHikePlanner();
-    expect(screen.getByText(/moderate/i)).toBeInTheDocument();
-    expect(screen.getByText(/easy/i)).toBeInTheDocument();
+    const button = await screen.findByRole("button", { name: /Plan New Hike/i });
+    fireEvent.click(button);
+
+    expect(await screen.findByTestId("new-hike-form")).toBeInTheDocument();
   });
 });

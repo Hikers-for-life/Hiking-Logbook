@@ -2,9 +2,16 @@ import express from 'express';
 import { AuthService } from '../services/authService.js';
 import { verifyAuth } from '../middleware/auth.js';
 import { dbUtils } from '../config/database.js';
+
 import { db } from '../config/firebase.js';
 import admin from "firebase-admin";
+
+import { getDatabase } from '../config/firebase.js';
+import { BADGE_RULES } from '../services/badgeService.js';
+
+
 const router = express.Router();
+
 
 // Test route to verify router is working
 router.get('/test', (req, res) => {
@@ -14,7 +21,7 @@ router.get('/test', (req, res) => {
 // Create user profile (for Google sign-in users)
 router.post('/create-profile', verifyAuth, async (req, res) => {
   try {
-    const { uid, email, displayName, bio, location, photoURL } = req.body;
+    const { uid, email, displayName, bio, location, latitude, longitude, photoURL } = req.body;
     
     // Verify the authenticated user matches the requested UID
     if (req.user.uid !== uid) {
@@ -64,7 +71,6 @@ router.post('/create-profile', verifyAuth, async (req, res) => {
       profile: profileData,
     });
   } catch (error) {
-    console.error('Create profile error:', error);
     res.status(500).json({
       error: 'Failed to create user profile',
       details: error.message,
@@ -103,10 +109,204 @@ router.get("/:uid/stats", async (req, res) => {
 });
 
 
+// Get current user profile (protected route)
+router.get("/profile", verifyAuth, async (req, res) => {
+  try {
+    const profile = await AuthService.getUserProfile(req.user.uid); 
+    res.json(profile); 
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get user by ID (public route)
+
+// Get user stats (must be before /:uid route to avoid conflicts)
+router.get('/stats', verifyAuth, async (req, res) => {
+  try {
+    const userId = req.user.uid;
+    
+    // Get basic hike stats (with fallback to empty stats)
+    let hikeStats;
+    try {
+      hikeStats = await dbUtils.getUserHikeStats(userId);
+    } catch (error) {
+      hikeStats = {
+        totalHikes: 0,
+        totalDistance: 0,
+        totalDuration: 0,
+        totalElevation: 0
+      };
+    }
+    
+    // Try to get user profile, create one if it doesn't exist
+    let profile;
+    try {
+      profile = await dbUtils.getUserProfile(userId);
+      if (!profile) {
+        const profileData = {
+          displayName: req.user.name || 'Hiker',
+          email: req.user.email || '',
+          bio: '',
+          location: '',
+          joinDate: new Date().toISOString(),
+          badges: [],
+          goals: [],
+          preferences: {
+            units: 'metric',
+            privacy: 'friends'
+          }
+        };
+        await dbUtils.createUserProfile(userId, profileData);
+        profile = profileData;
+      }
+    } catch (error) {
+      console.error(`Error with user profile for stats for ${userId}:`, error);
+      profile = { badges: [], goals: [] };
+    }
+    
+    // Combine hike stats with profile data
+    const stats = {
+      ...hikeStats,
+      badgesEarned: (profile?.badges || []).length,
+      goalsCompleted: (profile?.goals || []).filter(goal => goal.completed).length,
+      goalsInProgress: (profile?.goals || []).filter(goal => !goal.completed).length,
+      joinDate: profile?.joinDate || new Date().toISOString()
+    };
+    
+    res.json({ success: true, data: stats });
+  } catch (error) {
+    console.error('Error fetching user stats:', error);
+    res.status(500).json({ error: 'Failed to fetch user stats', details: error.message });
+  }
+});
+
+// Get user badges (must be before /:uid route to avoid conflicts)
+router.get('/badges', verifyAuth, async (req, res) => {
+  try {
+    const userId = req.user.uid;
+    
+    // Get user stats for progress calculation (with fallback to empty stats)
+    let stats;
+    try {
+      stats = await dbUtils.getUserHikeStats(userId);
+    } catch (error) {
+      console.error(`Error getting hike stats for badges for ${userId}:`, error);
+      stats = {
+        totalHikes: 0,
+        totalDistance: 0,
+        totalDuration: 0,
+        totalPeaks: 0,
+        uniqueTrails: 0,
+        hasEarlyBird: false,
+        hasEndurance: false
+      };
+    }
+    
+    // Try to get user profile, create one if it doesn't exist
+    let profile;
+    try {
+      profile = await dbUtils.getUserProfile(userId);
+      if (!profile) {
+        console.log(`Creating user profile for badges for ${userId}`);
+        const profileData = {
+          displayName: req.user.name || 'Hiker',
+          email: req.user.email || '',
+          bio: '',
+          location: '',
+          joinDate: new Date().toISOString(),
+          badges: [],
+          goals: [],
+          preferences: {
+            units: 'metric',
+            privacy: 'friends'
+          }
+        };
+        await dbUtils.createUserProfile(userId, profileData);
+        profile = profileData;
+      }
+    } catch (error) {
+      console.error(`Error with user profile for badges for ${userId}:`, error);
+      profile = { badges: [] };
+    }
+    
+    const earnedBadges = profile?.badges || [];
+    const allBadges = BADGE_RULES.map(rule => {
+      const isEarned = earnedBadges.some(badge => badge.name === rule.name);
+      
+      // Calculate progress and progress text based on rule type
+      let progress = 0;
+      let progressText = "Not started";
+      
+      if (isEarned) {
+        progress = 100;
+        progressText = "Completed";
+      } else {
+        // Calculate progress based on current stats
+        if (rule.name === "First Steps") {
+          progress = Math.min((stats.totalHikes || 0) * 100, 100);
+          progressText = `${stats.totalHikes || 0}/1 hikes`;
+        } else if (rule.name === "Distance Walker") {
+          progress = Math.min(((stats.totalDistance || 0) / 100) * 100, 100);
+          progressText = `${stats.totalDistance || 0}/100 km`;
+        } else if (rule.name === "Peak Collector") {
+          progress = Math.min(((stats.totalPeaks || 0) / 10) * 100, 100);
+          progressText = `${stats.totalPeaks || 0}/10 peaks`;
+        } else if (rule.name === "Trail Explorer") {
+          progress = Math.min(((stats.uniqueTrails || 0) / 25) * 100, 100);
+          progressText = `${stats.uniqueTrails || 0}/25 trails`;
+        } else {
+          // For binary badges (Early Bird, Endurance Master)
+          progress = rule.check(stats) ? 100 : 0;
+          progressText = rule.check(stats) ? "Completed" : "Not achieved";
+        }
+      }
+      
+      return {
+        id: rule.name.toLowerCase().replace(/\s+/g, '-'),
+        name: rule.name,
+        description: rule.description,
+        icon: rule.icon || "🏆",
+        category: rule.category || "achievement",
+        earned: isEarned,
+        progress: progress,
+        progressText: progressText,
+        earnedDate: isEarned ? (() => {
+          const badge = earnedBadges.find(badge => badge.name === rule.name);
+          if (!badge?.earnedDate) return null;
+          
+          // Convert Firestore Timestamp to ISO string
+          if (badge.earnedDate.toDate && typeof badge.earnedDate.toDate === 'function') {
+            return badge.earnedDate.toDate().toISOString();
+          }
+          // If it's already a Date object
+          else if (badge.earnedDate instanceof Date) {
+            return badge.earnedDate.toISOString();
+          }
+          // If it has seconds property (Firestore Timestamp)
+          else if (badge.earnedDate.seconds) {
+            return new Date(badge.earnedDate.seconds * 1000).toISOString();
+          }
+          // Return as is if it's already a string or other format
+          else {
+            return badge.earnedDate;
+          }
+        })() : null
+      };
+    });
+    
+    res.json({ success: true, data: allBadges, count: allBadges.length });
+  } catch (error) {
+    console.error('Error fetching user badges:', error);
+    res.status(500).json({ error: 'Failed to fetch badges', details: error.message });
+  }
+});
+
 // Get user by ID (public route, but with optional auth for additional info)
 router.get('/:uid', async (req, res) => {
   try {
     const { uid } = req.params;
+
 
     // Get user document
     const userDoc = await db.collection('users').doc(uid).get();
@@ -122,6 +322,7 @@ router.get('/:uid', async (req, res) => {
 
   //  const achievements = achievementsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   //  const goals = goalsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
     const hikes = hikesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
     // Construct response
@@ -134,12 +335,14 @@ router.get('/:uid', async (req, res) => {
       longitude: userData.longitude || null,
       photoURL: userData.photoURL || null,
       preferences: userData.preferences || null,
+
       friends: userData.friends || null,
       stats: userData.stats || null,
       createdAt: userData.createdAt || null,
 
      // achievements,
      // goals,
+
       hikes,
     };
 
@@ -147,6 +350,7 @@ router.get('/:uid', async (req, res) => {
   } catch (error) {
     console.error('Get user error:', error);
     res.status(500).json({ error: 'Something went wrong' });
+
   }
 });
 
@@ -159,11 +363,90 @@ router.get("/profile", async (req, res) => {
   }
 });
 
+ 
+
+// Search users (public route) - Basic implementation
+router.get('/search', async (req, res) => {
+  try {
+    const { q, location, difficulty } = req.query;
+
+    // Get database instance
+    const db = getDatabase();
+    let query = db.collection('users');
+
+    // Apply basic filters (Note: Firestore has limitations with text search)
+    if (location) {
+      query = query.where('location', '==', location);
+    }
+
+    if (difficulty) {
+      query = query.where('preferences.difficulty', '==', difficulty);
+    }
+
+    // Execute query
+    const snapshot = await query.limit(50).get(); // Limit results for performance
+    let users = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    // Client-side filtering for display name if query provided
+    if (q) {
+      const searchTerm = q.toLowerCase();
+      users = users.filter(user => 
+        user.displayName && user.displayName.toLowerCase().includes(searchTerm)
+      );
+    }
+
+    // Remove sensitive information
+    const publicUsers = users.map((user) => ({
+      uid: user.uid,
+      displayName: user.displayName,
+      bio: user.bio,
+      location: user.location,
+      photoURL: user.photoURL,
+      preferences: user.preferences,
+      stats: user.stats,
+    }));
+
+    res.json(publicUsers);
+  } catch (error) {
+    console.error('Search users error:', error);
+    res.status(500).json({
+      error: 'Failed to search users',
+      details: error.message,
+    });
+  }
+});
+
+// Get user achievements (public route)
+router.get('/:uid/achievements', async (req, res) => {
+  try {
+    const { uid } = req.params;
+    const profile = await AuthService.getUserProfile(uid);
+
+    if (!profile) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({
+      uid: profile.uid,
+      displayName: profile.displayName,
+      achievements: profile.stats.achievements || [],
+      totalHikes: profile.stats.totalHikes || 0,
+      totalDistance: profile.stats.totalDistance || 0,
+      totalElevation: profile.stats.totalElevation || 0,
+    });
+  } catch (error) {
+    console.error('Get achievements error:', error);
+    res.status(404).json({
+      error: 'User not found',
+    });
+  }
+});
 
 // Search users (public route)
 router.get('/search', async (req, res) => {
   try {
-    const { q, location, difficulty } = req.query;
+
+    const { q, location } = req.query;
 
     let conditions = [];
 
@@ -206,10 +489,180 @@ router.get('/search', async (req, res) => {
     }));
 
     res.json(publicUsers);
+
+    const { uid } = req.params;
+    const { limit = 10, offset = 0, status, difficulty } = req.query;
+
+    // Build filters object
+    const filters = {};
+    if (status) filters.status = status;
+    if (difficulty) filters.difficulty = difficulty;
+
+    // Query hikes for this user using dbUtils
+    const hikes = await dbUtils.getUserHikes(uid, filters);
+
+    // Apply pagination (hikes are already sorted by createdAt desc in dbUtils)
+    const startIndex = parseInt(offset);
+    const endIndex = startIndex + parseInt(limit);
+    const paginatedHikes = hikes.slice(startIndex, endIndex);
+
+    res.json({
+      hikes: paginatedHikes,
+      total: hikes.length,
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+    });
+
   } catch (error) {
     console.error('Search users error:', error);
     res.status(500).json({
       error: 'Failed to search users',
+      details: error.message,
+    });
+  }
+});
+
+// Get user planned hikes (public route)
+router.get('/:uid/planned-hikes', async (req, res) => {
+  try {
+    const { uid } = req.params;
+    const { limit = 10, offset = 0, status, difficulty } = req.query;
+
+    // Build filters object
+    const filters = {};
+    if (status) filters.status = status;
+    if (difficulty) filters.difficulty = difficulty;
+
+    // Query planned hikes for this user
+    const plannedHikes = await dbUtils.getUserPlannedHikes(uid, filters);
+
+    // Apply pagination
+    const startIndex = parseInt(offset);
+    const endIndex = startIndex + parseInt(limit);
+    const paginatedHikes = plannedHikes.slice(startIndex, endIndex);
+
+    res.json({
+      plannedHikes: paginatedHikes,
+      total: plannedHikes.length,
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+    });
+  } catch (error) {
+    console.error('Get planned hikes error:', error);
+    res.status(500).json({
+      error: 'Failed to get planned hikes',
+      details: error.message,
+    });
+  }
+});
+
+// Get user statistics (public route)
+router.get('/:uid/stats', async (req, res) => {
+  try {
+    const { uid } = req.params;
+    const stats = await dbUtils.getUserHikeStats(uid);
+    res.json(stats);
+  } catch (error) {
+    console.error('Get user stats error:', error);
+    res.status(500).json({
+      error: 'Failed to get user statistics',
+      details: error.message,
+    });
+  }
+});
+
+// Update user profile (protected route)
+
+
+// Delete user account (protected route)
+router.delete('/:uid', verifyAuth, async (req, res) => {
+  try {
+    const { uid } = req.params;
+
+    // Verify the authenticated user matches the requested UID
+    if (req.user.uid !== uid) {
+      return res.status(403).json({
+        error: 'Unauthorized: Cannot delete another user\'s account',
+      });
+    }
+
+    await AuthService.deleteUser(uid);
+
+    res.json({
+      message: 'User account deleted successfully'
+    });
+  } catch (error) {
+    console.error('Delete user error:', error);
+    res.status(500).json({
+      error: 'Failed to delete user account',
+      details: error.message,
+    });
+  }
+});
+
+// Follow user (protected route) - Placeholder implementation
+router.post('/:uid/follow', verifyAuth, async (req, res) => {
+  try {
+    const { uid: targetUid } = req.params;
+    const { uid: followerUid } = req.user;
+
+    if (targetUid === followerUid) {
+      return res.status(400).json({
+        error: 'Cannot follow yourself',
+      });
+    }
+
+    // Check if target user exists
+    const targetProfile = await AuthService.getUserProfile(targetUid);
+    if (!targetProfile) {
+      return res.status(404).json({
+        error: 'User not found',
+      });
+    }
+
+    // TODO: Implement actual following logic
+    // This would typically involve:
+    // 1. Adding to a followers subcollection
+    // 2. Adding to a following subcollection
+    // 3. Updating follower counts
+
+    res.json({
+      message: 'User followed successfully',
+    });
+  } catch (error) {
+    console.error('Follow user error:', error);
+    res.status(500).json({
+      error: 'Failed to follow user',
+      details: error.message,
+    });
+  }
+});
+
+// Unfollow user (protected route) - Placeholder implementation
+router.delete('/:uid/follow', verifyAuth, async (req, res) => {
+  try {
+    const { uid: targetUid } = req.params;
+    const { uid: followerUid } = req.user;
+
+    if (targetUid === followerUid) {
+      return res.status(400).json({
+        error: 'Cannot unfollow yourself',
+      });
+    }
+
+    // TODO: Implement actual unfollowing logic
+    // This would typically involve:
+    // 1. Removing from followers subcollection
+    // 2. Removing from following subcollection
+    // 3. Updating follower counts
+
+    res.json({
+      message: 'User unfollowed successfully',
+    });
+  } catch (error) {
+    console.error('Unfollow user error:', error);
+    res.status(500).json({
+      error: 'Failed to unfollow user',
       details: error.message,
     });
   }

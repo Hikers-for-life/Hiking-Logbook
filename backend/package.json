@@ -19,9 +19,22 @@
     "deploy": "firebase deploy --only functions",
     "add-test-hike": "node scripts/add-test-hike.js"
   },
+
+  "jest": {
+    "testEnvironment": "node",
+    "roots": ["<rootDir>/tests"],           
+    "collectCoverage": true,
+    "collectCoverageFrom": [
+      "src/**/*.js",                        
+      "!src/**/index.js"                     
+    ],
+    "coverageDirectory": "coverage"
+  },
+
   "keywords": [
     "hiking",
     "logbook",
+    "planning",
     "api",
     "firebase",
     "express"
@@ -39,7 +52,10 @@
     "firebase-admin": "^12.0.0",
     "firebase-functions": "^6.4.0",
     "helmet": "^7.2.0",
-    "morgan": "^1.10.1"
+
+    "morgan": "^1.10.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
 
   },
   "devDependencies": {

@@ -12,6 +12,8 @@ import Signup from './pages/Signup.jsx';
 import LoginPage from './components/auth/loginPage.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Friends from './pages/Friends.jsx';
+import  {Toaster}  from "./components/ui/toaster.jsx"
+import Achievements from './pages/Achievements.jsx';
 
 import { API_BASE } from './api/api.js';//ANNAH
 
@@ -66,13 +68,7 @@ const App = () => {
           path="/achievements"
           element={
             <ProtectedRoute>
-              <div className="min-h-screen bg-background flex items-center justify-center">
-                <div className="text-center">
-                  <h1 className="text-4xl font-bold text-foreground mb-4">Achievements</h1>
-                  <p className="text-muted-foreground">Create/view/edit goals • Pin hikes • Visualize progress with charts</p>
-                  <p className="text-muted-foreground mt-2">Coming soon in next sprint!</p>
-                </div>
-              </div>
+              <Achievements />
             </ProtectedRoute>
           }
         />

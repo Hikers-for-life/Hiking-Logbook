@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { useAuth } from '../../contexts/AuthContext.jsx';
+import { userApiService } from '../../services/userService.js';
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,6 +16,9 @@ import { User, Settings, LogOut, Trash2 } from 'lucide-react';
 
 export const ProfileDropdown = ({ onLogout, onViewProfile, onEditProfile}) => {
 const [profile, setProfile] = useState(null);
+
+const [isDeleting, setIsDeleting] = useState(false);
+
  const { currentUser, getUserProfile } = useAuth();
 
   useEffect(() => {
@@ -26,9 +31,7 @@ const [profile, setProfile] = useState(null);
       if (!res.ok) throw new Error("Failed to fetch profile");
       const data = await res.json();
       setProfile(data);  // now profile has bio, location, createdAt
-    
-      
-      
+
     } catch (err) {
       console.error(err);
     }
@@ -37,6 +40,47 @@ const [profile, setProfile] = useState(null);
   fetchProfile();
 }, [currentUser]);
 
+
+  const handleDeleteAccount = async () => {
+    // First confirmation
+    const firstConfirm = window.confirm(
+      "Are you sure you want to delete your account? This action cannot be undone and will permanently remove all your data including hikes, plans, and profile information."
+    );
+    
+    if (!firstConfirm) return;
+
+    // Second confirmation with typing requirement
+    const confirmText = prompt(
+      'To confirm account deletion, please type "DELETE MY ACCOUNT" (in all caps):'
+    );
+    
+    if (confirmText !== "DELETE MY ACCOUNT") {
+      if (confirmText !== null) { // User didn't cancel
+        alert("Confirmation text did not match. Account deletion cancelled.");
+      }
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+      
+      // Call the delete account API
+      await userApiService.deleteAccount(currentUser.uid);
+      
+      // Sign out the user from Firebase
+      await onLogout();
+      
+      // Navigate to home page with success message
+      // You can use React Router's navigate or window.location
+      window.location.href = '/?deleted=true';
+      
+    } catch (error) {
+      console.error('Failed to delete account:', error);
+      alert(`Failed to delete account: ${error.message}. Please try again or contact support.`);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   
   const user = {
@@ -89,9 +133,13 @@ const [profile, setProfile] = useState(null);
             <span>Edit Profile</span>
           </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="cursor-pointer text-destructive hover:bg-destructive/10 hover:text-destructive">
+        <DropdownMenuItem 
+          className="cursor-pointer text-destructive hover:bg-destructive/10 hover:text-destructive"
+          onClick={handleDeleteAccount}
+          disabled={isDeleting}
+        >
           <Trash2 className="mr-2 h-4 w-4" />
-          <span>Delete Account</span>
+          <span>{isDeleting ? 'Deleting...' : 'Delete Account'}</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem

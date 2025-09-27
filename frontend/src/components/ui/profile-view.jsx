@@ -4,23 +4,25 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { Link } from "react-router-dom";
+
 import { Badge } from '../ui/badge';
 import { useEffect, useState, useCallback } from "react";
 import { getUserHikeCount } from "../../services/userServices";
 import { hikeApiService } from "../../services/hikeApiService.js";
 import { getUserStats } from "../../services/statistics";
+
 import { 
-  Calendar, 
   MapPin, 
   Mountain, 
-  Clock, 
   UserPlus, 
-  MessageCircle, 
   Target, 
+  Clock,
+  Calendar,
   Award, 
   Medal, 
   TrendingUp 
   
+
 } from 'lucide-react';
 
 function formatDate(date) {
@@ -44,10 +46,12 @@ function formatDate(date) {
 }
 
 
+
 export const ProfileView = ({ open, onOpenChange, showAddFriend = false }) => {
   const { currentUser } = useAuth();
 
   const [recentHikes, setRecentHikes] = useState([]);
+
   const [userStats, setUserStats] = useState({
     totalDistance: 0,
     totalElevation: 0,
@@ -202,6 +206,8 @@ if (profile?.createdAt) {
 
 
 
+ 
+
   const user = {
     name: profile?.displayName || "No name",
     email: profile?.email || "No email",
@@ -209,16 +215,16 @@ if (profile?.createdAt) {
     location: profile?.location || "Not set",
     bio: profile?.bio || "No bio yet",
     stats: {
+
     totalHikes: profile?.stats?.totalHikes || 0,
     totalDistance: profile?.stats?.totalDistance || 0,
     totalElevation: profile?.stats?.totalElevation || 0,
    // achievements: achievements.length || profile?.stats?.achievementsCount || 0,
   },
 
-
-   
     recentHikes: recentHikes, // from state
    
+
   };
 
   return (
@@ -257,7 +263,7 @@ if (profile?.createdAt) {
               
               <p className="text-foreground">{user.bio}</p>
               
-              
+
             </div>
           </div>
 
@@ -265,26 +271,34 @@ if (profile?.createdAt) {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Card>
               <CardContent className="p-4 text-center">
+
                 <p className="text-2xl font-bold text-foreground">{hikeCount}</p>
+
                 <p className="text-sm text-muted-foreground">Total Hikes</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4 text-center">
+
                 <p className="text-2xl font-bold text-forest">{userStats.totalDistance} miles</p>
+
                 <p className="text-sm text-muted-foreground">Distance</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4 text-center">
+
                <p className="text-2xl font-bold text-foreground">{userStats.totalElevation} ft</p>
+
                 <p className="text-sm text-muted-foreground">Elevation</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4 text-center">
+
               <p className="text-2xl font-bold text-trail">0</p>
-                <p className="text-sm text-muted-foreground">Achievements</p>
+
+      <p className="text-sm text-muted-foreground">Achievements</p>
               </CardContent>
             </Card>
           </div>
@@ -298,6 +312,7 @@ if (profile?.createdAt) {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+
         
               <p className="text-muted-foreground">No goals set yet</p>
             
@@ -314,6 +329,7 @@ if (profile?.createdAt) {
               </CardTitle>
             </CardHeader>
             <CardContent>
+
             <div className="grid md:grid-cols-2 gap-4">
               
                 <p className="text-muted-foreground col-span-2">No achievements to display</p>
@@ -384,13 +400,12 @@ if (profile?.createdAt) {
           {/* Action Buttons */}
           <div className="flex gap-3 pt-4">
             <Link to="/edit-profile" className="flex-1" >
+
               <Button className="w-full bg-gradient-trail text-primary-foreground">
                 Edit Profile
               </Button>
             </Link>
-            <Button variant="outline" className="flex-1">
-              View All Hikes
-            </Button>
+
           </div>
         </div>
       </DialogContent>
