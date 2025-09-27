@@ -28,6 +28,9 @@ import {
   Share
 } from "lucide-react";
 
+import { createFeed } from "../services/feed";
+
+
 // Simple Progress Update Form Component
 const ProgressUpdateForm = ({ goal, onSubmit, onCancel }) => {
   const [newProgress, setNewProgress] = useState(goal?.progress || 0);
@@ -539,26 +542,53 @@ const Achievements = () => {
   };
 
   // Handler for sharing achievements
-  const handleShareAchievement = (achievement) => {
-    const shareMessage = `🎉 Achievement Unlocked: ${achievement.title}! ${achievement.description}`;
-    
-    // Try to use the Web Share API if available
+const handleShareAchievement = async (achievement) => {
+  const shareMessage = `🎉 Achievement Unlocked: ${achievement.title}! ${achievement.description || ""}`;
+
+  try {
+    // Create activity post for achievement (server attaches user info)
+    const postBody = {
+      action: "achieved",
+      hike: achievement.title, // backend uses 'hike' string field; reuse it for title
+      description: achievement.description || "",
+      stats: achievement.progressText || "",
+      photo: achievement.icon || null,
+    };
+
+    const created = await createFeed(postBody);
+    console.log("Achievement posted to feed:", created);
+
+    // Then do the client-side sharing UX (Web Share API / clipboard)
     if (navigator.share) {
-      navigator.share({
-        title: 'Hiking Achievement',
+      await navigator.share({
+        title: "Hiking Achievement",
         text: shareMessage,
-        url: window.location.href
-      }).catch(console.error);
-    } else {
-      // Fallback to copying to clipboard
-      navigator.clipboard.writeText(shareMessage).then(() => {
-        alert('Achievement copied to clipboard! You can now share it with your friends.');
-      }).catch(() => {
-        // Final fallback
-        alert(`Share this achievement:\n\n${shareMessage}`);
+        url: window.location.href,
       });
+    } else {
+      await navigator.clipboard.writeText(shareMessage);
+      alert("Achievement copied to clipboard! You can now share it with your friends.");
     }
-  };
+  } catch (err) {
+    console.error("Failed to share achievement:", err);
+    // Optional fallback UX: still attempt Web Share or clipboard
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: "Hiking Achievement",
+          text: shareMessage,
+          url: window.location.href,
+        });
+      } else {
+        await navigator.clipboard.writeText(shareMessage);
+        alert("Achievement copied to clipboard! You can now share it with your friends.");
+      }
+    } catch (e) {
+      console.error("Secondary sharing fallback failed:", e);
+    }
+  }
+};
+
 
   if (loading) {
     return (

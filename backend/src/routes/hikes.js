@@ -263,6 +263,55 @@ router.put('/:id', async (req, res) => {
   }
 });
 
+router.put('/:id/complete', async (req, res) => {
+  try {
+    const userId = req.user.uid;
+    const hikeId = req.params.id;
+    const endData = req.body;
+
+    // Get the hike first to check if it's from a planned hike
+    const hike = await dbUtils.getHike(userId, hikeId);
+    
+    if (!hike) {
+      return res.status(404).json({
+        success: false,
+        error: 'Hike not found'
+      });
+    }
+
+    // Complete the hike
+    const completeResult = await dbUtils.completeHike(userId, hikeId, endData);
+    
+    if (completeResult.success) {
+      // If this hike was started from a planned hike, delete the planned hike
+      if (hike.plannedHikeId) {
+        try {
+          await dbUtils.deletePlannedHike(userId, hike.plannedHikeId);
+          console.log(`Planned hike ${hike.plannedHikeId} deleted after hike completion`);
+        } catch (err) {
+          console.error('Failed to delete planned hike:', err);
+          // Don't fail the entire operation if planned hike deletion fails
+        }
+      }
+    }
+    
+    res.json({
+      success: true,
+      data: completeResult,
+      message: hike.plannedHikeId ? 
+        'Hike completed and planned hike removed successfully' : 
+        'Hike completed successfully'
+    });
+
+  } catch (error) {
+    console.error('Error completing hike:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
 // DELETE /api/hikes/:id - Delete a hike
 router.delete('/:id', async (req, res) => {
   try {

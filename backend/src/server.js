@@ -10,11 +10,12 @@ import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
 import hikeRoutes from './routes/hikes.js';
-
 import feedRoutes from './routes/feed.js';
 import discoverRoutes from './routes/discover.js';
 import goalsRoutes from './routes/goals.js';
 import friendRoutes from "./routes/friends.js";
+import plannedHikeRoutes from './routes/plannedHikes.js';
+import gearRoutes from './routes/gear.js';
 
 
 dotenv.config();
@@ -92,6 +93,8 @@ app.use("/api/friends", friendRoutes);
 app.use('/api/feed', feedRoutes);
 app.use('/api/discover', discoverRoutes);
 app.use('/api/goals', goalsRoutes);
+app.use('/api/planned-hikes', plannedHikeRoutes); 
+app.use('/api/gear', gearRoutes);
 
 
 // Global error handler
@@ -148,8 +151,8 @@ app.use((error, req, res,next) => {
 //  Wrap server startup in async function
 const startServer = async () => {
   try {
-   
     await initializeFirebase();
+    
     
     const server = app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
@@ -162,6 +165,8 @@ const startServer = async () => {
       console.log(`Discover API: http://localhost:${PORT}/api/discover`);
       console.log(`Goals API: http://localhost:${PORT}/api/goals`);
       console.log(`Friends API: http://localhost:${PORT}/api/friends`);
+      console.log(`Planned Hikes API: http://localhost:${PORT}/api/planned-hikes`); 
+      console.log(`Gear API: http://localhost:${PORT}/api/gear`);
     });
     
    process.on('SIGTERM', () => {

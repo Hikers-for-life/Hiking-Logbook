@@ -19,9 +19,22 @@
     "deploy": "firebase deploy --only functions",
     "add-test-hike": "node scripts/add-test-hike.js"
   },
+
+  "jest": {
+    "testEnvironment": "node",
+    "roots": ["<rootDir>/tests"],           
+    "collectCoverage": true,
+    "collectCoverageFrom": [
+      "src/**/*.js",                        
+      "!src/**/index.js"                     
+    ],
+    "coverageDirectory": "coverage"
+  },
+
   "keywords": [
     "hiking",
     "logbook",
+    "planning",
     "api",
     "firebase",
     "express"

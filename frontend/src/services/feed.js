@@ -11,6 +11,27 @@ async function getToken() {
   return await user.getIdToken();
 }
 
+// ---- Create a Feed Post ----
+export async function createFeed(postData) {
+  // postData should include at least: { action, hike, description?, stats?, photo? }
+  const token = await getToken();
+  const res = await fetch(`${API_URL}/feed`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: token ? `Bearer ${token}` : "",
+    },
+    body: JSON.stringify(postData),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Failed to create feed: ${res.status} ${errText}`);
+  }
+
+  return res.json(); // returns created activity object (backend returns id + fields)
+}
+
 // ---- Fetch Feed (Unified: posts, hikes, achievements, shares) ----
 export async function fetchFeed(page = 1, limit = 10) {
   const token = await getToken();

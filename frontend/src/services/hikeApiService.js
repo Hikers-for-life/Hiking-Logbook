@@ -62,6 +62,16 @@ export const hikeApiService = {
     return makeAuthenticatedRequest(endpoint);
   },
 
+  async startHikeFromPlanned(plannedHikeId, additionalData = {}) {
+    try {
+      // Import planned hike service
+      const { plannedHikeApiService } = await import('./plannedHikesService.js');
+      return await plannedHikeApiService.startPlannedHike(plannedHikeId, additionalData);
+    } catch (error) {
+      console.error('Failed to start hike from planned:', error);
+      throw error;
+    }
+  },
   // Get user hiking statistics
   async getStats() {
     return makeAuthenticatedRequest('/hikes/stats');

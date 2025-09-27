@@ -12,6 +12,9 @@ import RouteMapModal from "../components/RouteMapModal";
 import { MapPin, Clock, Mountain, Thermometer, Plus, Search, Map, Play, Trash2, Edit3, Pin, PinOff, Share2, Share } from "lucide-react";
 import { hikeApiService } from "../services/hikeApiService.js";
 import { useAuth } from "../contexts/AuthContext.jsx";
+import {  createFeed} from "../services/feed";
+import { getFirestore, doc, getDoc } from "firebase/firestore";
+
 
 const Logbook = () => {
   const { currentUser: user } = useAuth();
@@ -30,6 +33,15 @@ const Logbook = () => {
   // Hike entries from database
   const [hikeEntries, setHikeEntries] = useState([]);
 
+  // Real-time stats state
+  const [hikeStats, setHikeStats] = useState({
+    totalHikes: 0,
+    totalDistance: 0,
+    totalElevation: 0,
+    statesExplored: 0
+  });
+
+
   // API functions for loading data
   const loadHikes = useCallback(async (searchTerm = '', difficultyFilter = 'All') => {
     if (!user) {
@@ -46,7 +58,8 @@ const Logbook = () => {
       if (difficultyFilter !== 'All') filters.difficulty = difficultyFilter;
       
       const response = await hikeApiService.getHikes(filters);
-      console.log("📦 API Response:", response);
+      
+
       if (response.success) {
         
         // Convert Firestore timestamps to readable dates and ensure all fields are safe for React
@@ -71,6 +84,7 @@ const Logbook = () => {
         }));
         
         setHikeEntries(processedHikes);
+        
       } else {
         setError('Failed to load hikes from server.');
       }
@@ -88,6 +102,21 @@ const Logbook = () => {
   useEffect(() => {
     if (user) {
       loadHikes();
+      
+      // Check if we have active hike data from a planned hike
+      const activeHikeData = localStorage.getItem('activeHikeData');
+      if (activeHikeData) {
+        try {
+          const parsedData = JSON.parse(activeHikeData);
+          setActiveHikeMode(true);
+          setCurrentActiveHike(parsedData);
+          // Clear the localStorage data
+          localStorage.removeItem('activeHikeData');
+        } catch (err) {
+          console.error('Failed to parse active hike data:', err);
+          localStorage.removeItem('activeHikeData');
+        }
+      }
     } else {
       setIsLoading(false);
     }
@@ -115,54 +144,30 @@ const Logbook = () => {
     setIsRouteMapOpen(true);
   };
 
-  // Handler for starting active hike tracking
-  const handleStartActiveHike = async (formData) => {
-    try {
-      const hikeData = {
-        title: formData?.title || 'New Hike',
-        location: formData?.location || 'Unknown Location',
-        date: formData?.date || new Date().toISOString().split('T')[0],
-        weather: formData?.weather || '',
-        difficulty: formData?.difficulty || 'Easy',
-        notes: formData?.notes || '',
-        status: 'active'
-      };
-      
-      
-      const response = await hikeApiService.startHike(hikeData);
-      if (response.success) {
-        setActiveHikeMode(true);
-        setCurrentActiveHike({
-          id: response.data.id,
-          startTime: new Date(),
-          status: 'active',
-          ...hikeData  // Include the form data
-        });
-      }
-    } catch (err) {
-      console.error('Failed to start hike:', err);
-      setError('Failed to start hike. Please try again.');
-      // Fallback to local mode if API fails
-      setActiveHikeMode(true);
-      setCurrentActiveHike({
-        id: Date.now(),
-        startTime: new Date(),
-        status: 'active',
-        ...(formData || {})  // Include form data in fallback too
-      });
-    }
-  };
-
   // Handler for completing active hike
+
   const handleCompleteActiveHike = async (hikeData) => {
     try {
       const endData = {
         ...hikeData,
       };
       
-      const response = await hikeApiService.completeHike(currentActiveHike.id, endData);
+      const response = await hikeApiService.completeHike(currentActiveHike.id || currentActiveHike.activeHikeId, endData);
       
       if (response.success) {
+        // If this hike was started from a planned hike, delete the planned hike
+        if (currentActiveHike.plannedHikeId) {
+          try {
+            // Import the planned hike service
+            const { plannedHikeApiService } = await import('../services/plannedHikesService.js');
+            await plannedHikeApiService.deletePlannedHike(currentActiveHike.plannedHikeId);
+            console.log('Planned hike deleted successfully');
+          } catch (err) {
+            console.error('Failed to delete planned hike:', err);
+            // Don't fail the entire operation if planned hike deletion fails
+          }
+        }
+        
         // Refresh the entire list from server to ensure consistency
         await loadHikes();
         setActiveHikeMode(false);
@@ -174,13 +179,53 @@ const Logbook = () => {
       // Fallback to local completion if API fails
       const completedHike = {
         ...hikeData,
-        id: currentActiveHike.id,
+        id: currentActiveHike.id || currentActiveHike.activeHikeId,
+        photos: 0,
       };
       setHikeEntries(prev => [completedHike, ...prev]);
       setActiveHikeMode(false);
       setCurrentActiveHike(null);
     }
   };
+
+// Updated handleStartActiveHike to handle both manual starts and planned hike data
+const handleStartActiveHike = async (formData) => {
+  try {
+    const hikeData = {
+      title: formData?.title || 'New Hike',
+      location: formData?.location || 'Unknown Location',
+      weather: formData?.weather || '',
+      difficulty: formData?.difficulty || 'Easy',
+      notes: formData?.notes || '',
+      status: 'active',
+      ...(formData?.plannedHikeId && { plannedHikeId: formData.plannedHikeId })
+    };
+    
+    console.log('Starting hike with data:', hikeData);
+    
+    const response = await hikeApiService.startHike(hikeData);
+    if (response.success) {
+      setActiveHikeMode(true);
+      setCurrentActiveHike({
+        id: response.data.id,
+        startTime: new Date(),
+        status: 'active',
+        ...hikeData  // Include the form data
+      });
+    }
+  } catch (err) {
+    console.error('Failed to start hike:', err);
+    setError('Failed to start hike. Please try again.');
+    // Fallback to local mode if API fails
+    setActiveHikeMode(true);
+    setCurrentActiveHike({
+      id: Date.now(),
+      startTime: new Date(),
+      status: 'active',
+      ...(formData || {})  // Include form data in fallback too
+    });
+  }
+};
 
   // Handler for saving active hike progress
   const handleSaveActiveHike = (hikeData) => {
@@ -272,31 +317,44 @@ const Logbook = () => {
   };
 
   // Handler for sharing/unsharing hikes
-  const handleShareHike = async (hikeId) => {
-    try {
-      const hike = hikeEntries.find(h => h.id === hikeId);
-      const isShared = hike?.shared === true;
-      
-      if (isShared) {
-        // Unshare the hike
-        await hikeApiService.unshareHike(hikeId);
-        // Update local state
-        setHikeEntries(prev => prev.map(h => 
-          h.id === hikeId ? { ...h, shared: false } : h
-        ));
-      } else {
-        // Share the hike
-        await hikeApiService.shareHike(hikeId);
-        // Update local state
-        setHikeEntries(prev => prev.map(h => 
-          h.id === hikeId ? { ...h, shared: true } : h
-        ));
-      }
-    } catch (error) {
-      console.error('Failed to share/unshare hike:', error);
-      setError('Failed to share/unshare hike. Please try again.');
-    }
-  };
+// Handler for sharing/unsharing hikes
+const handleShareHike = async (hikeId) => {
+  try {
+    // 1️⃣ Always get the latest hike from backend (real source of truth)
+    const { success, data: hike } = await hikeApiService.getHike(hikeId);
+    if (!success || !hike) throw new Error("Hike not found or fetch failed");
+
+    // 2️⃣ Mark hike as shared (flip the `shared: true` flag)
+    await hikeApiService.shareHike(hikeId);
+
+    // 3️⃣ Create a feed post with REAL hike data
+    const result = await createFeed({
+      action: "completed a hike",
+      hike: hike.title || hike.name || "Untitled Hike",
+      description: hike.notes || hike.description || "",
+      stats: `${hike.distance || "0 mi"} • ${hike.elevation || "0 ft"} • ${hike.duration || "0s"}`,
+      photo: hike.photo || null,
+      hikeId: hike.id || hikeId,
+
+      // ✅ Include sharer info if present in the hike doc
+      userId: hike.userId || hike.ownerId || null,
+      userName: hike.userName || hike.ownerName || user?.displayName || user?.email || "Anonymous",
+      userAvatar: hike.userAvatar || null,
+    });
+
+    console.log("✅ Original feed post created:", result);
+
+    // 4️⃣ Update UI state so it reflects shared status
+    setHikeEntries((prev) =>
+      prev.map((h) => (h.id === hikeId ? { ...h, shared: true } : h))
+    );
+  } catch (err) {
+    console.error("❌ Failed to share hike:", err);
+    setError("Failed to share/unshare hike. Please try again.");
+  }
+};
+
+
 
   // Check if a hike is pinned
   const isHikePinned = (hikeId) => {
@@ -422,7 +480,6 @@ const Logbook = () => {
             </Button>
           </div>
         </div>
-
 
         {/* Hike Entries */}
         <div className="space-y-6">
