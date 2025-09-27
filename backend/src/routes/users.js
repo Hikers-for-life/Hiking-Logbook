@@ -72,6 +72,37 @@ router.post('/create-profile', verifyAuth, async (req, res) => {
     });
   }
 });
+router.get("/:uid/stats", async (req, res) => {
+  try {
+    const { uid } = req.params;
+    const hikesRef = admin.firestore().collection("users").doc(uid).collection("hikes");
+    const snapshot = await hikesRef.get();
+
+    let totalDistance = 0;
+    let totalElevation = 0;
+
+    snapshot.forEach(doc => {
+      const data = doc.data();
+
+      // strip last 2 chars ("km", "ft", etc.)
+      const distance = parseFloat((data.distance || "0").slice(0, -2)) || 0;
+      const elevation = parseFloat((data.elevation || "0").slice(0, -2)) || 0;
+
+      totalDistance += distance;
+      totalElevation += elevation;
+    });
+
+    res.json({
+      success: true,
+      totalDistance,
+      totalElevation,
+    });
+  } catch (err) {
+    console.error("Error fetching user stats:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 
 // Get current user profile (protected route)
 router.get("/profile", verifyAuth, async (req, res) => {
@@ -278,7 +309,7 @@ router.get('/:uid', async (req, res) => {
     }
 
     // Fetch subcollections using direct database access
-    const db = getDatabase();
+    //const db = admin.database();
     const hikesSnap = await db.collection('users').doc(uid).collection('hikes').get();
     const hikes = hikesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 

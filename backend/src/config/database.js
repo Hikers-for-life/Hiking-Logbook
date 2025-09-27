@@ -39,6 +39,73 @@ export const dbUtils = {
       return null;
     }
   },
+   // -----------------------
+  // Generic CRUD
+  // -----------------------
+ 
+  async create(collection, docId, data) {
+    try {
+      await db
+        .collection(collection)
+        .doc(docId)
+        .set({
+          ...data,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+      return { success: true, id: docId };
+    } catch (error) {
+      throw new Error(`Failed to create document: ${error.message}`);
+    }
+  },
+
+  async getById(collection, docId) {
+    try {
+      const doc = await db.collection(collection).doc(docId).get();
+      if (!doc.exists) {
+        return null;
+      }
+      return { id: doc.id, ...doc.data() };
+    } catch (error) {
+      throw new Error(`Failed to get document: ${error.message}`);
+    }
+  },
+  async update(collection, docId, data) {
+    try {
+      await db
+        .collection(collection)
+        .doc(docId)
+        .update({
+          ...data,
+          updatedAt: new Date(),
+        });
+      return { success: true };
+    } catch (error) {
+      throw new Error(`Failed to update document: ${error.message}`);
+    }
+  },
+
+  async query(collection, conditions = []) {
+    try {
+      let query = db.collection(collection);
+
+      conditions.forEach(({ field, operator, value }) => {
+        query = query.where(field, operator, value);
+      });
+
+      const snapshot = await query.get();
+      const docs = [];
+
+      snapshot.forEach((doc) => {
+        docs.push({ id: doc.id, ...doc.data() });
+      });
+
+      return docs;
+    } catch (error) {
+      throw new Error(`Failed to query documents: ${error.message}`);
+    }
+  },
+
 
   // -----------------------
   // Planned Hikes

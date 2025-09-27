@@ -15,6 +15,9 @@ import { getFirestore} from "firebase/firestore";
 import { getAuth } from "firebase/auth";//ANNA HERE
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useToast } from "../hooks/use-toast";
+import { getUserStats } from "../services/statistics";
+import { getFriendProfile } from "../services/friendService.js"; 
+
 
 
 import { Search, UserPlus,  MapPin,  TrendingUp, Mountain,Clock,Medal,Users,Share2,Heart,MessageSquare } from "lucide-react";
@@ -36,9 +39,10 @@ const Friends = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [searchError, setSearchError] = useState("");
-  const { currentUser } = useAuth(); 
-  const [friends, setFriends] = useState([]); 
-  const { toast } = useToast();
+   const { currentUser } = useAuth(); 
+   const [friends, setFriends] = useState([]); 
+   const [userStats,setUserStats] = useState([]);
+    const { toast } = useToast();
 
   const handleSearch = async () => {
     if (!searchTerm.trim()) return;
@@ -51,6 +55,43 @@ const Friends = () => {
       setSearchResults(results);
     }
   };
+
+  useEffect(() => {
+  const loadFriendProfiles = async () => {
+    if (!friends.length) return;
+
+    const updatedFriends = await Promise.all(
+      friends.map(async (f) => {
+        const profile = await getFriendProfile(f.id); // pass friend UID
+        if (profile.success) {
+          return {
+            ...f,
+            totalHikes: profile.totalHikes,
+            totalDistance: profile.totalDistance,
+            totalElevation: profile.totalElevation,
+            lastHike: profile.recentHikes[0]?.title || "No hikes yet",
+            lastHikeDate: profile.recentHikes[0]?.date || "",
+          };
+        }
+        return f; // fallback if fetch fails
+      })
+    );
+
+    setFriends(updatedFriends);
+  };
+
+  loadFriendProfiles();
+}, [friends.length]);
+
+
+  useEffect(() => {
+  if (!currentUser) return;
+
+  getUserStats(currentUser.uid).then((stats) => {
+    console.log("User stats:", stats);
+    setUserStats(stats); // { totalDistance: X, totalElevation: Y }
+  });
+}, [currentUser]);
 
   useEffect(() => {
   const fetchFriends = async () => {
@@ -365,6 +406,7 @@ const handleDeletePost = async (activityId) => {
       try {
         setLoading(true);
         const data = await discoverFriends();
+        console.log("suggestion :", data)
         setSuggestions(data);
       } catch (err) {
         console.error("Failed to fetch suggestions:", err);
@@ -435,36 +477,39 @@ const handleDeletePost = async (activityId) => {
               ✕
             </button>
 
-            <div className="flex items-center gap-2 mb-2">
-              <CardHeader className="pb-4">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-12 w-12">
-                    <AvatarFallback className="text-xl">
-                      {(user.displayName || user.name || "??")
-                        .split(" ")
-                        .map((n) => n?.[0] || "")
-                        .join("")}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="font-semibold text-foreground cursor-pointer hover:underline"
-                        onClick={() => handleViewProfile(user, true)}
-                      >
-                        {user.displayName}
-                      </span>
+                <div className="flex items-center gap-2 mb-2">
+                  <CardHeader className="pb-4">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-12 w-12">
+                        <AvatarFallback className="text-xl">
+                          {user.displayName
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="font-semibold text-foreground cursor-pointer hover:underline"
+                            onClick={() => {
+                              const isFriend = friends.some((f) => f.id === user.id); 
+                              handleViewProfile(user, !isFriend); // showAddFriend = false if already friend
+                            }}
+                          >
+                            {user.displayName}
+                          </span>
+                        </div>
+                        <p className="text-sm text-muted-foreground flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          {user.location || "Not yet set"}
+                        </p>
+                      </div>
                     </div>
-                    <p className="text-sm text-muted-foreground flex items-center gap-1">
-                      <MapPin className="h-3 w-3" />
-                      {user.location || "Not yet set"}
-                    </p>
-                  </div>
+                  </CardHeader>
                 </div>
-              </CardHeader>
-            </div>
-          </Card>
-        ))}
+              </Card>
+            ))}
 
 
 
@@ -474,59 +519,53 @@ const handleDeletePost = async (activityId) => {
             <TabsTrigger value="activity">Activity Feed</TabsTrigger>
             <TabsTrigger value="discover">Discover</TabsTrigger>
           </TabsList>
-{/*MY FRIENDS */}
+          {/*MY FRIENDS */}
           <TabsContent value="friends" className="space-y-6">
-  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-    {friends?.length > 0 ? (
-      friends.map((friend) => (
-        <Card key={friend.id} className="bg-card border-border shadow-elevation">
-          <CardHeader className="pb-4">
-            <div className="flex items-center gap-3">
-              <Avatar className="h-12 w-12">
-                <AvatarFallback className="text-l">
-                  {(friend.displayName || friend.name || "??")
-                    .split(" ")
-                    .map((n) => n?.[0] || "")
-                    .join("")}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-semibold text-foreground">{friend.displayName}</h3>
-                  <div
-                    className={`w-2 h-2 rounded-full ${
-                      friend.status === "online" ? "bg-green-500" : "bg-gray-400"
-                    }`}
-                  />
-                </div>
-                <p className="text-sm text-muted-foreground flex items-center gap-1">
-                  <MapPin className="h-3 w-3" />
-                  {friend.location}
-                </p>
-              </div>
-            </div>
-          </CardHeader>
-
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4 text-center">
-              <div>
-                <p className="text-2xl font-bold text-summit">{friend.totalHikes}</p>
-                <p className="text-xs text-muted-foreground">Hikes</p>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-forest">{friend.totalDistance}</p>
-                <p className="text-xs text-muted-foreground">Distance</p>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm">
-                <Mountain className="h-4 w-4 text-trail" />
-                <span className="text-muted-foreground">Last hike:</span>
-              </div>
-              <p className="text-sm font-medium">{friend.lastHike}</p>
-              <p className="text-xs text-muted-foreground">{friend.lastHikeDate}</p>
-            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {friends.map((friend) => (
+                <Card key={friend.id} className="bg-card border-border shadow-elevation">
+                  <CardHeader className="pb-4">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-12 w-12">
+                      <AvatarFallback className="text-l">
+                        {friend.displayName
+                        .split(' ')
+                        .map((n) => n[0])
+                        .join('')}
+                      </AvatarFallback>
+                    </Avatar>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold text-foreground">{friend.displayName}</h3>
+                          <div className={`w-2 h-2 rounded-full ${friend.status === 'online' ? 'bg-green-500' : 'bg-gray-400'}`} />
+                        </div>
+                        <p className="text-sm text-muted-foreground flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          {friend.location || "Not yet set"}
+                        </p>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4 text-center">
+                      <div>
+                        <p className="text-2xl font-bold text-summit">{friend.totalHikes}</p>
+                        <p className="text-xs text-muted-foreground">Hikes</p>
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold text-forest">{friend.totalDistance} miles</p>
+                        <p className="text-xs text-muted-foreground">Distance</p>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Mountain className="h-4 w-4 text-trail" />
+                        <span className="text-muted-foreground">Last hike:</span>
+                      </div>
+                      <p className="text-sm font-medium">{friend.lastHike}</p>
+                      <p className="text-xs text-muted-foreground">{friend.lastHikeDate}</p>
+                    </div>
 
             <Badge variant="secondary" className="text-xs">
               <Medal className="h-3 w-3 mr-1" />
@@ -542,26 +581,22 @@ const handleDeletePost = async (activityId) => {
               View Profile
             </Button>
 
-            <Button
-              variant="destructive"
-              className="w-full"
-              size="sm"
-              onClick={() => handleBlockFriend(friend.id)}
-            >
-              Block Friend
-            </Button>
-          </CardContent>
-        </Card>
-      ))
-    ) : (
-      <p className="text-muted-foreground text-sm col-span-full text-center">
-        You have no friends yet. Add some from the Discover tab!
-      </p>
-    )}
-  </div>
-</TabsContent>
+                    <Button 
+                      variant="destructive" 
+                      className="w-full" 
+                      size="sm"
+                      onClick={() => handleBlockFriend(friend.id)}
+                    >
+                      Block Friend
+                    </Button>
 
-{/*ACTIVITY FEED*/ }
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+
+          {/*ACTIVITY FEED*/ }
           <TabsContent value="activity" className="space-y-6">
             <Card className="bg-card border-border shadow-elevation">
               <CardHeader>
@@ -750,8 +785,8 @@ const handleDeletePost = async (activityId) => {
           </TabsContent>
 
 
-{/*DISCOVER */}
-      {/* DISCOVER */}
+
+        {/* DISCOVER */}
           <TabsContent value="discover" className="space-y-6">
             <Card className="bg-card border-border shadow-elevation">
               <CardHeader>
@@ -771,7 +806,7 @@ const handleDeletePost = async (activityId) => {
                       <div
                         key={suggestion.id}
                         className="flex items-center justify-between p-4 rounded-lg bg-muted hover:bg-muted/80 transition-colors cursor-pointer"
-                        onClick={() => handleViewProfile(suggestion, true)}
+                        onClick={() => handleViewProfile(suggestion.id, true)}
                       >
                         <div className="flex items-center gap-3">
                           <Avatar className="h-12 w-12">
@@ -795,6 +830,7 @@ const handleDeletePost = async (activityId) => {
                           onClick={async (e) => {
                             e.stopPropagation(); // prevent opening profile modal
                             try {
+                              
                               await addFriend(suggestion.id); // ✅ uses service
                               setSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
                               console.log(`Friend ${suggestion.name} added!`);
@@ -803,7 +839,9 @@ const handleDeletePost = async (activityId) => {
                             }
                           }}
                         >
+                           <UserPlus className="h-4 w-4 mr-2" />
                           Add Friend
+                          
                         </Button>
                       </div>
                     ))
