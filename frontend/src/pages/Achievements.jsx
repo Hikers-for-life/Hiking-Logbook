@@ -542,6 +542,7 @@ const Achievements = () => {
   };
 
   // Handler for sharing achievements
+// Handler for sharing achievements
 const handleShareAchievement = async (achievement) => {
   const shareMessage = `🎉 Achievement Unlocked: ${achievement.title}! ${achievement.description || ""}`;
 
@@ -566,26 +567,13 @@ const handleShareAchievement = async (achievement) => {
         url: window.location.href,
       });
     } else {
+      // Fallback to copying to clipboard
       await navigator.clipboard.writeText(shareMessage);
       alert("Achievement copied to clipboard! You can now share it with your friends.");
     }
-  } catch (err) {
-    console.error("Failed to share achievement:", err);
-    // Optional fallback UX: still attempt Web Share or clipboard
-    try {
-      if (navigator.share) {
-        await navigator.share({
-          title: "Hiking Achievement",
-          text: shareMessage,
-          url: window.location.href,
-        });
-      } else {
-        await navigator.clipboard.writeText(shareMessage);
-        alert("Achievement copied to clipboard! You can now share it with your friends.");
-      }
-    } catch (e) {
-      console.error("Secondary sharing fallback failed:", e);
-    }
+  } catch (error) {
+    console.error("Failed to share achievement:", error);
+    alert("Something went wrong while sharing your achievement. Please try again.");
   }
 };
 
@@ -879,8 +867,8 @@ const handleShareAchievement = async (achievement) => {
                         Earned {formatDate(badge.earnedDate)}
                       </div>
                     )}
-                    <div className="flex justify-end gap-2 pt-2">
-                      <Button
+                   <div className="flex justify-end gap-2 pt-2">
+                      {/*<Button
                         variant="ghost"
                         size="sm"
                         className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
@@ -888,7 +876,7 @@ const handleShareAchievement = async (achievement) => {
                       >
                         <Share className="h-3 w-3 mr-1" />
                         Share
-                      </Button>
+                      </Button>*/}
                     </div>
                   </CardContent>
                 </Card>
@@ -918,7 +906,7 @@ const handleShareAchievement = async (achievement) => {
                       Completed {formatDate(goal.earnedDate || goal.updatedAt)}
                     </div>
                     <div className="flex justify-end gap-2 pt-2">
-                      <Button
+                      {/*<Button
                         variant="ghost"
                         size="sm"
                         className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
@@ -926,7 +914,7 @@ const handleShareAchievement = async (achievement) => {
                       >
                         <Share className="h-3 w-3 mr-1" />
                         Share
-                      </Button>
+                      </Button>*/}
                     </div>
                   </CardContent>
                 </Card>

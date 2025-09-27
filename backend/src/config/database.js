@@ -1,16 +1,6 @@
-﻿// config/database.js  (refactored dbUtils - Firestore only)
-// - Consolidates hikes, planned hikes, stats and badge hooks
-// - Always returns consistent objects and includes user info in getHike()
-// - Assumes getDatabase() returns a Firestore-like object used previously in the project
-
-import { getDatabase } from './firebase.js';
+﻿import { getDatabase } from './firebase.js';
 import { evaluateAndAwardBadges } from '../services/badgeService.js';
 
-/**
- * NOTE:
- * - getDatabase() should return the Firestore instance you were using before.
- * - This module expects Firestore-style API: db.collection('...').doc(id).get() etc.
- */
 export const collections = {
   users: 'users',
   hikes: 'hikes',

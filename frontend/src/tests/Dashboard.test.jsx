@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
-import Dashboard from '../pages/Dashboard.jsx';
+import Dashboard from '../pages/Dashboard';
 
 // Mock AuthContext
 jest.mock('../contexts/AuthContext.jsx', () => ({
@@ -64,20 +64,27 @@ describe('Dashboard Component', () => {
   });
 
   test('displays stats with total hikes and distance', async () => {
-    hikeApiService.getHikes.mockResolvedValueOnce([
-      { id: 1, name: 'Trail One', distance: 5, date: '2024-01-01' },
-      { id: 2, name: 'Trail Two', distance: 10, date: '2024-02-01' },
-    ]);
+    hikeApiService.getHikes.mockResolvedValueOnce({
+      success: true,
+      data: [
+        { id: 1, name: 'Trail One', distance: 5, date: '2024-01-01' },
+        { id: 2, name: 'Trail Two', distance: 10, date: '2024-02-01' },
+      ]
+    });
 
     renderDashboard();
 
+    // Wait for loading to complete and stats to be displayed
     expect(await screen.findByText('2')).toBeInTheDocument(); // Total hikes
     expect(await screen.findByText('15 km')).toBeInTheDocument(); // Distance
   });
 
 
   test('shows no hikes message when no hikes exist', async () => {
-    hikeApiService.getHikes.mockResolvedValueOnce([]);
+    hikeApiService.getHikes.mockResolvedValueOnce({
+      success: true,
+      data: []
+    });
 
     renderDashboard();
 
@@ -85,7 +92,10 @@ describe('Dashboard Component', () => {
   });
 
   test('quick action buttons are clickable', async () => {
-    hikeApiService.getHikes.mockResolvedValueOnce([]);
+    hikeApiService.getHikes.mockResolvedValueOnce({
+      success: true,
+      data: []
+    });
 
     renderDashboard();
 
@@ -96,7 +106,10 @@ describe('Dashboard Component', () => {
   });
 
   test('displays achievements placeholder', async () => {
-    hikeApiService.getHikes.mockResolvedValueOnce([]);
+    hikeApiService.getHikes.mockResolvedValueOnce({
+      success: true,
+      data: []
+    });
 
     renderDashboard();
 

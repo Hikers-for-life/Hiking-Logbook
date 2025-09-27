@@ -4,6 +4,7 @@ import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { 
   Play, 
   Pause, 
@@ -40,6 +41,10 @@ const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
   const [currentLocation, setCurrentLocation] = useState(null);
   const [watchId, setWatchId] = useState(null);
   const intervalRef = useRef(null);
+
+  // Accomplishment dialog state
+  const [isAccomplishmentDialogOpen, setIsAccomplishmentDialogOpen] = useState(false);
+  const [accomplishmentText, setAccomplishmentText] = useState("");
 
   // Auto-save timer
   const autoSaveRef = useRef(null);
@@ -208,6 +213,14 @@ const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
       ...prev,
       accomplishments: [...prev.accomplishments, newAccomplishment]
     }));
+  };
+
+  const handleAddAccomplishment = () => {
+    if (accomplishmentText.trim()) {
+      addAccomplishment(accomplishmentText.trim());
+      setAccomplishmentText("");
+      setIsAccomplishmentDialogOpen(false);
+    }
   };
 
   const formatTime = (seconds) => {
@@ -446,10 +459,7 @@ const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
                   Mark Waypoint
                 </Button>
                 <Button 
-                  onClick={() => {
-                    const accomplishment = prompt("What did you accomplish?");
-                    if (accomplishment) addAccomplishment(accomplishment);
-                  }}
+                  onClick={() => setIsAccomplishmentDialogOpen(true)}
                   variant="outline"
                 >
                   <Plus className="h-4 w-4 mr-2" />
@@ -556,6 +566,48 @@ const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
             )}
           </CardContent>
         </Card>
+
+        {/* Accomplishment Dialog */}
+        <Dialog open={isAccomplishmentDialogOpen} onOpenChange={setIsAccomplishmentDialogOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Add Accomplishment</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  What did you accomplish?
+                </label>
+                <Input
+                  value={accomplishmentText}
+                  onChange={(e) => setAccomplishmentText(e.target.value)}
+                  placeholder="e.g., Reached the summit, saw a beautiful waterfall..."
+                  className="w-full"
+                  autoFocus
+                />
+              </div>
+              <div className="flex gap-3 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setAccomplishmentText("");
+                    setIsAccomplishmentDialogOpen(false);
+                  }}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleAddAccomplishment}
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                  disabled={!accomplishmentText.trim()}
+                >
+                  Add Accomplishment
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

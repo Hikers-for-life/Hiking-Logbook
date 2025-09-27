@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import cors from 'cors';
 import morgan from 'morgan';
 import { initializeFirebase } from './config/firebase.js';
+import { swaggerUi, specs } from './config/swagger.js';
 import * as middleware from './middleware/index.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 
@@ -16,6 +17,7 @@ import goalsRoutes from './routes/goals.js';
 import friendRoutes from "./routes/friends.js";
 import plannedHikeRoutes from './routes/plannedHikes.js';
 import gearRoutes from './routes/gear.js';
+import publicRoutes from './routes/public.js';
 
 
 dotenv.config();
@@ -95,29 +97,27 @@ app.use('/api/discover', discoverRoutes);
 app.use('/api/goals', goalsRoutes);
 app.use('/api/planned-hikes', plannedHikeRoutes); 
 app.use('/api/gear', gearRoutes);
+app.use('/api/goals', goalsRoutes);
 
+// Public API routes (no authentication required)
+app.use('/api/public', publicRoutes);
 
-// Global error handler
-app.use((error, req, res, next) => {
-  const statusCode = error.statusCode || 500;
-  const message = error.message || 'Internal server error';
+// API Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'Hiking Logbook API Documentation',
+  swaggerOptions: {
+    persistAuthorization: true,
+  }
+}));
 
-  res.status(statusCode).json({
-    error: message,
-    ...(process.env.NODE_ENV === 'development' && { stack: error.stack }),
-  });
+// Redirect root to API documentation
+app.get('/', (req, res) => {
+  res.redirect('/api-docs');
 });
 
-
-
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({
-    error: 'Route not found',
-    path: req.originalUrl,
-    method: req.method,
-  });
-});
+// 404 handler for undefined routes
+app.use('*', notFoundHandler);
 
 // Global error handler
 app.use((error, req, res,next) => {

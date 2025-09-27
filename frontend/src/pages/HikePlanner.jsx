@@ -275,9 +275,7 @@ const HikePlanner = () => {
 
   // Handler to Delete a Planned Hike
   const handleDeletePlannedHike = async (hikeId) => {
-    if (!window.confirm('Are you sure you want to delete this planned hike? This action cannot be undone.')) {
-      return;
-    }
+    // Proceed with deletion - users can undo by creating a new hike
 
     try {
       setError(null);
@@ -318,9 +316,7 @@ const HikePlanner = () => {
   };
 
   const handleCancelPlannedHike = async (hikeId) => {
-    if (!window.confirm('Are you sure you want to cancel this planned hike? This action cannot be undone.')) {
-      return;
-    }
+    // Proceed with cancellation - users can create a new hike if needed
 
     try {
       setError(null);
@@ -335,9 +331,8 @@ const HikePlanner = () => {
 
 // Add new function to start a planned hike
   const handleStartPlannedHike = async (trip) => {
-    if (!window.confirm('Are you sure you want to start this hike? This will convert it to an active hiking session.')) {
-      return;
-    }
+    // Remove the popup confirmation - proceed directly
+    // Users can cancel from the logbook if needed
 
     try {
       setError(null);
