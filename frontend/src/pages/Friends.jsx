@@ -18,6 +18,7 @@ import { useToast } from "../hooks/use-toast";
 import { getUserStats } from "../services/statistics";
 import { getFriendProfile } from "../services/friendService.js";
 import { formatTimeAgo } from "../utils/timeUtils";
+import { throttledRequest, REQUEST_PRIORITY } from "../utils/requestThrottle";
 
 
 
@@ -45,6 +46,7 @@ const Friends = () => {
   const [userStats, setUserStats] = useState([]);
   const { toast } = useToast();
   const [timestampUpdate, setTimestampUpdate] = useState(0); // Force re-render for timestamps
+  const [isInitialLoad, setIsInitialLoad] = useState(true); // Track initial load to prevent multiple simultaneous requests
 
   const handleSearch = async () => {
     if (!searchTerm.trim()) return;
@@ -58,60 +60,87 @@ const Friends = () => {
     }
   };
 
+  // Consolidated data loading to prevent 429 errors
   useEffect(() => {
-    const loadFriendProfiles = async () => {
-      if (!friends.length) return;
+    if (!currentUser || !isInitialLoad) return;
 
-      const updatedFriends = await Promise.all(
-        friends.map(async (f) => {
-          const profile = await getFriendProfile(f.id); // pass friend UID
-          if (profile.success) {
-            return {
-              ...f,
-              totalHikes: profile.totalHikes,
-              totalDistance: profile.totalDistance,
-              totalElevation: profile.totalElevation,
-              lastHike: profile.recentHikes[0]?.title || "No hikes yet",
-              lastHikeDate: profile.recentHikes[0]?.date || "",
-            };
-          }
-          return f; // fallback if fetch fails
-        })
-      );
-
-      setFriends(updatedFriends);
-    };
-
-    loadFriendProfiles();
-  }, [friends.length]);
-
-
-  useEffect(() => {
-    if (!currentUser) return;
-
-    getUserStats(currentUser.uid).then((stats) => {
-      console.log("User stats:", stats);
-      setUserStats(stats); // { totalDistance: X, totalElevation: Y }
-    });
-  }, [currentUser]);
-
-  useEffect(() => {
-    const fetchFriends = async () => {
+    const loadAllData = async () => {
       try {
-        const res = await fetch(`http://localhost:3001/api/friends/${currentUser.uid}`);
-        const data = await res.json();
-        if (data.success) {
-          setFriends(data.data);
-        } else {
-          console.error("Failed to fetch friends:", data.error);
+        setLoading(true);
+
+        // Load data using throttled requests to prevent 429 errors
+        console.log("Loading user stats...");
+        const stats = await throttledRequest(
+          () => getUserStats(currentUser.uid),
+          REQUEST_PRIORITY.HIGH
+        );
+        setUserStats(stats);
+
+        console.log("Loading friends...");
+        const friendsData = await throttledRequest(
+          async () => {
+            const friendsRes = await fetch(`http://localhost:3001/api/friends/${currentUser.uid}`);
+            const data = await friendsRes.json();
+            if (!friendsRes.ok) {
+              throw new Error(`Failed to fetch friends: ${friendsRes.status}`);
+            }
+            return data;
+          },
+          REQUEST_PRIORITY.HIGH
+        );
+
+        if (friendsData.success) {
+          setFriends(friendsData.data);
+
+          // Load friend profiles using throttled requests
+          if (friendsData.data.length > 0) {
+            console.log("Loading friend profiles...");
+            const updatedFriends = await Promise.all(
+              friendsData.data.map(async (f, index) => {
+                try {
+                  const profile = await throttledRequest(
+                    () => getFriendProfile(f.id),
+                    REQUEST_PRIORITY.MEDIUM
+                  );
+
+                  if (profile.success) {
+                    return {
+                      ...f,
+                      totalHikes: profile.totalHikes,
+                      totalDistance: profile.totalDistance,
+                      totalElevation: profile.totalElevation,
+                      lastHike: profile.recentHikes[0]?.title || "No hikes yet",
+                      lastHikeDate: profile.recentHikes[0]?.date || "",
+                    };
+                  }
+                } catch (error) {
+                  console.error(`Failed to load profile for friend ${f.id}:`, error);
+                }
+                return f; // fallback if fetch fails
+              })
+            );
+            setFriends(updatedFriends);
+          }
         }
-      } catch (err) {
-        console.error("Error fetching friends:", err);
+
+        setIsInitialLoad(false);
+      } catch (error) {
+        console.error("Error loading initial data:", error);
+        // Show user-friendly error message
+        if (error.message.includes('429')) {
+          toast({
+            title: "Rate limit reached",
+            description: "Please wait a moment and refresh the page.",
+            duration: 5000,
+          });
+        }
+      } finally {
+        setLoading(false);
       }
     };
 
-    if (currentUser) fetchFriends();
-  }, [currentUser]);
+    loadAllData();
+  }, [currentUser, isInitialLoad]);
 
 
   console.log("Fetching friends:", friends);
@@ -162,27 +191,39 @@ const Friends = () => {
 
     const loadFeed = async () => {
       try {
-        setLoading(true);
-        const data = await fetchFeed(); // fetches activities WITH comments included
+        // Only load feed after initial data is loaded to prevent 429 errors
+        if (isInitialLoad) return;
+
+        const data = await throttledRequest(
+          () => fetchFeed(),
+          REQUEST_PRIORITY.MEDIUM
+        );
+
         if (!isMounted) return;
 
         // Each activity object can now include a comments array
         const activitiesWithComments = (Array.isArray(data) ? data : data.activities || []).map(a => ({
           ...a,
-          comments: a.comments || [], // default empty array if backend doesn’t include
+          comments: a.comments || [], // default empty array if backend doesn't include
         }));
 
         setRecentActivity(activitiesWithComments);
       } catch (err) {
         console.error("Failed to fetch feed:", err);
-      } finally {
-        if (isMounted) setLoading(false);
+        // If it's a 429 error, show a user-friendly message
+        if (err.message.includes('429')) {
+          toast({
+            title: "Rate limit reached",
+            description: "Please wait a moment before refreshing the page.",
+            duration: 5000,
+          });
+        }
       }
     };
 
     loadFeed();
     return () => { isMounted = false; };
-  }, []);
+  }, [isInitialLoad, toast]);
 
 
   // ---- Like handler ----
@@ -403,21 +444,33 @@ const Friends = () => {
 
 
   useEffect(() => {
-    if (!auth?.currentUser) return;
+    if (!auth?.currentUser || isInitialLoad) return;
+
     const loadSuggestions = async () => {
       try {
-        setLoading(true);
-        const data = await discoverFriends();
+        const data = await throttledRequest(
+          () => discoverFriends(),
+          REQUEST_PRIORITY.LOW
+        );
         console.log("suggestion :", data)
         setSuggestions(data);
       } catch (err) {
         console.error("Failed to fetch suggestions:", err);
-      } finally {
-        setLoading(false);
+        // If it's a 429 error, show a user-friendly message
+        if (err.message.includes('429')) {
+          toast({
+            title: "Rate limit reached",
+            description: "Friend suggestions will load when the rate limit resets.",
+            duration: 5000,
+          });
+        }
       }
     };
-    loadSuggestions();
-  }, [auth?.currentUser]);
+
+    // Add a delay to prevent overwhelming the server
+    const timeoutId = setTimeout(loadSuggestions, 1000);
+    return () => clearTimeout(timeoutId);
+  }, [auth?.currentUser, isInitialLoad, toast]);
 
   // Real-time timestamp updates
   useEffect(() => {

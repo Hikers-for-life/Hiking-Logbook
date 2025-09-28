@@ -41,6 +41,10 @@ export async function fetchFeed(page = 1, limit = 10) {
 
   if (!res.ok) {
     const errText = await res.text();
+    // Handle 429 errors specifically
+    if (res.status === 429) {
+      throw new Error(`Failed to fetch feed: 429 Too many requests, please try again later.`);
+    }
     throw new Error(`Failed to fetch feed: ${res.status} ${errText}`);
   }
 

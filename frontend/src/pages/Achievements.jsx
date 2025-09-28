@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 
 import { createFeed } from "../services/feed";
+import { throttledRequest, REQUEST_PRIORITY } from "../utils/requestThrottle";
 
 
 // Simple Progress Update Form Component
@@ -120,9 +121,12 @@ const Achievements = () => {
         return;
       }
 
-      // Load badges, stats, and goals in parallel
+      // Load badges, stats, and goals using throttled requests
       const [badgesResponse, statsResponse, goalsResponse] = await Promise.all([
-        achievementApiService.getBadges().catch((error) => {
+        throttledRequest(
+          () => achievementApiService.getBadges(),
+          REQUEST_PRIORITY.MEDIUM
+        ).catch((error) => {
           console.error('Badges API error:', error);
           // Fallback to predefined badges when API fails
           return {
@@ -184,11 +188,17 @@ const Achievements = () => {
             ]
           };
         }),
-        achievementApiService.getStats().catch((error) => {
+        throttledRequest(
+          () => achievementApiService.getStats(),
+          REQUEST_PRIORITY.MEDIUM
+        ).catch((error) => {
           console.error('Stats API error:', error);
           return { data: { totalHikes: 0, totalDistance: 0, totalDuration: 0, currentStreak: 0 } };
         }),
-        goalsApi.getGoals().catch((error) => {
+        throttledRequest(
+          () => goalsApi.getGoals(),
+          REQUEST_PRIORITY.MEDIUM
+        ).catch((error) => {
           console.error('Goals API error:', error);
           return [];
         })
@@ -328,7 +338,10 @@ const Achievements = () => {
   useEffect(() => {
     const loadPinnedHikes = async () => {
       try {
-        const response = await hikeApiService.getHikes({ pinned: true });
+        const response = await throttledRequest(
+          () => hikeApiService.getHikes({ pinned: true }),
+          REQUEST_PRIORITY.LOW
+        );
 
         if (response.success) {
           // Process pinned hikes data
@@ -360,7 +373,10 @@ const Achievements = () => {
         // Reload pinned hikes when page becomes visible
         const loadPinnedHikes = async () => {
           try {
-            const response = await hikeApiService.getHikes({ pinned: true });
+            const response = await throttledRequest(
+              () => hikeApiService.getHikes({ pinned: true }),
+              REQUEST_PRIORITY.LOW
+            );
 
             if (response.success) {
               const pinnedHikesData = response.data.map(hike => ({
