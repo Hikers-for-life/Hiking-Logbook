@@ -96,7 +96,7 @@ app.use("/api/friends", friendRoutes);
 app.use('/api/feed', feedRoutes);
 app.use('/api/discover', discoverRoutes);
 app.use('/api/goals', goalsRoutes);
-app.use('/api/planned-hikes', plannedHikeRoutes); 
+app.use('/api/planned-hikes', plannedHikeRoutes);
 app.use('/api/gear', gearRoutes);
 app.use('/api/goals', goalsRoutes);
 
@@ -120,52 +120,16 @@ app.get('/', (req, res) => {
 
 // 404 handler for undefined routes
 app.use('*', notFoundHandler);
+
 // Global error handler
 app.use(errorHandler);
-
-
-
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({
-    error: 'Route not found',
-    path: req.originalUrl,
-    method: req.method,
-  });
-});
-
-// Global error handler
-app.use((error, req, res,next) => {
-  console.error('Global error handler:', error);
-
-  let statusCode = 500;
-  let message = 'Internal server error';
-
-  if (error.name === 'ValidationError') {
-    statusCode = 400;
-    message = error.message;
-  } else if (error.name === 'UnauthorizedError') {
-    statusCode = 401;
-    message = 'Unauthorized';
-  } else if (error.name === 'ForbiddenError') {
-    statusCode = 403;
-    message = 'Forbidden';
-  } else if (error.name === 'NotFoundError') {
-    statusCode = 404;
-    message = 'Resource not found';
-  } else if (error.code === 'ECONNREFUSED') {
-    statusCode = 503;
-    message = 'Service unavailable';
-
-  }
-});
 
 // Start the server
 const startServer = async () => {
   try {
     await initializeFirebase();
-    
-    
+
+
     const server = app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
       console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
@@ -177,13 +141,11 @@ const startServer = async () => {
       console.log(`Discover API: http://localhost:${PORT}/api/discover`);
       console.log(`Goals API: http://localhost:${PORT}/api/goals`);
       console.log(`Friends API: http://localhost:${PORT}/api/friends`);
-      console.log(`Planned Hikes API: http://localhost:${PORT}/api/planned-hikes`); 
-      console.log(`Gear API: http://localhost:${PORT}/api/gear`);
-      console.log(`Planned Hikes API: http://localhost:${PORT}/api/planned-hikes`); 
+      console.log(`Planned Hikes API: http://localhost:${PORT}/api/planned-hikes`);
       console.log(`Gear API: http://localhost:${PORT}/api/gear`);
     });
-    
-   process.on('SIGTERM', () => {
+
+    process.on('SIGTERM', () => {
       console.log('SIGTERM received, shutting down gracefully');
       server.close(() => {
         console.log('Process terminated');
@@ -198,16 +160,26 @@ const startServer = async () => {
         process.exit(0);
       });
     });
+
+    // Handle uncaught exceptions
+    process.on('uncaughtException', (err) => {
+      console.error('Uncaught Exception:', err);
+      process.exit(1);
+    });
+
+    // Handle unhandled promise rejections
+    process.on('unhandledRejection', (reason, promise) => {
+      console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+      process.exit(1);
+    });
+
   } catch (err) {
     console.error('Failed to start server:', err);
     process.exit(1);
   }
 };
 
-//  Wrap server startup in async function
-
-
-
+// Start the server
 startServer();
 
 export default app;
