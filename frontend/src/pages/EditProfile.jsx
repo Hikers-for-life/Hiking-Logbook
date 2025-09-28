@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -11,9 +11,8 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { ArrowLeft, Camera, MapPin, User, Lock, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "../hooks/use-toast";
-import { useAuth } from "../contexts/AuthContext.jsx";
-import { userApiService, locationService } from "../services/userService";
-
+import { useAuth } from '../contexts/AuthContext.jsx';
+import { useEffect} from "react";
 
 const profileSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -22,121 +21,120 @@ const profileSchema = z.object({
   location: z.string().min(2, "Location must be at least 2 characters"),
 });
 
+
+
 const EditProfile = () => {
   const [profileImage, setProfileImage] = useState("/placeholder.svg");
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [profile, setProfile] = useState(null);
-  const { currentUser } = useAuth();
+  const { currentUser } = useAuth();        //  get currentUser
+  const [profile, setProfile] = useState(null); //  profile state
   const { toast } = useToast();
-
   const form = useForm({
-    resolver: zodResolver(profileSchema),
-    defaultValues: {
-      name: "",
-      password: "",
-      bio: "",
-      location: "",
-    },
-  });
+  resolver: zodResolver(profileSchema),
+  defaultValues: {
+    name: currentUser.displayName || "No name",
+    password: "",
+    bio: "No bio yet",
+    location: "Not set",
+  },
+});
 
-  // ✅ Fetch user profile on mount
-  useEffect(() => {
-    if (!currentUser) return;
+useEffect(() => {
+  if (!currentUser) return;
 
-    const fetchProfile = async () => {
-      setIsLoading(true);
-      try {
-        const data = await userApiService.getCurrentProfile();
-        setProfile(data);
+  const fetchProfile = async () => {
+    try {
+      const res = await fetch(`http://localhost:3001/api/users/${currentUser.uid}`);
+      if (!res.ok) throw new Error("Failed to fetch profile");
+      const data = await res.json();
+      setProfile(data);
 
-        form.reset({
-          name: data.displayName || currentUser.displayName || "No name",
-          password: "",
-          bio: data.bio || "No bio yet",
-          location: data.location || "Not set",
-        });
-
-        if (data.photoURL) setProfileImage(data.photoURL);
-      } catch (error) {
-        console.error("Failed to fetch profile:", error);
-        toast({
-          title: "Error",
-          description: "Could not load profile data. Please refresh.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchProfile();
-  }, [currentUser, form, toast]);
-
-  const handleImageUpload = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      toast({ title: "File too large", description: "Max size is 5MB", variant: "destructive" });
-      return;
+      //  Update form values when profile loads
+      form.reset({
+        name: data.displayName || currentUser.displayName || "No name",
+       
+        bio: data.bio || "No bio yet",
+        location: data.location || "Not set",
+      });
+    } catch (err) {
+      console.error(err);
     }
-    const reader = new FileReader();
-    reader.onload = (event) => setProfileImage(event.target?.result);
-    reader.readAsDataURL(file);
   };
 
-  const onSubmit = async (data) => {
-    setIsSubmitting(true);
-    try {
-      let { latitude, longitude } = profile || {};
+  fetchProfile();
+}, [currentUser, form]);
 
-      if (!latitude || !longitude || data.location !== profile?.location) {
-        try {
-          const coords = await locationService.getLocationCoordinates(data.location);
-          latitude = coords.latitude;
-          longitude = coords.longitude;
-        } catch (geoError) {
-          console.error("Geocoding error:", geoError);
-          toast({
-            title: "Invalid location",
-            description: "Could not resolve location. Please check spelling.",
-            variant: "destructive",
-          });
-          setIsSubmitting(false);
-          return;
-        }
+  const handleImageUpload = (event) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setProfileImage(e.target?.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+const onSubmit = async (data) => {
+  try {
+    console.log("Submitting form data:", data);
+
+    // Step 1: Check if latitude and longitude exist in current profile
+    let latitude = profile?.latitude;
+    let longitude = profile?.longitude;
+
+    // Step 2: If location changed or coordinates missing, fetch from Geocoding API
+    if (!latitude || !longitude || data.location !== profile?.location) {
+      const geoRes = await fetch(
+        `http://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(data.location)}&limit=1&appid=${process.env.REACT_APP_OPENWEATHER_API_KEY}`
+      );
+      const geoData = await geoRes.json();
+      if (!geoData || geoData.length === 0) {
+        toast({
+          title: "Invalid location",
+          description: "Could not find coordinates for the specified location.",
+          variant: "destructive",
+        });
+        return;
       }
 
-      const updated = await userApiService.updateProfile(currentUser.uid, {
+      latitude = geoData[0].lat;
+      longitude = geoData[0].lon;
+    }
+
+    // Step 3: Update Firestore with location + coordinates
+    const res = await fetch(`http://localhost:3001/api/users/${currentUser.uid}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
         displayName: data.name,
         bio: data.bio,
         location: data.location,
         latitude,
         longitude,
-        ...(data.password ? { password: data.password } : {}),
-      });
+      }),
+    });
 
-      setProfile(updated.profile || updated);
-      toast({ title: "Profile Updated", description: "Your changes have been saved." });
-    } catch (error) {
-      console.error("Update error:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Could not update profile. Try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+    if (!res.ok) throw new Error("Failed to update profile");
+    const updatedProfile = await res.json();
+    setProfile(updatedProfile);
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
-      </div>
-    );
+    toast({
+      title: "Profile Updated",
+      description: "Your hiking profile has been successfully updated!",
+    });
+  } catch (err) {
+    console.error(err);
+    toast({
+      title: "Error",
+      description: "Unable to update profile. Try again.",
+      variant: "destructive",
+    });
   }
+};
+
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -147,7 +145,7 @@ const EditProfile = () => {
             <span>Back to Profile</span>
           </Link>
           <h1 className="text-3xl font-bold">Edit Your Hiking Profile</h1>
-          <p className="mt-2 opacity-90">Update your information and share your hiking story</p>
+          <p className="text-primary-foreground/90 mt-2">Update your information and share your hiking journey</p>
         </div>
       </div>
 
@@ -157,9 +155,13 @@ const EditProfile = () => {
             <div className="relative mx-auto mb-4">
               <Avatar className="h-32 w-32 border-4 border-background shadow-lg">
                 <AvatarImage src={profileImage} alt="Profile picture" />
-                <AvatarFallback className="text-2xl">
-                  {(profile?.displayName || "U").charAt(0).toUpperCase()}
-                </AvatarFallback>
+              <AvatarFallback className="text-2xl">
+                {form.defaultValues?.name 
+                  .split('')
+                  .map((n) => n[0])
+                  .join('')}
+              </AvatarFallback>
+
               </Avatar>
               <label className="absolute bottom-0 right-0 bg-primary text-white rounded-full p-3 cursor-pointer shadow-lg">
                 <Camera className="h-5 w-5" />
@@ -203,21 +205,10 @@ const EditProfile = () => {
                   />
                 </div>
 
-                {/* Password (optional) */}
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel><Lock className="h-4 w-4 text-primary inline mr-1" /> New Password</FormLabel>
-                      <FormControl><Input type="password" {...field} /></FormControl>
-                      <FormDescription>Leave blank to keep current password</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {/* Password Field */}
+              
 
-                {/* Bio */}
+                {/* Bio Field */}
                 <FormField
                   control={form.control}
                   name="bio"
@@ -233,12 +224,24 @@ const EditProfile = () => {
 
                 {/* Buttons */}
                 <div className="flex flex-col sm:flex-row gap-4 pt-6">
-                  <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? "Saving..." : "Save Changes"}
-                  </Button>
-                  <Button variant="outline" asChild>
-                    <Link to="/">Cancel</Link>
-                  </Button>
+                 
+                    {/* fields... */}
+                    <div className="flex flex-col sm:flex-row gap-4 pt-6">
+                      <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-md">
+                        Save Changes
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full border-border hover:bg-accent hover:text-accent-foreground"
+                        asChild
+                      >
+                        <Link to="/">Cancel</Link>
+                      </Button>
+                    </div>
+                  
+
+                  
                 </div>
               </form>
             </Form>

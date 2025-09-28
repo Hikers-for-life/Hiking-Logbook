@@ -20,18 +20,18 @@ import gearRoutes from './routes/gear.js';
 import publicRoutes from './routes/public.js';
 
 
+
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 
-// Apply middleware
 middleware.applySecurityMiddleware(app);
 middleware.applyParsingMiddleware(app);
 middleware.applyLoggingMiddleware(app);
 
-// Security middleware
+
 app.use(helmet());
 
 // CORS configuration
@@ -76,6 +76,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({
@@ -116,8 +117,22 @@ app.get('/', (req, res) => {
   res.redirect('/api-docs');
 });
 
+
 // 404 handler for undefined routes
 app.use('*', notFoundHandler);
+// Global error handler
+app.use(errorHandler);
+
+
+
+// 404 handler
+app.use('*', (req, res) => {
+  res.status(404).json({
+    error: 'Route not found',
+    path: req.originalUrl,
+    method: req.method,
+  });
+});
 
 // Global error handler
 app.use((error, req, res,next) => {
@@ -146,9 +161,6 @@ app.use((error, req, res,next) => {
 });
 
 // Start the server
-  let serverInstance = null;
-
-//  Wrap server startup in async function
 const startServer = async () => {
   try {
     await initializeFirebase();
@@ -165,6 +177,8 @@ const startServer = async () => {
       console.log(`Discover API: http://localhost:${PORT}/api/discover`);
       console.log(`Goals API: http://localhost:${PORT}/api/goals`);
       console.log(`Friends API: http://localhost:${PORT}/api/friends`);
+      console.log(`Planned Hikes API: http://localhost:${PORT}/api/planned-hikes`); 
+      console.log(`Gear API: http://localhost:${PORT}/api/gear`);
       console.log(`Planned Hikes API: http://localhost:${PORT}/api/planned-hikes`); 
       console.log(`Gear API: http://localhost:${PORT}/api/gear`);
     });
@@ -190,10 +204,12 @@ const startServer = async () => {
   }
 };
 
+//  Wrap server startup in async function
+
+
 
 startServer();
 
-
-
-
 export default app;
+
+

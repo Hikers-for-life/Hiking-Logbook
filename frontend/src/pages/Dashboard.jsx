@@ -59,6 +59,7 @@ const Dashboard = () => {
       try {
         const res = await fetch(`http://localhost:3001/api/users/${currentUser.uid}`);
         if (!res.ok) {
+
           const fallbackProfile = {
             displayName: currentUser.displayName || 'Hiker',
             bio: 'Passionate hiker exploring new trails',

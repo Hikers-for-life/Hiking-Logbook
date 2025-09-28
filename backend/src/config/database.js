@@ -1,16 +1,18 @@
-﻿import { getDatabase } from './firebase.js';
+﻿import { db } from './firebase.js';
 import { evaluateAndAwardBadges } from '../services/badgeService.js';
 
-export const collections = {
-  users: 'users',
-  hikes: 'hikes',
-  plannedHikes: 'plannedHikes'
-};
+// Database utilities for comprehensive hike management
 
+export const collections = {
+  USERS: 'users',
+  HIKES: 'hikes',
+  TRAILS: 'trails',
+  ACHIEVEMENTS: 'achievements',
+};
 export const dbUtils = {
   // Helper: return db & FieldValue
   getDb() {
-    return getDatabase();
+    return db;
   },
 
   _FieldValue() {
@@ -39,10 +41,10 @@ export const dbUtils = {
       return null;
     }
   },
-   // -----------------------
+  // -----------------------
   // Generic CRUD
   // -----------------------
- 
+
   async create(collection, docId, data) {
     try {
       await db
@@ -107,11 +109,77 @@ export const dbUtils = {
   },
 
 
+
+  // Add a new hike with comprehensive data
+
+  //const db = getDatabase();
+
+  // Database utilities for hike management
   // -----------------------
   // Planned Hikes
   // -----------------------
   async addPlannedHike(userId, plannedHikeData) {
     try {
+      if (!userId) {
+        throw new Error('User ID is required');
+      }
+
+      // Map and validate the hike data
+      const mappedHikeData = {
+        // Basic information
+        title: hikeData.title || hikeData.trailName || '',
+        location: hikeData.location || '',
+        route: hikeData.route || hikeData.trailName || '',
+
+        // Timing
+        date: hikeData.date || new Date(),
+        startTime: hikeData.startTime || null,
+        endTime: hikeData.endTime || null,
+        duration: hikeData.duration || 0,
+
+        // Physical metrics
+        distance: hikeData.distance || hikeData.distanceKm || 0,
+        elevation: hikeData.elevation || 0,
+        difficulty: hikeData.difficulty || 'Easy',
+
+        // Environmental
+        weather: hikeData.weather || '',
+
+        // Additional details
+        notes: hikeData.notes || '',
+
+        // GPS and tracking
+        waypoints: hikeData.waypoints || [],
+        startLocation: hikeData.startLocation || null,
+        endLocation: hikeData.endLocation || null,
+        routeMap: hikeData.routeMap || '',
+        gpsTrack: hikeData.gpsTrack || [],
+
+        // Metadata
+        status: hikeData.status || 'completed',
+        pinned: hikeData.pinned || false,
+        shared: hikeData.shared || false,
+      };
+
+      const db = this.getDb();
+      const docRef = await db.collection('users').doc(userId).collection('hikes').add(mapped);
+
+      // Re-evaluate badges/stats
+      const stats = await this.getUserHikeStats(userId);
+      await evaluateAndAwardBadges(userId, stats).catch(e => console.warn('Badge eval failed:', e.message));
+
+      return { success: true, id: docRef.id };
+    } catch (err) {
+      throw new Error(`addHike failed: ${err.message}`);
+    }
+  },
+
+  async addPlannedHike(userId, plannedHikeData) {
+    try {
+      if (!userId) {
+        throw new Error('User ID is required');
+      }
+
       const mapped = {
         title: plannedHikeData.title || '',
         date: plannedHikeData.date || new Date(),
@@ -359,6 +427,28 @@ export const dbUtils = {
     }
   },
 
+
+
+  // Create user profile
+  async createUserProfile(userId, profileData) {
+    try {
+      const db = this.getDb();
+      await db
+        .collection('users')
+        .doc(userId)
+        .set({
+          ...profileData,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+      return { success: true };
+    } catch (err) {
+      throw new Error(`createUserProfile failed: ${err.message}`);
+    }
+  },
+
+
+  // Get user hiking statistics
   async getUserHikes(userId, filters = {}) {
     try {
       const db = this.getDb();
@@ -422,6 +512,94 @@ export const dbUtils = {
     }
   },
 
+
+  // Helper function to parse distance string (e.g., "5km" -> 5)
+  parseDistance(distanceStr) {
+    if (!distanceStr) return 0;
+
+    // If it's already a number, return it
+    if (typeof distanceStr === 'number') return distanceStr;
+
+    // If it's not a string, return 0
+    if (typeof distanceStr !== 'string') return 0;
+
+    // Clean up the string - remove extra text and get the first valid number
+    // Handle cases like "04.1 miles000.0 miles05km205km220" by extracting the first number
+    const cleanStr = distanceStr.replace(/[^\d.,]/g, ' ').trim();
+    const numbers = cleanStr.split(/\s+/).filter(n => n && !isNaN(parseFloat(n)));
+
+    if (numbers.length > 0) {
+      return parseFloat(numbers[0]);
+    }
+
+    // Fallback to original regex method
+    const match = distanceStr.match(/(\d+(?:\.\d+)?)/);
+    return match ? parseFloat(match[1]) : 0;
+  },
+
+  // Helper function to parse elevation string (e.g., '2,400m' -> 2400)
+  parseElevation(elevationStr) {
+    if (!elevationStr) return 0;
+
+    // If it's already a number, return it
+    if (typeof elevationStr === 'number') return elevationStr;
+
+    // If it's not a string, return 0
+    if (typeof elevationStr !== 'string') return 0;
+
+    // Clean up the string - remove extra text and get the first valid number
+    const cleanStr = elevationStr.replace(/[^\d.,]/g, ' ').trim();
+    const numbers = cleanStr.split(/\s+/).filter(n => n && !isNaN(parseFloat(n.replace(/,/g, ''))));
+
+    if (numbers.length > 0) {
+      return parseFloat(numbers[0].replace(/,/g, ''));
+    }
+
+    // Fallback to original regex method
+    const match = elevationStr.match(/(\d+(?:\.\d+)?)/);
+    return match ? parseFloat(match[1]) : 0;
+  },
+
+  // Helper function to parse duration string (e.g., '2h 30m' -> 150 minutes)
+  parseDuration(durationStr) {
+    if (!durationStr) return 0;
+
+    // If it's already a number, return it
+    if (typeof durationStr === 'number') return durationStr;
+
+    // If it's not a string, return 0
+    if (typeof durationStr !== 'string') return 0;
+
+    // Extract hours and minutes from string like '2h 30m' or '2:30'
+    const hourMatch = durationStr.match(/(\d+)h/);
+    const minuteMatch = durationStr.match(/(\d+)m/);
+    const colonMatch = durationStr.match(/(\d+):(\d+)/);
+
+    let totalMinutes = 0;
+
+    if (hourMatch) {
+      totalMinutes += parseInt(hourMatch[1]) * 60;
+    }
+
+    if (minuteMatch) {
+      totalMinutes += parseInt(minuteMatch[1]);
+    }
+
+    if (colonMatch) {
+      totalMinutes += parseInt(colonMatch[1]) * 60 + parseInt(colonMatch[2]);
+    }
+
+    // If no patterns matched, try to extract just a number
+    if (totalMinutes === 0) {
+      const numberMatch = durationStr.match(/(\d+(?:\.\d+)?)/);
+      if (numberMatch) {
+        totalMinutes = parseFloat(numberMatch[1]);
+      }
+    }
+
+    return totalMinutes;
+  },
+
   async updateHike(userId, hikeId, hikeData) {
     try {
       const updateData = { ...hikeData, updatedAt: new Date() };
@@ -477,33 +655,87 @@ export const dbUtils = {
   async getUserHikeStats(userId) {
     try {
       const hikes = await this.getUserHikes(userId);
+
+      // Calculate streaks
+      const { currentStreak, longestStreak } = this.calculateStreaks(hikes);
+
+      const stats = {
+        totalHikes: hikes.length,
+        totalDistance: hikes.reduce((sum, hike) => sum + this.parseDistance(hike.distance), 0),
+        totalElevation: hikes.reduce((sum, hike) => sum + this.parseElevation(hike.elevation), 0),
+        totalDuration: hikes.reduce((sum, hike) => sum + this.parseDuration(hike.duration), 0),
+        currentStreak,
+        longestStreak,
+        byDifficulty: {
+          Easy: hikes.filter(h => h.difficulty === 'Easy').length,
+          Moderate: hikes.filter(h => h.difficulty === 'Moderate').length,
+          Hard: hikes.filter(h => h.difficulty === 'Hard').length,
+          Extreme: hikes.filter(h => h.difficulty === 'Extreme').length
+        },
+        byStatus: {
+          completed: hikes.filter(h => h.status === 'completed').length,
+          active: hikes.filter(h => h.status === 'active').length,
+          paused: hikes.filter(h => h.status === 'paused').length
+        }
+      };
+
+      return stats;
+    } catch (error) {
+      throw new Error(`Failed to get hike stats: ${error.message}`);
+    }
+  },
+
+
+  // Get global statistics across all users (for public API)
+  async getGlobalStats() {
+    try {
+      const db = this.getDb();
+      const usersSnapshot = await db.collection('users').get();
+
+      let totalUsers = 0;
+      let totalHikes = 0;
       let totalDistance = 0;
       let totalElevation = 0;
       let totalDuration = 0;
       const locations = new Set();
+      const allHikes = [];
 
-      hikes.forEach(h => {
-        // parse numbers safely
-        const distMatch = (h.distance || '').toString().match(/(\d+(?:\.\d+)?)/);
-        if (distMatch) totalDistance += parseFloat(distMatch[1]);
+      // Get all hikes from all users
+      for (const userDoc of usersSnapshot.docs) {
+        const userId = userDoc.id;
+        const hikesSnapshot = await db.collection('users').doc(userId).collection('hikes').get();
 
-        const elevMatch = (h.elevation || '').toString().match(/(\d+(?:\.\d+)?)/);
-        if (elevMatch) totalElevation += parseFloat(elevMatch[1]);
+        hikesSnapshot.forEach(hikeDoc => {
+          const hike = { id: hikeDoc.id, ...hikeDoc.data() };
+          allHikes.push(hike);
 
-        const durMatch = (h.duration || '').toString().match(/(\d+(?:\.\d+)?)/);
-        if (durMatch) totalDuration += parseFloat(durMatch[1]);
+          // parse numbers safely
+          const distMatch = (hike.distance || '').toString().match(/(\d+(?:\.\d+)?)/);
+          if (distMatch) totalDistance += parseFloat(distMatch[1]);
 
-        if (h.location) {
-          const parts = h.location.split(',').map(p => p.trim());
-          if (parts.length > 0) locations.add(parts[parts.length - 1]);
-        }
-      });
+          const elevMatch = (hike.elevation || '').toString().match(/(\d+(?:\.\d+)?)/);
+          if (elevMatch) totalElevation += parseFloat(elevMatch[1]);
+
+          const durMatch = (hike.duration || '').toString().match(/(\d+(?:\.\d+)?)/);
+          if (durMatch) totalDuration += parseFloat(durMatch[1]);
+
+          if (hike.location) {
+            const parts = hike.location.split(',').map(p => p.trim());
+            if (parts.length > 0) locations.add(parts[parts.length - 1]);
+          }
+        });
+
+        totalUsers++;
+      }
+
+      totalHikes = allHikes.length;
 
       // streaks
-      const { currentStreak, longestStreak } = this.calculateStreaks(hikes);
+      const { currentStreak, longestStreak } = this.calculateStreaks(allHikes);
 
       return {
-        totalHikes: hikes.length,
+        totalUsers,
+        totalHikes,
         totalDistance: Math.round(totalDistance * 10) / 10,
         totalElevation: Math.round(totalElevation),
         totalDuration: Math.round(totalDuration),
@@ -512,7 +744,7 @@ export const dbUtils = {
         longestStreak
       };
     } catch (err) {
-      throw new Error(`getUserHikeStats failed: ${err.message}`);
+      throw new Error(`getGlobalStats failed: ${err.message}`);
     }
   },
 
@@ -630,6 +862,7 @@ export const dbUtils = {
       throw new Error(`deleteUser failed: ${err.message}`);
     }
   }
+
 };
 
 export default dbUtils;

@@ -52,7 +52,7 @@ const Logbook = () => {
     try {
       setIsLoading(true);
       setError(null);
-      
+
       // Build filters for API call
       const filters = {};
       if (searchTerm) filters.search = searchTerm;

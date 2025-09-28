@@ -12,10 +12,11 @@ import Signup from './pages/Signup.jsx';
 import LoginPage from './components/auth/loginPage.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Friends from './pages/Friends.jsx';
+import  {Toaster}  from "./components/ui/toaster.jsx"
 import Achievements from './pages/Achievements.jsx';
+
 import { API_BASE } from './api/api.js';//ANNAH
 
-import  {Toaster}  from "./components/ui/toaster.jsx"
 
 
 const App = () => {
