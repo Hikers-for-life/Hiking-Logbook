@@ -8,6 +8,8 @@ import dotenv from 'dotenv';
 // Import routes
 import authRoutes from './src/routes/auth.js';
 import userRoutes from './src/routes/users.js';
+import hikeRoutes from './routes/hike.js';//ANNAH
+import feedRoutes from './routes/feed.js';//ANNAH
 
 dotenv.config();
 
@@ -23,6 +25,8 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/hikes', hikeRoutes);//ANNA
+app.use('/api/feed', feedRoutes);//ANNAH
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

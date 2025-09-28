@@ -1,8 +1,8 @@
 import express from 'express';
 import { AuthService } from '../services/authService.js';
 import { verifyAuth } from '../middleware/auth.js';
-import { dbUtils } from '../config/database.js';
-import { getDatabase } from '../config/firebase.js';
+import { dbUtils, collections } from '../config/database.js';
+import { db, admin } from '../config/firebase.js';
 import { BADGE_RULES } from '../services/badgeService.js';
 
 const router = express.Router();
@@ -72,6 +72,37 @@ router.post('/create-profile', verifyAuth, async (req, res) => {
     });
   }
 });
+router.get("/:uid/stats", async (req, res) => {
+  try {
+    const { uid } = req.params;
+    const hikesRef = admin.firestore().collection("users").doc(uid).collection("hikes");
+    const snapshot = await hikesRef.get();
+
+    let totalDistance = 0;
+    let totalElevation = 0;
+
+    snapshot.forEach(doc => {
+      const data = doc.data();
+
+      // strip last 2 chars ("km", "ft", etc.)
+      const distance = parseFloat((data.distance || "0").slice(0, -2)) || 0;
+      const elevation = parseFloat((data.elevation || "0").slice(0, -2)) || 0;
+
+      totalDistance += distance;
+      totalElevation += elevation;
+    });
+
+    res.json({
+      success: true,
+      totalDistance,
+      totalElevation,
+    });
+  } catch (err) {
+    console.error("Error fetching user stats:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 
 // Get current user profile (protected route)
 router.get("/profile", verifyAuth, async (req, res) => {
@@ -271,15 +302,21 @@ router.get('/:uid', async (req, res) => {
   try {
     const { uid } = req.params;
 
-    // Get user document using dbUtils
-    const userData = await dbUtils.getUserProfile(uid);
-    if (!userData) {
+
+    // Get user document
+    const userDoc = await db.collection('users').doc(uid).get();
+    if (!userDoc.exists) {
       return res.status(404).json({ error: 'User not found' });
     }
+    const userData = userDoc.data();
 
     // Fetch subcollections using direct database access
-    const db = getDatabase();
+    //const db = admin.database();
     const hikesSnap = await db.collection('users').doc(uid).collection('hikes').get();
+
+  //  const achievements = achievementsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  //  const goals = goalsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
     const hikes = hikesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
     // Construct response
@@ -292,8 +329,14 @@ router.get('/:uid', async (req, res) => {
       longitude: userData.longitude || null,
       photoURL: userData.photoURL || null,
       preferences: userData.preferences || null,
+
+      friends: userData.friends || null,
       stats: userData.stats || null,
       createdAt: userData.createdAt || null,
+
+     // achievements,
+     // goals,
+
       hikes,
     };
 
@@ -304,13 +347,15 @@ router.get('/:uid', async (req, res) => {
   }
 });
 
+
+ 
+
 // Search users (public route) - Basic implementation
 router.get('/search', async (req, res) => {
   try {
     const { q, location, difficulty } = req.query;
 
     // Get database instance
-    const db = getDatabase();
     let query = db.collection('users');
 
     // Apply basic filters (Note: Firestore has limitations with text search)
@@ -368,10 +413,10 @@ router.get('/:uid/achievements', async (req, res) => {
     res.json({
       uid: profile.uid,
       displayName: profile.displayName,
-      achievements: profile.stats.achievements || [],
-      totalHikes: profile.stats.totalHikes || 0,
-      totalDistance: profile.stats.totalDistance || 0,
-      totalElevation: profile.stats.totalElevation || 0,
+      achievements: profile.stats?.achievements || [],
+      totalHikes: profile.stats?.totalHikes || 0,
+      totalDistance: profile.stats?.totalDistance || 0,
+      totalElevation: profile.stats?.totalElevation || 0,
     });
   } catch (error) {
     console.error('Get achievements error:', error);
@@ -381,8 +426,59 @@ router.get('/:uid/achievements', async (req, res) => {
   }
 });
 
-// Get user hiking history (public route)
-router.get('/:uid/hikes', async (req, res) => {
+// Search users (public route) - Basic implementation
+router.get('/search', async (req, res) => {
+  try {
+    const { q, location, difficulty } = req.query;
+
+    // Get database instance
+    let query = db.collection('users');
+
+    // Apply basic filters (Note: Firestore has limitations with text search)
+    if (location) {
+      query = query.where('location', '==', location);
+    }
+
+    if (difficulty) {
+      query = query.where('preferences.difficulty', '==', difficulty);
+    }
+
+    // Execute query
+    const snapshot = await query.limit(50).get(); // Limit results for performance
+    let users = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    // Client-side filtering for display name if query provided
+    if (q) {
+      const searchTerm = q.toLowerCase();
+      users = users.filter(user => 
+        user.displayName && user.displayName.toLowerCase().includes(searchTerm)
+      );
+    }
+
+    // Remove sensitive information
+    const publicUsers = users.map((user) => ({
+      uid: user.uid,
+      displayName: user.displayName,
+      bio: user.bio,
+      location: user.location,
+      photoURL: user.photoURL,
+      preferences: user.preferences,
+      stats: user.stats,
+    }));
+
+    res.json(publicUsers);
+  } catch (error) {
+    console.error('Search users error:', error);
+    res.status(500).json({
+      error: 'Failed to search users',
+      details: error.message,
+    });
+  }
+});
+
+
+// Get hike count for a user
+router.get("/:uid/hikes/count", async (req, res) => {
   try {
     const { uid } = req.params;
     const { limit = 10, offset = 0, status, difficulty } = req.query;
@@ -407,9 +503,9 @@ router.get('/:uid/hikes', async (req, res) => {
       offset: parseInt(offset),
     });
   } catch (error) {
-    console.error('Get hikes error:', error);
+    console.error('Get hike count error:', error);
     res.status(500).json({
-      error: 'Failed to get hiking history',
+      error: 'Failed to get hike count',
       details: error.message,
     });
   }
@@ -597,5 +693,32 @@ router.delete('/:uid/follow', verifyAuth, async (req, res) => {
     });
   }
 });
+
+
+
+// Get user hiking history (public route)
+router.get("/:uid/hikes", async (req, res) => {
+  try {
+    const { uid } = req.params;
+    const limit = parseInt(req.query.limit || "2", 10);
+
+    const hikesRef = admin
+      .firestore()
+      .collection("users")
+      .doc(uid)
+      .collection("hikes");
+
+    const snap = await hikesRef.orderBy("createdAt", "desc").limit(limit).get();
+    const hikes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    res.json({ success: true, data: hikes });
+  } catch (err) {
+    console.error("Error fetching user hikes:", err.message, err.stack);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+
+
+
 
 export default router;

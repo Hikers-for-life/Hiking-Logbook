@@ -1,25 +1,79 @@
 ﻿import express from 'express';
 import dotenv from 'dotenv';
+import helmet from 'helmet';
+import cors from 'cors';
+import morgan from 'morgan';
 import { initializeFirebase } from './config/firebase.js';
 import { swaggerUi, specs } from './config/swagger.js';
 import * as middleware from './middleware/index.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
+
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
 import hikeRoutes from './routes/hikes.js';
+import feedRoutes from './routes/feed.js';
+import discoverRoutes from './routes/discover.js';
+import goalsRoutes from './routes/goals.js';
+import friendRoutes from "./routes/friends.js";
 import plannedHikeRoutes from './routes/plannedHikes.js';
 import gearRoutes from './routes/gear.js';
-import goalsRoutes from './routes/goals.js';
 import publicRoutes from './routes/public.js';
+
+
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+
 middleware.applySecurityMiddleware(app);
 middleware.applyParsingMiddleware(app);
 middleware.applyLoggingMiddleware(app);
+
+
+app.use(helmet());
+
+// CORS configuration
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://localhost:3000',
+  process.env.FRONTEND_URL,
+  'https://hiking-logbook.web.app',
+  'https://hiking-logbook.firebaseapp.com',
+  'https://your-custom-domain.com',
+  'https://your-app.netlify.app',
+  'https://your-app.vercel.app',
+  'https://your-app.github.io',
+].filter(Boolean);
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+      if (origin.includes('localhost') || origin.startsWith('https://')) {
+        callback(null, true);
+      } else if (allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        console.log('CORS blocked origin:', origin);
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  })
+);
+
+// Logging middleware
+if (process.env.NODE_ENV === 'development') {
+  app.use(morgan('dev'));
+}
+
+// Body parsing middleware
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 
 
@@ -33,10 +87,15 @@ app.get('/health', (req, res) => {
   });
 });
 
+
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/hikes', hikeRoutes);
+app.use("/api/friends", friendRoutes);
+app.use('/api/feed', feedRoutes);
+app.use('/api/discover', discoverRoutes);
+app.use('/api/goals', goalsRoutes);
 app.use('/api/planned-hikes', plannedHikeRoutes); 
 app.use('/api/gear', gearRoutes);
 app.use('/api/goals', goalsRoutes);
@@ -58,16 +117,54 @@ app.get('/', (req, res) => {
   res.redirect('/api-docs');
 });
 
+
 // 404 handler for undefined routes
 app.use('*', notFoundHandler);
-
 // Global error handler
 app.use(errorHandler);
 
-// Initialize Firebase and start server
-async function startServer() {
+
+
+// 404 handler
+app.use('*', (req, res) => {
+  res.status(404).json({
+    error: 'Route not found',
+    path: req.originalUrl,
+    method: req.method,
+  });
+});
+
+// Global error handler
+app.use((error, req, res,next) => {
+  console.error('Global error handler:', error);
+
+  let statusCode = 500;
+  let message = 'Internal server error';
+
+  if (error.name === 'ValidationError') {
+    statusCode = 400;
+    message = error.message;
+  } else if (error.name === 'UnauthorizedError') {
+    statusCode = 401;
+    message = 'Unauthorized';
+  } else if (error.name === 'ForbiddenError') {
+    statusCode = 403;
+    message = 'Forbidden';
+  } else if (error.name === 'NotFoundError') {
+    statusCode = 404;
+    message = 'Resource not found';
+  } else if (error.code === 'ECONNREFUSED') {
+    statusCode = 503;
+    message = 'Service unavailable';
+
+  }
+});
+
+// Start the server
+const startServer = async () => {
   try {
     await initializeFirebase();
+    
     
     const server = app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
@@ -76,51 +173,43 @@ async function startServer() {
       console.log(`Auth API: http://localhost:${PORT}/api/auth`);
       console.log(`Users API: http://localhost:${PORT}/api/users`);
       console.log(`Hikes API: http://localhost:${PORT}/api/hikes`);
+      console.log(`Feed API: http://localhost:${PORT}/api/feed`);
+      console.log(`Discover API: http://localhost:${PORT}/api/discover`);
+      console.log(`Goals API: http://localhost:${PORT}/api/goals`);
+      console.log(`Friends API: http://localhost:${PORT}/api/friends`);
       console.log(`Planned Hikes API: http://localhost:${PORT}/api/planned-hikes`); 
       console.log(`Gear API: http://localhost:${PORT}/api/gear`);
-
+      console.log(`Planned Hikes API: http://localhost:${PORT}/api/planned-hikes`); 
+      console.log(`Gear API: http://localhost:${PORT}/api/gear`);
+    });
+    
+   process.on('SIGTERM', () => {
+      console.log('SIGTERM received, shutting down gracefully');
+      server.close(() => {
+        console.log('Process terminated');
+        process.exit(0);
+      });
     });
 
-    return server;
-  } catch (error) {
-    console.error('Failed to start server:', error);
+    process.on('SIGINT', () => {
+      console.log('SIGINT received, shutting down gracefully');
+      server.close(() => {
+        console.log('Process terminated');
+        process.exit(0);
+      });
+    });
+  } catch (err) {
+    console.error('Failed to start server:', err);
     process.exit(1);
   }
-}
+};
+
+//  Wrap server startup in async function
 
 
-let serverInstance = null;
 
-startServer().then((server) => {
-  serverInstance = server;
-}).catch((error) => {
-  console.error('Failed to start server:', error);
-  process.exit(1);
-});
-
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully');
-  if (serverInstance) {
-    serverInstance.close(() => {
-      console.log('Process terminated');
-      process.exit(0);
-    });
-  } else {
-    process.exit(0);
-  }
-});
-
-process.on('SIGINT', () => {
-  console.log('SIGINT received, shutting down gracefully');
-  if (serverInstance) {
-    serverInstance.close(() => {
-      console.log('Process terminated');
-      process.exit(0);
-    });
-  } else {
-    process.exit(0);
-  }
-});
+startServer();
 
 export default app;
+
+
