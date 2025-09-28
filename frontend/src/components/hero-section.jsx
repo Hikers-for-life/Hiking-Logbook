@@ -3,7 +3,7 @@ import { Card, CardContent } from './ui/card';
 import { MapPin, Clock, TrendingUp } from 'lucide-react';
 import heroImage from './assets/hero-mountain.jpg';
 
-export const HeroSection = ({ onGetStarted }) => {
+export const HeroSection = ({ onGetStarted, onViewSampleLog }) => {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Image with Overlay */}
@@ -20,7 +20,7 @@ export const HeroSection = ({ onGetStarted }) => {
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-foreground mb-6">
             Track Your
             <span className="block bg-gradient-trail bg-clip-text text-transparent">
-              Mountain Adventures
+              Elevation Adventures
             </span>
           </h1>
           <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
@@ -40,7 +40,8 @@ export const HeroSection = ({ onGetStarted }) => {
             <Button
               size="lg"
               variant="outline"
-              className="border-border bg-background/50 backdrop-blur-sm"
+              className="border-border bg-background/50 backdrop-blur-sm hover:bg-background/80 transition-all duration-300"
+              onClick={onViewSampleLog}
             >
               View Sample Log
             </Button>
