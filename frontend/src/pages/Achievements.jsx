@@ -632,27 +632,27 @@ const Achievements = () => {
           <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 gap-1 sm:gap-0">
             <TabsTrigger value="badges" className="text-xs sm:text-sm px-2 sm:px-3">
               <span className="hidden sm:inline">Badges</span>
-              <span className="sm:hidden">🏆</span>
+              <span className="sm:hidden">Badges</span>
             </TabsTrigger>
             <TabsTrigger value="goals" className="text-xs sm:text-sm px-2 sm:px-3">
               <span className="hidden sm:inline">Goals</span>
-              <span className="sm:hidden">🎯</span>
+              <span className="sm:hidden">Goals</span>
             </TabsTrigger>
             <TabsTrigger value="completed" className="text-xs sm:text-sm px-2 sm:px-3">
               <span className="hidden sm:inline">Completed</span>
-              <span className="sm:hidden">✅</span>
+              <span className="sm:hidden">Done</span>
             </TabsTrigger>
             <TabsTrigger value="progress" className="text-xs sm:text-sm px-2 sm:px-3">
               <span className="hidden sm:inline">In Progress</span>
-              <span className="sm:hidden">⏳</span>
+              <span className="sm:hidden">Active</span>
             </TabsTrigger>
             <TabsTrigger value="charts" className="text-xs sm:text-sm px-2 sm:px-3">
               <span className="hidden sm:inline">Charts</span>
-              <span className="sm:hidden">📊</span>
+              <span className="sm:hidden">Stats</span>
             </TabsTrigger>
             <TabsTrigger value="pinned" className="text-xs sm:text-sm px-2 sm:px-3">
               <span className="hidden sm:inline">Pinned Hikes</span>
-              <span className="sm:hidden">📌</span>
+              <span className="sm:hidden">Pinned</span>
             </TabsTrigger>
           </TabsList>
 

@@ -405,23 +405,25 @@ const handleStartActiveHike = async (formData) => {
               Keep notes on location, weather, elevation, and route - along the way
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <Button 
-              className="bg-green-600 hover:bg-green-700 text-white shadow-mountain hover:shadow-elevation hover:scale-105 transition-all duration-300"
+              className="bg-green-600 hover:bg-green-700 text-white shadow-mountain hover:shadow-elevation hover:scale-105 transition-all duration-300 flex-1 sm:flex-none"
               size="lg"
               onClick={() => setIsStartHikeFormOpen(true)}
             >
               <Play className="h-5 w-5 mr-2" />
-              Start Hike
+              <span className="hidden sm:inline">Start Hike</span>
+              <span className="sm:hidden">Start Hike</span>
             </Button>
             <Button 
-              className="bg-gradient-trail text-primary-foreground shadow-mountain hover:shadow-elevation hover:scale-105 transition-all duration-300"
+              className="bg-gradient-trail text-primary-foreground shadow-mountain hover:shadow-elevation hover:scale-105 transition-all duration-300 flex-1 sm:flex-none"
               size="lg"
               onClick={() => setIsNewEntryOpen(true)}
               variant="outline"
             >
               <Plus className="h-5 w-5 mr-2" />
-              Add Past Hike
+              <span className="hidden sm:inline">Add Past Hike</span>
+              <span className="sm:hidden">Add Past</span>
             </Button>
             
           </div>
