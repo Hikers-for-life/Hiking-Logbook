@@ -47,6 +47,48 @@ const Friends = () => {
   const { toast } = useToast();
   const [timestampUpdate, setTimestampUpdate] = useState(0); // Force re-render for timestamps
   const [isInitialLoad, setIsInitialLoad] = useState(true); // Track initial load to prevent multiple simultaneous requests
+  const [sharedPosts, setSharedPosts] = useState(new Set()); // Track which posts have been shared
+  const [deletedOriginalPosts, setDeletedOriginalPosts] = useState(new Set()); // Track deleted original posts
+
+  // Helper function to determine share button state
+  const getShareButtonState = (activity) => {
+    const originalPostId = activity.type === "share" ? activity.original.id : activity.id;
+    const isShared = sharedPosts.has(originalPostId);
+    const isOriginalDeleted = deletedOriginalPosts.has(originalPostId);
+
+    if (isOriginalDeleted) {
+      return { text: "Share", disabled: false, isShared: false };
+    }
+
+    return {
+      text: isShared ? "Shared" : "Share",
+      disabled: isShared,
+      isShared: isShared
+    };
+  };
+
+  // Function to handle external post deletions (from other pages like Logbook)
+  const handleExternalPostDeletion = (deletedPostId) => {
+    setDeletedOriginalPosts(prev => new Set([...prev, deletedPostId]));
+    // Remove from shared posts tracking since the original is deleted
+    setSharedPosts(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(deletedPostId);
+      return newSet;
+    });
+  };
+
+  // Listen for post deletions from other pages
+  useEffect(() => {
+    const handlePostDeletion = (event) => {
+      if (event.detail && event.detail.type === 'post-deleted') {
+        handleExternalPostDeletion(event.detail.postId);
+      }
+    };
+
+    window.addEventListener('post-deleted', handlePostDeletion);
+    return () => window.removeEventListener('post-deleted', handlePostDeletion);
+  }, []);
 
   const handleSearch = async () => {
     if (!searchTerm.trim()) return;
@@ -208,6 +250,15 @@ const Friends = () => {
         }));
 
         setRecentActivity(activitiesWithComments);
+
+        // Initialize shared posts tracking from loaded data
+        const sharedPostIds = new Set();
+        activitiesWithComments.forEach(activity => {
+          if (activity.type === "share" && activity.original && activity.original.id) {
+            sharedPostIds.add(activity.original.id);
+          }
+        });
+        setSharedPosts(sharedPostIds);
       } catch (err) {
         console.error("Failed to fetch feed:", err);
         // If it's a 429 error, show a user-friendly message
@@ -348,7 +399,6 @@ const Friends = () => {
 
 
   // ---- Share handler ----
-  // ---- Share handler ----
   const handleShare = async (activity) => {
     const user = auth.currentUser;
 
@@ -383,6 +433,9 @@ const Friends = () => {
     // Optimistic UI update
     setRecentActivity((prev) => [tempShare, ...prev]);
 
+    // Track that this post has been shared
+    setSharedPosts(prev => new Set([...prev, activity.id]));
+
     try {
       //  use service function instead of fetch
       const data = await shareFeed(activity.id, {
@@ -412,10 +465,19 @@ const Friends = () => {
       });
       // rollback optimistic
       setRecentActivity((prev) => prev.filter((a) => a.id !== tempShare.id));
+      // Remove from shared posts tracking
+      setSharedPosts(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(activity.id);
+        return newSet;
+      });
     }
   };
 
   const handleDeletePost = async (activityId) => {
+    // Find the activity being deleted
+    const activityToDelete = recentActivity.find(a => a.id === activityId);
+
     // Optimistic UI update: remove the post locally first
     const prevActivity = [...recentActivity];
     setRecentActivity(prev => prev.filter(a => a.id !== activityId));
@@ -423,6 +485,12 @@ const Friends = () => {
     try {
       // Call a backend/service function to delete the post
       await deleteFeed(activityId);
+
+      // If this was an original post (not a share), mark it as deleted for shared posts
+      if (activityToDelete && activityToDelete.type !== "share") {
+        setDeletedOriginalPosts(prev => new Set([...prev, activityId]));
+      }
+
       toast({
         title: "✅  Post deleted",
         description: "The post has been removed from your feed.",
@@ -784,13 +852,26 @@ const Friends = () => {
                             {commentsMap[activity.id]?.length || activity.comments?.length || 0}
                           </button>
 
-                          <button
-                            onClick={() => handleShare(activity.type === "share" ? activity.original : activity)}
-                            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                          >
-                            <Share2 className="h-4 w-4" />
-                            Share
-                          </button>
+                          {(() => {
+                            const shareState = getShareButtonState(activity);
+                            return (
+                              <button
+                                onClick={() => {
+                                  if (!shareState.disabled) {
+                                    handleShare(activity.type === "share" ? activity.original : activity);
+                                  }
+                                }}
+                                disabled={shareState.disabled}
+                                className={`flex items-center gap-1 text-sm transition-colors ${shareState.disabled
+                                    ? "text-green-600 cursor-not-allowed"
+                                    : "text-muted-foreground hover:text-foreground"
+                                  }`}
+                              >
+                                <Share2 className="h-4 w-4" />
+                                {shareState.text}
+                              </button>
+                            );
+                          })()}
 
                           {isOwnPost && (
                             <button
