@@ -550,7 +550,7 @@ const Achievements = () => {
         hike: achievement.title || achievement.name, // backend uses 'hike' string field; reuse it for title
         description: achievement.description || "",
         stats: achievement.progressText || "",
-        photo: achievement.icon || null,
+        photo: null, // Don't include photos for achievement posts
       };
 
       const created = await createFeed(postBody);
