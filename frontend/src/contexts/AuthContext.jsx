@@ -54,15 +54,13 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Check if environment variables are set correctly
-  useEffect(() => {
-    if (!process.env.REACT_APP_API_URL || process.env.REACT_APP_API_URL.includes('your-backend-api-url.com')) {
-      console.error('Environment Error: REACT_APP_API_URL is not set correctly!');
-      console.error('Current value:', process.env.REACT_APP_API_URL);
-      console.error('Please set REACT_APP_API_URL to your actual backend URL');
-      setError('Backend API URL not configured.');
-    }
-  }, []);
+  // Get the correct API URL
+  const getApiUrl = () => {
+    return process.env.REACT_APP_API_URL || 
+      (window.location.hostname === 'hiking-logbook.web.app' 
+        ? 'https://hiking-logbook-hezw.onrender.com'
+        : 'http://localhost:3001');
+  };
 
 
 
@@ -72,7 +70,7 @@ export const AuthProvider = ({ children }) => {
       setError(null);
       
       // Call backend signup route to create both Auth user and Firestore document
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/auth/signup`, {
+      const response = await fetch(`${getApiUrl()}/auth/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -165,7 +163,7 @@ export const AuthProvider = ({ children }) => {
       
       // For Google sign-in, directly create the profile
       // This avoids the 500 error when profile doesn't exist
-      const apiUrl = `${process.env.REACT_APP_API_URL}/users/create-profile`;
+      const apiUrl = `${getApiUrl()}/users/create-profile`;
       
       const createResponse = await fetch(
         apiUrl,
@@ -217,7 +215,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const token = await currentUser.getIdToken();
       const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/auth/profile`,
+        `${getApiUrl()}/auth/profile`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -248,7 +246,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const token = await currentUser.getIdToken();
       const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/auth/profile`,
+        `${getApiUrl()}/auth/profile`,
         {
           method: 'PUT',
           headers: {

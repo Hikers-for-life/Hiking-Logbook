@@ -2,7 +2,10 @@
 import { useState, useCallback } from 'react';
 import { auth } from '../config/firebase.js';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 
+  (window.location.hostname === 'hiking-logbook.web.app' 
+    ? 'https://hiking-logbook-hezw.onrender.com/api'
+    : 'http://localhost:3001/api');
 
 // Helper function to get auth token
 const getAuthToken = async () => {
