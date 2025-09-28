@@ -1,8 +1,8 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
-import { Input } from './ui/input';
 import {
   MapPin,
   Calendar,
@@ -10,7 +10,6 @@ import {
   Mountain,
   Star,
   Plus,
-  Search,
 } from 'lucide-react';
 
 const sampleHikes = [
@@ -62,13 +61,11 @@ const difficultyColors = {
 
 export const LogbookSection = () => {
   const [hikes] = useState(sampleHikes);
-  const [searchTerm, setSearchTerm] = useState('');
+  const navigate = useNavigate();
 
-  const filteredHikes = hikes.filter(
-    (hike) =>
-      hike.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      hike.location.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleAddHike = () => {
+    navigate('/?auth=login');
+  };
 
   return (
     <section id="logbook" className="py-20 bg-gradient-card">
@@ -82,26 +79,20 @@ export const LogbookSection = () => {
             conquests.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center max-w-md mx-auto">
-            <div className="relative flex-1 w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder="Search hikes..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Button className="bg-gradient-trail text-primary-foreground">
-              <Plus className="h-4 w-4 mr-2" />
+          <div className="flex justify-center mb-8">
+            <Button
+              size="lg"
+              className="bg-gradient-trail text-primary-foreground px-8 py-3"
+              onClick={handleAddHike}
+            >
+              <Plus className="h-5 w-5 mr-2" />
               Add Hike
             </Button>
           </div>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredHikes.map((hike) => (
+          {hikes.map((hike) => (
             <Card
               key={hike.id}
               className="hover:shadow-elevation transition-all duration-300 hover:-translate-y-1"
@@ -113,11 +104,10 @@ export const LogbookSection = () => {
                     {[...Array(5)].map((_, i) => (
                       <Star
                         key={i}
-                        className={`h-4 w-4 ${
-                          i < hike.rating
-                            ? 'text-trail fill-current'
-                            : 'text-muted-foreground'
-                        }`}
+                        className={`h-4 w-4 ${i < hike.rating
+                          ? 'text-trail fill-current'
+                          : 'text-muted-foreground'
+                          }`}
                       />
                     ))}
                   </div>
@@ -158,7 +148,7 @@ export const LogbookSection = () => {
           ))}
         </div>
 
-        {filteredHikes.length === 0 && (
+        {hikes.length === 0 && (
           <div className="text-center py-12">
             <Mountain className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-medium text-foreground mb-2">

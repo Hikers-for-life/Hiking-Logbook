@@ -30,12 +30,25 @@ const Index = () => {
     navigate('/signup');
   };
 
+  const handleViewSampleLog = () => {
+    const logbookSection = document.getElementById('logbook');
+    if (logbookSection) {
+      logbookSection.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
 
       {/* Hero Section with integrated login functionality */}
-      <HeroSection onGetStarted={handleLoginOpen} />
+      <HeroSection
+        onGetStarted={handleLoginOpen}
+        onViewSampleLog={handleViewSampleLog}
+      />
 
       {/* Logbook Section - Now comes right after hero */}
       <LogbookSection />
@@ -46,7 +59,7 @@ const Index = () => {
       <Login
         open={isLoginOpen}
         onOpenChange={handleLoginClose}
-        onLogin={() => {}} // Placeholder
+        onLogin={() => { }} // Placeholder
         onSignup={handleSignupRedirect}
       />
     </div>
