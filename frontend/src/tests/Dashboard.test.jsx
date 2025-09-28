@@ -45,7 +45,7 @@ describe('Dashboard Component', () => {
         <Dashboard />
       </MemoryRouter>
     );
-
+  };
 
   const mockProfile = {
     displayName: 'Test User',
@@ -129,7 +129,7 @@ test('displays profile information', async () => {
     fireEvent.click(editButton);
     // Optional: Add assertions if a modal opens or action occurs
 
-  };
+  });
 
   beforeEach(() => {
     jest.clearAllMocks();
