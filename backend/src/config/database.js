@@ -287,6 +287,15 @@ export const dbUtils = {
         endTime: endData.endTime || new Date(),
         duration: endData.duration || 0,
         endLocation: endData.endLocation || null,
+        // Add missing fields that were being lost
+        elevation: endData.elevation || 0,
+        distance: endData.distance || 0,
+        waypoints: endData.waypoints || [],
+        notes: endData.notes || '',
+        weather: endData.weather || '',
+        difficulty: endData.difficulty || 'Easy',
+        title: endData.title || '',
+        location: endData.location || '',
         updatedAt: new Date()
       };
 

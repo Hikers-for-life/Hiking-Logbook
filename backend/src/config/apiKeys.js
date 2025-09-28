@@ -1,5 +1,4 @@
 // Simple API key management for external access
-// In production, you'd want to store these in a database with expiration dates, usage limits, etc.
 
 const API_KEYS = new Map([
   // Format: [key, { name, permissions, createdAt, lastUsed }]

@@ -579,7 +579,7 @@ const handleStartActiveHike = async (formData) => {
                 </div>
 
                 {/* Actions */}
-                <div className="flex justify-between items-center pt-2">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center pt-2 space-y-2 sm:space-y-0">
                   <div className="flex items-center space-x-2">
                     {isHikePinned(hike.id) && (
                       <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-200">
@@ -594,22 +594,24 @@ const handleStartActiveHike = async (formData) => {
                       </Badge>
                     )}
                   </div>
-                  <div className="flex space-x-2">
+                  <div className="flex flex-wrap gap-1 sm:gap-2">
                     <Button 
                       variant="ghost" 
                       size="sm" 
                       className={`${isHikePinned(hike.id) 
                         ? 'text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50' 
                         : 'text-muted-foreground hover:text-yellow-600 hover:bg-yellow-50'
-                      }`}
+                      } px-2 sm:px-3`}
                       onClick={() => handlePinHike(hike.id)}
                     >
                       {isHikePinned(hike.id) ? (
-                        <PinOff className="h-4 w-4 mr-1" />
+                        <PinOff className="h-4 w-4 sm:mr-1" />
                       ) : (
-                        <Pin className="h-4 w-4 mr-1" />
+                        <Pin className="h-4 w-4 sm:mr-1" />
                       )}
-                      {isHikePinned(hike.id) ? 'Unpin' : 'Pin'}
+                      <span className="hidden sm:inline">
+                        {isHikePinned(hike.id) ? 'Unpin' : 'Pin'}
+                      </span>
                     </Button>
                     <Button 
                       variant="ghost" 
@@ -617,42 +619,44 @@ const handleStartActiveHike = async (formData) => {
                       className={`${hike.shared 
                         ? 'text-blue-600 hover:text-blue-700 hover:bg-blue-50' 
                         : 'text-muted-foreground hover:text-blue-600 hover:bg-blue-50'
-                      }`}
+                      } px-2 sm:px-3`}
                       onClick={() => handleShareHike(hike.id)}
                     >
                       {hike.shared ? (
-                        <Share2 className="h-4 w-4 mr-1" />
+                        <Share2 className="h-4 w-4 sm:mr-1" />
                       ) : (
-                        <Share className="h-4 w-4 mr-1" />
+                        <Share className="h-4 w-4 sm:mr-1" />
                       )}
-                      {hike.shared ? 'Shared' : 'Share'}
+                      <span className="hidden sm:inline">
+                        {hike.shared ? 'Shared' : 'Share'}
+                      </span>
                     </Button>
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      className="text-summit hover:text-summit hover:bg-muted"
+                      className="text-summit hover:text-summit hover:bg-muted px-2 sm:px-3"
                       onClick={() => handleViewRouteMap(hike)}
                     >
-                      <Map className="h-4 w-4 mr-1" />
-                      Route Map
+                      <Map className="h-4 w-4 sm:mr-1" />
+                      <span className="hidden sm:inline">Route Map</span>
                     </Button>
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      className="text-forest hover:text-forest hover:bg-muted"
+                      className="text-forest hover:text-forest hover:bg-muted px-2 sm:px-3"
                       onClick={() => handleEditHike(hike)}
                     >
-                      <Edit3 className="h-4 w-4 mr-1" />
-                      Edit
+                      <Edit3 className="h-4 w-4 sm:mr-1" />
+                      <span className="hidden sm:inline">Edit</span>
                     </Button>
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      className="text-red-600 hover:text-red-600 hover:bg-red-50"
+                      className="text-red-600 hover:text-red-600 hover:bg-red-50 px-2 sm:px-3"
                       onClick={() => handleDeleteHike(hike.id)}
                     >
-                      <Trash2 className="h-4 w-4 mr-1" />
-                      Delete
+                      <Trash2 className="h-4 w-4 sm:mr-1" />
+                      <span className="hidden sm:inline">Delete</span>
                     </Button>
                   </div>
                 </div>

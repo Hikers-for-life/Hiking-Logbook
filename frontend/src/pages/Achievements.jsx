@@ -582,18 +582,19 @@ const Achievements = () => {
       
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-foreground mb-2">Achievements & Progress</h1>
-              <p className="text-muted-foreground">Track your hiking milestones and unlock new achievements.</p>
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">Achievements & Progress</h1>
+              <p className="text-muted-foreground text-sm sm:text-base">Track your hiking milestones and unlock new achievements.</p>
             </div>
             <div className="flex gap-2">
               <Button 
                 onClick={() => setIsGoalFormOpen(true)}
-                className="bg-gradient-trail text-primary-foreground hover:opacity-90"
+                className="bg-gradient-trail text-primary-foreground hover:opacity-90 w-full sm:w-auto"
               >
                 <Plus className="h-4 w-4 mr-2" />
-                Create Goal
+                <span className="hidden sm:inline">Create Goal</span>
+                <span className="sm:hidden">Create</span>
               </Button>
             </div>
           </div>
@@ -628,13 +629,31 @@ const Achievements = () => {
         </div>
 
         <Tabs value={currentTab} onValueChange={handleTabChange} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="badges">Badges</TabsTrigger>
-            <TabsTrigger value="goals">Goals</TabsTrigger>
-            <TabsTrigger value="completed">Completed</TabsTrigger>
-            <TabsTrigger value="progress">In Progress</TabsTrigger>
-            <TabsTrigger value="charts">Charts</TabsTrigger>
-            <TabsTrigger value="pinned">Pinned Hikes</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 gap-1 sm:gap-0">
+            <TabsTrigger value="badges" className="text-xs sm:text-sm px-2 sm:px-3">
+              <span className="hidden sm:inline">Badges</span>
+              <span className="sm:hidden">🏆</span>
+            </TabsTrigger>
+            <TabsTrigger value="goals" className="text-xs sm:text-sm px-2 sm:px-3">
+              <span className="hidden sm:inline">Goals</span>
+              <span className="sm:hidden">🎯</span>
+            </TabsTrigger>
+            <TabsTrigger value="completed" className="text-xs sm:text-sm px-2 sm:px-3">
+              <span className="hidden sm:inline">Completed</span>
+              <span className="sm:hidden">✅</span>
+            </TabsTrigger>
+            <TabsTrigger value="progress" className="text-xs sm:text-sm px-2 sm:px-3">
+              <span className="hidden sm:inline">In Progress</span>
+              <span className="sm:hidden">⏳</span>
+            </TabsTrigger>
+            <TabsTrigger value="charts" className="text-xs sm:text-sm px-2 sm:px-3">
+              <span className="hidden sm:inline">Charts</span>
+              <span className="sm:hidden">📊</span>
+            </TabsTrigger>
+            <TabsTrigger value="pinned" className="text-xs sm:text-sm px-2 sm:px-3">
+              <span className="hidden sm:inline">Pinned Hikes</span>
+              <span className="sm:hidden">📌</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="badges" className="space-y-6">
