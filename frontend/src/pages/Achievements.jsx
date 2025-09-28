@@ -28,6 +28,9 @@ import {
   Share
 } from "lucide-react";
 
+import { createFeed } from "../services/feed";
+
+
 // Simple Progress Update Form Component
 const ProgressUpdateForm = ({ goal, onSubmit, onCancel }) => {
   const [newProgress, setNewProgress] = useState(goal?.progress || 0);
@@ -539,28 +542,42 @@ const Achievements = () => {
   };
 
   // Handler for sharing achievements
-  const handleShareAchievement = (achievement) => {
-    const shareMessage = `🎉 Achievement Unlocked: ${achievement.title}! ${achievement.description}`;
-    
-    // Try to use the Web Share API if available
+// Handler for sharing achievements
+
+/*const handleShareAchievement = async (achievement) => {
+  const shareMessage = `🎉 Achievement Unlocked: ${achievement.title}! ${achievement.description || ""}`;
+
+  try {
+    // Create activity post for achievement (server attaches user info)
+    const postBody = {
+      action: "achieved",
+      hike: achievement.title, // backend uses 'hike' string field; reuse it for title
+      description: achievement.description || "",
+      stats: achievement.progressText || "",
+      photo: achievement.icon || null,
+    };
+
+    const created = await createFeed(postBody);
+    console.log("Achievement posted to feed:", created);
+
+    // Then do the client-side sharing UX (Web Share API / clipboard)
     if (navigator.share) {
-      navigator.share({
-        title: 'Hiking Achievement',
+      await navigator.share({
+        title: "Hiking Achievement",
         text: shareMessage,
-        url: window.location.href
-      }).catch(console.error);
+        url: window.location.href,
+      });
     } else {
       // Fallback to copying to clipboard
-      navigator.clipboard.writeText(shareMessage).then(() => {
-        // Use a subtle console log instead of popup
-        console.log('Achievement copied to clipboard! You can now share it with your friends.');
-        // You could also add a toast notification here if you have a toast system
-      }).catch(() => {
-        // Final fallback - copy to console instead of popup
-        console.log(`Share this achievement:\n\n${shareMessage}`);
-      });
+      await navigator.clipboard.writeText(shareMessage);
+      alert("Achievement copied to clipboard! You can now share it with your friends.");
     }
-  };
+  } catch (error) {
+    console.error("Failed to share achievement:", error);
+    alert("Something went wrong while sharing your achievement. Please try again.");
+  }
+};
+*/
 
   if (loading) {
     return (
@@ -693,7 +710,7 @@ const Achievements = () => {
                                 <Calendar className="h-3 w-3" />
                                 Earned {formatDate(badge.earnedDate)}
                               </div>
-                              <Button
+                              {/*<Button
                                 variant="ghost"
                                 size="sm"
                                 className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
@@ -701,7 +718,7 @@ const Achievements = () => {
                               >
                                 <Share className="h-3 w-3 mr-1" />
                                 Share
-                              </Button>
+                              </Button>*/}
                             </div>
                           )}
                         </CardContent>
@@ -774,7 +791,7 @@ const Achievements = () => {
                                 <Calendar className="h-3 w-3" />
                                 Completed {formatDate(goal.earnedDate || goal.updatedAt)}
                               </div>
-                              <Button
+                              {/*<Button
                                 variant="ghost"
                                 size="sm"
                                 className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
@@ -782,7 +799,7 @@ const Achievements = () => {
                               >
                                 <Share className="h-3 w-3 mr-1" />
                                 Share
-                              </Button>
+                              </Button>*/}
                             </div>
                           )}
 
@@ -851,8 +868,9 @@ const Achievements = () => {
                         Earned {formatDate(badge.earnedDate)}
                       </div>
                     )}
-                    <div className="flex justify-end gap-2 pt-2">
-                      <Button
+                    {/* TODO: Re-enable share button when social features are ready */}
+                   <div className="flex justify-end gap-2 pt-2">
+                      {/*<Button
                         variant="ghost"
                         size="sm"
                         className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
@@ -860,7 +878,7 @@ const Achievements = () => {
                       >
                         <Share className="h-3 w-3 mr-1" />
                         Share
-                      </Button>
+                      </Button>*/}
                     </div>
                   </CardContent>
                 </Card>
@@ -890,7 +908,7 @@ const Achievements = () => {
                       Completed {formatDate(goal.earnedDate || goal.updatedAt)}
                     </div>
                     <div className="flex justify-end gap-2 pt-2">
-                      <Button
+                      {/*<Button
                         variant="ghost"
                         size="sm"
                         className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
@@ -898,7 +916,7 @@ const Achievements = () => {
                       >
                         <Share className="h-3 w-3 mr-1" />
                         Share
-                      </Button>
+                      </Button>*/}
                     </div>
                   </CardContent>
                 </Card>

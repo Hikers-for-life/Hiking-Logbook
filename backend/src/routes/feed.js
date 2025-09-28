@@ -5,38 +5,55 @@ import { getDatabase } from '../config/firebase.js';
 const router = express.Router();
 
 // GET /feed - fetch latest activities
+// GET /feed - fetch latest activities
 router.get('/', verifyAuth, async (req, res) => {
   try {
     const db = getDatabase();
-    const snapshot = await db.collection('feed_items')
+    const snapshot = await db
+      .collection('feed_items')
       .orderBy('created_at', 'desc')
       .limit(20)
       .get();
 
-    const activities = await Promise.all(snapshot.docs.map(async (doc) => {
-      const data = doc.data();
+    const activities = await Promise.all(
+      snapshot.docs.map(async (doc) => {
+        const data = doc.data();
 
-      // Fetch comments with user names
-      const commentsSnapshot = await doc.ref.collection('comments').orderBy('created_at', 'asc').get();
-      const comments = commentsSnapshot.docs.map(c => ({
-        id: c.id,    
-        ...c.data()
-      }));
+        // ✅ Ensure safe fallbacks for missing fields
+        const safeName = data.name || "Unknown Hiker";
+        const safeAvatar = data.avatar || safeName[0]?.toUpperCase() || "U";
 
-      return {
-        id: doc.id,
-        ...data,
-        comments
-      };
-    }));
+        // Fetch comments with user names
+        const commentsSnapshot = await doc.ref
+          .collection('comments')
+          .orderBy('created_at', 'asc')
+          .get();
 
-    res.json({ activities });
+        const comments = commentsSnapshot.docs.map((c) => ({
+          id: c.id,
+          ...c.data(),
+        }));
+
+        return {
+          id: doc.id,
+          ...data,
+          name: safeName,
+          avatar: safeAvatar,
+          comments: comments || [],
+        };
+      })
+    );
+
+    // ✅ Return the array directly instead of { activities }
+    res.json(activities);
   } catch (error) {
     console.error('Error fetching feed:', error);
     res.status(500).json({ error: 'Failed to fetch feed' });
   }
 });
 
+
+// POST /feed - create a new activity
 // POST /feed - create a new activity
 router.post('/', verifyAuth, async (req, res) => {
   try {
@@ -47,15 +64,31 @@ router.post('/', verifyAuth, async (req, res) => {
       return res.status(400).json({ error: 'Action and hike are required' });
     }
 
+    // 🔍 Fetch user profile to get display name
+    const userDoc = await db.collection('users').doc(req.user.uid).get();
+    const userData = userDoc.exists ? userDoc.data() : {};
+
+    const fallbackName =
+      req.body.name ||
+      userData.name ||
+      userData.displayName ||
+      req.user?.displayName ||
+      req.user?.email?.split("@")[0] ||
+      "Anonymous";
+
+    const fallbackAvatar = fallbackName[0]?.toUpperCase() || "U";
+
     const newActivity = {
+      type: 'original',
       userId: req.user.uid,
-      name: req.user.name || req.user.displayName || req.user.email, // will show your name
-      action,           // e.g., "completed", "reached milestone"
-      hike,             // e.g., "Mount Rainier Trail"
-      description: description || "",
-      stats: stats || "",
+      name: fallbackName,
+      avatar: fallbackAvatar,
+      action,
+      hike,
+      description: description || '',
+      stats: stats || '',
       photo: photo || null,
-      time:new Date().toISOString(),
+      time: new Date().toISOString(),
       likes: [],
       created_at: new Date().toISOString(),
     };
@@ -78,11 +111,12 @@ router.post('/:id/like', verifyAuth, async (req, res) => {
 
     const ref = db.collection('feed_items').doc(id);
     const doc = await ref.get();
+
     if (!doc.exists) return res.status(404).json({ error: 'Feed item not found' });
 
     let likes = doc.data().likes || [];
     if (likes.includes(uid)) {
-      likes = likes.filter(u => u !== uid);
+      likes = likes.filter((u) => u !== uid);
     } else {
       likes.push(uid);
     }
@@ -145,7 +179,6 @@ router.delete('/:feedId/comments/:commentId', verifyAuth, async (req, res) => {
       .doc(commentId);
 
     const commentDoc = await commentRef.get();
-
     if (!commentDoc.exists) {
       return res.status(404).json({ error: 'Comment not found' });
     }
@@ -158,7 +191,6 @@ router.delete('/:feedId/comments/:commentId', verifyAuth, async (req, res) => {
     }
 
     await commentRef.delete();
-
     res.json({ message: 'Comment deleted' });
   } catch (error) {
     console.error('Error deleting comment:', error);
@@ -166,56 +198,105 @@ router.delete('/:feedId/comments/:commentId', verifyAuth, async (req, res) => {
   }
 });
 
-
-
 // POST /feed/:id/share
 // Share an activity
+// POST /feed/:feedId/share - share an existing activity
 router.post('/:feedId/share', verifyAuth, async (req, res) => {
   try {
     const db = getDatabase();
     const { sharerId, sharerName, sharerAvatar, original } = req.body;
 
+    // ✅ Fallbacks for sharer info
+    const safeSharerName =
+      sharerName ||
+      req.user?.name ||
+      req.user?.displayName ||
+      req.user?.email?.split("@")[0] ||
+      "Anonymous";
+
+    const safeSharerAvatar = sharerAvatar || safeSharerName[0]?.toUpperCase() || "U";
+
+    // ✅ Safely handle original activity data
+    const safeOriginal = original || {};
+
     const newActivity = {
-      type: "share",
-      original, // embed full original activity
-      userId: sharerId,
-      name: sharerName,
-      avatar: sharerAvatar,
+      type: 'share',
       created_at: new Date().toISOString(),
       likes: [],
+      userId: req.user.uid, 
+      name: safeSharerName,
+      avatar: safeSharerAvatar,
+      sharer: {
+        id: sharerId || req.user?.uid,
+        name: safeSharerName,
+        avatar: safeSharerAvatar,
+      },
+      original: {
+        id: safeOriginal.id || null,
+        name: safeOriginal.name || "Unknown Hiker",
+        avatar: safeOriginal.avatar || safeOriginal.name?.[0]?.toUpperCase() || "U",
+        action: safeOriginal.action || "shared a hike",
+        hike: safeOriginal.hike || "Unknown trail",
+        description: safeOriginal.description || "",
+        stats: safeOriginal.stats || "",
+        photo: safeOriginal.photo || null,
+        time: safeOriginal.time || new Date().toISOString(),
+      },
     };
 
     const docRef = await db.collection('feed_items').add(newActivity);
 
-    res.json({ newActivityId: docRef.id });
+    // ✅ Return full new activity so frontend can immediately render it
+    res.json({ id: docRef.id, ...newActivity });
   } catch (err) {
-    console.error("Error sharing activity:", err);
-    res.status(500).json({ error: "Failed to share activity" });
+    console.error('Error sharing activity:', err);
+    res.status(500).json({ error: 'Failed to share activity' });
   }
 });
 
-// DELETE /feed/:id
+// DELETE /feed/:id - delete a feed post
 router.delete('/:id', verifyAuth, async (req, res) => {
   try {
     const db = getDatabase();
     const { id } = req.params;
+    const uid = req.user?.uid;
+
+    if (!uid) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
 
     const docRef = db.collection('feed_items').doc(id);
     const docSnap = await docRef.get();
-    if (!docSnap.exists) return res.status(404).json({ error: 'Feed item not found' });
 
-    if (docSnap.data().userId !== req.user.uid) {
+    if (!docSnap.exists) {
+      return res.status(404).json({ error: 'Feed item not found' });
+    }
+
+    const postData = docSnap.data() || {};
+
+    // ✅ Match frontend logic for ownership
+    const ownerId = postData.userId || postData.sharer?.id;
+
+    if (ownerId !== uid) {
       return res.status(403).json({ error: 'Not authorized to delete this post' });
     }
 
+    // ✅ Delete all comments first (optional but clean)
+    const commentsRef = docRef.collection('comments');
+    const commentsSnap = await commentsRef.get();
+    const batch = db.batch();
+    commentsSnap.forEach((comment) => batch.delete(comment.ref));
+    await batch.commit();
+
+    // ✅ Delete the feed post itself
     await docRef.delete();
-    res.json({ message: 'Post deleted' });
+
+    res.json({ message: 'Post deleted successfully' });
   } catch (err) {
-    console.error('Failed to delete post:', err);
+    console.error('🔥 Failed to delete post:', err);
     res.status(500).json({ error: 'Failed to delete post' });
   }
 });
-
 
 
 export default router;

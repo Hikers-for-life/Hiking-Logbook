@@ -12,6 +12,9 @@ import RouteMapModal from "../components/RouteMapModal";
 import { MapPin, Clock, Mountain, Thermometer, Plus, Search, Map, Play, Trash2, Edit3, Pin, PinOff, Share2, Share } from "lucide-react";
 import { hikeApiService } from "../services/hikeApiService.js";
 import { useAuth } from "../contexts/AuthContext.jsx";
+import {  createFeed} from "../services/feed";
+import { getFirestore, doc, getDoc } from "firebase/firestore";
+import { useToast } from "../hooks/use-toast";
 
 const Logbook = () => {
   const { currentUser: user } = useAuth();
@@ -29,6 +32,7 @@ const Logbook = () => {
   const [error, setError] = useState(null);
   // Hike entries from database
   const [hikeEntries, setHikeEntries] = useState([]);
+  const { toast } = useToast();
 
   // Real-time stats state
   const [hikeStats, setHikeStats] = useState({
@@ -55,6 +59,7 @@ const Logbook = () => {
       if (difficultyFilter !== 'All') filters.difficulty = difficultyFilter;
       
       const response = await hikeApiService.getHikes(filters);
+      
 
       if (response.success) {
         
@@ -276,12 +281,17 @@ const handleStartActiveHike = async (formData) => {
         await loadHikes(searchTerm, difficultyFilter);
         setIsEditHikeOpen(false);
         setEditingHike(null);
+        if (updatedHikeData.notes) {
+
+        } 
       } else {
         setError('Failed to update hike. Please try again.');
+
       }
     } catch (err) {
       console.error('Failed to update hike:', err);
       setError('Failed to update hike. Please try again.');
+
     }
   };
 
@@ -313,31 +323,55 @@ const handleStartActiveHike = async (formData) => {
   };
 
   // Handler for sharing/unsharing hikes
-  const handleShareHike = async (hikeId) => {
-    try {
-      const hike = hikeEntries.find(h => h.id === hikeId);
-      const isShared = hike?.shared === true;
-      
-      if (isShared) {
-        // Unshare the hike
-        await hikeApiService.unshareHike(hikeId);
-        // Update local state
-        setHikeEntries(prev => prev.map(h => 
-          h.id === hikeId ? { ...h, shared: false } : h
-        ));
-      } else {
-        // Share the hike
-        await hikeApiService.shareHike(hikeId);
-        // Update local state
-        setHikeEntries(prev => prev.map(h => 
-          h.id === hikeId ? { ...h, shared: true } : h
-        ));
-      }
-    } catch (error) {
-      console.error('Failed to share/unshare hike:', error);
-      setError('Failed to share/unshare hike. Please try again.');
-    }
-  };
+// Handler for sharing/unsharing hikes
+const handleShareHike = async (hikeId) => {
+  try {
+    // 1️⃣ Always get the latest hike from backend (real source of truth)
+    const { success, data: hike } = await hikeApiService.getHike(hikeId);
+    if (!success || !hike) throw new Error("Hike not found or fetch failed");
+
+    // 2️⃣ Mark hike as shared (flip the `shared: true` flag)
+    await hikeApiService.shareHike(hikeId);
+
+    // 3️⃣ Create a feed post with REAL hike data
+    const result = await createFeed({
+      action: "completed a hike",
+      hike: hike.title || hike.name || "Untitled Hike",
+      description: hike.notes || hike.description || "",
+      stats: `${hike.distance || "0 mi"} • ${hike.elevation || "0 ft"} • ${hike.duration || "0s"}`,
+      photo: hike.photo || null,
+      hikeId: hike.id || hikeId,
+
+      // ✅ Include sharer info if present in the hike doc
+      userId: hike.userId || hike.ownerId || null,
+      userName: hike.userName || hike.ownerName || user?.displayName || user?.email || "Anonymous",
+      userAvatar: hike.userAvatar || null,
+    });
+
+    console.log("✅ Original feed post created:", result);
+
+    // 4️⃣ Update UI state so it reflects shared status
+    setHikeEntries((prev) =>
+      prev.map((h) => (h.id === hikeId ? { ...h, shared: true } : h))
+    );
+     toast({
+      title: " ✅ Hike shared!",
+      description: `${hike.title || hike.name || "This hike"} was posted to your feed.`,
+      duration: 3000,
+    });
+  } catch (err) {
+    console.error("❌ Failed to share hike:", err);
+    setError("Failed to share/unshare hike. Please try again.");
+  
+  toast({
+      title: "❌ Share failed",
+      description: "We couldn’t share your hike. Please try again later.",
+         duration: 3000,
+    });
+  }
+};
+
+
 
   // Check if a hike is pinned
   const isHikePinned = (hikeId) => {

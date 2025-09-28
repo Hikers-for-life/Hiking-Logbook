@@ -138,8 +138,7 @@ const onSubmit = async (data) => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-primary via-primary to-accent p-6 text-primary-foreground">
+      <div className="bg-gradient-to-r from-primary to-accent p-6 text-primary-foreground">
         <div className="max-w-4xl mx-auto">
           <Link to="/" className="inline-flex items-center gap-2 mb-4 hover:opacity-80 transition-opacity">
             <ArrowLeft className="h-5 w-5" />
@@ -151,7 +150,7 @@ const onSubmit = async (data) => {
       </div>
 
       <div className="max-w-4xl mx-auto p-6 -mt-8">
-        <Card className="shadow-lg border-0" style={{ boxShadow: "var(--nature-shadow)" }}>
+        <Card className="shadow-lg border-0">
           <CardHeader className="text-center pb-6">
             <div className="relative mx-auto mb-4">
               <Avatar className="h-32 w-32 border-4 border-background shadow-lg">
@@ -164,72 +163,42 @@ const onSubmit = async (data) => {
               </AvatarFallback>
 
               </Avatar>
-              <label className="absolute bottom-0 right-0 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full p-3 cursor-pointer transition-colors shadow-lg">
+              <label className="absolute bottom-0 right-0 bg-primary text-white rounded-full p-3 cursor-pointer shadow-lg">
                 <Camera className="h-5 w-5" />
-                <input
-                  type="file"
-                  className="hidden"
-                  accept="image/*"
-                  aria-label="Upload avatar" 
-                  onChange={handleImageUpload}
-                />
+                <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
               </label>
             </div>
             <CardTitle className="text-2xl">Profile Settings</CardTitle>
-            <CardDescription>
-              Keep your hiking profile up to date to connect with fellow adventurers
-            </CardDescription>
+            <CardDescription>Keep your profile updated to connect with fellow hikers</CardDescription>
           </CardHeader>
 
           <CardContent>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Name Field */}
+                  {/* Name */}
                   <FormField
                     control={form.control}
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-primary" />
-                          Display Name
-                        </FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="Enter your hiking name" 
-                            className="focus:ring-primary" 
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          This is how other hikers will see you on the trail
-                        </FormDescription>
+                        <FormLabel><User className="h-4 w-4 text-primary inline mr-1" /> Display Name</FormLabel>
+                        <FormControl><Input {...field} /></FormControl>
+                        <FormDescription>This name will be visible to other hikers</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
 
-                  {/* Location Field */}
+                  {/* Location */}
                   <FormField
                     control={form.control}
                     name="location"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4 text-accent" />
-                          Location
-                        </FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="City, State/Country" 
-                            className="focus:ring-primary" 
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Share your home base for local trail recommendations
-                        </FormDescription>
+                        <FormLabel><MapPin className="h-4 w-4 text-accent inline mr-1" /> Location</FormLabel>
+                        <FormControl><Input {...field} /></FormControl>
+                        <FormDescription>Helps us recommend nearby trails</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -245,26 +214,15 @@ const onSubmit = async (data) => {
                   name="bio"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="flex items-center gap-2">
-                        <FileText className="h-4 w-4 text-primary" />
-                        About You
-                      </FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Tell fellow hikers about your outdoor adventures, favorite trails, hiking experience, and what motivates you to explore nature..."
-                          className="min-h-[120px] focus:ring-primary resize-none"
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Share your hiking story and connect with like-minded adventurers ({field.value?.length || 0}/500)
-                      </FormDescription>
+                      <FormLabel><FileText className="h-4 w-4 text-primary inline mr-1" /> About You</FormLabel>
+                      <FormControl><Textarea {...field} className="min-h-[120px]" /></FormControl>
+                      <FormDescription>{field.value?.length || 0}/500 characters</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                {/* Action Buttons */}
+                {/* Buttons */}
                 <div className="flex flex-col sm:flex-row gap-4 pt-6">
                  
                     {/* fields... */}

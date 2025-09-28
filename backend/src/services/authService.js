@@ -1,6 +1,6 @@
 import { getAuth } from '../config/firebase.js';
+import { collections,dbUtils } from '../config/database.js';
 import { auth, db } from '../config/firebase.js';
-import {collections,  dbUtils } from '../config/database.js';
 import { getDatabase } from '../config/firebase.js';
 
 
@@ -63,23 +63,6 @@ export class AuthService {
 
 
 
-  static async  updateUserProfile(uid, data) {
-  const userRef = firestore.collection('users').doc(uid);
-
-  const updateData = {
-    ...(data.displayName && { displayName: data.displayName }),
-    ...(data.bio && { bio: data.bio }),
-    ...(data.location && { location: data.location }),
-  };
-
-  await userRef.set(updateData, { merge: true });
-
-  // Optionally update Firebase Auth
-  
-
-  const updatedDoc = await userRef.get();
-  return updatedDoc.data();
-}
 
 
 
@@ -174,57 +157,10 @@ export class AuthService {
     }
   }
 
-  // Verify user email
-  static async verifyEmail(uid) {
-    try {
-      
-      await auth.updateUser(uid, { emailVerified: true });
-      await dbUtils.updateUserProfile(uid, { emailVerified: true });
-      return { success: true };
-    } catch (error) {
-      throw new Error(`Failed to verify email: ${error.message}`);
-    }
-  }
 
 
-   static async getUserAchievements(userId) {
-    try {
-      // Subcollection version:
-      const snapshot = await db.collection('users')
-        .doc(userId)
-        .collection('achievements')
-        .get();
-
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-      // If you used array field instead, then:
-      // const userDoc = await db.collection('users').doc(userId).get();
-      // return userDoc.data().achievements || [];
-    } catch (error) {
-      console.error("Error fetching achievements:", error);
-      throw error;
-    }
-  }
 
 
-  static async getUserHikes(userId) {
-    try {
-      // Subcollection version:
-      const snapshot = await db.collection('users')
-        .doc(userId)
-        .collection('hikes')
-        .get();
-
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-      // If you used array field instead, then:
-      // const userDoc = await db.collection('users').doc(userId).get();
-      // return userDoc.data().achievements || [];
-    } catch (error) {
-      console.error("Error fetching hikes:", error);
-      throw error;
-    }
-  }
   
 
 

@@ -3,7 +3,7 @@ import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import { MemoryRouter } from "react-router-dom";
-import HikePlanner from "../pages/HikePlanner";
+import HikePlanner from "../pages/HikePlanner.jsx";
 
 // --- Mocks ---
 jest.mock("../contexts/AuthContext.jsx", () => ({
@@ -80,14 +80,63 @@ describe("HikePlanner Component", () => {
     expect(sats.length).toBeGreaterThan(0);
   });
 
-  test('displays upcoming trips', () => {
+  test('displays upcoming trips', async () => {
+    // Mock planned hikes data that matches test expectations
+    const mockPlannedHikes = [
+      {
+        id: '1',
+        title: 'Weekend Warriors: Lake Summit',
+        location: 'Lake District',
+        date: new Date('2024-12-25'),
+        distance: '8.5 mi',
+        difficulty: 'Medium',
+        status: 'confirmed',
+        description: 'A beautiful hike to the lake summit',
+        startTime: '08:00'
+      },
+      {
+        id: '2', 
+        title: 'Wildflower Photography Hike',
+        location: 'Meadow Valley',
+        date: new Date('2024-12-26'),
+        distance: '5.2 mi',
+        difficulty: 'Easy',
+        status: 'confirmed',
+        description: 'Perfect for nature photography',
+        startTime: '09:00'
+      }
+    ];
+    
+    plannedHikeApiService.getPlannedHikes.mockResolvedValueOnce(mockPlannedHikes);
+    
     renderHikePlanner();
+    
     expect(screen.getByText(/upcoming adventures/i)).toBeInTheDocument();
-    expect(screen.getByText(/weekend warriors: lake summit/i)).toBeInTheDocument();
-    expect(screen.getByText(/wildflower photography hike/i)).toBeInTheDocument();
+    
+    // Wait for the data to load and then check for the specific trip titles
+    expect(await screen.findByText(/weekend warriors: lake summit/i)).toBeInTheDocument();
+    expect(await screen.findByText(/wildflower photography hike/i)).toBeInTheDocument();
   });
 
   test('shows gear checklist', () => {
+    // Override the default mock to include the expected gear items
+    useGearChecklist.mockReturnValue({
+      gearChecklist: [
+        { item: "Hiking Boots", checked: false },
+        { item: "Water Bottle", checked: false }
+      ],
+      isLoading: false,
+      error: null,
+      loadGearChecklist: jest.fn(),
+      addGearItem: jest.fn(),
+      removeGearItem: jest.fn(),
+      toggleGearItem: jest.fn(),
+      resetGearChecklist: jest.fn(),
+      totalItems: 2,
+      checkedItems: 0,
+      completionPercentage: 0,
+    });
+    
     renderHikePlanner();
     expect(screen.getByText(/gear checklist/i)).toBeInTheDocument();
     expect(screen.getByText(/hiking boots/i)).toBeInTheDocument();

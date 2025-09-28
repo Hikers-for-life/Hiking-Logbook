@@ -133,13 +133,9 @@ const [isDeleting, setIsDeleting] = useState(false);
             <span>Edit Profile</span>
           </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem 
-          className="cursor-pointer text-destructive hover:bg-destructive/10 hover:text-destructive"
-          onClick={handleDeleteAccount}
-          disabled={isDeleting}
-        >
+        <DropdownMenuItem className="cursor-pointer text-destructive hover:bg-destructive/10 hover:text-destructive">
           <Trash2 className="mr-2 h-4 w-4" />
-          <span>{isDeleting ? 'Deleting...' : 'Delete Account'}</span>
+          <span>Delete Account</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem

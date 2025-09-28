@@ -1,5 +1,8 @@
-import express from 'express';
+﻿import express from 'express';
 import dotenv from 'dotenv';
+import helmet from 'helmet';
+import cors from 'cors';
+import morgan from 'morgan';
 import { initializeFirebase } from './config/firebase.js';
 import { swaggerUi, specs } from './config/swagger.js';
 import * as middleware from './middleware/index.js';
@@ -8,17 +11,14 @@ import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
 import hikeRoutes from './routes/hikes.js';
-import plannedHikeRoutes from './routes/plannedHikes.js';
-import gearRoutes from './routes/gear.js';
-import goalsRoutes from './routes/goals.js';
-import publicRoutes from './routes/public.js';
-
 import feedRoutes from './routes/feed.js';
 import discoverRoutes from './routes/discover.js';
-import helmet from 'helmet';
-import cors from 'cors';
-import morgan from 'morgan';
+import goalsRoutes from './routes/goals.js';
 import friendRoutes from "./routes/friends.js";
+import plannedHikeRoutes from './routes/plannedHikes.js';
+import gearRoutes from './routes/gear.js';
+import publicRoutes from './routes/public.js';
+
 
 
 dotenv.config();
@@ -92,11 +92,10 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/hikes', hikeRoutes);
-
 app.use("/api/friends", friendRoutes);
 app.use('/api/feed', feedRoutes);
 app.use('/api/discover', discoverRoutes);
-
+app.use('/api/goals', goalsRoutes);
 app.use('/api/planned-hikes', plannedHikeRoutes); 
 app.use('/api/gear', gearRoutes);
 app.use('/api/goals', goalsRoutes);
@@ -136,7 +135,7 @@ app.use('*', (req, res) => {
 });
 
 // Global error handler
-app.use((error, req, res) => {
+app.use((error, req, res,next) => {
   console.error('Global error handler:', error);
 
   let statusCode = 500;
@@ -164,8 +163,9 @@ app.use((error, req, res) => {
 // Start the server
 const startServer = async () => {
   try {
-   
     await initializeFirebase();
+    
+    
     const server = app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
       console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
@@ -173,13 +173,17 @@ const startServer = async () => {
       console.log(`Auth API: http://localhost:${PORT}/api/auth`);
       console.log(`Users API: http://localhost:${PORT}/api/users`);
       console.log(`Hikes API: http://localhost:${PORT}/api/hikes`);
-       console.log(`Friends API: http://localhost:${PORT}/api/friends`);
+      console.log(`Feed API: http://localhost:${PORT}/api/feed`);
+      console.log(`Discover API: http://localhost:${PORT}/api/discover`);
+      console.log(`Goals API: http://localhost:${PORT}/api/goals`);
+      console.log(`Friends API: http://localhost:${PORT}/api/friends`);
+      console.log(`Planned Hikes API: http://localhost:${PORT}/api/planned-hikes`); 
+      console.log(`Gear API: http://localhost:${PORT}/api/gear`);
       console.log(`Planned Hikes API: http://localhost:${PORT}/api/planned-hikes`); 
       console.log(`Gear API: http://localhost:${PORT}/api/gear`);
     });
-
-    // Graceful shutdown
-    process.on('SIGTERM', () => {
+    
+   process.on('SIGTERM', () => {
       console.log('SIGTERM received, shutting down gracefully');
       server.close(() => {
         console.log('Process terminated');

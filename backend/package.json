@@ -56,7 +56,6 @@
     "morgan": "^1.10.0",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1"
-
   },
   "devDependencies": {
     "eslint": "^9.32.0",

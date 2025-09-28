@@ -17,7 +17,6 @@ import Achievements from './pages/Achievements.jsx';
 
 import { API_BASE } from './api/api.js';//ANNAH
 
-import  {Toaster}  from "./components/ui/toaster.jsx"
 
 
 const App = () => {

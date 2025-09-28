@@ -2,36 +2,25 @@
 import { useState , useEffect} from "react";
 import { Navigation } from "../components/ui/navigation";
 import { Button } from "../components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Card,CardHeader,CardFooter,CardTitle,CardDescription,CardContent,} from "../components/ui/card";
 import { Input } from "../components/ui/input";
-import { Badge } from "../components/ui/badge";
-import { Avatar, AvatarFallback } from "../components/ui/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import {  Badge, badgeVariants  } from "../components/ui/badge";
+import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
+import {   Tabs, TabsList, TabsTrigger, TabsContent} from "../components/ui/tabs";
 import { searchUsers } from "../services/userServices";
 import { ProfileView } from "../components/ui/view-friend-profile";
 import { fetchFeed, likeFeed, commentFeed, shareFeed, fetchComments, deleteCommentFeed,deleteFeed } from "../services/feed";//ANNAH HERE
-import { discoverFriends, addFriend } from "../services/discover";//ANNAH HERE
+import { discoverFriends, addFriend , getUserDetails  } from "../services/discover";//ANNAH HERE
 import { getFirestore} from "firebase/firestore";
-import { getAuth } from "firebase/auth";//NOT SURE ABOUT THIS IMPORT//ANNA HERE
+import { getAuth } from "firebase/auth";//ANNA HERE
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useToast } from "../hooks/use-toast";
 import { getUserStats } from "../services/statistics";
 import { getFriendProfile } from "../services/friendService.js"; 
 
 
-import { 
-  Search, 
-  UserPlus, 
-  MapPin, 
-  TrendingUp,
-  Mountain,
-  Clock,
-  Medal,
-  Users,
-  Share2,
-  Heart,
-  MessageSquare
-} from "lucide-react";
+
+import { Search, UserPlus,  MapPin,  TrendingUp, Mountain,Clock,Medal,Users,Share2,Heart,MessageSquare } from "lucide-react";
 
 
 const Friends = () => {
@@ -143,13 +132,27 @@ const handleBlockFriend = async (fid) => {
     console.error("Error blocking friend:", err);
   }
 };
-  const handleViewProfile = (person, showAddFriend = false) => {
-    setSelectedProfile({ ...person, showAddFriend });
+  const handleViewProfile = async (person, showAddFriend = false) => {
+  try {
+    let details = person;
+
+    // if only id/name provided, fetch full details
+    if (person.id) {
+      details = await getUserDetails(person.id);
+    }
+
+    setSelectedProfile({ ...details, showAddFriend });
     setIsProfileOpen(true);
+  } catch (err) {
+    console.error("Failed to fetch profile details:", err);
+    setSelectedProfile({ ...person, showAddFriend }); // fallback
+    setIsProfileOpen(true);
+  }
   };
 
   //ANNAH HERE
 const auth = getAuth();
+
 
 
   useEffect(() => {
@@ -181,35 +184,46 @@ const auth = getAuth();
 
 
   // ---- Like handler ----
-  const handleLike = async (activity) => {
-    const uid = auth?.currentUser.uid;
-    if (!uid) return; 
+const handleLike = async (activity) => {
+  console.log(" Liking activity:", activity);
+  const uid = auth?.currentUser?.uid;
+  if (!uid) return;
 
-    // Optimistic UI update
-    setRecentActivity(prev => prev.map(a => {
+  // Always use the latest state to avoid stale `likes`
+  setRecentActivity(prev =>
+    prev.map(a => {
       if (a.id === activity.id) {
-        const likes = a.likes?.includes(uid)
+        const alreadyLiked = a.likes?.includes(uid);
+        const likes = alreadyLiked
           ? a.likes.filter(l => l !== uid)
           : [...(a.likes || []), uid];
         return { ...a, likes };
       }
       return a;
-    }));
+    })
+  );
 
-    try {
-      await likeFeed(activity.id, !activity.likes?.includes(uid));
-    } catch (err) {
-      console.error("Failed to like:", err);
-      // rollback if needed
-      setRecentActivity(prev => prev.map(a => {
-        if (a.id === activity.id) {
-          const likes = activity.likes || [];
-          return { ...a, likes };
-        }
-        return a;
-      }));
-    }
-  };
+  try {
+    // Always pass activity.id (NOT original.id)
+    const result = await likeFeed(activity.id);
+
+    // Sync with backend’s final likes (in case of concurrent updates)
+    setRecentActivity(prev =>
+      prev.map(a =>
+        a.id === activity.id ? { ...a, likes: result.likes } : a
+      )
+    );
+  } catch (err) {
+    console.error("Failed to like:", err);
+
+    //  Roll back to original state if request fails
+    setRecentActivity(prev =>
+      prev.map(a =>
+        a.id === activity.id ? { ...a, likes: activity.likes || [] } : a
+      )
+    );
+  }
+};
 
   // ---- Comment handler ----
   const handleAddComment = async (activityId, content) => {
@@ -272,9 +286,19 @@ const auth = getAuth();
 
   try {
     await deleteCommentFeed(activityId, commentId);
+     toast({
+      title: "💬 Comment deleted",
+      description: "Your comment was successfully removed.",
+      duration: 1000, 
+    });
   } catch (err) {
     console.error("Failed to delete comment:", err);
     // Optional: refetch comments here if you want rollback
+    toast({
+      title: "❌ Failed to delete comment",
+      description: "We couldn’t remove the comment. Please try again.",
+      duration: 1000, 
+    });
   }
 };
 
@@ -317,7 +341,7 @@ const handleShare = async (activity) => {
   setRecentActivity((prev) => [tempShare, ...prev]);
 
   try {
-    // ✅ use service function instead of fetch
+    //  use service function instead of fetch
     const data = await shareFeed(activity.id, {
       sharerId: user.uid,
       sharerName: user.displayName || user.email,
@@ -328,11 +352,21 @@ const handleShare = async (activity) => {
     // Replace temp with persisted version
     setRecentActivity((prev) =>
       prev.map((a) =>
-        a.id === tempShare.id ? { ...tempShare, id: data.newActivityId } : a
+        a.id === tempShare.id ? { ...tempShare, id: data.id } : a
       )
     );
+     toast({
+      title: "✅ Activity shared!",
+      description: `${activity.name} was successfully shared to your feed.`,
+      duration: 1, 
+    });
   } catch (err) {
     console.error("Failed to share:", err);
+    toast({
+      title: "❌ Failed to share",
+      description: "There was an error sharing this activity. Please try again.",
+      duration: 1000, 
+    });
     // rollback optimistic
     setRecentActivity((prev) => prev.filter((a) => a.id !== tempShare.id));
   }
@@ -345,36 +379,25 @@ const handleDeletePost = async (activityId) => {
 
   try {
     // Call a backend/service function to delete the post
-    await deleteFeed(activityId); // <-- you need to implement this in services/feed.js
+    await deleteFeed(activityId); 
+    toast({
+      title: "✅  Post deleted",
+      description: "The post has been removed from your feed.",
+      duration: 3000, 
+    });
   } catch (err) {
     console.error("Failed to delete post:", err);
+    toast({
+      title: "❌ Deletion failed",
+      description: "We couldn't delete the post. Try again later.",
+      duration: 3000, 
+    });
     // Rollback if deletion fails
     setRecentActivity(prevActivity);
   }
 };
 
-  
-  const handlePostAchievement = async () => {
-  const user = auth?.currentUser;
-  const displayName = user.displayName || user.email.split("@")[0];
-
-  const mockedActivity = {
-    id: Math.random().toString(36).substr(2, 9),
-    type: "achievement", // optional, helps distinguish achievements
-    userId: user.uid,     // very important for ownership & delete button
-    name: displayName,    // match the activity feed key
-    avatar: displayName[0].toUpperCase(),
-    action: "completed",
-    hike: "Mount Rainier Trail",
-    description: "Beautiful day!",
-    stats: "5km in 1h 30min",
-    time: "just now",
-    likes: [],
-    comments: [],
-  };
-
-  setRecentActivity(prev => [mockedActivity, ...prev]);
-};//ANNAH HERE
+//ANNAH HERE
 
 
   useEffect(() => {
@@ -395,12 +418,32 @@ const handleDeletePost = async (activityId) => {
   }, [auth?.currentUser]);
 
 
+  // ---- Add Friend handler ----
+  const handleAddFriend = async (friendId) => {
+  try {
+    await addFriend(friendId); // uses backend API
+    setSuggestions(prev => prev.filter(s => s.id !== friendId)); // remove locally
+    console.log(`Friend ${friendId} added successfully!`);
+    toast({
+      title: "✅  Friend added",
+      description: "You’re now connected!",
+      duration: 4000, 
+    });
+  } catch (err) {
+    console.error("Failed to add friend:", err);
+     toast({
+      title: "❌ Failed to add friend",
+      description: "Something went wrong. Please try again.",
+      duration: 4000, 
+    });
+  }
+};
 
 
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      
+
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">Friends & Community</h1>
@@ -418,19 +461,21 @@ const handleDeletePost = async (activityId) => {
           />
         </div>
 
-          {searchError && <p className="text-red-500 mt-2">{searchError}</p>}
-            {searchResults.map((user) => (
-              <Card 
-                key={user.id} 
-                className="relative flex flex-col sm:flex-row gap-3 items-start mt-4 mb-4"
-              >
-                {/* Close button */}
-                <button
-                  onClick={() => setSearchResults(searchResults.filter(u => u.id !== user.id))}
-                  className="absolute top-2 right-2 text-gray-400 hover:text-red-500 transition-colors"
-                >
-                  ✕ 
-                </button>
+        {searchError && <p className="text-red-500 mt-2">{searchError}</p>}
+
+        {/* ✅ 'user' is now defined above */}
+        {searchResults.map((user) => (
+          <Card
+            key={user.id}
+            className="relative flex flex-col sm:flex-row gap-3 items-start mt-4 mb-4"
+          >
+            {/* Close button */}
+            <button
+              onClick={() => setSearchResults(searchResults.filter(u => u.id !== user.id))}
+              className="absolute top-2 right-2 text-gray-400 hover:text-red-500 transition-colors"
+            >
+              ✕
+            </button>
 
                 <div className="flex items-center gap-2 mb-2">
                   <CardHeader className="pb-4">
@@ -522,19 +567,19 @@ const handleDeletePost = async (activityId) => {
                       <p className="text-xs text-muted-foreground">{friend.lastHikeDate}</p>
                     </div>
 
-                    <Badge variant="secondary" className="text-xs">
-                      <Medal className="h-3 w-3 mr-1" />
-                      {friend.recentAchievement}
-                    </Badge>
+            <Badge variant="secondary" className="text-xs">
+              <Medal className="h-3 w-3 mr-1" />
+              {friend.recentAchievement}
+            </Badge>
 
-                    <Button 
-                      variant="outline" 
-                      className="w-full" 
-                      size="sm"
-                      onClick={() => handleViewProfile(friend)}
-                    >
-                      View Profile
-                    </Button>
+            <Button
+              variant="outline"
+              className="w-full"
+              size="sm"
+              onClick={() => handleViewProfile(friend)}
+            >
+              View Profile
+            </Button>
 
                     <Button 
                       variant="destructive" 
@@ -563,33 +608,35 @@ const handleDeletePost = async (activityId) => {
               <CardContent>
                 <div className="space-y-6">
                   {recentActivity.map((activity) => {
-                    const isOwnPost = activity.userId === auth.currentUser.uid; // works for normal & shared
-
+                    const isOwnPost =
+                      activity.userId === currentUser?.uid ||
+                      activity.sharer?.id === currentUser?.uid;
+                    // works for normal & shared
                     return (
                       <div key={activity.id} className="p-4 rounded-lg bg-muted space-y-3">
                         {/* ---- If shared post ---- */}
                         {activity.type === "share" ? (
                           <>
                             <div className="flex items-center gap-3">
-                              <Avatar className="h-8 w-8">
+                              <Avatar className="h-8 w-8" onClick={() => handleViewProfile({ id: activity.userId })}>
                                 <AvatarFallback>{activity.name[0]}</AvatarFallback>
                               </Avatar>
                               <p className="text-sm">
-                                <span className="font-medium">{activity.name}</span>{" "}
+                                <span className="font-medium" onClick={() => handleViewProfile({ id: activity.userId })}>{activity.name}</span>{" "}
                                 <span className="text-muted-foreground">shared</span>{" "}
-                                <span className="font-medium">{activity.original.name}</span>’s post
+                                <span className="font-medium"onClick={() => handleViewProfile({ id: activity.userId })}>{activity.original.name}</span>’s post
                               </p>
                             </div>
 
                             {/* Original post preview */}
                             <div className="ml-6 mt-3 p-3 rounded-md border bg-background space-y-3">
                               <div className="flex items-center gap-3">
-                                <Avatar className="h-8 w-8">
+                                <Avatar className="h-8 w-8" onClick={() => handleViewProfile({ id: activity.userId })}>
                                   <AvatarFallback>{activity.original.avatar}</AvatarFallback>
                                 </Avatar>
                                 <div className="flex-1">
                                   <p className="text-sm">
-                                    <span className="font-medium">{activity.original.name}</span>{" "}
+                                    <span className="font-medium" onClick={() => handleViewProfile({ id: activity.userId })}>{activity.original.name}</span>{" "}
                                     <span className="text-muted-foreground">{activity.original.action}</span>{" "}
                                     <span className="font-medium">{activity.original.hike}</span>
                                   </p>
@@ -613,7 +660,7 @@ const handleDeletePost = async (activityId) => {
                           <div className="flex items-center gap-3">
                             <Avatar
                               className="h-10 w-10 cursor-pointer"
-                              onClick={() => handleViewProfile({ name: activity.friend, avatar: activity.avatar })}
+                              onClick={() => handleViewProfile({ name: activity.friend, avatar: activity.avatar, id: activity.userId})}
                             >
                               <AvatarFallback>{activity.avatar}</AvatarFallback>
                             </Avatar>
@@ -621,7 +668,7 @@ const handleDeletePost = async (activityId) => {
                               <p className="text-sm">
                                 <span
                                   className="font-medium cursor-pointer hover:underline"
-                                  onClick={() => handleViewProfile({ name: activity.name, avatar: activity.avatar })}
+                                  onClick={() => handleViewProfile({ name: activity.name, avatar: activity.avatar, id: activity.userId })}
                                 >
                                   {activity.name}
                                 </span>
@@ -766,7 +813,7 @@ const handleDeletePost = async (activityId) => {
                             <AvatarFallback>{suggestion.avatar}</AvatarFallback>
                           </Avatar>
                           <div>
-                            <h4 className="font-medium text-foreground">{suggestion.name}</h4>
+                            <h4 className="font-medium text-foreground" onClick={() => handleViewProfile({ id: suggestion.id })}> {suggestion.name}</h4>
                             <p className="text-sm text-muted-foreground">
                               {suggestion.mutualFriends} mutual friends
                             </p>
