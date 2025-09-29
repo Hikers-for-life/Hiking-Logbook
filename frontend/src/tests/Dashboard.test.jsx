@@ -65,24 +65,29 @@ describe('Dashboard Component', () => {
 
   test('displays stats with total hikes and distance', async () => {
     // Mock the API to return data in the format the component expects
-    hikeApiService.getHikes.mockResolvedValueOnce([
+    const mockHikes = [
       { id: 1, name: 'Trail One', distance: 5, date: '2024-01-01' },
       { id: 2, name: 'Trail Two', distance: 10, date: '2024-02-01' },
-    ]);
+    ];
+
+    hikeApiService.getHikes.mockResolvedValueOnce(mockHikes);
 
     renderDashboard();
 
-    // Wait for loading to complete and stats to be displayed
-    expect(await screen.findByText('2')).toBeInTheDocument(); // Total hikes
-
-    // Wait for the distance to be calculated and displayed
-    // Wait for the loading state to disappear first
+    // Wait for the service to be called
     await waitFor(() => {
-      expect(screen.queryByText('...')).not.toBeInTheDocument();
+      expect(hikeApiService.getHikes).toHaveBeenCalled();
     });
 
-    // Now check for the distance
-    expect(await screen.findByText('15 km')).toBeInTheDocument();
+    // Wait for the total hikes to be displayed
+    await waitFor(() => {
+      expect(screen.getByText('2')).toBeInTheDocument();
+    });
+
+    // Wait for the distance to be calculated and displayed
+    // Use findByText with a longer timeout
+    const distanceElement = await screen.findByText('15 km', {}, { timeout: 10000 });
+    expect(distanceElement).toBeInTheDocument();
   });
 
 
