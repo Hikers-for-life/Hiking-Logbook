@@ -380,3 +380,22 @@ export const evaluateBadges = (userStats) => {
   
   return badges;
 };
+
+// CommonJS exports for CI compatibility
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    parseDistance,
+    parseElevation,
+    parseDuration,
+    validateHikeData,
+    validateUserData,
+    calculateHikeStats,
+    calculateStreaks,
+    generateMonthlyActivity,
+    formatSuccessResponse,
+    formatErrorResponse,
+    processHikeData,
+    processUserData,
+    evaluateBadges
+  };
+}
