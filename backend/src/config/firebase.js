@@ -8,6 +8,10 @@ dotenv.config();
 let db = null;
 let authInstance = null;
 
+//export const db = getDatabase();
+//export const auth = getAuth();
+
+
 /**
  * Initialize Firebase Admin SDK (only once)
  */
@@ -20,6 +24,7 @@ export function initializeFirebase() {
   }
 
   try {
+
     // Check if Firebase environment variables are set
     if (!process.env.FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID === 'your-project-id') {
       // Create mock instances for development
@@ -42,6 +47,7 @@ export function initializeFirebase() {
     }
 
     // Build service account from .env
+
     const serviceAccount = {
       type: process.env.FIREBASE_TYPE || 'service_account',
       project_id: process.env.FIREBASE_PROJECT_ID,
@@ -65,7 +71,6 @@ export function initializeFirebase() {
       databaseURL: process.env.FIREBASE_DATABASE_URL,
     });
 
-    // Initialize instances 
 
     db = admin.firestore();
     authInstance = admin.auth();
@@ -91,6 +96,21 @@ export function getAuth() {
   return authInstance;
 }
 
-// Exports for easy usage
-export { admin };
+
+export function getCollections() {
+  const database = getDatabase();
+  return {
+    hikes: database.collection('hikes'),
+    users: database.collection('users'),
+    feeds: database.collection('feed_items'),
+    // add more collections here
+  };
+}
+
+
+/**
+ * Direct exports (for convenience in routes like users.js)
+ * ⚠️ Make sure you call initializeFirebase() ONCE at app startup
+ */
+export { db, authInstance as auth, admin };
 

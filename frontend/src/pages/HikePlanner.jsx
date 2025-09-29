@@ -1,15 +1,19 @@
+
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Navigation } from "../components/ui/navigation";
 import { Input } from "../components/ui/input";
 import NewHikePlanForm from "../components/NewHikePlanForm";
+
 import RouteExplorer from "../components/RouteExplorer"; 
 import { Calendar, MapPin, Users, Backpack, Mountain, Plus, X, RotateCcw, Search, Trash2, Edit } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext.jsx";
 import { plannedHikeApiService } from "../services/plannedHikesService.js";
 import { useGearChecklist } from "../services/gearService.js";
+
 import clear from '../components/assets/clear.jpg';
 import sunny from '../components/assets/sunny.jpg';
 import snow from '../components/assets/snow.jpg';
@@ -17,6 +21,9 @@ import rain from '../components/assets/rain.jpg';
 import drizzle from '../components/assets/drizzle.jpg';
 import wind from '../components/assets/wind.png';
 import humidity from '../components/assets/humidity.png';
+
+import { Description } from "@radix-ui/react-dialog";
+import { useToast } from "../hooks/use-toast";
 
 
 const sampleWeather = [
@@ -35,13 +42,20 @@ const sampleWeather = [
   }
 ]
 const HikePlanner = () => {
+
+  const inputRef = useRef()
+  const { toast } = useToast();
+
   const { currentUser } = useAuth();
-  const inputRef = useRef();
+
+
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isNewPlanOpen, setIsNewPlanOpen] = useState(false);
   const [isRouteExplorerOpen, setIsRouteExplorerOpen] = useState(false); 
   const [newGearItem, setNewGearItem] = useState("");
-  
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [weather] = useState(sampleWeather);
   // Edit state
   const [editingHike, setEditingHike] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -51,8 +65,9 @@ const HikePlanner = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedCalendarDate, setSelectedCalendarDate] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [weather] = useState(sampleWeather);
+  
+
+
   const [profile, setProfile] = useState(null);
   const [weatherData, setWeatherData] = useState(false);
   const filteredHikes = weather.filter(
@@ -151,7 +166,9 @@ const HikePlanner = () => {
     console.error("Error fetching weather:", error);
   }
 };
-  const search2 = async (query) => {
+
+   const search2 = async (query) => {
+
         try {
           const geoUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${query}&limit=1&appid=${process.env.REACT_APP_OPENWEATHER_API_KEY}`;
           const response = await fetch(geoUrl);
@@ -175,6 +192,7 @@ const HikePlanner = () => {
         }
       };
       
+
 
 
   // Use the gear checklist hook instead of local state
@@ -272,6 +290,7 @@ const HikePlanner = () => {
       setError("Failed to create the new hike plan. Please try again.");
     }
   };
+
 
   // Handler to Delete a Planned Hike
   const handleDeletePlannedHike = async (hikeId) => {
@@ -749,103 +768,105 @@ const HikePlanner = () => {
               </Card>
               
 
-              {/* Quick Stats - Now Dynamic */}
-              <Card className="bg-gradient-card border-border">
-                <CardHeader><CardTitle className="text-xl text-foreground">All-Time Stats</CardTitle></CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Planned Hikes</span><span className="font-semibold text-forest">{isLoading ? '...' : hikeStats.totalPlannedHikes}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Total Distance</span><span className="font-semibold text-trail">{isLoading ? '...' : `${hikeStats.totalEstimatedDistance} km`}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Gear Items</span><span className="font-semibold text-summit">{gearLoading ? '...' : totalItems}</span></div>
-                  {totalItems > 0 && (
-                    <div className="flex justify-between"><span className="text-muted-foreground">Gear Ready</span><span className="font-semibold text-forest">{completionPercentage}%</span></div>
-                  )}
-                </CardContent>
-              </Card>
-
               {/* Weather Widget */}
              
-              <Card className="relative bg-gradient-card border-border overflow-hidden"> 
-                {/* Background Image */}
-                <div
-                  className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-                  style={{ backgroundImage: `url(${weatherData.icon})` }}
-                >
-                  {/* Strong dark overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black/70" />
-                </div>
-
-                {/* Put content above overlay */}
-                <CardHeader className="relative z-10">
-                  <CardTitle className="text-xl text-foreground">
-                    <div className="relative flex-1 w-full">
-                      <Input
-                        ref = {inputRef}
-                        type="text"
-                        placeholder="Search location..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10 bg-background/80 text-black placeholder:text-black-300"
-                      />
-                      <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" onClick={()=> search2(inputRef.current.value)} />
-                    </div>
-                  </CardTitle>
-                </CardHeader>
-
-                <CardContent className="relative z-10">
-                  <div className="text-center space-y-4">
-                    <div
-                      className="text-3xl font-bold text-white mb-6"
-                      style={{ textShadow: "2px 2px 6px rgba(0,0,0,0.8)" }}
-                    >
-                      {location.location}
-                    </div>
-                      <div className="grid grid-cols-3 items-center text-center gap-2">
-                        {/* Left - Humidity */}
-                        <div className="flex flex-col items-center justify-center p-2">
-                          <div className="flex items-center gap-1">
-                            <img src={humidity} alt="" className="h-3 w-3" />
-                            <span className="font-medium text-white text-xs">{weatherData.humidity}%</span>
-                          </div>
-                          <div className="text-gray-300 text-xs">Humidity</div>
+                      <Card className="relative bg-gradient-card border-border overflow-hidden"> 
+                        {/* Background Image */}
+                        <div
+                          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                          style={{ backgroundImage: `url(${weatherData.icon})` }}
+                        >
+                          {/* Strong dark overlay */}
+                          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black/70" />
                         </div>
 
-                        {/* Middle - Temp */}
-                        <div className="flex flex-col items-center justify-center p-2">
-                          <div
-                            className="text-2xl font-bold text-white"
-                            style={{ textShadow: "2px 2px 6px rgba(0,0,0,0.8)" }}
-                          >
-                            {weatherData.temperature}°C
-                          </div>
-                          <div className="text-gray-100 text-xs">{weatherData.description}</div>
-                        </div>
+                        {/* Put content above overlay */}
+                        <CardHeader className="relative z-10">
+                          <CardTitle className="text-xl text-foreground">
+                            <div className="relative flex-1 w-full">
+                              <Input
+                                ref = {inputRef}
+                                type="text"
+                                placeholder="Search location..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="pl-10 bg-background/80 text-black placeholder:text-black-300"
+                              />
+                              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" onClick={()=> search2(inputRef.current.value)} />
+                            </div>
+                          </CardTitle>
+                        </CardHeader>
 
-                        {/* Right - Wind */}
-                        <div className="flex flex-col items-center justify-center p-2">
-                          <div className="flex items-center gap-1">
-                            <img src={wind} alt="" className="h-3 w-3" />
-                            <span className="font-medium text-white text-xs">{weatherData.windSpeed}Km/h</span>
+                        <CardContent className="relative z-10">
+                          <div className="text-center space-y-4">
+                            <div
+                              className="text-3xl font-bold text-white mb-6"
+                              style={{ textShadow: "2px 2px 6px rgba(0,0,0,0.8)" }}
+                            >
+                              {location.location}
+                            </div>
+                             <div className="grid grid-cols-3 items-center text-center gap-2">
+                                {/* Left - Humidity */}
+                                <div className="flex flex-col items-center justify-center p-2">
+                                  <div className="flex items-center gap-1">
+                                    <img src={humidity} alt="" className="h-3 w-3" />
+                                    <span className="font-medium text-white text-xs">{weatherData.humidity}%</span>
+                                  </div>
+                                  <div className="text-gray-300 text-xs">Humidity</div>
+                                </div>
+
+                                {/* Middle - Temp */}
+                                <div className="flex flex-col items-center justify-center p-2">
+                                  <div
+                                    className="text-2xl font-bold text-white"
+                                    style={{ textShadow: "2px 2px 6px rgba(0,0,0,0.8)" }}
+                                  >
+                                    {weatherData.temperature}°C
+                                  </div>
+                                  <div className="text-gray-100 text-xs">{weatherData.description}</div>
+                                </div>
+
+                                {/* Right - Wind */}
+                                <div className="flex flex-col items-center justify-center p-2">
+                                  <div className="flex items-center gap-1">
+                                    <img src={wind} alt="" className="h-3 w-3" />
+                                    <span className="font-medium text-white text-xs">{weatherData.windSpeed}Km/h</span>
+                                  </div>
+                                  <div className="text-gray-300 text-xs">Wind Speed</div>
+                                </div>
+                              </div>
+                            <div className="grid grid-cols-3 gap-2 text-xs">
+                              <div className="text-center p-2 rounded-lg bg-white/10">
+                                <div className="font-medium text-white">Feels Like</div>
+                                <div className="text-gray-300">{weatherData.feelsLike}°C</div>
+                              </div>
+                              <div className="text-center p-2 rounded-lg bg-white/10">
+                                <div className="font-medium text-white">Lowest</div>
+                                <div className="text-gray-300">{weatherData.minTemp}°C</div>
+                              </div>
+                              <div className="text-center p-2 rounded-lg bg-white/10">
+                                <div className="font-medium text-white">Highest </div>
+                                <div className="text-gray-300">{weatherData.maxTemp}°C</div>
+                              </div>
+                            </div>
                           </div>
-                          <div className="text-gray-300 text-xs">Wind Speed</div>
-                        </div>
-                      </div>
-                    <div className="grid grid-cols-3 gap-2 text-xs">
-                      <div className="text-center p-2 rounded-lg bg-white/10">
-                        <div className="font-medium text-white">Feels Like</div>
-                        <div className="text-gray-300">{weatherData.feelsLike}°C</div>
-                      </div>
-                      <div className="text-center p-2 rounded-lg bg-white/10">
-                        <div className="font-medium text-white">Lowest</div>
-                        <div className="text-gray-300">{weatherData.minTemp}°C</div>
-                      </div>
-                      <div className="text-center p-2 rounded-lg bg-white/10">
-                        <div className="font-medium text-white">Highest </div>
-                        <div className="text-gray-300">{weatherData.maxTemp}°C</div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                        </CardContent>
+                      </Card>
+
+                       {/* Quick Stats - Now Dynamic */}
+                    <Card className="bg-gradient-card border-border">
+                      <CardHeader><CardTitle className="text-xl text-foreground">All-Time Stats</CardTitle></CardHeader>
+                      <CardContent className="space-y-3">
+                        <div className="flex justify-between"><span className="text-muted-foreground">Planned Hikes</span><span className="font-semibold text-forest">{isLoading ? '...' : hikeStats.totalPlannedHikes}</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">Total Distance</span><span className="font-semibold text-trail">{isLoading ? '...' : `${hikeStats.totalEstimatedDistance} km`}</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">Gear Items</span><span className="font-semibold text-summit">{gearLoading ? '...' : totalItems}</span></div>
+                        {totalItems > 0 && (
+                          <div className="flex justify-between"><span className="text-muted-foreground">Gear Ready</span><span className="font-semibold text-forest">{completionPercentage}%</span></div>
+                        )}
+                      </CardContent>
+                    </Card>
+
+
             </div>
           </div>
         </div>

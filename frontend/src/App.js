@@ -15,6 +15,11 @@ import Friends from './pages/Friends.jsx';
 import  {Toaster}  from "./components/ui/toaster.jsx"
 import Achievements from './pages/Achievements.jsx';
 
+import { API_BASE } from './api/api.js';//ANNAH
+
+
+
+
 const App = () => {
   useEffect(() => {
     // Set default title

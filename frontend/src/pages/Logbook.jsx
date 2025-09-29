@@ -48,14 +48,14 @@ const Logbook = () => {
     try {
       setIsLoading(true);
       setError(null);
-      
+
       // Build filters for API call
       const filters = {};
       if (searchTerm) filters.search = searchTerm;
       if (difficultyFilter !== 'All') filters.difficulty = difficultyFilter;
       
       const response = await hikeApiService.getHikes(filters);
-      
+
       if (response.success) {
         
         // Helper function to safely format dates

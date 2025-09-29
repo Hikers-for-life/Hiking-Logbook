@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { userApiService } from '../../services/userService.js';
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,11 +16,14 @@ import { User, Settings, LogOut, Trash2 } from 'lucide-react';
 
 export const ProfileDropdown = ({ onLogout, onViewProfile, onEditProfile}) => {
 const [profile, setProfile] = useState(null);
+
 const [isDeleting, setIsDeleting] = useState(false);
+
  const { currentUser, getUserProfile } = useAuth();
 
   useEffect(() => {
   if (!currentUser) return;
+
 
   const fetchProfile = async () => {
     try {
@@ -27,6 +31,7 @@ const [isDeleting, setIsDeleting] = useState(false);
       if (!res.ok) throw new Error("Failed to fetch profile");
       const data = await res.json();
       setProfile(data);  // now profile has bio, location, createdAt
+
     } catch (err) {
       console.error(err);
     }
@@ -34,6 +39,7 @@ const [isDeleting, setIsDeleting] = useState(false);
 
   fetchProfile();
 }, [currentUser]);
+
 
   const handleDeleteAccount = async () => {
     // First confirmation
@@ -75,6 +81,7 @@ const [isDeleting, setIsDeleting] = useState(false);
       setIsDeleting(false);
     }
   };
+
   
   const user = {
     name: profile?.displayName || currentUser?.displayName || "Anonymous",
@@ -93,6 +100,7 @@ const [isDeleting, setIsDeleting] = useState(false);
                 ? user.name.split(' ').map((n) => n[0]).join('')
                 : "?"}
             </AvatarFallback>
+
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
