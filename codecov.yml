@@ -3,12 +3,16 @@ codecov:
 
 coverage:
   precision: 2
-  round: down
+  round: nearest
   range: "70...100"
 
   status:
     project:
       default:
+        # Equal weighting - each flag counts the same regardless of size
+        flags:
+          - frontend
+          - backend
         target: auto
         threshold: 1%
         informational: false

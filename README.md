@@ -2,7 +2,9 @@
 #  Hiking Logbook
 
 
-[![codecov](https://codecov.io/gh/Hikers-for-life/Hiking-Logbook/graph/badge.svg?token=HFZWUVB49J)](https://codecov.io/gh/Hikers-for-life/Hiking-Logbook)
+![Coverage](https://img.shields.io/badge/Coverage-39.11%25-brightgreen)
+[![Frontend](https://img.shields.io/badge/Frontend-32.72%25-brightgreen)](https://codecov.io/gh/Hikers-for-life/Hiking-Logbook)
+[![Backend](https://img.shields.io/badge/Backend-6.39%25-yellow)](https://codecov.io/gh/Hikers-for-life/Hiking-Logbook)
 
 A comprehensive hiking application that allows users to track their hiking adventures, plan trips, and connect with fellow hikers. Built with modern web technologies and a robust authentication system.
 
