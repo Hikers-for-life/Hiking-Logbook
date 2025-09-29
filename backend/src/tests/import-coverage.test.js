@@ -6,7 +6,7 @@ describe('Import Coverage Tests', () => {
   beforeAll(async () => {
     try {
       // Try to import the testable functions
-      testableFunctions = await import('../src/testable-functions.js');
+      testableFunctions = await import('../testable-functions.js');
     } catch (error) {
       // If import fails, create mock functions for testing
       console.log('Import failed, using inline functions for coverage');

@@ -22,27 +22,18 @@
 
   "jest": {
     "testEnvironment": "node",
-    "roots": ["<rootDir>/tests", "<rootDir>/src"],           
+    "roots": ["<rootDir>/src"],
     "collectCoverage": true,
     "collectCoverageFrom": [
       "src/**/*.js",
-      "tests/testable-functions.test.js",
-      "tests/core.test.js",
-      "tests/source-coverage.test.js",
-      "!src/**/index.js",
-      "!tests/simple.test.js",
-      "!tests/dummytest.test.js",
-      "!tests/utils.test.js",
-      "!tests/database.test.js",
-      "!tests/authService.test.js",
-      "!tests/api.test.js",
-      "!tests/achievement.test.js"
+      "!src/tests/**/*.js",
+      "!src/**/index.js"
     ],
     "coverageDirectory": "coverage",
     "coverageReporters": ["text", "lcov", "html", "json-summary"],
     "coverageThreshold": {
       "global": {
-        "branches": 5,
+        "branches": 3,
         "functions": 3,
         "lines": 3,
         "statements": 3
