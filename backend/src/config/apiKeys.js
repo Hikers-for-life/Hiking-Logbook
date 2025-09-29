@@ -18,7 +18,7 @@ const API_KEYS = new Map([
   }]
 ]);
 
-export class ApiKeyManager {
+class ApiKeyManager {
   
   // Validate an API key
   static validateKey(apiKey) {
@@ -103,8 +103,13 @@ export class ApiKeyManager {
 }
 
 // Export demo keys for documentation
-export const DEMO_KEYS = {
+const DEMO_KEYS = {
   FULL_ACCESS: 'demo-key-12345',
   READ_ONLY: 'readonly-key-67890'
+};
+
+module.exports = {
+  ApiKeyManager,
+  DEMO_KEYS
 };
 

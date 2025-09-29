@@ -9,13 +9,19 @@ coverage:
   status:
     project:
       default:
-        # Equal weighting - each flag counts the same regardless of size
-        flags:
-          - frontend
-          - backend
         target: auto
         threshold: 1%
         informational: false
+      frontend:
+        flags:
+          - frontend
+        target: auto
+        threshold: 1%
+      backend:
+        flags:
+          - backend
+        target: auto
+        threshold: 1%
     patch:
       default:
         target: auto
