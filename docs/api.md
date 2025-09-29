@@ -76,7 +76,7 @@ Include the header in protected routes:
 
 ## Example Requests
 
-### Create Hike
+Create Hike
 ```bash
 curl -X POST http://localhost:3001/api/hikes \
   -H "Authorization: Bearer <JWT_TOKEN>" \
@@ -89,11 +89,12 @@ curl -X POST http://localhost:3001/api/hikes \
     "notes": "Felt great!"
   }'
 
-### Get stat
+Get stat
 ```bash
 curl -X GET http://localhost:3001/api/hikes/stats/overview \
   -H "Authorization: Bearer <JWT_TOKEN>"
-### Response (Example)
+
+Response (Example)
 ```bash
 {
   "success": true,
@@ -106,14 +107,17 @@ curl -X GET http://localhost:3001/api/hikes/stats/overview \
     "byStatus": { "completed": 10, "active": 1, "paused": 1 }
   }
 }
-### Pin a Hike
+
+Pin a Hike
 ```bash
 curl -X PATCH http://localhost:3001/api/hikes/123/pin \
   -H "Authorization: Bearer <JWT_TOKEN>"
-### Response
+
+Response
 ```bash 
 { "message": "Hike pinned successfully" }
-### Plan a Hike 
+
+Plan a Hike 
 ```bash
 curl -X POST http://localhost:3001/api/planner \
   -H "Authorization: Bearer <JWT_TOKEN>" \
