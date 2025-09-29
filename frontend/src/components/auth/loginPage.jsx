@@ -23,14 +23,22 @@ export default function LoginPage({ open, onOpenChange, onLogin, onSignup }) {
   });
 
 
-  // Close modal when `open` changes to false
+  // Reset form when modal opens or closes
   useEffect(() => {
-    if (!open) {
+    if (open) {
+      // Clear fields when modal opens
       setEmail('');
       setPassword('');
       setError('');
     }
   }, [open]);
+
+  // Additional effect to ensure fields are cleared on component mount
+  useEffect(() => {
+    setEmail('');
+    setPassword('');
+    setError('');
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -64,7 +72,7 @@ export default function LoginPage({ open, onOpenChange, onLogin, onSignup }) {
 
   };
 
-   const handleMouseEnter = (buttonType, index = null) => {
+  const handleMouseEnter = (buttonType, index = null) => {
     if (index !== null) {
       setHoverStates((prev) => ({
         ...prev,
@@ -97,33 +105,31 @@ export default function LoginPage({ open, onOpenChange, onLogin, onSignup }) {
     <div style={styles.overlay}>
       <div style={styles.container}>
         <div style={styles.backButtonContainer}>
-                  <button
-                    style={{
-                      ...styles.backButton,
-                      ...(hoverStates.backButton && styles.backButtonHover),
-                    }}
-                  onClick={() => {
-                      if (typeof onOpenChange === 'function') onOpenChange(false);
-                      navigate('/');
-                    }}
-                    onMouseEnter={() => handleMouseEnter('backButton')}
-                    onMouseLeave={() => handleMouseLeave('backButton')}
-                    type="button"
-                  >
-                    <ArrowLeft size={16} />
-                    Back to Home
-                  </button>
-                </div>
+          <button
+            style={{
+              ...styles.backButton,
+              ...(hoverStates.backButton && styles.backButtonHover),
+            }}
+            onClick={() => {
+              if (typeof onOpenChange === 'function') onOpenChange(false);
+              navigate('/');
+            }}
+            onMouseEnter={() => handleMouseEnter('backButton')}
+            onMouseLeave={() => handleMouseLeave('backButton')}
+            type="button"
+          >
+            <ArrowLeft size={16} />
+            Back to Home
+          </button>
+        </div>
         <div style={styles.formContainer}>
           <form style={styles.form} onSubmit={handleSubmit}>
             <div
-            
               style={{
                 ...styles.banner,
                 backgroundImage: `url(${mountain})`,
               }}
             >
-              
               <div style={styles.gradientOverlay} />
               <div style={styles.headerText}>
                 <h2 style={styles.title}>Welcome Back</h2>
@@ -131,62 +137,67 @@ export default function LoginPage({ open, onOpenChange, onLogin, onSignup }) {
               </div>
             </div>
 
-            <label style={styles.label} htmlFor="email">
-              Email
-            </label>
-            <input
-              style={styles.input}
-              type="email"
-              placeholder="your@gmail.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+            <div style={styles.formContent}>
+              <label style={styles.label} htmlFor="email">
+                Email
+              </label>
+              <input
+                style={styles.input}
+                type="email"
+                placeholder="Enter your email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="off"
+                autoFocus={false}
+                required
+              />
 
-            <label style={styles.label} htmlFor="password">
-              Password
-            </label>
-            <input
-              style={styles.input}
-              type="password"
-              placeholder="Enter your Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+              <label style={styles.label} htmlFor="password">
+                Password
+              </label>
+              <input
+                style={styles.input}
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="new-password"
+                autoFocus={false}
+                required
+              />
 
-            {error && <div style={styles.error}>{error}</div>}
+              {error && <div style={styles.error}>{error}</div>}
 
-            <button style={styles.button} type="submit" disabled={loading}>
-              {loading ? 'Signing In...' : 'Sign In to Dashboard'}
-            </button>
-
-            <h3 style={styles.message2}>
-              --------------------- Or Continue With ---------------------
-            </h3>
-            <div style={styles.socialButtons}>
-              <button
-                style={styles.socialButton}
-                type="button"
-                onClick={handleGoogleSignIn}
-                disabled={loading}
-              >
-                <i className="fa-brands fa-google"></i> Google
+              <button style={styles.button} type="submit" disabled={loading}>
+                {loading ? 'Signing In...' : 'Sign In to Dashboard'}
               </button>
 
-            </div>
+              <h3 style={styles.message2}>
+                --------------------- Or Continue With ---------------------
+              </h3>
+              <div style={styles.socialButtons}>
+                <button
+                  style={styles.socialButton}
+                  type="button"
+                  onClick={handleGoogleSignIn}
+                  disabled={loading}
+                >
+                  <i className="fa-brands fa-google"></i> Google
+                </button>
+              </div>
 
-            <p style={styles.signP}>Don't have an account?</p>
-            <button
-              style={styles.signup}
-              type="button"
-              onClick={() => {
-                if (typeof onOpenChange === 'function') onOpenChange(false);
-                if (typeof onSignup === 'function') onSignup();
-              }}
-            >
-              Sign Up
-            </button>
+              <p style={styles.signP}>Don't have an account?</p>
+              <button
+                style={styles.signup}
+                type="button"
+                onClick={() => {
+                  if (typeof onOpenChange === 'function') onOpenChange(false);
+                  if (typeof onSignup === 'function') onSignup();
+                }}
+              >
+                Sign Up
+              </button>
+            </div>
           </form>
         </div>
       </div>
@@ -233,13 +244,16 @@ const styles = {
   },
   //THE IMAGE
   banner: {
-    height: '200px',
+    height: '220px',
     backgroundSize: 'cover',
-    backgroundPosition: 'center',
+    backgroundPosition: 'center center',
+    backgroundRepeat: 'no-repeat',
     position: 'relative',
     display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: 'flex-end',
+    justifyContent: 'flex-start',
+    borderRadius: '8px 8px 0 0',
+    overflow: 'hidden',
   },
   //THE WHITE BOX
   form: {
@@ -247,31 +261,31 @@ const styles = {
     flexDirection: 'column',
     backgroundPosition: 'center',
     width: '400px',
-    height: '550px',
-    padding: '40px',
+    height: '570px',
+    padding: '0',
     overflow: 'hidden',
     backgroundColor: '#fff',
     borderRadius: '8px',
-    boxShadow: '0 2px 8px black',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
   },
   //Go back Home Nav
   backButton: {
-  display: "flex",
-  alignItems: "center",
-  gap: "6px",
-  background: "transparent",
-  border: "none",
-  color: "#fff",
-  fontSize: "14px",
-  cursor: "pointer",
-  position: "absolute",
-  top: "20px",
-  left: "20px",
-},
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+    background: "transparent",
+    border: "none",
+    color: "#fff",
+    fontSize: "14px",
+    cursor: "pointer",
+    position: "absolute",
+    top: "20px",
+    left: "20px",
+  },
 
-backButtonHover: {
-  color: "#16a34a", 
-},
+  backButtonHover: {
+    color: "#16a34a",
+  },
 
   input: {
     marginBottom: '15px',
@@ -353,11 +367,20 @@ backButtonHover: {
   gradientOverlay: {
     position: 'absolute',
     inset: 0,
-    background: 'linear-gradient(to top, rgba(0,0,0,0.6), transparent)',
+    background: 'linear-gradient(135deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.6) 100%)',
   },
   headerText: {
     position: 'absolute',
-    bottom: 16,
+    bottom: 20,
     left: 24,
+    right: 24,
+    zIndex: 2,
+  },
+
+  formContent: {
+    padding: '40px',
+    display: 'flex',
+    flexDirection: 'column',
+    flex: 1,
   },
 };
