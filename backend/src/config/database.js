@@ -272,6 +272,102 @@ export const dbUtils = {
     }
   },
 
+   // GEAR CHECKLIST METHODS
+  // Get user's gear checklist
+  async getUserGearChecklist(userId) {
+    try {
+      const doc = await this.getDb().collection('users').doc(userId).get();
+      
+      if (!doc.exists) {
+        // Return default gear checklist if user doesn't exist yet
+        return [
+          { item: "Hiking Boots", checked: false },
+          { item: "Water (3L)", checked: false },
+          { item: "Trail Snacks", checked: false },
+          { item: "First Aid Kit", checked: false }
+        ];
+      }
+      
+      const userData = doc.data();
+      return userData.gearChecklist || [
+        { item: "Hiking Boots", checked: false },
+        { item: "Water (3L)", checked: false },
+        { item: "Trail Snacks", checked: false },
+        { item: "First Aid Kit", checked: false }
+      ];
+    } catch (error) {
+      throw new Error(`Failed to get gear checklist: ${error.message}`);
+    }
+  },
+
+  // Update user's gear checklist
+  async updateUserGearChecklist(userId, gearItems) {
+    try {
+      // Ensure user profile exists
+      const userDoc = await this.getDb().collection('users').doc(userId).get();
+      
+      if (!userDoc.exists) {
+        // Create user profile with gear checklist
+        await this.createUserProfile(userId, {
+          gearChecklist: gearItems
+        });
+      } else {
+        // Update existing user profile
+        await this.getDb()
+          .collection('users')
+          .doc(userId)
+          .update({
+            gearChecklist: gearItems,
+            updatedAt: new Date()
+          });
+      }
+      return { success: true };
+    } catch (error) {
+      throw new Error(`Failed to update gear checklist: ${error.message}`);
+    }
+  },
+
+  // Add item to gear checklist
+  async addGearItem(userId, newItem) {
+    try {
+      const currentChecklist = await this.getUserGearChecklist(userId);
+      const updatedChecklist = [...currentChecklist, { item: newItem, checked: false }];
+      
+      await this.updateUserGearChecklist(userId, updatedChecklist);
+      return { success: true, checklist: updatedChecklist };
+    } catch (error) {
+      throw new Error(`Failed to add gear item: ${error.message}`);
+    }
+  },
+
+  // Remove item from gear checklist
+  async removeGearItem(userId, itemIndex) {
+    try {
+      const currentChecklist = await this.getUserGearChecklist(userId);
+      const updatedChecklist = currentChecklist.filter((_, index) => index !== itemIndex);
+      
+      await this.updateUserGearChecklist(userId, updatedChecklist);
+      return { success: true, checklist: updatedChecklist };
+    } catch (error) {
+      throw new Error(`Failed to remove gear item: ${error.message}`);
+    }
+  },
+
+  // Toggle gear item checked status
+  async toggleGearItem(userId, itemIndex) {
+    try {
+      const currentChecklist = await this.getUserGearChecklist(userId);
+      const updatedChecklist = currentChecklist.map((item, index) => 
+        index === itemIndex ? { ...item, checked: !item.checked } : item
+      );
+      
+      await this.updateUserGearChecklist(userId, updatedChecklist);
+      return { success: true, checklist: updatedChecklist };
+    } catch (error) {
+      throw new Error(`Failed to toggle gear item: ${error.message}`);
+    }
+  },
+
   // -----------------------
   // Hikes (core)
   // -----------------------
