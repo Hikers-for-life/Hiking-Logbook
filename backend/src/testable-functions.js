@@ -2,21 +2,21 @@
 // This file contains core business logic that can be easily tested
 
 // Data parsing utilities (extracted from database.js)
-export const parseDistance = (value) => {
+const parseDistance = (value) => {
   if (value === null || value === undefined) return 0;
   if (typeof value === 'number') return value;
   const parsed = parseFloat(String(value).replace(/[^\d.]/g, ''));
   return isNaN(parsed) ? 0 : parsed;
 };
 
-export const parseElevation = (value) => {
+const parseElevation = (value) => {
   if (value === null || value === undefined) return 0;
   if (typeof value === 'number') return value;
   const parsed = parseFloat(String(value).replace(/[^\d.-]/g, ''));
   return isNaN(parsed) ? 0 : parsed;
 };
 
-export const parseDuration = (value) => {
+const parseDuration = (value) => {
   if (value === null || value === undefined) return 0;
   if (typeof value === 'number') return value;
   const parsed = parseFloat(String(value));
@@ -24,7 +24,7 @@ export const parseDuration = (value) => {
 };
 
 // Data validation functions
-export const validateHikeData = (hikeData) => {
+const validateHikeData = (hikeData) => {
   const errors = [];
   
   if (!hikeData || typeof hikeData !== 'object') {
@@ -60,7 +60,7 @@ export const validateHikeData = (hikeData) => {
 };
 
 // User data validation
-export const validateUserData = (userData) => {
+const validateUserData = (userData) => {
   const errors = [];
   
   if (!userData || typeof userData !== 'object') {
@@ -89,7 +89,7 @@ export const validateUserData = (userData) => {
 };
 
 // Statistics calculation functions
-export const calculateHikeStats = (hikes) => {
+const calculateHikeStats = (hikes) => {
   if (!hikes || !Array.isArray(hikes)) {
     return {
       totalHikes: 0,
@@ -124,7 +124,7 @@ export const calculateHikeStats = (hikes) => {
 };
 
 // Streak calculation
-export const calculateStreaks = (hikes) => {
+const calculateStreaks = (hikes) => {
   if (!hikes || !Array.isArray(hikes) || hikes.length === 0) {
     return { currentStreak: 0, longestStreak: 0 };
   }
@@ -183,7 +183,7 @@ export const calculateStreaks = (hikes) => {
 };
 
 // Monthly activity aggregation
-export const generateMonthlyActivity = (hikes) => {
+const generateMonthlyActivity = (hikes) => {
   if (!hikes || !Array.isArray(hikes)) {
     return [];
   }
@@ -215,7 +215,7 @@ export const generateMonthlyActivity = (hikes) => {
 };
 
 // Response formatting utilities
-export const formatSuccessResponse = (data, message = 'Success') => {
+const formatSuccessResponse = (data, message = 'Success') => {
   return {
     success: true,
     data,
@@ -224,7 +224,7 @@ export const formatSuccessResponse = (data, message = 'Success') => {
   };
 };
 
-export const formatErrorResponse = (error, statusCode = 500) => {
+const formatErrorResponse = (error, statusCode = 500) => {
   return {
     success: false,
     error: error.message || error || 'An error occurred',
@@ -234,7 +234,7 @@ export const formatErrorResponse = (error, statusCode = 500) => {
 };
 
 // Data processing utilities
-export const processHikeData = (rawData) => {
+const processHikeData = (rawData) => {
   if (!rawData || typeof rawData !== 'object') {
     return {
       title: '',
@@ -265,7 +265,7 @@ export const processHikeData = (rawData) => {
   };
 };
 
-export const processUserData = (rawData) => {
+const processUserData = (rawData) => {
   if (!rawData || typeof rawData !== 'object') {
     return {
       email: '',
@@ -306,7 +306,7 @@ export const processUserData = (rawData) => {
 };
 
 // Badge evaluation logic
-export const evaluateBadges = (userStats) => {
+const evaluateBadges = (userStats) => {
   const badges = [];
   
   // First Hike badge
@@ -381,21 +381,19 @@ export const evaluateBadges = (userStats) => {
   return badges;
 };
 
-// CommonJS exports for CI compatibility
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {
-    parseDistance,
-    parseElevation,
-    parseDuration,
-    validateHikeData,
-    validateUserData,
-    calculateHikeStats,
-    calculateStreaks,
-    generateMonthlyActivity,
-    formatSuccessResponse,
-    formatErrorResponse,
-    processHikeData,
-    processUserData,
-    evaluateBadges
-  };
-}
+// CommonJS exports
+module.exports = {
+  parseDistance,
+  parseElevation,
+  parseDuration,
+  validateHikeData,
+  validateUserData,
+  calculateHikeStats,
+  calculateStreaks,
+  generateMonthlyActivity,
+  formatSuccessResponse,
+  formatErrorResponse,
+  processHikeData,
+  processUserData,
+  evaluateBadges
+};
