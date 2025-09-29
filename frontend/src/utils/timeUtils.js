@@ -72,3 +72,4 @@ export function formatTime(timestamp) {
         hour12: true
     });
 }
+

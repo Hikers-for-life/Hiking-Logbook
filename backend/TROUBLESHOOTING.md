@@ -182,3 +182,4 @@ If issues persist:
 3. Check memory/CPU usage: `npm run pm2:monit`
 4. Verify all environment variables are set
 5. Test Firebase connection separately
+
