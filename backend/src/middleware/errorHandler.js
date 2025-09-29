@@ -1,4 +1,4 @@
-export function notFoundHandler(req, res, next) {
+function notFoundHandler(req, res, next) {
   res.status(404).json({
     error: 'Route not found',
     path: req.originalUrl,
@@ -6,7 +6,7 @@ export function notFoundHandler(req, res, next) {
   });
 }
 
-export function errorHandler(err, req, res, next) {
+function errorHandler(err, req, res, next) {
   console.error('Global error handler:', err);
 
   let statusCode = 500;
@@ -31,3 +31,8 @@ export function errorHandler(err, req, res, next) {
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
   });
 }
+
+module.exports = {
+  notFoundHandler,
+  errorHandler
+};
