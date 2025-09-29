@@ -90,12 +90,10 @@ curl -X POST http://localhost:3001/api/hikes \
   }'
 
 Get stat
-```bash
 curl -X GET http://localhost:3001/api/hikes/stats/overview \
   -H "Authorization: Bearer <JWT_TOKEN>"
 
 Response (Example)
-```bash
 {
   "success": true,
   "data": {
@@ -109,16 +107,13 @@ Response (Example)
 }
 
 Pin a Hike
-```bash
 curl -X PATCH http://localhost:3001/api/hikes/123/pin \
   -H "Authorization: Bearer <JWT_TOKEN>"
 
 Response
-```bash 
 { "message": "Hike pinned successfully" }
 
 Plan a Hike 
-```bash
 curl -X POST http://localhost:3001/api/planner \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -H "Content-Type: application/json" \
