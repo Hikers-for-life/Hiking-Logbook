@@ -52,9 +52,18 @@ jobs:
         run: npm test -- --coverage
 
 
-      - name: Upload coverage reports to Codecov
+      - name: Upload frontend coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
             token: ${{ secrets.CODECOV_TOKEN }}
-            files: backend/coverage/lcov.info,frontend/coverage/lcov.info
-            slug: Hikers-for-life/Hiking-Logbook
+            files: frontend/coverage/lcov.info
+            flags: frontend
+            name: frontend-coverage
+            
+      - name: Upload backend coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+            token: ${{ secrets.CODECOV_TOKEN }}
+            files: backend/coverage/lcov.info
+            flags: backend
+            name: backend-coverage

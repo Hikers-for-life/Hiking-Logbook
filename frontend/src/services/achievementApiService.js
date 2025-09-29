@@ -1,7 +1,10 @@
 // Frontend service for achievement-related API calls
 import { auth } from '../config/firebase.js';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 
+  (window.location.hostname === 'hiking-logbook.web.app' 
+    ? 'https://hiking-logbook-hezw.onrender.com/api'
+    : 'http://localhost:3001/api');
 
 class AchievementApiService {
   // Get auth token from Firebase

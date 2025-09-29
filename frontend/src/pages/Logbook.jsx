@@ -63,13 +63,25 @@ const Logbook = () => {
 
       if (response.success) {
 
+        
+        // Helper function to safely format dates
+        const formatDate = (dateValue) => {
+          if (!dateValue) return 'No date';
+          if (dateValue.toDate) {
+            return dateValue.toDate().toLocaleDateString();
+          }
+          const date = new Date(dateValue);
+          return isNaN(date.getTime()) ? 'Invalid date' : date.toLocaleDateString();
+        };
+
+
         // Convert Firestore timestamps to readable dates and ensure all fields are safe for React
         const processedHikes = response.data.map(hike => ({
           ...hike,
           // Convert dates
-          date: hike.date ? (hike.date.toDate ? hike.date.toDate().toLocaleDateString() : new Date(hike.date).toLocaleDateString()) : 'No date',
-          createdAt: hike.createdAt ? (hike.createdAt.toDate ? hike.createdAt.toDate() : new Date(hike.createdAt)) : null,
-          updatedAt: hike.updatedAt ? (hike.updatedAt.toDate ? hike.updatedAt.toDate().toLocaleDateString() : new Date(hike.updatedAt).toLocaleDateString()) : null,
+          date: formatDate(hike.date),
+          createdAt: formatDate(hike.createdAt),
+          updatedAt: formatDate(hike.updatedAt),
           startTime: hike.startTime ? (hike.startTime.toDate ? hike.startTime.toDate() : new Date(hike.startTime)) : null,
           endTime: hike.endTime ? (hike.endTime.toDate ? hike.endTime.toDate() : new Date(hike.endTime)) : null,
           // Ensure other fields are strings/numbers
@@ -457,7 +469,38 @@ const Logbook = () => {
                 Add Past Hike
               </Button>
 
-            </div>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-4xl font-bold text-foreground mb-2">
+              Track Your <span className="text-forest">Hikes</span>
+            </h1>
+            <p className="text-muted-foreground text-lg">
+              Keep notes on location, weather, elevation, and route - along the way
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button 
+              className="bg-green-600 hover:bg-green-700 text-white shadow-mountain hover:shadow-elevation hover:scale-105 transition-all duration-300 flex-1 sm:flex-none"
+              size="lg"
+              onClick={() => setIsStartHikeFormOpen(true)}
+            >
+              <Play className="h-5 w-5 mr-2" />
+              <span className="hidden sm:inline">Start Hike</span>
+              <span className="sm:hidden">Start Hike</span>
+            </Button>
+            <Button 
+              className="bg-gradient-trail text-primary-foreground shadow-mountain hover:shadow-elevation hover:scale-105 transition-all duration-300 flex-1 sm:flex-none"
+              size="lg"
+              onClick={() => setIsNewEntryOpen(true)}
+              variant="outline"
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              <span className="hidden sm:inline">Add Past Hike</span>
+              <span className="sm:hidden">Add Past</span>
+            </Button>
+            
+
           </div>
 
           {/* Search and Filter */}
@@ -705,6 +748,7 @@ const Logbook = () => {
             </Button>
           </div>
 
+
           {/* New Entry Form */}
           <NewHikeEntryForm
             open={isNewEntryOpen}
@@ -808,6 +852,89 @@ const Logbook = () => {
                     <Play className="h-4 w-4 mr-2" />
                     Start Tracking
                   </Button>
+
+                {/* Actions */}
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center pt-2 space-y-2 sm:space-y-0">
+                  <div className="flex items-center space-x-2">
+                    {isHikePinned(hike.id) && (
+                      <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-200">
+                        <Pin className="h-3 w-3 mr-1" />
+                        Pinned
+                      </Badge>
+                    )}
+                    {hike.shared && (
+                      <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800 border-blue-200">
+                        <Share2 className="h-3 w-3 mr-1" />
+                        Shared
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-1 sm:gap-2">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className={`${isHikePinned(hike.id) 
+                        ? 'text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50' 
+                        : 'text-muted-foreground hover:text-yellow-600 hover:bg-yellow-50'
+                      } px-2 sm:px-3`}
+                      onClick={() => handlePinHike(hike.id)}
+                    >
+                      {isHikePinned(hike.id) ? (
+                        <PinOff className="h-4 w-4 sm:mr-1" />
+                      ) : (
+                        <Pin className="h-4 w-4 sm:mr-1" />
+                      )}
+                      <span className="hidden sm:inline">
+                        {isHikePinned(hike.id) ? 'Unpin' : 'Pin'}
+                      </span>
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className={`${hike.shared 
+                        ? 'text-blue-600 hover:text-blue-700 hover:bg-blue-50' 
+                        : 'text-muted-foreground hover:text-blue-600 hover:bg-blue-50'
+                      } px-2 sm:px-3`}
+                      onClick={() => handleShareHike(hike.id)}
+                    >
+                      {hike.shared ? (
+                        <Share2 className="h-4 w-4 sm:mr-1" />
+                      ) : (
+                        <Share className="h-4 w-4 sm:mr-1" />
+                      )}
+                      <span className="hidden sm:inline">
+                        {hike.shared ? 'Shared' : 'Share'}
+                      </span>
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-summit hover:text-summit hover:bg-muted px-2 sm:px-3"
+                      onClick={() => handleViewRouteMap(hike)}
+                    >
+                      <Map className="h-4 w-4 sm:mr-1" />
+                      <span className="hidden sm:inline">Route Map</span>
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-forest hover:text-forest hover:bg-muted px-2 sm:px-3"
+                      onClick={() => handleEditHike(hike)}
+                    >
+                      <Edit3 className="h-4 w-4 sm:mr-1" />
+                      <span className="hidden sm:inline">Edit</span>
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-red-600 hover:text-red-600 hover:bg-red-50 px-2 sm:px-3"
+                      onClick={() => handleDeleteHike(hike.id)}
+                    >
+                      <Trash2 className="h-4 w-4 sm:mr-1" />
+                      <span className="hidden sm:inline">Delete</span>
+                    </Button>
+                  </div>
+
                 </div>
               </div>
             </DialogContent>

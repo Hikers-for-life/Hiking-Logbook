@@ -132,7 +132,7 @@ export const dbUtils = {
         route: hikeData.route || hikeData.trailName || '',
 
         // Timing
-        date: hikeData.date || new Date(),
+        date: hikeData.date ? (typeof hikeData.date === 'string' ? new Date(hikeData.date) : hikeData.date) : new Date(),
         startTime: hikeData.startTime || null,
         endTime: hikeData.endTime || null,
         duration: hikeData.duration || 0,
@@ -376,6 +376,7 @@ export const dbUtils = {
     try {
       const update = {
         status: 'completed',
+        date: endData.date || new Date().toISOString(), // Update the date field
         endTime: endData.endTime || new Date(),
         duration: endData.duration || endData.duration || 0,
         distance: endData.distance || endData.distance || undefined,
@@ -383,7 +384,19 @@ export const dbUtils = {
         weather: endData.weather || undefined,
         notes: endData.notes || undefined,
         endLocation: endData.endLocation || null,
+
         photos: endData.photos || undefined,
+
+        // Add missing fields that were being lost
+        elevation: endData.elevation || 0,
+        distance: endData.distance || 0,
+        waypoints: endData.waypoints || [],
+        notes: endData.notes || '',
+        weather: endData.weather || '',
+        difficulty: endData.difficulty || 'Easy',
+        title: endData.title || '',
+        location: endData.location || '',
+
         updatedAt: new Date()
       };
 
@@ -794,22 +807,37 @@ export const dbUtils = {
     }
   },
 
-  async getUserProfile(userId) {
-    try {
-      const db = this.getDb();
-      const doc = await db.collection('users').doc(userId).get();
-      if (!doc.exists) return null;
-      const data = doc.data();
-      return {
-        id: doc.id,
-        displayName: data.displayName || data.name || data.email?.split?.('@')?.[0] || '',
-        avatar: data.avatar || data.photoURL || (data.displayName ? data.displayName[0].toUpperCase() : (data.email ? data.email[0].toUpperCase() : 'U')),
-        ...data
-      };
-    } catch (err) {
-      throw new Error(`getUserProfile failed: ${err.message}`);
-    }
-  },
+async getUserProfile(userId) {
+  try {
+    const db = this.getDb();
+    const doc = await db.collection('users').doc(userId).get();
+    if (!doc.exists) return null;
+    const data = doc.data();
+    return {
+      id: doc.id,
+      displayName: data.displayName || data.name || data.email?.split?.('@')?.[0] || '',
+      avatar: data.avatar || data.photoURL || (data.displayName 
+        ? data.displayName[0].toUpperCase() 
+        : (data.email ? data.email[0].toUpperCase() : 'U')),
+      ...data
+    };
+  } catch (err) {
+    throw new Error(`getUserProfile failed: ${err.message}`);
+  }
+},
+
+// PLANNED HIKES METHODS
+// Add a new planned hike
+async addPlannedHike(userId, plannedHikeData) {
+  try {
+    const db = this.getDb();
+    const ref = await db.collection('users').doc(userId).collection('plannedHikes').add(plannedHikeData);
+    return { id: ref.id, ...plannedHikeData };
+  } catch (err) {
+    throw new Error(`addPlannedHike failed: ${err.message}`);
+  }
+},
+
 
   async createUserProfile(userId, profileData) {
     try {

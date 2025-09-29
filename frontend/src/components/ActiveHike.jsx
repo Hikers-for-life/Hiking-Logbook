@@ -163,6 +163,7 @@ const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
     // Save final hike data
     const finalHikeData = {
       ...hikeData,
+      date: new Date().toISOString(), // Add the date field
       startTime,
       endTime: new Date(),
       duration: formatTime(elapsedTime),

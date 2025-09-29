@@ -1,10 +1,10 @@
 
-import { getDatabase, admin } from '../config/firebase.js';
+const { getDatabase, admin } = require('../config/firebase.js');
 
 /**
  * Rules and checks.
  */
-export const BADGE_RULES = [
+const BADGE_RULES = [
   {
     name: "First Steps",
     description: "Completed your very first hike",
@@ -37,7 +37,7 @@ export const BADGE_RULES = [
   },
 ];
 
-export async function evaluateAndAwardBadges(userId, stats) {
+async function evaluateAndAwardBadges(userId, stats) {
   const db = getDatabase();
   const userRef = db.collection('users').doc(userId);
   const userSnap = await userRef.get();
@@ -84,3 +84,8 @@ export async function evaluateAndAwardBadges(userId, stats) {
 
   return newBadges; // return array to allow logging if desired
 }
+
+module.exports = {
+  BADGE_RULES,
+  evaluateAndAwardBadges
+};

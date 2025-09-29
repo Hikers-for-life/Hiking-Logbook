@@ -1,5 +1,4 @@
 // Simple API key management for external access
-// In production, you'd want to store these in a database with expiration dates, usage limits, etc.
 
 const API_KEYS = new Map([
   // Format: [key, { name, permissions, createdAt, lastUsed }]
@@ -19,7 +18,7 @@ const API_KEYS = new Map([
   }]
 ]);
 
-export class ApiKeyManager {
+class ApiKeyManager {
   
   // Validate an API key
   static validateKey(apiKey) {
@@ -104,8 +103,13 @@ export class ApiKeyManager {
 }
 
 // Export demo keys for documentation
-export const DEMO_KEYS = {
+const DEMO_KEYS = {
   FULL_ACCESS: 'demo-key-12345',
   READ_ONLY: 'readonly-key-67890'
+};
+
+module.exports = {
+  ApiKeyManager,
+  DEMO_KEYS
 };
 

@@ -1,7 +1,6 @@
 {
   "name": "hiking-logbook-backend",
   "version": "1.0.0",
-  "type": "module",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
@@ -27,15 +26,25 @@
   },
   "jest": {
     "testEnvironment": "node",
-    "roots": [
-      "<rootDir>/tests"
-    ],
+
+    "roots": ["<rootDir>/src"],
     "collectCoverage": true,
     "collectCoverageFrom": [
       "src/**/*.js",
+      "!src/tests/**/*.js",
+
       "!src/**/index.js"
     ],
-    "coverageDirectory": "coverage"
+    "coverageDirectory": "coverage",
+    "coverageReporters": ["text", "lcov", "html", "json-summary"],
+    "coverageThreshold": {
+      "global": {
+        "branches": 0,
+        "functions": 0,
+        "lines": 0,
+        "statements": 0
+      }
+    }
   },
   "keywords": [
     "hiking",
