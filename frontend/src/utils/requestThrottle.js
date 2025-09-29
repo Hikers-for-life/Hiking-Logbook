@@ -87,3 +87,4 @@ export const REQUEST_PRIORITY = {
 export function throttledRequest(requestFn, priority = REQUEST_PRIORITY.MEDIUM) {
     return requestThrottle.queueRequest(requestFn, priority);
 }
+
