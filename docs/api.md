@@ -1,12 +1,13 @@
 # Hiking Logbook API Documentation
 
 This document describes the REST API endpoints for the Hiking Logbook Web App.  
-All endpoints are prefixed with:
-
+All endpoints are prefixed with: /api
 
 Authentication is handled using **JWT tokens**.  
 Include the header in protected routes:  
 `Authorization: Bearer <JWT_TOKEN>`
+
+**Base URL**: `https://hiking-logbook-hezw.onrender.com` (Production) | `http://localhost:3001` (Development)
 
 ---
 
