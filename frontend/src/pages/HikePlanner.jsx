@@ -9,7 +9,7 @@ import { Input } from "../components/ui/input";
 import NewHikePlanForm from "../components/NewHikePlanForm";
 
 import RouteExplorer from "../components/RouteExplorer"; 
-import { Calendar, MapPin, Users, Backpack, Mountain, Plus, X, RotateCcw, Search, Trash2, Edit } from "lucide-react";
+import { Calendar, MapPin,Backpack, Mountain, Plus, X, RotateCcw, Search, Edit } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext.jsx";
 import { plannedHikeApiService } from "../services/plannedHikesService.js";
 import { useGearChecklist } from "../services/gearService.js";
