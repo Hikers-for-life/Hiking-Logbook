@@ -192,7 +192,7 @@ useEffect(() => {
 
 let joinDate = "Unknown";
 
-if (profile?.createdAt) {
+if (profile?.createdAt || currentUser?.createdAt) {
   const createdAt = profile.createdAt;
 
   if (createdAt.toDate) {
@@ -209,11 +209,11 @@ if (profile?.createdAt) {
  
 
   const user = {
-    name: profile?.displayName || "No name",
-    email: profile?.email || "No email",
+    name: profile?.displayName || currentUser?.displayName || "No name",
+    email: profile?.email || currentUser?.email || "No email",
     joinDate: joinDate,
-    location: profile?.location || "Not set",
-    bio: profile?.bio || "No bio yet",
+    location: profile?.location || currentUser?.location || "Not set",
+    bio: profile?.bio ||  currentUser?.bio || "No bio yet",
     stats: {
 
     totalHikes: profile?.stats?.totalHikes || 0,
