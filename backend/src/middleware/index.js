@@ -7,7 +7,7 @@ import rateLimit from 'express-rate-limit';
 export function applySecurityMiddleware(app) {
     const limiter = rateLimit({
         windowMs: 15 * 60 * 1000, // 15 minutes
-        max: 100, // limit each IP to 100 requests per window
+        max: 10000, // limit each IP to 100 requests per window
         message: 'Too many requests, please try again later.',
     });
 
