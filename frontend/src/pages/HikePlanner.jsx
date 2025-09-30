@@ -25,6 +25,8 @@ import humidity from '../components/assets/humidity.png';
 import { Description } from "@radix-ui/react-dialog";
 import { useToast } from "../hooks/use-toast";
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+
 
 const sampleWeather = [
   {
@@ -81,7 +83,7 @@ const HikePlanner = () => {
 
       const fetchProfile = async () => {
         try {
-          const res = await fetch(`http://localhost:3001/api/users/${currentUser.uid}`);
+          const res = await fetch(`${API_BASE_URL}/users/${currentUser.uid}`);
           if (!res.ok) throw new Error("Failed to fetch profile");
           const data = await res.json();
           setProfile(data);  // now profile has bio, location, createdAt
