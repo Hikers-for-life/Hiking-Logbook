@@ -77,6 +77,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "GENERATE_SOURCEMAP=false CI=false react-scripts build",
+    "test:coverage": "react-scripts test --coverage --watchAll=false",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "lint": "eslint .",
@@ -93,7 +94,20 @@
   "jest": {
     "moduleNameMapper": {
       "^firebase/(.*)$": "<rootDir>/src/mocks/firebase/$1.js"
-    }
+    },
+
+    "collectCoverageFrom": [
+    "src/**/*.{js,jsx,ts,tsx}",  
+    "src/**/*.test.{js,jsx,ts,tsx}", 
+    "!src/index.js",              
+    "!src/reportWebVitals.js",    
+    "!src/mocks/**", 
+    "!src/components/**",
+    "!src/pages/**",
+    "!src/services/**",
+    "!src/utils/**",
+    "!src/contexts/**"                    
+  ]
   },
   "browserslist": {
     "production": [
