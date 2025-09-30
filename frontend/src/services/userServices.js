@@ -1,5 +1,26 @@
 import { db } from "../config/firebase.js";
-import { collection, query, where, getDocs, getCountFromServer } from "firebase/firestore";
+import { collection, query, where, getDocs, getCountFromServer, doc, getDoc } from "firebase/firestore";
+
+
+function formatDate(date) {
+  if (!(date instanceof Date) || isNaN(date)) return "Unknown";
+
+  const day = date.getDate();
+  const month = date.toLocaleString("en-US", { month: "long" });
+  const year = date.getFullYear();
+
+  // Add ordinal suffix (st, nd, rd, th)
+  const suffix =
+    day % 10 === 1 && day !== 11
+      ? "st"
+      : day % 10 === 2 && day !== 12
+      ? "nd"
+      : day % 10 === 3 && day !== 13
+      ? "rd"
+      : "th";
+
+  return `${month} ${day}${suffix}, ${year}`;
+}
 
 export const searchUsers = async (name) => {
   const q = query(
@@ -23,6 +44,42 @@ export const getUserHikeCount = async (userId) => {
     return 0;
   }
 };
+export const getUserProfile = async (userId) => {
+  let userName = "";
+  let bio = "";
+  let location = "";
+  let joinDate = "";
 
+  try {
+    // reference the user document
+    const userRef = doc(db, "users", userId);
+    const snapshot = await getDoc(userRef);
 
+    if (snapshot.exists()) {
+      const data = snapshot.data();
+      console.log("User Profile:", data);
 
+      userName = data.displayName || "";
+      bio = data.bio || "";
+      location = data.location || "";
+
+      if (data?.createdAt) {
+        const createdAt = data.createdAt;
+
+        if (createdAt.toDate) {
+          joinDate = formatDate(createdAt.toDate());
+        } else if (createdAt._seconds) {
+          joinDate = formatDate(new Date(createdAt._seconds * 1000));
+        } else {
+          joinDate = formatDate(new Date(createdAt));
+        }
+      }
+    } else {
+      console.warn(`No user profile found for ID: ${userId}`);
+    }
+  } catch (err) {
+    console.error("Failed to fetch Profile please check your code:", err);
+  }
+
+  return { userName, location, joinDate, bio };
+};
