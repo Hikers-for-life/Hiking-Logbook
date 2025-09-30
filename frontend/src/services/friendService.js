@@ -2,7 +2,7 @@
  // optional if you already have formatDate
 
 // Fetch all friend profile data in one place
-
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 function formatDate(date) {
   if (!(date instanceof Date) || isNaN(date)) return "Unknown";
 
@@ -25,7 +25,7 @@ function formatDate(date) {
 export async function getFriendProfile(uid, limit = 2) {
   try {
     // 1. Fetch hikes (preview only)
-    const hikesRes = await fetch(`http://localhost:3001/api/users/${uid}/hikes?limit=${limit}`);
+    const hikesRes = await fetch(`${API_BASE_URL}/users/${uid}/hikes?limit=${limit}`);
     const hikesData = await hikesRes.json();
 
     let recentHikes = [];
@@ -57,12 +57,12 @@ export async function getFriendProfile(uid, limit = 2) {
     }
 
     // 2. Fetch hike count
-    const countRes = await fetch(`http://localhost:3001/api/users/${uid}/hikes/count`);
+    const countRes = await fetch(`${API_BASE_URL}/users/${uid}/hikes/count`);
     const countData = await countRes.json();
     const totalHikes = countData.success ? countData.count : 0;
 
     // 3. Fetch stats (distance & elevation)
-    const statsRes = await fetch(`http://localhost:3001/api/users/${uid}/stats`);
+    const statsRes = await fetch(`${API_BASE_URL}/users/${uid}/stats`);
     const statsData = await statsRes.json();
     const totalDistance = statsData.success ? statsData.totalDistance : 0;
     const totalElevation = statsData.success ? statsData.totalElevation : 0;
