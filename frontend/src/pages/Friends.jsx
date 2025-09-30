@@ -1,94 +1,60 @@
 
-import { useState, useEffect } from "react";
+import { useState , useEffect} from "react";
 import { Navigation } from "../components/ui/navigation";
 import { Button } from "../components/ui/button";
-import { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent, } from "../components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Input } from "../components/ui/input";
-import { Badge, badgeVariants } from "../components/ui/badge";
-import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "../components/ui/tabs";
+import { Badge } from "../components/ui/badge";
+import { Avatar, AvatarFallback } from "../components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { searchUsers } from "../services/userServices";
 import { ProfileView } from "../components/ui/view-friend-profile";
-import { fetchFeed, likeFeed, commentFeed, shareFeed, fetchComments, deleteCommentFeed, deleteFeed } from "../services/feed";//ANNAH HERE
-import { discoverFriends, addFriend, getUserDetails } from "../services/discover";//ANNAH HERE
-import { getFirestore } from "firebase/firestore";
-import { getAuth } from "firebase/auth";//ANNA HERE
+import { fetchFeed, likeFeed, commentFeed, shareFeed, fetchComments, deleteCommentFeed,deleteFeed } from "../services/feed";//ANNAH HERE
+import { discoverFriends, addFriend } from "../services/discover";//ANNAH HERE
+import { getFirestore} from "firebase/firestore";
+import { getAuth } from "firebase/auth";//NOT SURE ABOUT THIS IMPORT//ANNA HERE
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useToast } from "../hooks/use-toast";
 import { getUserStats } from "../services/statistics";
-import { getFriendProfile } from "../services/friendService.js";
-import { formatTimeAgo } from "../utils/timeUtils";
-import { throttledRequest, REQUEST_PRIORITY } from "../utils/requestThrottle";
+import { getFriendProfile } from "../services/friendService.js"; 
 
 
+import { 
+  Search, 
+  UserPlus, 
+  MapPin, 
+  TrendingUp,
+  Mountain,
+  Clock,
+  Medal,
+  Users,
+  Share2,
+  Heart,
+  MessageSquare
+} from "lucide-react";
 
-import { Search, UserPlus, MapPin, TrendingUp, Mountain, Clock, Medal, Users, Share2, Heart, MessageSquare } from "lucide-react";
-
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
 const Friends = () => {
   const [selectedProfile, setSelectedProfile] = useState(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
-  //ANNAH HERE
+//ANNAH HERE
 
   const [recentActivity, setRecentActivity] = useState([]);
   const [commentsMap, setCommentsMap] = useState({});
   const [expandedComments, setExpandedComments] = useState({});
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(true);
-  //ANNAH HERE
+//ANNAH HERE
 
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [searchError, setSearchError] = useState("");
-  const { currentUser } = useAuth();
-  const [friends, setFriends] = useState([]);
-  const [userStats, setUserStats] = useState([]);
-  const { toast } = useToast();
-  const [timestampUpdate, setTimestampUpdate] = useState(0); // Force re-render for timestamps
-  const [isInitialLoad, setIsInitialLoad] = useState(true); // Track initial load to prevent multiple simultaneous requests
-  const [sharedPosts, setSharedPosts] = useState(new Set()); // Track which posts have been shared
-  const [deletedOriginalPosts, setDeletedOriginalPosts] = useState(new Set()); // Track deleted original posts
-
-  // Helper function to determine share button state
-  const getShareButtonState = (activity) => {
-    const originalPostId = activity.type === "share" ? activity.original.id : activity.id;
-    const isShared = sharedPosts.has(originalPostId);
-    const isOriginalDeleted = deletedOriginalPosts.has(originalPostId);
-
-    if (isOriginalDeleted) {
-      return { text: "Share", disabled: false, isShared: false };
-    }
-
-    return {
-      text: isShared ? "Shared" : "Share",
-      disabled: isShared,
-      isShared: isShared
-    };
-  };
-
-  // Function to handle external post deletions (from other pages like Logbook)
-  const handleExternalPostDeletion = (deletedPostId) => {
-    setDeletedOriginalPosts(prev => new Set([...prev, deletedPostId]));
-    // Remove from shared posts tracking since the original is deleted
-    setSharedPosts(prev => {
-      const newSet = new Set(prev);
-      newSet.delete(deletedPostId);
-      return newSet;
-    });
-  };
-
-  // Listen for post deletions from other pages
-  useEffect(() => {
-    const handlePostDeletion = (event) => {
-      if (event.detail && event.detail.type === 'post-deleted') {
-        handleExternalPostDeletion(event.detail.postId);
-      }
-    };
-
-    window.addEventListener('post-deleted', handlePostDeletion);
-    return () => window.removeEventListener('post-deleted', handlePostDeletion);
-  }, []);
+   const { currentUser } = useAuth(); 
+   const [friends, setFriends] = useState([]); 
+   const [userStats,setUserStats] = useState([]);
+    const { toast } = useToast();
 
   const handleSearch = async () => {
     if (!searchTerm.trim()) return;
@@ -102,130 +68,89 @@ const Friends = () => {
     }
   };
 
-  // Consolidated data loading to prevent 429 errors
   useEffect(() => {
-    if (!currentUser || !isInitialLoad) return;
+  const loadFriendProfiles = async () => {
+    if (!friends.length) return;
 
-    const loadAllData = async () => {
-      try {
-        setLoading(true);
-
-        // Load data using throttled requests to prevent 429 errors
-        console.log("Loading user stats...");
-        const stats = await throttledRequest(
-          () => getUserStats(currentUser.uid),
-          REQUEST_PRIORITY.HIGH
-        );
-        setUserStats(stats);
-
-        console.log("Loading friends...");
-        const friendsData = await throttledRequest(
-          async () => {
-            const friendsRes = await fetch(`http://localhost:3001/api/friends/${currentUser.uid}`);
-            const data = await friendsRes.json();
-            if (!friendsRes.ok) {
-              throw new Error(`Failed to fetch friends: ${friendsRes.status}`);
-            }
-            return data;
-          },
-          REQUEST_PRIORITY.HIGH
-        );
-
-        if (friendsData.success) {
-          setFriends(friendsData.data);
-
-          // Load friend profiles using throttled requests
-          if (friendsData.data.length > 0) {
-            console.log("Loading friend profiles...");
-            const updatedFriends = await Promise.all(
-              friendsData.data.map(async (f, index) => {
-                try {
-                  const profile = await throttledRequest(
-                    () => getFriendProfile(f.id),
-                    REQUEST_PRIORITY.MEDIUM
-                  );
-
-                  if (profile.success) {
-                    return {
-                      ...f,
-                      totalHikes: profile.totalHikes,
-                      totalDistance: profile.totalDistance,
-                      totalElevation: profile.totalElevation,
-                      lastHike: profile.recentHikes[0]?.title || "No hikes yet",
-                      lastHikeDate: profile.recentHikes[0]?.date || "",
-                    };
-                  }
-                } catch (error) {
-                  console.error(`Failed to load profile for friend ${f.id}:`, error);
-                }
-                return f; // fallback if fetch fails
-              })
-            );
-            setFriends(updatedFriends);
-          }
+    const updatedFriends = await Promise.all(
+      friends.map(async (f) => {
+        const profile = await getFriendProfile(f.id); // pass friend UID
+        if (profile.success) {
+          return {
+            ...f,
+            totalHikes: profile.totalHikes,
+            totalDistance: profile.totalDistance,
+            totalElevation: profile.totalElevation,
+            lastHike: profile.recentHikes[0]?.title || "No hikes yet",
+            lastHikeDate: profile.recentHikes[0]?.date || "",
+          };
         }
+        return f; // fallback if fetch fails
+      })
+    );
 
-        setIsInitialLoad(false);
-      } catch (error) {
-        console.error("Error loading initial data:", error);
-        // Show user-friendly error message
-        if (error.message.includes('429')) {
-          toast({
-            title: "Rate limit reached",
-            description: "Please wait a moment and refresh the page.",
-            duration: 5000,
-          });
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
+    setFriends(updatedFriends);
+  };
 
-    loadAllData();
-  }, [currentUser, isInitialLoad]);
+  loadFriendProfiles();
+}, [friends.length]);
 
 
-  console.log("Fetching friends:", friends);
-  const handleBlockFriend = async (fid) => {
+  useEffect(() => {
+  if (!currentUser) return;
+
+  getUserStats(currentUser.uid).then((stats) => {
+    console.log("User stats:", stats);
+    setUserStats(stats); // { totalDistance: X, totalElevation: Y }
+  });
+}, [currentUser]);
+
+  useEffect(() => {
+  const fetchFriends = async () => {
     try {
-      const res = await fetch(`http://localhost:3001/api/friends/${currentUser.uid}/block/${fid}`, {
-        method: "DELETE",
-      });
+      const res = await fetch(`${API_BASE_URL}/friends/${currentUser.uid}`);
       const data = await res.json();
       if (data.success) {
-        setFriends(prev => prev.filter(f => f.id !== fid)); // update UI
-        toast({
-          title: "User blocked",
-          description: "Friendship removed successfully!",
-        });
+        setFriends(data.data);
       } else {
-        console.error("Failed to block friend:", data.error);
+        console.error("Failed to fetch friends:", data.error);
       }
     } catch (err) {
-      console.error("Error blocking friend:", err);
+      console.error("Error fetching friends:", err);
     }
   };
-  const handleViewProfile = async (person, showAddFriend = false) => {
-    try {
-      let details = person;
 
-      // if only id/name provided, fetch full details
-      if (person.id) {
-        details = await getUserDetails(person.id);
-      }
+  if (currentUser) fetchFriends();
+}, [currentUser]);
 
-      setSelectedProfile({ ...details, showAddFriend });
-      setIsProfileOpen(true);
-    } catch (err) {
-      console.error("Failed to fetch profile details:", err);
-      setSelectedProfile({ ...person, showAddFriend }); // fallback
-      setIsProfileOpen(true);
+
+console.log("Fetching friends:", friends);
+const handleBlockFriend = async (fid) => {
+  try {
+    const res = await fetch(`${API_BASE_URL}/friends/${currentUser.uid}/block/${fid}`, {
+      method: "DELETE",
+    });
+    const data = await res.json();
+    if (data.success) {
+      setFriends(prev => prev.filter(f => f.id !== fid)); // update UI
+      toast({
+      title: "User blocked",
+      description: "Friendship removed successfully!",
+    });
+    } else {
+      console.error("Failed to block friend:", data.error);
     }
+  } catch (err) {
+    console.error("Error blocking friend:", err);
+  }
+};
+  const handleViewProfile = (person, showAddFriend = false) => {
+    setSelectedProfile({ ...person, showAddFriend });
+    setIsProfileOpen(true);
   };
 
   //ANNAH HERE
-  const auth = getAuth();
-
+const auth = getAuth();
 
 
   useEffect(() => {
@@ -233,89 +158,57 @@ const Friends = () => {
 
     const loadFeed = async () => {
       try {
-        // Only load feed after initial data is loaded to prevent 429 errors
-        if (isInitialLoad) return;
-
-        const data = await throttledRequest(
-          () => fetchFeed(),
-          REQUEST_PRIORITY.MEDIUM
-        );
-
+        setLoading(true);
+        const data = await fetchFeed(); // fetches activities WITH comments included
         if (!isMounted) return;
 
         // Each activity object can now include a comments array
-        const activitiesWithComments = (Array.isArray(data) ? data : data.activities || []).map(a => ({
+        const activitiesWithComments = (Array.isArray(data) ? data : data.activities || []).map(a =>  ({
           ...a,
-          comments: a.comments || [], // default empty array if backend doesn't include
+          comments: a.comments || [], // default empty array if backend doesn’t include
         }));
 
         setRecentActivity(activitiesWithComments);
-
-        // Initialize shared posts tracking from loaded data
-        const sharedPostIds = new Set();
-        activitiesWithComments.forEach(activity => {
-          if (activity.type === "share" && activity.original && activity.original.id) {
-            sharedPostIds.add(activity.original.id);
-          }
-        });
-        setSharedPosts(sharedPostIds);
       } catch (err) {
         console.error("Failed to fetch feed:", err);
-        // If it's a 429 error, show a user-friendly message
-        if (err.message.includes('429')) {
-          toast({
-            title: "Rate limit reached",
-            description: "Please wait a moment before refreshing the page.",
-            duration: 5000,
-          });
-        }
+      } finally {
+        if (isMounted) setLoading(false);
       }
     };
 
     loadFeed();
     return () => { isMounted = false; };
-  }, [isInitialLoad, toast]);
+  }, []);
 
 
   // ---- Like handler ----
   const handleLike = async (activity) => {
-    console.log(" Liking activity:", activity);
-    const uid = auth?.currentUser?.uid;
-    if (!uid) return;
+    const uid = auth?.currentUser.uid;
+    if (!uid) return; 
 
-    // Always use the latest state to avoid stale `likes`
-    setRecentActivity(prev =>
-      prev.map(a => {
+    // Optimistic UI update
+    setRecentActivity(prev => prev.map(a => {
+      if (a.id === activity.id) {
+        const likes = a.likes?.includes(uid)
+          ? a.likes.filter(l => l !== uid)
+          : [...(a.likes || []), uid];
+        return { ...a, likes };
+      }
+      return a;
+    }));
+
+    try {
+      await likeFeed(activity.id, !activity.likes?.includes(uid));
+    } catch (err) {
+      console.error("Failed to like:", err);
+      // rollback if needed
+      setRecentActivity(prev => prev.map(a => {
         if (a.id === activity.id) {
-          const alreadyLiked = a.likes?.includes(uid);
-          const likes = alreadyLiked
-            ? a.likes.filter(l => l !== uid)
-            : [...(a.likes || []), uid];
+          const likes = activity.likes || [];
           return { ...a, likes };
         }
         return a;
-      })
-    );
-
-    try {
-      // Always pass activity.id (NOT original.id)
-      const result = await likeFeed(activity.id);
-
-      // Sync with backend’s final likes (in case of concurrent updates)
-      setRecentActivity(prev =>
-        prev.map(a =>
-          a.id === activity.id ? { ...a, likes: result.likes } : a
-        )
-      );
-    } catch (err) {
-      console.error("Failed to like:", err);
-
-      //  Roll back to original state if request fails
-      setRecentActivity(prev =>
-        prev.map(a =>
-          a.id === activity.id ? { ...a, likes: activity.likes || [] } : a
-        )
-      );
+      }));
     }
   };
 
@@ -339,17 +232,17 @@ const Friends = () => {
       )
     );
     try {
-      const res = await commentFeed(activityId, content);
+     const res = await commentFeed(activityId, content);
       setRecentActivity(prev =>
         prev.map(a =>
           a.id === activityId
             ? {
-              ...a,
-              comments: [
-                ...(a.comments || []).filter(c => c.id !== tempComment.id),
-                res.comment,
-              ],
-            }
+                ...a,
+                comments: [
+                  ...(a.comments || []).filter(c => c.id !== tempComment.id),
+                  res.comment,
+                ],
+              }
             : a
         )
       );
@@ -360,221 +253,155 @@ const Friends = () => {
         prev.map(a =>
           a.id === activityId
             ? {
-              ...a,
-              comments: (a.comments || []).filter(c => c.id !== tempComment.id),
-            }
+                ...a,
+                comments: (a.comments || []).filter(c => c.id !== tempComment.id),
+              }
             : a
         )
       );
     }
   };
   const handleDeleteComment = async (activityId, commentId) => {
-    // Optimistic update
-    setRecentActivity(prev =>
-      prev.map(a =>
-        a.id === activityId
-          ? { ...a, comments: a.comments.filter(c => c.id !== commentId) }
-          : a
-      )
-    );
+  // Optimistic update
+  setRecentActivity(prev =>
+    prev.map(a =>
+      a.id === activityId
+        ? { ...a, comments: a.comments.filter(c => c.id !== commentId) }
+        : a
+    )
+  );
 
-    try {
-      await deleteCommentFeed(activityId, commentId);
-      toast({
-        title: "💬 Comment deleted",
-        description: "Your comment was successfully removed.",
-        duration: 1000,
-      });
-    } catch (err) {
-      console.error("Failed to delete comment:", err);
-      // Optional: refetch comments here if you want rollback
-      toast({
-        title: "❌ Failed to delete comment",
-        description: "We couldn’t remove the comment. Please try again.",
-        duration: 1000,
-      });
-    }
-  };
+  try {
+    await deleteCommentFeed(activityId, commentId);
+  } catch (err) {
+    console.error("Failed to delete comment:", err);
+    // Optional: refetch comments here if you want rollback
+  }
+};
 
 
 
   // ---- Share handler ----
-  const handleShare = async (activity) => {
-    const user = auth.currentUser;
+  // ---- Share handler ----
+const handleShare = async (activity) => {
+  const user = auth.currentUser;
 
-    // Embed the original activity data directly
-    const originalData = {
-      id: activity.id,
-      name: activity.name,
-      avatar: activity.avatar,
-      action: activity.action,
-      hike: activity.hike,
-      description: activity.description,
-      time: activity.time,
-      stats: activity.stats,
-      photo: activity.photo,
-      likes: activity.likes || [],
-      comments: activity.comments || [],
-    };
+  // Embed the original activity data directly
+  const originalData = {
+    id: activity.id,
+    name: activity.name,
+    avatar: activity.avatar,
+    action: activity.action,
+    hike: activity.hike,
+    description: activity.description,
+    time: activity.time,
+    stats: activity.stats,
+    photo: activity.photo,
+    likes: activity.likes || [],
+    comments: activity.comments || [],
+  };
 
-    // Optimistic share object
-    const tempShare = {
-      id: Math.random().toString(36).substr(2, 9),
-      type: "share",
+  // Optimistic share object
+  const tempShare = {
+    id: Math.random().toString(36).substr(2, 9),
+    type: "share",
+    original: originalData,
+    userId: user.uid,
+    name: user.displayName || user.email,
+    avatar: user.displayName?.[0] || user.email?.[0] || "?",
+    created_at: new Date().toISOString(),
+    likes: [],
+    comments: [],
+  };
+
+  // Optimistic UI update
+  setRecentActivity((prev) => [tempShare, ...prev]);
+
+  try {
+    // ✅ use service function instead of fetch
+    const data = await shareFeed(activity.id, {
+      sharerId: user.uid,
+      sharerName: user.displayName || user.email,
+      sharerAvatar: tempShare.avatar,
       original: originalData,
-      userId: user.uid,
-      name: user.displayName || user.email,
-      avatar: user.displayName?.[0] || user.email?.[0] || "?",
-      created_at: new Date().toISOString(),
-      likes: [],
-      comments: [],
-    };
+    });
 
-    // Optimistic UI update
-    setRecentActivity((prev) => [tempShare, ...prev]);
+    // Replace temp with persisted version
+    setRecentActivity((prev) =>
+      prev.map((a) =>
+        a.id === tempShare.id ? { ...tempShare, id: data.newActivityId } : a
+      )
+    );
+  } catch (err) {
+    console.error("Failed to share:", err);
+    // rollback optimistic
+    setRecentActivity((prev) => prev.filter((a) => a.id !== tempShare.id));
+  }
+};
 
-    // Track that this post has been shared
-    setSharedPosts(prev => new Set([...prev, activity.id]));
+const handleDeletePost = async (activityId) => {
+  // Optimistic UI update: remove the post locally first
+  const prevActivity = [...recentActivity];
+  setRecentActivity(prev => prev.filter(a => a.id !== activityId));
 
-    try {
-      //  use service function instead of fetch
-      const data = await shareFeed(activity.id, {
-        sharerId: user.uid,
-        sharerName: user.displayName || user.email,
-        sharerAvatar: tempShare.avatar,
-        original: originalData,
-      });
+  try {
+    // Call a backend/service function to delete the post
+    await deleteFeed(activityId); // <-- you need to implement this in services/feed.js
+  } catch (err) {
+    console.error("Failed to delete post:", err);
+    // Rollback if deletion fails
+    setRecentActivity(prevActivity);
+  }
+};
 
-      // Replace temp with persisted version
-      setRecentActivity((prev) =>
-        prev.map((a) =>
-          a.id === tempShare.id ? { ...tempShare, id: data.id } : a
-        )
-      );
-      toast({
-        title: "✅ Activity shared!",
-        description: `${activity.name} was successfully shared to your feed.`,
-        duration: 1,
-      });
-    } catch (err) {
-      console.error("Failed to share:", err);
-      toast({
-        title: "❌ Failed to share",
-        description: "There was an error sharing this activity. Please try again.",
-        duration: 1000,
-      });
-      // rollback optimistic
-      setRecentActivity((prev) => prev.filter((a) => a.id !== tempShare.id));
-      // Remove from shared posts tracking
-      setSharedPosts(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(activity.id);
-        return newSet;
-      });
-    }
+  
+  const handlePostAchievement = async () => {
+  const user = auth?.currentUser;
+  const displayName = user.displayName || user.email.split("@")[0];
+
+  const mockedActivity = {
+    id: Math.random().toString(36).substr(2, 9),
+    type: "achievement", // optional, helps distinguish achievements
+    userId: user.uid,     // very important for ownership & delete button
+    name: displayName,    // match the activity feed key
+    avatar: displayName[0].toUpperCase(),
+    action: "completed",
+    hike: "Mount Rainier Trail",
+    description: "Beautiful day!",
+    stats: "5km in 1h 30min",
+    time: "just now",
+    likes: [],
+    comments: [],
   };
 
-  const handleDeletePost = async (activityId) => {
-    // Find the activity being deleted
-    const activityToDelete = recentActivity.find(a => a.id === activityId);
-
-    // Optimistic UI update: remove the post locally first
-    const prevActivity = [...recentActivity];
-    setRecentActivity(prev => prev.filter(a => a.id !== activityId));
-
-    try {
-      // Call a backend/service function to delete the post
-      await deleteFeed(activityId);
-
-      // If this was an original post (not a share), mark it as deleted for shared posts
-      if (activityToDelete && activityToDelete.type !== "share") {
-        setDeletedOriginalPosts(prev => new Set([...prev, activityId]));
-      }
-
-      toast({
-        title: "✅  Post deleted",
-        description: "The post has been removed from your feed.",
-        duration: 3000,
-      });
-    } catch (err) {
-      console.error("Failed to delete post:", err);
-      toast({
-        title: "❌ Deletion failed",
-        description: "We couldn't delete the post. Try again later.",
-        duration: 3000,
-      });
-      // Rollback if deletion fails
-      setRecentActivity(prevActivity);
-    }
-  };
-
-  //ANNAH HERE
+  setRecentActivity(prev => [mockedActivity, ...prev]);
+};//ANNAH HERE
 
 
   useEffect(() => {
-    if (!auth?.currentUser || isInitialLoad) return;
-
+    if (!auth?.currentUser) return;
     const loadSuggestions = async () => {
       try {
-        const data = await throttledRequest(
-          () => discoverFriends(),
-          REQUEST_PRIORITY.LOW
-        );
+        setLoading(true);
+        const data = await discoverFriends();
         console.log("suggestion :", data)
         setSuggestions(data);
       } catch (err) {
         console.error("Failed to fetch suggestions:", err);
-        // If it's a 429 error, show a user-friendly message
-        if (err.message.includes('429')) {
-          toast({
-            title: "Rate limit reached",
-            description: "Friend suggestions will load when the rate limit resets.",
-            duration: 5000,
-          });
-        }
+      } finally {
+        setLoading(false);
       }
     };
+    loadSuggestions();
+  }, [auth?.currentUser]);
 
-    // Add a delay to prevent overwhelming the server
-    const timeoutId = setTimeout(loadSuggestions, 1000);
-    return () => clearTimeout(timeoutId);
-  }, [auth?.currentUser, isInitialLoad, toast]);
 
-  // Real-time timestamp updates
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTimestampUpdate(prev => prev + 1);
-    }, 60000); // Update every minute
-
-    return () => clearInterval(interval);
-  }, []);
-
-  // ---- Add Friend handler ----
-  const handleAddFriend = async (friendId) => {
-    try {
-      await addFriend(friendId); // uses backend API
-      setSuggestions(prev => prev.filter(s => s.id !== friendId)); // remove locally
-      console.log(`Friend ${friendId} added successfully!`);
-      toast({
-        title: "✅  Friend added",
-        description: "You’re now connected!",
-        duration: 4000,
-      });
-    } catch (err) {
-      console.error("Failed to add friend:", err);
-      toast({
-        title: "❌ Failed to add friend",
-        description: "Something went wrong. Please try again.",
-        duration: 4000,
-      });
-    }
-  };
 
 
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-
+      
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">Friends & Community</h1>
@@ -592,55 +419,53 @@ const Friends = () => {
           />
         </div>
 
-        {searchError && <p className="text-red-500 mt-2">{searchError}</p>}
+          {searchError && <p className="text-red-500 mt-2">{searchError}</p>}
+            {searchResults.map((user) => (
+              <Card 
+                key={user.id} 
+                className="relative flex flex-col sm:flex-row gap-3 items-start mt-4 mb-4"
+              >
+                {/* Close button */}
+                <button
+                  onClick={() => setSearchResults(searchResults.filter(u => u.id !== user.id))}
+                  className="absolute top-2 right-2 text-gray-400 hover:text-red-500 transition-colors"
+                >
+                  ✕ 
+                </button>
 
-        {/* ✅ 'user' is now defined above */}
-        {searchResults.map((user) => (
-          <Card
-            key={user.id}
-            className="relative flex flex-col sm:flex-row gap-3 items-start mt-4 mb-4"
-          >
-            {/* Close button */}
-            <button
-              onClick={() => setSearchResults(searchResults.filter(u => u.id !== user.id))}
-              className="absolute top-2 right-2 text-gray-400 hover:text-red-500 transition-colors"
-            >
-              ✕
-            </button>
-
-            <div className="flex items-center gap-2 mb-2">
-              <CardHeader className="pb-4">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-12 w-12">
-                    <AvatarFallback className="text-xl">
-                      {user.displayName
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="font-semibold text-foreground cursor-pointer hover:underline"
-                        onClick={() => {
-                          const isFriend = friends.some((f) => f.id === user.id);
-                          handleViewProfile(user, !isFriend); // showAddFriend = false if already friend
-                        }}
-                      >
-                        {user.displayName}
-                      </span>
+                <div className="flex items-center gap-2 mb-2">
+                  <CardHeader className="pb-4">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-12 w-12">
+                        <AvatarFallback className="text-xl">
+                          {user.displayName
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="font-semibold text-foreground cursor-pointer hover:underline"
+                            onClick={() => {
+                              const isFriend = friends.some((f) => f.id === user.id); 
+                              handleViewProfile(user, !isFriend); // showAddFriend = false if already friend
+                            }}
+                          >
+                            {user.displayName}
+                          </span>
+                        </div>
+                        <p className="text-sm text-muted-foreground flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          {user.location || "Not yet set"}
+                        </p>
+                      </div>
                     </div>
-                    <p className="text-sm text-muted-foreground flex items-center gap-1">
-                      <MapPin className="h-3 w-3" />
-                      {user.location || "Not yet set"}
-                    </p>
-                  </div>
+                  </CardHeader>
                 </div>
-              </CardHeader>
-            </div>
-          </Card>
-        ))}
+              </Card>
+            ))}
 
 
 
@@ -658,13 +483,13 @@ const Friends = () => {
                   <CardHeader className="pb-4">
                     <div className="flex items-center gap-3">
                       <Avatar className="h-12 w-12">
-                        <AvatarFallback className="text-l">
-                          {friend.displayName
-                            .split(' ')
-                            .map((n) => n[0])
-                            .join('')}
-                        </AvatarFallback>
-                      </Avatar>
+                      <AvatarFallback className="text-l">
+                        {friend.displayName
+                        .split(' ')
+                        .map((n) => n[0])
+                        .join('')}
+                      </AvatarFallback>
+                    </Avatar>
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <h3 className="font-semibold text-foreground">{friend.displayName}</h3>
@@ -688,7 +513,7 @@ const Friends = () => {
                         <p className="text-xs text-muted-foreground">Distance</p>
                       </div>
                     </div>
-
+                    
                     <div className="space-y-2">
                       <div className="flex items-center gap-2 text-sm">
                         <Mountain className="h-4 w-4 text-trail" />
@@ -703,18 +528,18 @@ const Friends = () => {
                       {friend.recentAchievement}
                     </Badge>
 
-                    <Button
-                      variant="outline"
-                      className="w-full"
+                    <Button 
+                      variant="outline" 
+                      className="w-full" 
                       size="sm"
                       onClick={() => handleViewProfile(friend)}
                     >
                       View Profile
                     </Button>
 
-                    <Button
-                      variant="destructive"
-                      className="w-full"
+                    <Button 
+                      variant="destructive" 
+                      className="w-full" 
                       size="sm"
                       onClick={() => handleBlockFriend(friend.id)}
                     >
@@ -727,7 +552,7 @@ const Friends = () => {
             </div>
           </TabsContent>
 
-          {/*ACTIVITY FEED*/}
+          {/*ACTIVITY FEED*/ }
           <TabsContent value="activity" className="space-y-6">
             <Card className="bg-card border-border shadow-elevation">
               <CardHeader>
@@ -739,42 +564,40 @@ const Friends = () => {
               <CardContent>
                 <div className="space-y-6">
                   {recentActivity.map((activity) => {
-                    const isOwnPost =
-                      activity.userId === currentUser?.uid ||
-                      activity.sharer?.id === currentUser?.uid;
-                    // works for normal & shared
+                    const isOwnPost = activity.userId === auth.currentUser.uid; // works for normal & shared
+
                     return (
                       <div key={activity.id} className="p-4 rounded-lg bg-muted space-y-3">
                         {/* ---- If shared post ---- */}
                         {activity.type === "share" ? (
                           <>
                             <div className="flex items-center gap-3">
-                              <Avatar className="h-8 w-8" onClick={() => handleViewProfile({ id: activity.userId })}>
+                              <Avatar className="h-8 w-8">
                                 <AvatarFallback>{activity.name[0]}</AvatarFallback>
                               </Avatar>
                               <p className="text-sm">
-                                <span className="font-medium" onClick={() => handleViewProfile({ id: activity.userId })}>{activity.name}</span>{" "}
+                                <span className="font-medium">{activity.name}</span>{" "}
                                 <span className="text-muted-foreground">shared</span>{" "}
-                                <span className="font-medium" onClick={() => handleViewProfile({ id: activity.userId })}>{activity.original.name}</span>’s post
+                                <span className="font-medium">{activity.original.name}</span>’s post
                               </p>
                             </div>
 
                             {/* Original post preview */}
                             <div className="ml-6 mt-3 p-3 rounded-md border bg-background space-y-3">
                               <div className="flex items-center gap-3">
-                                <Avatar className="h-8 w-8" onClick={() => handleViewProfile({ id: activity.userId })}>
+                                <Avatar className="h-8 w-8">
                                   <AvatarFallback>{activity.original.avatar}</AvatarFallback>
                                 </Avatar>
                                 <div className="flex-1">
                                   <p className="text-sm">
-                                    <span className="font-medium" onClick={() => handleViewProfile({ id: activity.userId })}>{activity.original.name}</span>{" "}
+                                    <span className="font-medium">{activity.original.name}</span>{" "}
                                     <span className="text-muted-foreground">{activity.original.action}</span>{" "}
                                     <span className="font-medium">{activity.original.hike}</span>
                                   </p>
                                   <div className="flex items-center gap-4 mt-1">
                                     <p className="text-xs text-muted-foreground flex items-center gap-1">
                                       <Clock className="h-3 w-3" />
-                                      {formatTimeAgo(activity.original.time)}
+                                      {activity.original.time}
                                     </p>
                                     <p className="text-xs text-muted-foreground">{activity.original.stats}</p>
                                   </div>
@@ -791,7 +614,7 @@ const Friends = () => {
                           <div className="flex items-center gap-3">
                             <Avatar
                               className="h-10 w-10 cursor-pointer"
-                              onClick={() => handleViewProfile({ name: activity.friend, avatar: activity.avatar, id: activity.userId })}
+                              onClick={() => handleViewProfile({ name: activity.friend, avatar: activity.avatar })}
                             >
                               <AvatarFallback>{activity.avatar}</AvatarFallback>
                             </Avatar>
@@ -799,7 +622,7 @@ const Friends = () => {
                               <p className="text-sm">
                                 <span
                                   className="font-medium cursor-pointer hover:underline"
-                                  onClick={() => handleViewProfile({ name: activity.name, avatar: activity.avatar, id: activity.userId })}
+                                  onClick={() => handleViewProfile({ name: activity.name, avatar: activity.avatar })}
                                 >
                                   {activity.name}
                                 </span>
@@ -809,7 +632,7 @@ const Friends = () => {
                               <div className="flex items-center gap-4 mt-1">
                                 <p className="text-xs text-muted-foreground flex items-center gap-1">
                                   <Clock className="h-3 w-3" />
-                                  {formatTimeAgo(activity.time)}
+                                  {activity.time}
                                 </p>
                                 <p className="text-xs text-muted-foreground">{activity.stats}</p>
                                 {activity.photo && (
@@ -852,26 +675,13 @@ const Friends = () => {
                             {commentsMap[activity.id]?.length || activity.comments?.length || 0}
                           </button>
 
-                          {(() => {
-                            const shareState = getShareButtonState(activity);
-                            return (
-                              <button
-                                onClick={() => {
-                                  if (!shareState.disabled) {
-                                    handleShare(activity.type === "share" ? activity.original : activity);
-                                  }
-                                }}
-                                disabled={shareState.disabled}
-                                className={`flex items-center gap-1 text-sm transition-colors ${shareState.disabled
-                                    ? "text-green-600 cursor-not-allowed"
-                                    : "text-muted-foreground hover:text-foreground"
-                                  }`}
-                              >
-                                <Share2 className="h-4 w-4" />
-                                {shareState.text}
-                              </button>
-                            );
-                          })()}
+                          <button
+                            onClick={() => handleShare(activity.type === "share" ? activity.original : activity)}
+                            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            <Share2 className="h-4 w-4" />
+                            Share
+                          </button>
 
                           {isOwnPost && (
                             <button
@@ -930,7 +740,7 @@ const Friends = () => {
 
 
 
-          {/* DISCOVER */}
+        {/* DISCOVER */}
           <TabsContent value="discover" className="space-y-6">
             <Card className="bg-card border-border shadow-elevation">
               <CardHeader>
@@ -957,7 +767,7 @@ const Friends = () => {
                             <AvatarFallback>{suggestion.avatar}</AvatarFallback>
                           </Avatar>
                           <div>
-                            <h4 className="font-medium text-foreground" onClick={() => handleViewProfile({ id: suggestion.id })}> {suggestion.name}</h4>
+                            <h4 className="font-medium text-foreground">{suggestion.name}</h4>
                             <p className="text-sm text-muted-foreground">
                               {suggestion.mutualFriends} mutual friends
                             </p>
@@ -974,7 +784,7 @@ const Friends = () => {
                           onClick={async (e) => {
                             e.stopPropagation(); // prevent opening profile modal
                             try {
-
+                              
                               await addFriend(suggestion.id); // ✅ uses service
                               setSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
                               console.log(`Friend ${suggestion.name} added!`);
@@ -983,9 +793,9 @@ const Friends = () => {
                             }
                           }}
                         >
-                          <UserPlus className="h-4 w-4 mr-2" />
+                           <UserPlus className="h-4 w-4 mr-2" />
                           Add Friend
-
+                          
                         </Button>
                       </div>
                     ))
@@ -998,7 +808,7 @@ const Friends = () => {
         </Tabs>
       </main>
 
-      <ProfileView
+      <ProfileView 
         open={isProfileOpen}
         onOpenChange={setIsProfileOpen}
         person={selectedProfile}
