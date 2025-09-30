@@ -1,11 +1,11 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import Friends from '../pages/Friends';
+import Friends from '../pages/Friends.jsx';
 import { getAuth } from 'firebase/auth';
-import { fetchFeed, likeFeed, commentFeed, shareFeed, deleteCommentFeed, deleteFeed } from '../services/feed';
-import { discoverFriends, addFriend, getUserDetails } from '../services/discover';
-import { searchUsers } from '../services/userServices';
-import { getUserStats } from '../services/statistics';
+import { fetchFeed, likeFeed, commentFeed, shareFeed, deleteCommentFeed, deleteFeed } from '../services/feed.js';
+import { discoverFriends, addFriend, getUserDetails } from '../services/discover.js';
+import { searchUsers } from '../services/userServices.js';
+import { getUserStats } from '../services/statistics.js';
 import { getFriendProfile } from '../services/friendService.js';
 
 // Mock all dependencies with proper React elements
