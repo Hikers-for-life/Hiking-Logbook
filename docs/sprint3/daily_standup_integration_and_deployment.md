@@ -6,7 +6,7 @@
 - The team stayed on a **call all night** to address **integration issues**.  
 - During integration, sudden bugs appeared in **Hike Planner**, **Logbook**, and **Profile** features.  
 - **Naledi, Annah, and Jane** collaborated closely, comparing with their local code to identify and fix the issues.  
-- **Risuna** focused on resolving problems with the **Weather API** and stabilizing the **deployment site**.  
+- **Risuna** focused on resolving problems with the **Weather API** and stabilizing the **deployment site** and documenting public api and security audit report.
 - **Ntokozo** worked on updating **project documentation** in preparation for the next sprint meeting.  
 
 ## Key Notes
