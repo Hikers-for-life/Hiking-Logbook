@@ -92,5 +92,4 @@ export function getAuth() {
 }
 
 // Exports for easy usage
-export { admin };
-
+export { db, admin };

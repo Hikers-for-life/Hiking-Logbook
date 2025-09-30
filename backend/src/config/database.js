@@ -1,9 +1,429 @@
 ﻿import { getDatabase } from './firebase.js';
 import { evaluateAndAwardBadges } from '../services/badgeService.js';
 
-// Database utilities for hike management
+// Database utilities for comprehensive hike management
+
+export const collections = {
+  USERS: 'users',
+  HIKES: 'hikes',
+  TRAILS: 'trails',
+  ACHIEVEMENTS: 'achievements',
+};
 export const dbUtils = {
+  // Helper: return db & FieldValue
+  getDb() {
+    return getDatabase();
+  },
+
+  _FieldValue() {
+    const db = this.getDb();
+    // Firestore libs sometimes expose FieldValue differently; attempt both
+    return db.FieldValue || (db.firestore && db.firestore.FieldValue) || (db.firebase && db.firebase.firestore && db.firebase.firestore.FieldValue);
+  },
+
+  // -----------------------
+  // Generic Helpers
+  // -----------------------
+  _safeDocData(doc) {
+    if (!doc) return null;
+    return { id: doc.id, ...(doc.data ? doc.data() : {}) };
+  },
+
+  async _getUserProfileIfExists(userId) {
+    try {
+      if (!userId) return null;
+      const db = this.getDb();
+      const userDoc = await db.collection('users').doc(userId).get();
+      if (!userDoc.exists) return null;
+      return { id: userDoc.id, ...userDoc.data() };
+    } catch (err) {
+      console.warn(`_getUserProfileIfExists(${userId}) failed:`, err.message);
+      return null;
+    }
+  },
+  // -----------------------
+  // Generic CRUD
+  // -----------------------
+
+  async create(collection, docId, data) {
+    try {
+      await db
+        .collection(collection)
+        .doc(docId)
+        .set({
+          ...data,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+      return { success: true, id: docId };
+    } catch (error) {
+      throw new Error(`Failed to create document: ${error.message}`);
+    }
+  },
+
+  async getById(collection, docId) {
+    try {
+      const doc = await db.collection(collection).doc(docId).get();
+      if (!doc.exists) {
+        return null;
+      }
+      return { id: doc.id, ...doc.data() };
+    } catch (error) {
+      throw new Error(`Failed to get document: ${error.message}`);
+    }
+  },
+  async update(collection, docId, data) {
+    try {
+      await db
+        .collection(collection)
+        .doc(docId)
+        .update({
+          ...data,
+          updatedAt: new Date(),
+        });
+      return { success: true };
+    } catch (error) {
+      throw new Error(`Failed to update document: ${error.message}`);
+    }
+  },
+
+  async query(collection, conditions = []) {
+    try {
+      let query = db.collection(collection);
+
+      conditions.forEach(({ field, operator, value }) => {
+        query = query.where(field, operator, value);
+      });
+
+      const snapshot = await query.get();
+      const docs = [];
+
+      snapshot.forEach((doc) => {
+        docs.push({ id: doc.id, ...doc.data() });
+      });
+
+      return docs;
+    } catch (error) {
+      throw new Error(`Failed to query documents: ${error.message}`);
+    }
+  },
+
+
+
   // Add a new hike with comprehensive data
+
+  //const db = getDatabase();
+
+  // Database utilities for hike management
+  // -----------------------
+  // Planned Hikes
+  // -----------------------
+  async addPlannedHike(userId, plannedHikeData) {
+    try {
+      if (!userId) {
+        throw new Error('User ID is required');
+      }
+
+      const mapped = {
+        title: plannedHikeData.title || '',
+        date: plannedHikeData.date || new Date(),
+        startTime: plannedHikeData.startTime || null,
+        location: plannedHikeData.location || '',
+        distance: plannedHikeData.distance || '',
+        difficulty: plannedHikeData.difficulty || 'Easy',
+        description: plannedHikeData.description || '',
+        notes: plannedHikeData.notes || '',
+        status: 'planning',
+        participants: plannedHikeData.participants || [userId],
+        createdBy: userId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        userId,
+        maxParticipants: plannedHikeData.maxParticipants || 10
+      };
+
+      const db = this.getDb();
+      const docRef = await db.collection('users').doc(userId).collection('plannedHikes').add(mapped);
+
+      // Re-evaluate badges/stats
+      const stats = await this.getUserHikeStats(userId);
+      await evaluateAndAwardBadges(userId, stats).catch(e => console.warn('Badge eval failed:', e.message));
+
+      return { success: true, id: docRef.id };
+    } catch (err) {
+      throw new Error(`addPlannedHike failed: ${err.message}`);
+    }
+  },
+
+  async getUserPlannedHikes(userId, filters = {}) {
+    try {
+      const db = this.getDb();
+      let query = db.collection('users').doc(userId).collection('plannedHikes').orderBy('date', 'asc');
+      const snapshot = await query.get();
+      const planned = [];
+      snapshot.forEach(d => planned.push({ id: d.id, ...d.data() }));
+
+      // apply simple js filters (keeps query simple, avoids composite index needs)
+      let result = planned;
+      if (!filters.includeCancelled) result = result.filter(h => h.status !== 'cancelled');
+      if (filters.status) result = result.filter(h => h.status === filters.status);
+      if (filters.difficulty) result = result.filter(h => h.difficulty === filters.difficulty);
+      if (filters.dateFrom) {
+        const from = new Date(filters.dateFrom);
+        result = result.filter(h => (h.date && new Date(h.date) >= from));
+      }
+      if (filters.dateTo) {
+        const to = new Date(filters.dateTo);
+        result = result.filter(h => (h.date && new Date(h.date) <= to));
+      }
+      return result;
+    } catch (err) {
+      throw new Error(`getUserPlannedHikes failed: ${err.message}`);
+    }
+  },
+
+  async getPlannedHike(userId, plannedHikeId) {
+    try {
+      const db = this.getDb();
+      const doc = await db.collection('users').doc(userId).collection('plannedHikes').doc(plannedHikeId).get();
+      if (!doc.exists) return null;
+      return { id: doc.id, ...doc.data() };
+    } catch (err) {
+      throw new Error(`getPlannedHike failed: ${err.message}`);
+    }
+  },
+
+  async updatePlannedHike(userId, plannedHikeId, updateData) {
+    try {
+      const db = this.getDb();
+      await db.collection('users').doc(userId).collection('plannedHikes').doc(plannedHikeId).update({
+        ...updateData,
+        updatedAt: new Date()
+      });
+      return { success: true };
+    } catch (err) {
+      throw new Error(`updatePlannedHike failed: ${err.message}`);
+    }
+  },
+
+  async deletePlannedHike(userId, plannedHikeId) {
+    try {
+      const db = this.getDb();
+      await db.collection('users').doc(userId).collection('plannedHikes').doc(plannedHikeId).delete();
+      return { success: true };
+    } catch (err) {
+      throw new Error(`deletePlannedHike failed: ${err.message}`);
+    }
+  },
+
+    async startPlannedHike(userId, plannedHikeId) {
+    try {
+      const plannedHike = await this.getPlannedHike(userId, plannedHikeId);
+      if (!plannedHike) {
+        throw new Error('Planned hike not found');
+      }
+
+      // Create active hike from planned hike data
+      const activeHikeData = {
+        title: plannedHike.title,
+        location: plannedHike.location,
+        distance: plannedHike.distance,
+        difficulty: plannedHike.difficulty,
+        description: plannedHike.description,
+        notes: plannedHike.notes,
+        status: 'active',
+        startTime: new Date(),
+        date: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        userId: userId,
+        waypoints: [],
+        gpsTrack: [],
+        plannedHikeId: plannedHikeId
+      };
+
+      const activeHikeResult = await this.addHike(userId, activeHikeData);
+
+      // Update planned hike status
+      await this.updatePlannedHike(userId, plannedHikeId, { status: 'started' });
+
+      return activeHikeResult;
+    } catch (error) {
+      throw new Error(`Failed to start planned hike: ${error.message}`);
+    }
+  },
+
+    async joinPlannedHike(userId, plannedHikeId, participantId) {
+    try {
+      const hikeRef = this.getDb()
+        .collection('users')
+        .doc(userId)
+        .collection('plannedHikes')
+        .doc(plannedHikeId);
+
+      const doc = await hikeRef.get();
+      if (!doc.exists) {
+        throw new Error('Planned hike not found');
+      }
+
+      const hikeData = doc.data();
+      const participants = hikeData.participants || [];
+      
+      // Check if already a participant
+      if (participants.includes(participantId)) {
+        throw new Error('User is already a participant');
+      }
+
+      // Check if max participants reached
+      if (participants.length >= hikeData.maxParticipants) {
+        throw new Error('Maximum participants reached');
+      }
+
+      // Add participant
+      participants.push(participantId);
+      
+      await hikeRef.update({
+        participants: participants,
+        updatedAt: new Date()
+      });
+
+      return { success: true };
+    } catch (error) {
+      throw new Error(`Failed to join planned hike: ${error.message}`);
+    }
+  },
+
+  // Leave a planned hike (remove participant)
+  async leavePlannedHike(userId, plannedHikeId, participantId) {
+    try {
+      const hikeRef = this.getDb()
+        .collection('users')
+        .doc(userId)
+        .collection('plannedHikes')
+        .doc(plannedHikeId);
+
+      const doc = await hikeRef.get();
+      if (!doc.exists) {
+        throw new Error('Planned hike not found');
+      }
+
+      const hikeData = doc.data();
+      const participants = hikeData.participants || [];
+      
+      // Remove participant
+      const updatedParticipants = participants.filter(id => id !== participantId);
+      
+      await hikeRef.update({
+        participants: updatedParticipants,
+        updatedAt: new Date()
+      });
+
+      return { success: true };
+    } catch (error) {
+      throw new Error(`Failed to leave planned hike: ${error.message}`);
+    }
+  },
+
+   // GEAR CHECKLIST METHODS
+  // Get user's gear checklist
+  async getUserGearChecklist(userId) {
+    try {
+      const doc = await this.getDb().collection('users').doc(userId).get();
+      
+      if (!doc.exists) {
+        // Return default gear checklist if user doesn't exist yet
+        return [
+          { item: "Hiking Boots", checked: false },
+          { item: "Water (3L)", checked: false },
+          { item: "Trail Snacks", checked: false },
+          { item: "First Aid Kit", checked: false }
+        ];
+      }
+      
+      const userData = doc.data();
+      return userData.gearChecklist || [
+        { item: "Hiking Boots", checked: false },
+        { item: "Water (3L)", checked: false },
+        { item: "Trail Snacks", checked: false },
+        { item: "First Aid Kit", checked: false }
+      ];
+    } catch (error) {
+      throw new Error(`Failed to get gear checklist: ${error.message}`);
+    }
+  },
+
+  // Update user's gear checklist
+  async updateUserGearChecklist(userId, gearItems) {
+    try {
+      // Ensure user profile exists
+      const userDoc = await this.getDb().collection('users').doc(userId).get();
+      
+      if (!userDoc.exists) {
+        // Create user profile with gear checklist
+        await this.createUserProfile(userId, {
+          gearChecklist: gearItems
+        });
+      } else {
+        // Update existing user profile
+        await this.getDb()
+          .collection('users')
+          .doc(userId)
+          .update({
+            gearChecklist: gearItems,
+            updatedAt: new Date()
+          });
+      }
+      return { success: true };
+    } catch (error) {
+      throw new Error(`Failed to update gear checklist: ${error.message}`);
+    }
+  },
+
+  // Add item to gear checklist
+  async addGearItem(userId, newItem) {
+    try {
+      const currentChecklist = await this.getUserGearChecklist(userId);
+      const updatedChecklist = [...currentChecklist, { item: newItem, checked: false }];
+      
+      await this.updateUserGearChecklist(userId, updatedChecklist);
+      return { success: true, checklist: updatedChecklist };
+    } catch (error) {
+      throw new Error(`Failed to add gear item: ${error.message}`);
+    }
+  },
+
+  // Remove item from gear checklist
+  async removeGearItem(userId, itemIndex) {
+    try {
+      const currentChecklist = await this.getUserGearChecklist(userId);
+      const updatedChecklist = currentChecklist.filter((_, index) => index !== itemIndex);
+      
+      await this.updateUserGearChecklist(userId, updatedChecklist);
+      return { success: true, checklist: updatedChecklist };
+    } catch (error) {
+      throw new Error(`Failed to remove gear item: ${error.message}`);
+    }
+  },
+
+  // Toggle gear item checked status
+  async toggleGearItem(userId, itemIndex) {
+    try {
+      const currentChecklist = await this.getUserGearChecklist(userId);
+      const updatedChecklist = currentChecklist.map((item, index) => 
+        index === itemIndex ? { ...item, checked: !item.checked } : item
+      );
+      
+      await this.updateUserGearChecklist(userId, updatedChecklist);
+      return { success: true, checklist: updatedChecklist };
+    } catch (error) {
+      throw new Error(`Failed to toggle gear item: ${error.message}`);
+    }
+  },
+
+  // -----------------------
+  // Hikes (core)
+  // -----------------------
+   // Add a new hike with comprehensive data
   async addHike(userId, hikeData) {
     try {
       if (!userId) {
@@ -32,6 +452,7 @@ export const dbUtils = {
         
         // Additional details
         notes: hikeData.notes || '',
+        description: hikeData.description || '', // Support planned hike descriptions
         
         // GPS and tracking
         waypoints: hikeData.waypoints || [],
@@ -39,6 +460,8 @@ export const dbUtils = {
         endLocation: hikeData.endLocation || null,
         routeMap: hikeData.routeMap || '',
         gpsTrack: hikeData.gpsTrack || [],
+
+        plannedHikeId: hikeData.plannedHikeId || null, // Reference to planned hike if applicable
         
         // Metadata
         status: hikeData.status || 'completed',
@@ -226,13 +649,17 @@ export const dbUtils = {
         ...hikeData,
         status: 'active',
         date: hikeData.date || new Date(), // Ensure date field exists for ordering
+        actualStartTime: new Date(), // Always set actual start time for active hikes
+        startTime: hikeData.startTime || new Date(),
         startTime: new Date(),
         pinned: hikeData.pinned || false,
         createdAt: new Date(),
         updatedAt: new Date(),
         userId: userId,
         waypoints: [],
-        gpsTrack: []
+        gpsTrack: [],
+      // Preserve planned hike reference if it exists
+      plannedHikeId: hikeData.plannedHikeId || null
       };
 
       const db = getDatabase();
@@ -317,8 +744,12 @@ export const dbUtils = {
     }
   },
 
-  // Get user profile
-  async getUserProfile(userId) {
+
+  // -----------------------
+  // User Profiles
+  // -----------------------
+
+   async getUserProfile(userId) {
     try {
       const db = getDatabase();
       const doc = await db.collection('users').doc(userId).get();
@@ -614,29 +1045,6 @@ export const dbUtils = {
     }
   },
 
-  // Delete user and all their data
-  async deleteUser(userId) {
-    try {
-      // Delete all hikes first
-      const db = getDatabase();
-      const hikesSnapshot = await db
-        .collection('users')
-        .doc(userId)
-        .collection('hikes')
-        .get();
-      
-      const deletePromises = hikesSnapshot.docs.map(doc => doc.ref.delete());
-      await Promise.all(deletePromises);
-      
-      // Delete the user document
-      await db.collection('users').doc(userId).delete();
-      
-      return { success: true };
-    } catch (error) {
-      throw new Error(`Failed to delete user: ${error.message}`);
-    }
-  },
-
   // Get global statistics across all users (for public API)
   async getGlobalStats() {
     try {
@@ -837,291 +1245,31 @@ export const dbUtils = {
     }
   },
 
-  // PLANNED HIKES METHODS
-  // Add a new planned hike
-  async addPlannedHike(userId, plannedHikeData) {
+  // -----------------------
+  // Cleanup / Admin
+  // -----------------------
+  async deleteUser(userId) {
     try {
-      // Map and validate the planned hike data with updated schema
-      const mappedPlannedHikeData = {
-        title: plannedHikeData.title || '',
-        date: plannedHikeData.date || new Date(),
-        startTime: plannedHikeData.startTime || '', // New field
-        location: plannedHikeData.location || '',
-        distance: plannedHikeData.distance || '',
-        difficulty: plannedHikeData.difficulty || 'Easy',
-        description: plannedHikeData.description || '',
-        notes: plannedHikeData.notes || '',
-        
-        // Additional metadata
-        status: 'planning', // Default status
-        participants: [userId], // Creator is automatically a participant
-        createdBy: userId,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        userId: userId
-      };
+      const db = this.getDb();
 
-      const db = getDatabase();
-      const docRef = await db
-        .collection('users')
-        .doc(userId)
-        .collection('plannedHikes')
-        .add(mappedPlannedHikeData);
-        
-      // After saving hike, evaluate badges
-      const stats = await this.getUserHikeStats(userId);
-      await evaluateAndAwardBadges(userId, stats);
+      // delete hikes
+      const hikesSnap = await db.collection('users').doc(userId).collection('hikes').get();
+      const hikeDeletes = hikesSnap.docs.map(d => d.ref.delete());
+      await Promise.all(hikeDeletes);
 
-      return { success: true, id: docRef.id };
+      // delete planned hikes
+      const plannedSnap = await db.collection('users').doc(userId).collection('plannedHikes').get();
+      const plannedDeletes = plannedSnap.docs.map(d => d.ref.delete());
+      await Promise.all(plannedDeletes);
 
-    } catch (error) {
-      throw new Error(`Failed to add planned hike: ${error.message}`);
-    }
-  },
-
-  // Get a specific planned hike by ID
-  async getPlannedHike(userId, plannedHikeId) {
-    try {
-      const doc = await getDatabase()
-        .collection('users')
-        .doc(userId)
-        .collection('plannedHikes')
-        .doc(plannedHikeId)
-        .get();
-      if (!doc.exists) {
-        return null;
-      }
-      return { id: doc.id, ...doc.data() };
-    } catch (error) {
-      throw new Error(`Failed to get planned hike: ${error.message}`);
-    }
-  },
-
-  // Update a planned hike
-  async updatePlannedHike(userId, plannedHikeId, plannedHikeData) {
-    try {
-      const updateData = {
-        ...plannedHikeData,
-        updatedAt: new Date()
-      };
-
-      await getDatabase()
-        .collection('users')
-        .doc(userId)
-        .collection('plannedHikes')
-        .doc(plannedHikeId)
-        .update(updateData);
-
+      // delete user doc
+      await db.collection('users').doc(userId).delete();
       return { success: true };
-    } catch (error) {
-      throw new Error(`Failed to update planned hike: ${error.message}`);
-    }
-  },
-
-  // Delete a planned hike
-  async deletePlannedHike(userId, plannedHikeId) {
-    try {
-      await getDatabase()
-        .collection('users')
-        .doc(userId)
-        .collection('plannedHikes')
-        .doc(plannedHikeId)
-        .delete();
-
-      return { success: true };
-    } catch (error) {
-      throw new Error(`Failed to delete planned hike: ${error.message}`);
-    }
-  },
-
-  // Convert planned hike to active hike
-  async startPlannedHike(userId, plannedHikeId) {
-    try {
-      const plannedHike = await this.getPlannedHike(userId, plannedHikeId);
-      if (!plannedHike) {
-        throw new Error('Planned hike not found');
-      }
-
-      // Create active hike from planned hike data
-      const activeHikeData = {
-        title: plannedHike.title,
-        location: plannedHike.location,
-        distance: plannedHike.distance,
-        difficulty: plannedHike.difficulty,
-        description: plannedHike.description,
-        notes: plannedHike.notes,
-        status: 'active',
-        startTime: new Date(),
-        date: new Date(),
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        userId: userId,
-        waypoints: [],
-        gpsTrack: [],
-        plannedHikeId: plannedHikeId
-      };
-
-      const activeHikeResult = await this.addHike(userId, activeHikeData);
-
-      // Update planned hike status
-      await this.updatePlannedHike(userId, plannedHikeId, { status: 'started' });
-
-      return activeHikeResult;
-    } catch (error) {
-      throw new Error(`Failed to start planned hike: ${error.message}`);
-    }
-  },
-
-  // Get user's planned hikes with optional filters
-  async getUserPlannedHikes(userId, filters = {}) {
-    try {
-      // Simple query - just get all planned hikes ordered by date
-      const query = getDatabase()
-        .collection('users')
-        .doc(userId)
-        .collection('plannedHikes')
-        .orderBy('date', 'asc');
-      
-      const snapshot = await query.get();
-      
-      let plannedHikes = [];
-      snapshot.forEach(doc => {
-        plannedHikes.push({ id: doc.id, ...doc.data() });
-      });
-      
-      // Apply filters in JavaScript to avoid complex Firestore indexes
-      if (!filters.includeCancelled) {
-        plannedHikes = plannedHikes.filter(hike => hike.status !== 'cancelled');
-      }
-      
-      if (filters.status) {
-        plannedHikes = plannedHikes.filter(hike => hike.status === filters.status);
-      }
-      
-      if (filters.difficulty) {
-        plannedHikes = plannedHikes.filter(hike => hike.difficulty === filters.difficulty);
-      }
-      
-      if (filters.dateFrom) {
-        const dateFrom = new Date(filters.dateFrom);
-        plannedHikes = plannedHikes.filter(hike => {
-          const hikeDate = hike.date && hike.date._seconds 
-            ? new Date(hike.date._seconds * 1000)
-            : new Date(hike.date);
-          return hikeDate >= dateFrom;
-        });
-      }
-      
-      if (filters.dateTo) {
-        const dateTo = new Date(filters.dateTo);
-        plannedHikes = plannedHikes.filter(hike => {
-          const hikeDate = hike.date && hike.date._seconds 
-            ? new Date(hike.date._seconds * 1000)
-            : new Date(hike.date);
-          return hikeDate <= dateTo;
-        });
-      }
-      
-      return plannedHikes;
-    } catch (error) {
-      throw new Error(`Failed to get planned hikes: ${error.message}`);
-    }
-  },
-
-  // GEAR CHECKLIST METHODS (from remote branch)
-  // Get user's gear checklist
-  async getUserGearChecklist(userId) {
-    try {
-      const doc = await getDatabase().collection('users').doc(userId).get();
-      
-      if (!doc.exists) {
-        // Return default gear checklist if user doesn't exist yet
-        return [
-          { item: "Hiking Boots", checked: false },
-          { item: "Water (3L)", checked: false },
-          { item: "Trail Snacks", checked: false },
-          { item: "First Aid Kit", checked: false }
-        ];
-      }
-      
-      const userData = doc.data();
-      return userData.gearChecklist || [
-        { item: "Hiking Boots", checked: false },
-        { item: "Water (3L)", checked: false },
-        { item: "Trail Snacks", checked: false },
-        { item: "First Aid Kit", checked: false }
-      ];
-    } catch (error) {
-      throw new Error(`Failed to get gear checklist: ${error.message}`);
-    }
-  },
-
-  // Update user's gear checklist
-  async updateUserGearChecklist(userId, gearItems) {
-    try {
-      // Ensure user profile exists
-      const userDoc = await getDatabase().collection('users').doc(userId).get();
-      
-      if (!userDoc.exists) {
-        // Create user profile with gear checklist
-        await getDatabase().collection('users').doc(userId).set({
-          gearChecklist: gearItems,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        });
-      } else {
-        // Update existing user profile
-        await getDatabase().collection('users').doc(userId).update({
-          gearChecklist: gearItems,
-          updatedAt: new Date()
-        });
-      }
-      
-      return { success: true };
-    } catch (error) {
-      throw new Error(`Failed to update gear checklist: ${error.message}`);
-    }
-  },
-
-  // Add item to gear checklist
-  async addGearItem(userId, newItem) {
-    try {
-      const currentChecklist = await this.getUserGearChecklist(userId);
-      const updatedChecklist = [...currentChecklist, { item: newItem, checked: false }];
-      
-      await this.updateUserGearChecklist(userId, updatedChecklist);
-      return { success: true, checklist: updatedChecklist };
-    } catch (error) {
-      throw new Error(`Failed to add gear item: ${error.message}`);
-    }
-  },
-
-  // Remove item from gear checklist
-  async removeGearItem(userId, itemIndex) {
-    try {
-      const currentChecklist = await this.getUserGearChecklist(userId);
-      const updatedChecklist = currentChecklist.filter((_, index) => index !== itemIndex);
-      
-      await this.updateUserGearChecklist(userId, updatedChecklist);
-      return { success: true, checklist: updatedChecklist };
-    } catch (error) {
-      throw new Error(`Failed to remove gear item: ${error.message}`);
-    }
-  },
-
-  // Toggle gear item checked status
-  async toggleGearItem(userId, itemIndex) {
-    try {
-      const currentChecklist = await this.getUserGearChecklist(userId);
-      const updatedChecklist = currentChecklist.map((item, index) =>
-        index === itemIndex ? { ...item, checked: !item.checked } : item
-      );
-      
-      await this.updateUserGearChecklist(userId, updatedChecklist);
-      return { success: true, checklist: updatedChecklist };
-    } catch (error) {
-      throw new Error(`Failed to toggle gear item: ${error.message}`);
+    } catch (err) {
+      throw new Error(`deleteUser failed: ${err.message}`);
     }
   }
+
 };
 
+export default dbUtils;

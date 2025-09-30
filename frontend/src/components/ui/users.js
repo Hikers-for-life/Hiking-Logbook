@@ -307,15 +307,22 @@ router.get('/:uid', async (req, res) => {
   try {
     const { uid } = req.params;
 
-    // Get user document using dbUtils
-    const userData = await dbUtils.getUserProfile(uid);
-    if (!userData) {
+
+    // Get user document
+    const userDoc = await db.collection('users').doc(uid).get();
+    if (!userDoc.exists) {
       return res.status(404).json({ error: 'User not found' });
     }
+    const userData = userDoc.data();
 
-    // Fetch subcollections using direct database access
-    const db = getDatabase();
+    // Fetch subcollections
+  //  const achievementsSnap = await db.collection('users').doc(uid).collection('achievements').get();
+  //  const goalsSnap = await db.collection('users').doc(uid).collection('goals').get();
     const hikesSnap = await db.collection('users').doc(uid).collection('hikes').get();
+
+  //  const achievements = achievementsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  //  const goals = goalsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
     const hikes = hikesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
     // Construct response
@@ -328,8 +335,14 @@ router.get('/:uid', async (req, res) => {
       longitude: userData.longitude || null,
       photoURL: userData.photoURL || null,
       preferences: userData.preferences || null,
+
+      friends: userData.friends || null,
       stats: userData.stats || null,
       createdAt: userData.createdAt || null,
+
+     // achievements,
+     // goals,
+
       hikes,
     };
 
@@ -337,6 +350,7 @@ router.get('/:uid', async (req, res) => {
   } catch (error) {
     console.error('Get user error:', error);
     res.status(500).json({ error: 'Something went wrong' });
+
   }
 });
 
@@ -586,7 +600,79 @@ router.delete('/:uid', verifyAuth, async (req, res) => {
   }
 });
 
+// Follow user (protected route) - Placeholder implementation
+router.post('/:uid/follow', verifyAuth, async (req, res) => {
+  try {
+    const { uid: targetUid } = req.params;
+    const { uid: followerUid } = req.user;
+
+    if (targetUid === followerUid) {
+      return res.status(400).json({
+        error: 'Cannot follow yourself',
+      });
+    }
+
+    // Check if target user exists
+    const targetProfile = await AuthService.getUserProfile(targetUid);
+    if (!targetProfile) {
+      return res.status(404).json({
+        error: 'User not found',
+      });
+    }
+
+    // TODO: Implement actual following logic
+    // This would typically involve:
+    // 1. Adding to a followers subcollection
+    // 2. Adding to a following subcollection
+    // 3. Updating follower counts
+
+    res.json({
+      message: 'User followed successfully',
+    });
+  } catch (error) {
+    console.error('Follow user error:', error);
+    res.status(500).json({
+      error: 'Failed to follow user',
+      details: error.message,
+    });
+  }
+});
+
+// Unfollow user (protected route) - Placeholder implementation
+router.delete('/:uid/follow', verifyAuth, async (req, res) => {
+  try {
+    const { uid: targetUid } = req.params;
+    const { uid: followerUid } = req.user;
+
+    if (targetUid === followerUid) {
+      return res.status(400).json({
+        error: 'Cannot unfollow yourself',
+      });
+    }
+
+    // TODO: Implement actual unfollowing logic
+    // This would typically involve:
+    // 1. Removing from followers subcollection
+    // 2. Removing from following subcollection
+    // 3. Updating follower counts
+
+    res.json({
+      message: 'User unfollowed successfully',
+    });
+  } catch (error) {
+    console.error('Unfollow user error:', error);
+    res.status(500).json({
+      error: 'Failed to unfollow user',
+      details: error.message,
+    });
+  }
+});
+
+
+
 // Get user hiking history (public route)
+
+
 router.get("/:uid/hikes", async (req, res) => {
   try {
     const { uid } = req.params;
@@ -629,43 +715,30 @@ router.get("/:uid/hikes/count", async (req, res) => {
   }
 });
 
-// Update user profile (protected route)
-router.patch('/:uid', verifyAuth, async (req, res) => {
+router.patch('/:uid', async (req, res) => {
   try {
     const { uid } = req.params;
-    const { displayName, bio, location, latitude, longitude } = req.body;
-
-    // Verify the authenticated user matches the requested UID
-    if (req.user.uid !== uid) {
-      return res.status(403).json({
-        error: 'Unauthorized: Cannot update another user\'s profile',
-      });
-    }
+    const { displayName, bio, location, latitude, longitude, password } = req.body;
 
     // Build update object
-    const updateData = {};
-    if (displayName !== undefined) updateData.displayName = displayName;
-    if (bio !== undefined) updateData.bio = bio;
-    if (location !== undefined) updateData.location = location;
-    if (latitude !== undefined) updateData.latitude = latitude;
-    if (longitude !== undefined) updateData.longitude = longitude;
+    const updateData = {
+      displayName,
+      bio,
+      location,
+    };
 
-    // Update profile
-    await AuthService.updateUserProfile(uid, updateData);
+    // Only include latitude and longitude if provided
+    if (latitude !== undefined && longitude !== undefined) {
+      updateData.latitude = latitude;
+      updateData.longitude = longitude;
+    }
 
-    // Get updated profile
-    const updatedProfile = await AuthService.getUserProfile(uid);
+    const updatedProfile = await AuthService.updateUserProfile(uid, updateData);
 
-    res.json({
-      message: 'Profile updated successfully',
-      profile: updatedProfile
-    });
+    res.json(updatedProfile);
   } catch (error) {
-    console.error('Update profile error:', error);
-    res.status(400).json({ 
-      error: "Failed to update profile",
-      details: error.message 
-    });
+    console.error(error);
+    res.status(400).json({ error: "Failed to update profile" });
   }
 });
 

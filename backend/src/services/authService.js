@@ -1,10 +1,15 @@
-import { getAuth, getDatabase } from '../config/firebase.js';
-import { dbUtils } from '../config/database.js';
+import { getAuth } from '../config/firebase.js';
+import { collections,dbUtils } from '../config/database.js';
+import { getDatabase } from '../config/firebase.js';
+
+
 
 export class AuthService {
   // Create a new user account
   static async createUser(userData) {
+    //const auth = getAuth();//ANNAH HERE
     try {
+
       const { email, password, displayName, bio, location } = userData;
 
       // Create user in Firebase Authentication
@@ -24,6 +29,8 @@ export class AuthService {
         bio: bio || '',
         location: location || null,
         photoURL: '',
+        friends: [],     // ✅ initialize
+        trails: [],    
         preferences: {
           difficulty: 'beginner',
           terrain: 'mixed',
@@ -41,6 +48,7 @@ export class AuthService {
       };
 
       await dbUtils.createUserProfile(userRecord.uid, profileData);
+
 
       return {
         success: true,
@@ -66,7 +74,7 @@ export class AuthService {
   }
 
   // Update user profile
-  static async updateUserProfile(uid, updateData) {
+    static async updateUserProfile(uid, updateData) {
     try {
       // Remove sensitive fields that shouldn't be updated
       const { email, uid: _, ...safeUpdateData } = updateData;
@@ -157,6 +165,7 @@ export class AuthService {
     }
   }
 
+
   // Get user planned hikes
   static async getUserPlannedHikes(userId, filters = {}) {
     try {
@@ -193,12 +202,12 @@ export class AuthService {
     }
   }
 
-
-
   // Reset user password
   static async resetPassword(email) {
     try {
+
       const auth = getAuth();
+
       const userRecord = await auth.getUserByEmail(email);
       // Note: Firebase Admin SDK cannot send password reset emails
       // This would typically be handled by the frontend Firebase Auth

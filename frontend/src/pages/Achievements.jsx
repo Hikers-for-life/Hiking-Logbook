@@ -14,11 +14,11 @@ import { hikeApiService } from "../services/hikeApiService";
 import { achievementApiService } from "../services/achievementApiService";
 import StatsOverview from "../components/StatsOverview";
 import { AuthContext } from "../contexts/AuthContext";
-import { 
-  Trophy, 
-  Target, 
-  Mountain, 
-  Clock, 
+import {
+  Trophy,
+  Target,
+  Mountain,
+  Clock,
   Medal,
   MapPin,
   Calendar,
@@ -27,6 +27,10 @@ import {
   Thermometer,
   Share
 } from "lucide-react";
+
+import { createFeed } from "../services/feed";
+import { throttledRequest, REQUEST_PRIORITY } from "../utils/requestThrottle";
+
 
 // Simple Progress Update Form Component
 const ProgressUpdateForm = ({ goal, onSubmit, onCancel }) => {
@@ -60,7 +64,7 @@ const ProgressUpdateForm = ({ goal, onSubmit, onCancel }) => {
           Target: {goal?.maxProgress} {goal?.unit}
         </p>
       </div>
-      
+
       <div className="flex justify-end space-x-2">
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancel
@@ -75,27 +79,27 @@ const ProgressUpdateForm = ({ goal, onSubmit, onCancel }) => {
 
 const Achievements = () => {
   const { currentUser } = useContext(AuthContext);
-  
+
   // State for goal management
   const [isGoalFormOpen, setIsGoalFormOpen] = useState(false);
   const [isProgressUpdateOpen, setIsProgressUpdateOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState(null);
   const [customGoals, setCustomGoals] = useState([]);
-  
+
   // State for current tab
   const [currentTab, setCurrentTab] = useState(() => {
     // Try to get tab from URL params first, then localStorage, then default to 'badges'
     const urlParams = new URLSearchParams(window.location.search);
     const tabFromUrl = urlParams.get('tab');
     if (tabFromUrl) return tabFromUrl;
-    
+
     const savedTab = localStorage.getItem('achievements-current-tab');
     return savedTab || 'badges';
   });
 
   // Pinned hikes data - loaded from API
   const [pinnedHikes, setPinnedHikes] = useState([]);
-  
+
   // View details modal state
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [selectedHike, setSelectedHike] = useState(null);
@@ -110,138 +114,147 @@ const Achievements = () => {
   const loadAchievementData = async () => {
     try {
       setLoading(true);
-      
+
       // Check if user is authenticated
       if (!currentUser) {
         setLoading(false);
         return;
       }
-        
-        // Load badges, stats, and goals in parallel
-        const [badgesResponse, statsResponse, goalsResponse] = await Promise.all([
-          achievementApiService.getBadges().catch((error) => {
-            console.error('Badges API error:', error);
-            // Fallback to predefined badges when API fails
-            return { 
-              data: [
-                {
-                  id: "first-steps",
-                  name: "First Steps",
-                  description: "Completed your very first hike",
-                  progress: 0,
-                  progressText: "0/1 hikes",
-                  isEarned: false,
-                  category: "milestone"
-                },
-                {
-                  id: "distance-walker",
-                  name: "Distance Walker", 
-                  description: "Hiked a total distance of 100 km",
-                  progress: 0,
-                  progressText: "0/100 km",
-                  isEarned: false,
-                  category: "distance"
-                },
-                {
-                  id: "peak-collector",
-                  name: "Peak Collector",
-                  description: "Summited 10 peaks",
-                  progress: 0,
-                  progressText: "0/10 peaks",
-                  isEarned: false,
-                  category: "peaks"
-                },
-                {
-                  id: "early-bird",
-                  name: "Early Bird",
-                  description: "Completed a hike that started before 7 AM",
-                  progress: 0,
-                  progressText: "Not achieved",
-                  isEarned: false,
-                  category: "achievement"
-                },
-                {
-                  id: "endurance-master",
-                  name: "Endurance Master",
-                  description: "Completed a hike longer than 8 hours",
-                  progress: 0,
-                  progressText: "Not achieved",
-                  isEarned: false,
-                  category: "achievement"
-                },
-                {
-                  id: "trail-explorer",
-                  name: "Trail Explorer",
-                  description: "Completed 25 unique trails",
-                  progress: 0,
-                  progressText: "0/25 trails",
-                  isEarned: false,
-                  category: "trails"
-                }
-              ]
-            };
-          }),
-          achievementApiService.getStats().catch((error) => {
-            console.error('Stats API error:', error);
-            return { data: { totalHikes: 0, totalDistance: 0, totalDuration: 0, currentStreak: 0 } };
-          }),
-          goalsApi.getGoals().catch((error) => {
-            console.error('Goals API error:', error);
-            return [];
-          })
-        ]);
-        
-        
-        
-        setBadges(badgesResponse.data || []);
-        setStats(statsResponse.data || {
-          totalHikes: 0,
-          totalDistance: 0,
-          totalDuration: 0,
-          currentStreak: 0,
-          badges: 0,
-          completedBadges: 0
-        });
-        
-        // Process goals data
-        if (goalsResponse && goalsResponse.length > 0) {
-          const transformedGoals = goalsResponse.map(goal => ({
-            id: goal.id || `goal-${Date.now()}-${Math.random()}`,
-            title: goal.title,
-            description: goal.description,
-            category: goal.category || 'custom',
-            progress: goal.currentProgress || 0,
-            maxProgress: goal.targetValue || 1,
-            completed: goal.status === 'completed',
-            earnedDate: goal.status === 'completed' ? goal.updatedAt : null,
-            icon: Target,
-            status: goal.status,
-            isCustomGoal: true,
-            targetDate: goal.targetDate,
-            unit: goal.unit
-          }));
-          setCustomGoals(transformedGoals);
-          console.log('Loaded goals from API:', transformedGoals);
-        } else {
-          console.log('No goals found in API response');
-        }
-        
-        setBadges(badgesResponse.data || []);
-        setStats(statsResponse.data || {
-          totalHikes: 0,
-          totalDistance: 0,
-          totalDuration: 0,
-          currentStreak: 0,
-          badges: 0,
-          completedBadges: 0
-        });
-        
-      } catch (error) {
-        console.error('Error loading achievement data:', error);
-      } finally {
-        setLoading(false);
+
+      // Load badges, stats, and goals using throttled requests
+      const [badgesResponse, statsResponse, goalsResponse] = await Promise.all([
+        throttledRequest(
+          () => achievementApiService.getBadges(),
+          REQUEST_PRIORITY.MEDIUM
+        ).catch((error) => {
+          console.error('Badges API error:', error);
+          // Fallback to predefined badges when API fails
+          return {
+            data: [
+              {
+                id: "first-steps",
+                name: "First Steps",
+                description: "Completed your very first hike",
+                progress: 0,
+                progressText: "0/1 hikes",
+                isEarned: false,
+                category: "milestone"
+              },
+              {
+                id: "distance-walker",
+                name: "Distance Walker",
+                description: "Hiked a total distance of 100 km",
+                progress: 0,
+                progressText: "0/100 km",
+                isEarned: false,
+                category: "distance"
+              },
+              {
+                id: "peak-collector",
+                name: "Peak Collector",
+                description: "Summited 10 peaks",
+                progress: 0,
+                progressText: "0/10 peaks",
+                isEarned: false,
+                category: "peaks"
+              },
+              {
+                id: "early-bird",
+                name: "Early Bird",
+                description: "Completed a hike that started before 7 AM",
+                progress: 0,
+                progressText: "Not achieved",
+                isEarned: false,
+                category: "achievement"
+              },
+              {
+                id: "endurance-master",
+                name: "Endurance Master",
+                description: "Completed a hike longer than 8 hours",
+                progress: 0,
+                progressText: "Not achieved",
+                isEarned: false,
+                category: "achievement"
+              },
+              {
+                id: "trail-explorer",
+                name: "Trail Explorer",
+                description: "Completed 25 unique trails",
+                progress: 0,
+                progressText: "0/25 trails",
+                isEarned: false,
+                category: "trails"
+              }
+            ]
+          };
+        }),
+        throttledRequest(
+          () => achievementApiService.getStats(),
+          REQUEST_PRIORITY.MEDIUM
+        ).catch((error) => {
+          console.error('Stats API error:', error);
+          return { data: { totalHikes: 0, totalDistance: 0, totalDuration: 0, currentStreak: 0 } };
+        }),
+        throttledRequest(
+          () => goalsApi.getGoals(),
+          REQUEST_PRIORITY.MEDIUM
+        ).catch((error) => {
+          console.error('Goals API error:', error);
+          return [];
+        })
+      ]);
+
+
+
+      setBadges(badgesResponse.data || []);
+      setStats(statsResponse.data || {
+        totalHikes: 0,
+        totalDistance: 0,
+        totalDuration: 0,
+        currentStreak: 0,
+        badges: 0,
+        completedBadges: 0
+      });
+
+      // Process goals data
+      if (goalsResponse && goalsResponse.length > 0) {
+        const transformedGoals = goalsResponse.map(goal => ({
+          id: goal.id || `goal-${Date.now()}-${Math.random()}`,
+          title: goal.title,
+          description: goal.description,
+          category: goal.category || 'custom',
+          progress: goal.currentProgress || 0,
+          maxProgress: goal.targetValue || 1,
+          completed: goal.status === 'completed',
+          earnedDate: goal.status === 'completed' ? goal.updatedAt : null,
+          icon: Target,
+          status: goal.status,
+          isCustomGoal: true,
+          targetDate: goal.targetDate,
+          unit: goal.unit
+        }));
+        setCustomGoals(transformedGoals);
+        console.log('Loaded goals from API:', transformedGoals);
+      } else {
+        console.log('No goals found in API response');
       }
-    };
+
+      setBadges(badgesResponse.data || []);
+      setStats(statsResponse.data || {
+        totalHikes: 0,
+        totalDistance: 0,
+        totalDuration: 0,
+        currentStreak: 0,
+        badges: 0,
+        completedBadges: 0
+      });
+
+    } catch (error) {
+      console.error('Error loading achievement data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Load data when component mounts or user changes
   useEffect(() => {
@@ -278,16 +291,16 @@ const Achievements = () => {
   // Helper function to format dates properly
   const formatDate = (dateValue) => {
     if (!dateValue) return 'No date';
-    
+
     try {
       // Backend now sends ISO strings, so this should work
       const date = new Date(dateValue);
-      
+
       // Check if date is valid
       if (isNaN(date.getTime())) {
         return 'Invalid date';
       }
-      
+
       return date.toLocaleDateString();
     } catch (error) {
       console.error('Date formatting error:', error, dateValue);
@@ -313,7 +326,7 @@ const Achievements = () => {
   const handleTabChange = (newTab) => {
     setCurrentTab(newTab);
     localStorage.setItem('achievements-current-tab', newTab);
-    
+
     // Update URL without causing a page reload
     const url = new URL(window.location);
     url.searchParams.set('tab', newTab);
@@ -325,28 +338,31 @@ const Achievements = () => {
   useEffect(() => {
     const loadPinnedHikes = async () => {
       try {
-        const response = await hikeApiService.getHikes({ pinned: true });
-        
+        const response = await throttledRequest(
+          () => hikeApiService.getHikes({ pinned: true }),
+          REQUEST_PRIORITY.LOW
+        );
+
         if (response.success) {
           // Process pinned hikes data
           const pinnedHikesData = response.data.map(hike => ({
             ...hike,
-            
+
             date: hike.date ? formatDate(hike.date) : 'No date',
             pinnedAt: formatDate(hike.updatedAt),
-           
+
             distance: hike.distance ? `${hike.distance} mi` : '0 mi',
             elevation: hike.elevation ? `${hike.elevation} ft` : '0 ft',
             duration: hike.duration ? `${hike.duration} min` : '0 min'
           }));
-          
+
           setPinnedHikes(pinnedHikesData);
         }
       } catch (error) {
         console.error('Failed to load pinned hikes:', error);
       }
     };
-    
+
     loadPinnedHikes();
   }, []);
 
@@ -357,8 +373,11 @@ const Achievements = () => {
         // Reload pinned hikes when page becomes visible
         const loadPinnedHikes = async () => {
           try {
-            const response = await hikeApiService.getHikes({ pinned: true });
-            
+            const response = await throttledRequest(
+              () => hikeApiService.getHikes({ pinned: true }),
+              REQUEST_PRIORITY.LOW
+            );
+
             if (response.success) {
               const pinnedHikesData = response.data.map(hike => ({
                 ...hike,
@@ -368,18 +387,18 @@ const Achievements = () => {
                 elevation: hike.elevation ? `${hike.elevation} ft` : '0 ft',
                 duration: hike.duration ? `${hike.duration} min` : '0 min'
               }));
-              
+
               setPinnedHikes(pinnedHikesData);
             }
           } catch (error) {
             console.error('Failed to refresh pinned hikes:', error);
           }
         };
-        
+
         loadPinnedHikes();
       }
     };
-    
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
@@ -402,14 +421,14 @@ const Achievements = () => {
         status: newGoal.status
       };
       setCustomGoals(prev => [...prev, transformedGoal]);
-      
+
       // Refresh achievement data to update stats
       setTimeout(() => {
         loadAchievementData();
       }, 500);
     } catch (error) {
       console.error('Failed to create goal:', error);
-      
+
     }
   };
 
@@ -429,22 +448,22 @@ const Achievements = () => {
         icon: Target, // Default icon for custom goals
         status: updatedGoal.status
       };
-      setCustomGoals(prev => 
-        prev.map(goal => 
-          goal.id === editingGoal.id 
+      setCustomGoals(prev =>
+        prev.map(goal =>
+          goal.id === editingGoal.id
             ? transformedGoal
             : goal
         )
       );
       setEditingGoal(null);
-      
+
       // Refresh achievement data to update stats
       setTimeout(() => {
         loadAchievementData();
       }, 500);
     } catch (error) {
       console.error('Failed to update goal:', error);
-      
+
     }
   };
 
@@ -452,14 +471,14 @@ const Achievements = () => {
     try {
       await goalsApi.deleteGoal(goalId);
       setCustomGoals(prev => prev.filter(goal => goal.id !== goalId));
-      
+
       // Refresh achievement data to update stats
       setTimeout(() => {
         loadAchievementData();
       }, 500);
     } catch (error) {
       console.error('Failed to delete goal:', error);
-      
+
     }
   };
 
@@ -493,28 +512,28 @@ const Achievements = () => {
   // Handler for submitting progress update
   const handleProgressUpdateSubmit = async (newProgress) => {
     if (!editingGoal) return;
-    
+
     try {
       const updatedGoal = {
         ...editingGoal,
         progress: parseInt(newProgress),
         completed: parseInt(newProgress) >= editingGoal.maxProgress
       };
-      
+
       // Update in backend
       await goalsApi.updateGoal(editingGoal.id, {
         currentProgress: parseInt(newProgress),
         status: parseInt(newProgress) >= editingGoal.maxProgress ? 'completed' : 'in_progress'
       });
-      
+
       // Update the goal in the list
       setCustomGoals(prev => prev.map(g => g.id === editingGoal.id ? updatedGoal : g));
-      
-      
+
+
       // Close modal and reset state
       setIsProgressUpdateOpen(false);
       setEditingGoal(null);
-      
+
       // Refresh achievement data to update stats
       setTimeout(() => {
         loadAchievementData();
@@ -530,7 +549,7 @@ const Achievements = () => {
       setCustomGoals(prev => prev.map(g => g.id === editingGoal.id ? updatedGoal : g));
       setIsProgressUpdateOpen(false);
       setEditingGoal(null);
-      
+
       // Refresh achievement data even on error
       setTimeout(() => {
         loadAchievementData();
@@ -539,26 +558,25 @@ const Achievements = () => {
   };
 
   // Handler for sharing achievements
-  const handleShareAchievement = (achievement) => {
-    const shareMessage = `🎉 Achievement Unlocked: ${achievement.title}! ${achievement.description}`;
-    
-    // Try to use the Web Share API if available
-    if (navigator.share) {
-      navigator.share({
-        title: 'Hiking Achievement',
-        text: shareMessage,
-        url: window.location.href
-      }).catch(console.error);
-    } else {
-      // Fallback to copying to clipboard
-      navigator.clipboard.writeText(shareMessage).then(() => {
-        // Use a subtle console log instead of popup
-        console.log('Achievement copied to clipboard! You can now share it with your friends.');
-        // You could also add a toast notification here if you have a toast system
-      }).catch(() => {
-        // Final fallback - copy to console instead of popup
-        console.log(`Share this achievement:\n\n${shareMessage}`);
-      });
+  const handleShareAchievement = async (achievement) => {
+    try {
+      // Create activity post for achievement (server attaches user info)
+      const postBody = {
+        action: "achieved",
+        hike: achievement.title || achievement.name, // backend uses 'hike' string field; reuse it for title
+        description: achievement.description || "",
+        stats: achievement.progressText || "",
+        photo: null, // Don't include photos for achievement posts
+      };
+
+      const created = await createFeed(postBody);
+      console.log("Achievement posted to feed:", created);
+
+      // Show success message instead of using Web Share API
+      alert(`🎉 Achievement shared to your activity feed! Your friends can now see that you achieved: ${achievement.title || achievement.name}`);
+    } catch (error) {
+      console.error("Failed to share achievement:", error);
+      alert("Something went wrong while sharing your achievement. Please try again.");
     }
   };
 
@@ -579,7 +597,7 @@ const Achievements = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      
+
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -588,7 +606,7 @@ const Achievements = () => {
               <p className="text-muted-foreground text-sm sm:text-base">Track your hiking milestones and unlock new achievements.</p>
             </div>
             <div className="flex gap-2">
-              <Button 
+              <Button
                 onClick={() => setIsGoalFormOpen(true)}
                 className="bg-gradient-trail text-primary-foreground hover:opacity-90 w-full sm:w-auto"
               >
@@ -671,7 +689,7 @@ const Achievements = () => {
                   {badges.map((badge) => {
                     const isEarned = badge.earnedDate;
                     const progressPercentage = badge.progress || 0;
-                    
+
                     return (
                       <Card key={badge.id} className={`bg-card border-border shadow-elevation ${isEarned ? 'ring-2 ring-success/20' : ''}`}>
                         <CardHeader className="pb-4">
@@ -694,14 +712,14 @@ const Achievements = () => {
                         </CardHeader>
                         <CardContent className="space-y-4">
                           <p className="text-sm text-muted-foreground">{badge.description}</p>
-                          
+
                           {/* Progress Bar for Badges */}
                           <div className="space-y-2">
                             <div className="flex justify-between text-sm">
                               <span className="text-muted-foreground">Progress</span>
-                            <span className="font-medium">
-                              {badge.progressText || (isEarned ? 'Completed' : 'Not Earned')}
-                            </span>
+                              <span className="font-medium">
+                                {badge.progressText || (isEarned ? 'Completed' : 'Not Earned')}
+                              </span>
                             </div>
                             <Progress value={progressPercentage} className="h-2" />
                           </div>
@@ -746,10 +764,10 @@ const Achievements = () => {
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {customGoals.map((goal) => {
                     const isCompleted = goal.completed;
-                    const progressPercentage = goal.maxProgress > 0 
+                    const progressPercentage = goal.maxProgress > 0
                       ? Math.min((goal.progress / goal.maxProgress) * 100, 100)
                       : 0;
-                    
+
                     return (
                       <Card key={goal.id} className={`bg-card border-border shadow-elevation ${isCompleted ? 'ring-2 ring-success/20' : ''}`}>
                         <CardHeader className="pb-4">
@@ -775,7 +793,7 @@ const Achievements = () => {
                         </CardHeader>
                         <CardContent className="space-y-4">
                           <p className="text-sm text-muted-foreground">{goal.description}</p>
-                          
+
                           {/* Progress Bar for Goals */}
                           <div className="space-y-2">
                             <div className="flex justify-between text-sm">
@@ -931,7 +949,7 @@ const Achievements = () => {
               {customGoals.filter(goal => !goal.completed).map((goal) => {
                 const isCompleted = goal.completed;
                 const progressPercentage = (goal.progress / goal.maxProgress) * 100;
-                
+
                 return (
                   <Card key={goal.id} className="bg-card border-border shadow-elevation">
                     <CardHeader className="pb-4">
@@ -1022,7 +1040,7 @@ const Achievements = () => {
                     Current: {editingGoal.progress}/{editingGoal.maxProgress} {editingGoal.unit}
                   </p>
                 </div>
-                <ProgressUpdateForm 
+                <ProgressUpdateForm
                   goal={editingGoal}
                   onSubmit={handleProgressUpdateSubmit}
                   onCancel={() => setIsProgressUpdateOpen(false)}
@@ -1054,13 +1072,12 @@ const Achievements = () => {
                       </p>
                     </div>
                     <div className="flex items-center gap-3">
-                      <Badge 
+                      <Badge
                         variant="secondary"
-                        className={`text-sm px-3 py-1 ${
-                          selectedHike.difficulty === 'Easy' ? 'bg-meadow/20 text-forest border-meadow' :
+                        className={`text-sm px-3 py-1 ${selectedHike.difficulty === 'Easy' ? 'bg-meadow/20 text-forest border-meadow' :
                           selectedHike.difficulty === 'Moderate' ? 'bg-trail/20 text-foreground border-trail' :
-                          'bg-summit/20 text-foreground border-summit'
-                        }`}
+                            'bg-summit/20 text-foreground border-summit'
+                          }`}
                       >
                         {selectedHike.difficulty}
                       </Badge>
@@ -1084,7 +1101,7 @@ const Achievements = () => {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="bg-card border border-border rounded-lg p-4">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-trail/10 rounded-lg">
@@ -1096,7 +1113,7 @@ const Achievements = () => {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="bg-card border border-border rounded-lg p-4">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-summit/10 rounded-lg">
@@ -1108,7 +1125,7 @@ const Achievements = () => {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="bg-card border border-border rounded-lg p-4">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-stone/10 rounded-lg">

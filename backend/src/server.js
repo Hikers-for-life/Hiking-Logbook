@@ -1,7 +1,6 @@
 ﻿import express from 'express';
 import dotenv from 'dotenv';
 import { initializeFirebase } from './config/firebase.js';
-import { swaggerUi, specs } from './config/swagger.js';
 import * as middleware from './middleware/index.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import authRoutes from './routes/auth.js';
@@ -11,6 +10,9 @@ import plannedHikeRoutes from './routes/plannedHikes.js';
 import gearRoutes from './routes/gear.js';
 import goalsRoutes from './routes/goals.js';
 import publicRoutes from './routes/public.js';
+import feedRoutes from './routes/feed.js';
+import discoverRoutes from './routes/discover.js';
+import friendRoutes from "./routes/friends.js";
 
 dotenv.config();
 
@@ -40,23 +42,12 @@ app.use('/api/hikes', hikeRoutes);
 app.use('/api/planned-hikes', plannedHikeRoutes); 
 app.use('/api/gear', gearRoutes);
 app.use('/api/goals', goalsRoutes);
+app.use("/api/friends", friendRoutes);
+app.use('/api/feed', feedRoutes);
+app.use('/api/discover', discoverRoutes);
 
 // Public API routes (no authentication required)
 app.use('/api/public', publicRoutes);
-
-// API Documentation
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
-  customCss: '.swagger-ui .topbar { display: none }',
-  customSiteTitle: 'Hiking Logbook API Documentation',
-  swaggerOptions: {
-    persistAuthorization: true,
-  }
-}));
-
-// Redirect root to API documentation
-app.get('/', (req, res) => {
-  res.redirect('/api-docs');
-});
 
 // 404 handler for undefined routes
 app.use('*', notFoundHandler);
@@ -78,6 +69,10 @@ async function startServer() {
       console.log(`Hikes API: http://localhost:${PORT}/api/hikes`);
       console.log(`Planned Hikes API: http://localhost:${PORT}/api/planned-hikes`); 
       console.log(`Gear API: http://localhost:${PORT}/api/gear`);
+      console.log(`Feed API: http://localhost:${PORT}/api/feed`);
+      console.log(`Discover API: http://localhost:${PORT}/api/discover`);
+      console.log(`Goals API: http://localhost:${PORT}/api/goals`);
+      console.log(`Friends API: http://localhost:${PORT}/api/friends`);
 
     });
 
@@ -124,3 +119,5 @@ process.on('SIGINT', () => {
 });
 
 export default app;
+
+
