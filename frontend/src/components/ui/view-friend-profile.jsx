@@ -23,6 +23,8 @@ import {
   TrendingUp 
 } from "lucide-react";
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+
 function formatDate(date) {
   if (!(date instanceof Date) || isNaN(date)) return "Unknown";
 
@@ -66,7 +68,7 @@ const loadHikes = useCallback(async () => {
     setError(null);
 
     // --- CALL BACKEND FOR SPECIFIC USER ---
-    const res = await fetch(`http://localhost:3001/api/users/${person.uid}/hikes?limit=2`);
+    const res = await fetch(`${API_BASE_URL}/users/${person.uid}/hikes?limit=2`);
     const response = await res.json();
     console.log("API Response for person.hikes:", response);
 
@@ -115,7 +117,7 @@ useEffect(() => {
   if (!person) return;
   const fetchHikeCount = async () => {
     try {
-      const res = await fetch(`http://localhost:3001/api/users/${person.uid}/hikes/count`);
+      const res = await fetch(`${API_BASE_URL}/users/${person.uid}/hikes/count`);
       const data = await res.json();
       if (data.success) {
         setHikeCount(data.count);
@@ -145,7 +147,7 @@ useEffect(() => {
 
   const fetchStats = async () => {
     try {
-      const res = await fetch(`http://localhost:3001/api/users/${person.uid}/stats`);
+      const res = await fetch(`${API_BASE_URL}/users/${person.uid}/stats`);
       const data = await res.json();
 
       if (data.success) {
@@ -305,13 +307,13 @@ useEffect(() => {
             </Card>
             <Card>
               <CardContent className="p-4 text-center">
-                <p className="text-2xl font-bold text-forest">{userStats.totalDistance} km</p>
+                <p className="text-2xl font-bold text-forest">{userStats.totalDistance} miles</p>
                 <p className="text-sm text-muted-foreground">Distance</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4 text-center">
-                <p className="text-2xl font-bold text-sky">{userStats.totalElevation} m</p>
+                <p className="text-2xl font-bold text-sky">{userStats.totalElevation} ft</p>
                 <p className="text-sm text-muted-foreground">Elevation</p>
               </CardContent>
             </Card>

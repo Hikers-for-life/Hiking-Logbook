@@ -18,8 +18,8 @@ To implement backend functionalities for core features (Hike Planner, Activity F
 ---
 
 ## Task Allocation
-- **Annah & Jane**: Work on the **backend of Hike Planner**.  
-- **Naledi**: Work on the **backend of Activity Feed**.  
+- **Naledi**: Work on the **backend of Hike Planner**.  
+- **Annah & Jane**: Work on the **backend of Activity Feed**.  
 - **Ntokozo**: Work on the **backend of Achievements**.  
 - **Risuna**: Work on the **frontend of Achievements**.  
 
@@ -40,3 +40,4 @@ To implement backend functionalities for core features (Hike Planner, Activity F
 ---
 
 **Next Meeting:** Next meeting will be on WhatsApp to track each other's progress
+

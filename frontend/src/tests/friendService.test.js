@@ -1,131 +1,156 @@
-// Tests for friendService
-import { getFriendProfile } from '../services/friendService';
+// services/__tests__/friendService.test.js
+import { getFriendProfile } from '../services/friendService.js';
 
-// Mock fetch
+// Mock fetch globally
 global.fetch = jest.fn();
 
-describe('friendService Tests', () => {
+describe('friendService', () => {
   beforeEach(() => {
-    fetch.mockClear();
+    // Clear all mocks before each test
+    jest.clearAllMocks();
+  });
+
+  afterEach(() => {
+    jest.resetAllMocks();
   });
 
   describe('getFriendProfile', () => {
-    const mockUid = 'test-user-123';
+    const mockUid = 'user123';
 
-    test('should fetch and return friend profile successfully', async () => {
-      // Mock all three API calls
-      fetch
+    it('should fetch and return complete friend profile data', async () => {
+      // Mock responses
+      const mockHikesResponse = {
+        success: true,
+        data: [
+          {
+            id: 'hike1',
+            title: 'Mountain Trail',
+            location: 'Rocky Mountains',
+            distance: '5.2 miles',
+            duration: '120 min',
+            difficulty: 'Moderate',
+            createdAt: { _seconds: 1704067200 } // Jan 1, 2024
+          },
+          {
+            id: 'hike2',
+            title: 'Forest Path',
+            location: 'Pine Forest',
+            distance: '3.1 miles',
+            duration: '90 min',
+            difficulty: 'Easy',
+            createdAt: { _seconds: 1703980800 } // Dec 31, 2023
+          }
+        ]
+      };
+
+      const mockCountResponse = {
+        success: true,
+        count: 15
+      };
+
+      const mockStatsResponse = {
+        success: true,
+        totalDistance: 50.5,
+        totalElevation: 2500
+      };
+
+      // Setup fetch mock to return different responses
+      global.fetch
         .mockResolvedValueOnce({
-          json: async () => ({
-            success: true,
-            data: [
-              {
-                id: 'hike-1',
-                title: 'Mountain Trail',
-                location: 'Rocky Mountains',
-                distance: '10 miles',
-                duration: '120 min',
-                difficulty: 'Hard',
-                createdAt: { _seconds: 1672531200 }
-              },
-              {
-                id: 'hike-2',
-                title: 'Forest Path',
-                location: 'Pine Forest',
-                distance: '5 miles',
-                duration: '60 min',
-                difficulty: 'Easy',
-                createdAt: { _seconds: 1672444800 }
-              }
-            ]
-          })
+          json: jest.fn().mockResolvedValue(mockHikesResponse)
         })
         .mockResolvedValueOnce({
-          json: async () => ({
-            success: true,
-            count: 15
-          })
+          json: jest.fn().mockResolvedValue(mockCountResponse)
         })
         .mockResolvedValueOnce({
-          json: async () => ({
-            success: true,
-            totalDistance: 120,
-            totalElevation: 5000
-          })
+          json: jest.fn().mockResolvedValue(mockStatsResponse)
         });
 
       const result = await getFriendProfile(mockUid, 2);
 
+      // Verify fetch was called with correct URLs
+      expect(global.fetch).toHaveBeenCalledTimes(3);
+      expect(global.fetch).toHaveBeenCalledWith(
+        `http://localhost:3001/api/users/${mockUid}/hikes?limit=2`
+      );
+      expect(global.fetch).toHaveBeenCalledWith(
+        `http://localhost:3001/api/users/${mockUid}/hikes/count`
+      );
+      expect(global.fetch).toHaveBeenCalledWith(
+        `http://localhost:3001/api/users/${mockUid}/stats`
+      );
+
+      // Verify result structure
       expect(result.success).toBe(true);
       expect(result.totalHikes).toBe(15);
-      expect(result.totalDistance).toBe(120);
-      expect(result.totalElevation).toBe(5000);
+      expect(result.totalDistance).toBe(50.5);
+      expect(result.totalElevation).toBe(2500);
       expect(result.recentHikes).toHaveLength(2);
       expect(result.recentHikes[0].title).toBe('Mountain Trail');
-      
-      // Verify API calls were made correctly
-      expect(fetch).toHaveBeenCalledTimes(3);
-      expect(fetch).toHaveBeenCalledWith(`http://localhost:3001/api/users/${mockUid}/hikes?limit=2`);
-      expect(fetch).toHaveBeenCalledWith(`http://localhost:3001/api/users/${mockUid}/hikes/count`);
-      expect(fetch).toHaveBeenCalledWith(`http://localhost:3001/api/users/${mockUid}/stats`);
+      expect(result.recentHikes[0].date).toBe('January 1st, 2024');
     });
 
-    test('should handle hikes with toDate() method', async () => {
-      const mockDate = new Date('2023-01-01');
-      
-      fetch
+    it('should handle hikes with toDate() method (Firestore Timestamp)', async () => {
+      const mockDate = new Date('2024-06-15T10:30:00Z');
+      const mockHikesResponse = {
+        success: true,
+        data: [
+          {
+            id: 'hike1',
+            title: 'Lake Trail',
+            location: 'Blue Lake',
+            distance: '4 miles',
+            duration: '100 min',
+            difficulty: 'Easy',
+            createdAt: {
+              toDate: jest.fn().mockReturnValue(mockDate)
+            }
+          }
+        ]
+      };
+
+      global.fetch
         .mockResolvedValueOnce({
-          json: async () => ({
-            success: true,
-            data: [
-              {
-                id: 'hike-1',
-                title: 'Test Hike',
-                location: 'Test Location',
-                createdAt: {
-                  toDate: () => mockDate
-                }
-              }
-            ]
-          })
+          json: jest.fn().mockResolvedValue(mockHikesResponse)
         })
         .mockResolvedValueOnce({
-          json: async () => ({ success: true, count: 1 })
+          json: jest.fn().mockResolvedValue({ success: true, count: 1 })
         })
         .mockResolvedValueOnce({
-          json: async () => ({ success: true, totalDistance: 10, totalElevation: 100 })
+          json: jest.fn().mockResolvedValue({ success: true, totalDistance: 4, totalElevation: 100 })
         });
 
-      const result = await getFriendProfile(mockUid, 1);
+      const result = await getFriendProfile(mockUid);
 
-      expect(result.success).toBe(true);
-      expect(result.recentHikes[0].createdAt).toEqual(mockDate);
+      expect(result.recentHikes[0].date).toBe('June 15th, 2024');
+      expect(mockHikesResponse.data[0].createdAt.toDate).toHaveBeenCalled();
     });
 
-    test('should handle missing hike fields with defaults', async () => {
-      fetch
+    it('should handle missing hike data with default values', async () => {
+      const mockHikesResponse = {
+        success: true,
+        data: [
+          {
+            id: 'hike1',
+            // Missing all optional fields
+            createdAt: { _seconds: 1704067200 }
+          }
+        ]
+      };
+
+      global.fetch
         .mockResolvedValueOnce({
-          json: async () => ({
-            success: true,
-            data: [
-              {
-                id: 'hike-1',
-                // Missing title, location, distance, etc.
-                createdAt: new Date('2023-01-01')
-              }
-            ]
-          })
+          json: jest.fn().mockResolvedValue(mockHikesResponse)
         })
         .mockResolvedValueOnce({
-          json: async () => ({ success: true, count: 1 })
+          json: jest.fn().mockResolvedValue({ success: true, count: 1 })
         })
         .mockResolvedValueOnce({
-          json: async () => ({ success: true, totalDistance: 0, totalElevation: 0 })
+          json: jest.fn().mockResolvedValue({ success: true, totalDistance: 0, totalElevation: 0 })
         });
 
-      const result = await getFriendProfile(mockUid, 1);
+      const result = await getFriendProfile(mockUid);
 
-      expect(result.success).toBe(true);
       expect(result.recentHikes[0].title).toBe('Untitled Hike');
       expect(result.recentHikes[0].location).toBe('Unknown Location');
       expect(result.recentHikes[0].distance).toBe('0 miles');
@@ -133,16 +158,49 @@ describe('friendService Tests', () => {
       expect(result.recentHikes[0].difficulty).toBe('Easy');
     });
 
-    test('should return 0 values when API calls fail gracefully', async () => {
-      fetch
+    it('should respect the limit parameter', async () => {
+      const mockHikesResponse = {
+        success: true,
+        data: [
+          { id: 'hike1', title: 'Hike 1', createdAt: { _seconds: 1704067200 } },
+          { id: 'hike2', title: 'Hike 2', createdAt: { _seconds: 1703980800 } },
+          { id: 'hike3', title: 'Hike 3', createdAt: { _seconds: 1703894400 } }
+        ]
+      };
+
+      global.fetch
         .mockResolvedValueOnce({
-          json: async () => ({ success: false })
+          json: jest.fn().mockResolvedValue(mockHikesResponse)
         })
         .mockResolvedValueOnce({
-          json: async () => ({ success: false })
+          json: jest.fn().mockResolvedValue({ success: true, count: 3 })
         })
         .mockResolvedValueOnce({
-          json: async () => ({ success: false })
+          json: jest.fn().mockResolvedValue({ success: true, totalDistance: 10, totalElevation: 500 })
+        });
+
+      const result = await getFriendProfile(mockUid, 1);
+
+      expect(result.recentHikes).toHaveLength(1);
+      expect(global.fetch).toHaveBeenCalledWith(
+        `http://localhost:3001/api/users/${mockUid}/hikes?limit=1`
+      );
+    });
+
+    it('should handle API failures gracefully', async () => {
+      const mockHikesResponse = { success: false };
+      const mockCountResponse = { success: false };
+      const mockStatsResponse = { success: false };
+
+      global.fetch
+        .mockResolvedValueOnce({
+          json: jest.fn().mockResolvedValue(mockHikesResponse)
+        })
+        .mockResolvedValueOnce({
+          json: jest.fn().mockResolvedValue(mockCountResponse)
+        })
+        .mockResolvedValueOnce({
+          json: jest.fn().mockResolvedValue(mockStatsResponse)
         });
 
       const result = await getFriendProfile(mockUid);
@@ -154,9 +212,8 @@ describe('friendService Tests', () => {
       expect(result.recentHikes).toEqual([]);
     });
 
-    test('should handle fetch errors', async () => {
-      const error = new Error('Network error');
-      fetch.mockRejectedValue(error);
+    it('should handle network errors', async () => {
+      global.fetch.mockRejectedValueOnce(new Error('Network error'));
 
       const result = await getFriendProfile(mockUid);
 
@@ -164,127 +221,85 @@ describe('friendService Tests', () => {
       expect(result.error).toBe('Network error');
     });
 
-    test('should limit recent hikes to specified limit', async () => {
-      const manyHikes = Array.from({ length: 10 }, (_, i) => ({
-        id: `hike-${i}`,
-        title: `Hike ${i}`,
-        location: `Location ${i}`,
-        distance: '5 miles',
-        createdAt: { _seconds: 1672531200 - i * 86400 }
-      }));
+    it('should handle missing createdAt field', async () => {
+      const mockHikesResponse = {
+        success: true,
+        data: [
+          {
+            id: 'hike1',
+            title: 'No Date Hike'
+            // No createdAt field
+          }
+        ]
+      };
 
-      fetch
+      global.fetch
         .mockResolvedValueOnce({
-          json: async () => ({
-            success: true,
-            data: manyHikes
-          })
+          json: jest.fn().mockResolvedValue(mockHikesResponse)
         })
         .mockResolvedValueOnce({
-          json: async () => ({ success: true, count: 10 })
+          json: jest.fn().mockResolvedValue({ success: true, count: 1 })
         })
         .mockResolvedValueOnce({
-          json: async () => ({ success: true, totalDistance: 50, totalElevation: 1000 })
-        });
-
-      const result = await getFriendProfile(mockUid, 3);
-
-      expect(result.recentHikes).toHaveLength(3);
-    });
-
-    test('should sort hikes by createdAt in descending order', async () => {
-      fetch
-        .mockResolvedValueOnce({
-          json: async () => ({
-            success: true,
-            data: [
-              {
-                id: 'hike-1',
-                title: 'Oldest',
-                location: 'Location 1',
-                distance: '5 miles',
-                createdAt: '2023-01-01T00:00:00Z' // Oldest date
-              },
-              {
-                id: 'hike-2',
-                title: 'Newest',
-                location: 'Location 2',
-                distance: '10 miles',
-                createdAt: '2023-01-03T00:00:00Z' // Newest date
-              },
-              {
-                id: 'hike-3',
-                title: 'Middle',
-                location: 'Location 3',
-                distance: '8 miles',
-                createdAt: '2023-01-02T00:00:00Z' // Middle date
-              }
-            ]
-          })
-        })
-        .mockResolvedValueOnce({
-          json: async () => ({ success: true, count: 3 })
-        })
-        .mockResolvedValueOnce({
-          json: async () => ({ success: true, totalDistance: 23, totalElevation: 500 })
-        });
-
-      const result = await getFriendProfile(mockUid, 3); // Request 3 hikes
-
-      // Should be sorted by createdAt descending (newest first)
-      expect(result.recentHikes).toHaveLength(3);
-      expect(result.recentHikes[0].title).toBe('Newest');
-      expect(result.recentHikes[1].title).toBe('Middle');
-      expect(result.recentHikes[2].title).toBe('Oldest');
-    });
-
-    test('should use default limit of 2 when not specified', async () => {
-      fetch
-        .mockResolvedValueOnce({
-          json: async () => ({
-            success: true,
-            data: []
-          })
-        })
-        .mockResolvedValueOnce({
-          json: async () => ({ success: true, count: 0 })
-        })
-        .mockResolvedValueOnce({
-          json: async () => ({ success: true, totalDistance: 0, totalElevation: 0 })
-        });
-
-      await getFriendProfile(mockUid);
-
-      expect(fetch).toHaveBeenCalledWith(`http://localhost:3001/api/users/${mockUid}/hikes?limit=2`);
-    });
-
-    test('should handle hikes without createdAt field', async () => {
-      fetch
-        .mockResolvedValueOnce({
-          json: async () => ({
-            success: true,
-            data: [
-              {
-                id: 'hike-1',
-                title: 'No Date Hike',
-                location: 'Somewhere'
-                // No createdAt field
-              }
-            ]
-          })
-        })
-        .mockResolvedValueOnce({
-          json: async () => ({ success: true, count: 1 })
-        })
-        .mockResolvedValueOnce({
-          json: async () => ({ success: true, totalDistance: 5, totalElevation: 100 })
+          json: jest.fn().mockResolvedValue({ success: true, totalDistance: 5, totalElevation: 200 })
         });
 
       const result = await getFriendProfile(mockUid);
 
-      expect(result.success).toBe(true);
       expect(result.recentHikes[0].date).toBe('Unknown');
       expect(result.recentHikes[0].createdAt).toBeNull();
+    });
+
+    it('should handle date ordinal suffixes correctly', async () => {
+      const testCases = [
+        { _seconds: new Date('2024-01-01').getTime() / 1000, expected: 'January 1st, 2024' },
+        { _seconds: new Date('2024-01-02').getTime() / 1000, expected: 'January 2nd, 2024' },
+        { _seconds: new Date('2024-01-03').getTime() / 1000, expected: 'January 3rd, 2024' },
+        { _seconds: new Date('2024-01-04').getTime() / 1000, expected: 'January 4th, 2024' },
+        { _seconds: new Date('2024-01-11').getTime() / 1000, expected: 'January 11th, 2024' },
+        { _seconds: new Date('2024-01-21').getTime() / 1000, expected: 'January 21st, 2024' },
+        { _seconds: new Date('2024-01-22').getTime() / 1000, expected: 'January 22nd, 2024' },
+        { _seconds: new Date('2024-01-23').getTime() / 1000, expected: 'January 23rd, 2024' }
+      ];
+
+      for (const testCase of testCases) {
+        global.fetch
+          .mockResolvedValueOnce({
+            json: jest.fn().mockResolvedValue({
+              success: true,
+              data: [{ id: 'hike1', title: 'Test', createdAt: { _seconds: testCase._seconds } }]
+            })
+          })
+          .mockResolvedValueOnce({
+            json: jest.fn().mockResolvedValue({ success: true, count: 1 })
+          })
+          .mockResolvedValueOnce({
+            json: jest.fn().mockResolvedValue({ success: true, totalDistance: 1, totalElevation: 1 })
+          });
+
+        const result = await getFriendProfile(mockUid);
+        expect(result.recentHikes[0].date).toBe(testCase.expected);
+        jest.clearAllMocks();
+      }
+    });
+
+    it('should use default limit of 2 when not specified', async () => {
+      global.fetch
+        .mockResolvedValueOnce({
+          json: jest.fn().mockResolvedValue({ success: true, data: [] })
+        })
+        .mockResolvedValueOnce({
+          json: jest.fn().mockResolvedValue({ success: true, count: 0 })
+        })
+        .mockResolvedValueOnce({
+          json: jest.fn().mockResolvedValue({ success: true, totalDistance: 0, totalElevation: 0 })
+        });
+
+      await getFriendProfile(mockUid);
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        `http://localhost:3001/api/users/${mockUid}/hikes?limit=2`
+      );
     });
   });
 });

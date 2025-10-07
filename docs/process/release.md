@@ -59,10 +59,10 @@ This document outlines the release strategy for our software project, with versi
 
 ## Upcoming Releases
 
-### Version 0.3.0 (Current Release)
+### Version 0.3.0 (Released)
 - **Target Release**: 29 September 2025
 - **Sprint**: Sprint 3
-- **Status**:  In Planning
+- **Status**:  Released
 - **Milestone**: Social Features & Advanced Functionality
 - **Planned Features**:
   - **Enhanced Friends System**:
@@ -187,7 +187,7 @@ This roadmap is reviewed and updated every sprint. Changes may occur based on:
 
 ### Version Control
 - Document version: 2.0
-- Last updated: 02 September 2025
+- Last updated: 29 September 2025
 - Next review: 19 September 2025
 
 ---

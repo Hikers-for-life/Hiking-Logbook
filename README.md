@@ -2,7 +2,7 @@
 #  Hiking Logbook
 
 
-![Test Coverage](https://img.shields.io/badge/Test%20Coverage-73.43%25-brightgreen)
+![Test Coverage](https://img.shields.io/badge/Test%20Coverage-81.31%25-brightgreen)
 
 A comprehensive hiking application that allows users to track their hiking adventures, plan trips, and connect with fellow hikers. Built with modern web technologies and a robust authentication system.
 

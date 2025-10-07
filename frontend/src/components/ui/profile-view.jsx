@@ -8,6 +8,7 @@ import { Link } from "react-router-dom";
 import { Badge } from '../ui/badge';
 import { useEffect, useState, useCallback } from "react";
 import { getUserHikeCount } from "../../services/userServices";
+import { getUserProfile} from "../../services/userServices";
 import { hikeApiService } from "../../services/hikeApiService.js";
 import { getUserStats } from "../../services/statistics";
 
@@ -56,7 +57,12 @@ export const ProfileView = ({ open, onOpenChange, showAddFriend = false }) => {
     totalDistance: 0,
     totalElevation: 0,
   });
-  const [profile, setProfile] = useState(null);
+  const [profile, setProfile] = useState({
+    userName: " ",
+    location: " ",
+    joinDate: " ",
+    bio: " " ,
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [hikeEntries, setHikeEntries] = useState([]);
@@ -168,64 +174,17 @@ export const ProfileView = ({ open, onOpenChange, showAddFriend = false }) => {
       fetchHikeCount();
     }, [currentUser]);
 
-useEffect(() => {
-  if (!currentUser) return;
-
-
-  const fetchProfile = async () => {
-    try {
-      const res = await fetch(`http://localhost:3001/api/users/${currentUser.uid}`);
-      if (!res.ok) throw new Error("Failed to fetch profile");
-      const data = await res.json();
-      setProfile(data);  // now profile has bio, location, createdAt
-    
+    useEffect(() => {
+    if (!currentUser) return;
+  
+    getUserProfile(currentUser.uid).then((userProfile) => {
       
-      setRecentHikes(data.hikes || []);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  fetchProfile();
-}, [currentUser]);
-
-
-let joinDate = "Unknown";
-
-if (profile?.createdAt || currentUser?.createdAt) {
-  const createdAt = profile.createdAt;
-
-  if (createdAt.toDate) {
-    joinDate = formatDate(createdAt.toDate());
-  } else if (createdAt._seconds) {
-    joinDate = formatDate(new Date(createdAt._seconds * 1000));
-  } else {
-    joinDate = formatDate(new Date(createdAt));
-  }
-}
+      setProfile(userProfile); 
+    });
+  }, [currentUser]);
 
 
 
- 
-
-  const user = {
-    name: profile?.displayName || currentUser?.displayName || "No name",
-    email: profile?.email || currentUser?.email || "No email",
-    joinDate: joinDate,
-    location: profile?.location || currentUser?.location || "Not set",
-    bio: profile?.bio ||  currentUser?.bio || "No bio yet",
-    stats: {
-
-    totalHikes: profile?.stats?.totalHikes || 0,
-    totalDistance: profile?.stats?.totalDistance || 0,
-    totalElevation: profile?.stats?.totalElevation || 0,
-   // achievements: achievements.length || profile?.stats?.achievementsCount || 0,
-  },
-
-    recentHikes: recentHikes, // from state
-   
-
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -239,7 +198,7 @@ if (profile?.createdAt || currentUser?.createdAt) {
           <div className="flex flex-col sm:flex-row gap-6 items-start">
             <Avatar className="h-24 w-24">
               <AvatarFallback className="text-2xl">
-                {user.name
+                {profile.userName
                 .split(' ')
                 .map((n) => n[0])
                 .join('')}
@@ -249,19 +208,19 @@ if (profile?.createdAt || currentUser?.createdAt) {
             <div className="flex-1 space-y-4">
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <h2 className="text-2xl font-bold text-foreground">{user.name}</h2>
+                  <h2 className="text-2xl font-bold text-foreground">{profile.userName}</h2>
                 </div>
       
                 <p className="text-muted-foreground flex items-center gap-1 mb-2">
                   <MapPin className="h-4 w-4" />
-                  {user.location}
+                  {profile.location}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Joined Since {user.joinDate}
+                  Joined Since {profile.joinDate}
                 </p>
               </div>
               
-              <p className="text-foreground">{user.bio}</p>
+              <p className="text-foreground">{profile.bio}</p>
               
 
             </div>
@@ -280,7 +239,7 @@ if (profile?.createdAt || currentUser?.createdAt) {
             <Card>
               <CardContent className="p-4 text-center">
 
-                <p className="text-2xl font-bold text-forest">{userStats.totalDistance} km</p>
+                <p className="text-2xl font-bold text-forest">{userStats.totalDistance} miles</p>
 
                 <p className="text-sm text-muted-foreground">Distance</p>
               </CardContent>
@@ -288,7 +247,7 @@ if (profile?.createdAt || currentUser?.createdAt) {
             <Card>
               <CardContent className="p-4 text-center">
 
-               <p className="text-2xl font-bold text-foreground">{userStats.totalElevation} m</p>
+               <p className="text-2xl font-bold text-foreground">{userStats.totalElevation} ft</p>
 
                 <p className="text-sm text-muted-foreground">Elevation</p>
               </CardContent>

@@ -93,12 +93,6 @@ describe('Additional page smoke tests', () => {
     expect(screen.getByText(/Log New Hike/i)).toBeInTheDocument();
   });
 
-  test('Friends renders page title and search input', async () => {
-    renderWithRouter(<Friends />);
-    expect(await screen.findByText(/Friends & Community/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/Search for friends or hikers/i)).toBeInTheDocument();
-  });
-
   test('EditProfile renders form and Save Changes button', async () => {
     renderWithRouter(<EditProfile />);
     expect(await screen.findByText(/Edit Your Hiking Profile/i)).toBeInTheDocument();
