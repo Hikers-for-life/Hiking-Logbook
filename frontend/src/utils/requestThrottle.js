@@ -7,18 +7,25 @@ class RequestThrottle {
         this.maxConcurrentRequests = 3; // Maximum concurrent requests
         this.requestDelay = 200; // Delay between requests in ms
         this.activeRequests = 0;
+
+        this.pendingRequests = new Set();
     }
 
     // Add a request to the queue
     async queueRequest(requestFn, priority = 0) {
         return new Promise((resolve, reject) => {
-            this.requestQueue.push({
+            // CHANGES START: Store request object in pendingRequests
+            const requestObj = {
                 requestFn,
                 priority,
                 resolve,
                 reject,
-                timestamp: Date.now()
-            });
+                timestamp: Date.now(),
+                cancelled: false
+            };
+            this.requestQueue.push(requestObj);
+            this.pendingRequests.add(requestObj);
+            // CHANGES END
 
             // Sort by priority (higher priority first)
             this.requestQueue.sort((a, b) => b.priority - a.priority);
@@ -26,6 +33,7 @@ class RequestThrottle {
             this.processQueue();
         });
     }
+
 
     // Process the request queue
     async processQueue() {
@@ -48,12 +56,24 @@ class RequestThrottle {
 
     // Execute a single request
     async executeRequest(request) {
+        // CHANGES START: Handle cancelled requests
+        if (request.cancelled) {
+            request.reject(new Error('Request cancelled'));
+            this.pendingRequests.delete(request);
+            this.activeRequests--;
+            setTimeout(() => this.processQueue(), this.requestDelay);
+            return;
+        }
+        // CHANGES END
         try {
             const result = await request.requestFn();
             request.resolve(result);
         } catch (error) {
             request.reject(error);
         } finally {
+            // CHANGES START: Remove from pendingRequests
+            this.pendingRequests.delete(request);
+            // CHANGES END
             this.activeRequests--;
 
             // Add delay before processing next request
@@ -65,10 +85,21 @@ class RequestThrottle {
 
     // Clear the queue (useful for cleanup)
     clearQueue() {
+        // CHANGES START: Cancel and reject all requests (queued and running)
         this.requestQueue.forEach(request => {
+            request.cancelled = true;
             request.reject(new Error('Request cancelled'));
+            this.pendingRequests.delete(request);
         });
         this.requestQueue = [];
+        this.pendingRequests.forEach(request => {
+            if (!request.cancelled) {
+                request.cancelled = true;
+                request.reject(new Error('Request cancelled'));
+            }
+        });
+        this.pendingRequests.clear();
+        // CHANGES END
     }
 }
 
