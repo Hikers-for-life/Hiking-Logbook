@@ -19,7 +19,7 @@ describe('Navigation component (public user)', () => {
         <Navigation />
       </MemoryRouter>
     );
-    expect(screen.getByText(/Hiking Log/i)).toBeInTheDocument();
+    expect(screen.getByText(/Hiking Logbook/i)).toBeInTheDocument();
     // Toggle mobile button
     const buttons = screen.getAllByRole('button');
     const toggle = buttons[buttons.length - 1];

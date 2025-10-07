@@ -74,7 +74,7 @@ export const Navigation = () => {
               to="/"
               className="text-xl font-bold text-foreground hover:text-forest transition-colors"
             >
-              Hiking Log
+              Hiking Logbook
             </Link>
           </div>
 
