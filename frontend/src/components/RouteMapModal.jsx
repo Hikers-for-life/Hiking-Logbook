@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Card, CardContent } from "./ui/card";
 import { MapPin, Clock, Mountain, Navigation, Eye, EyeOff } from "lucide-react";
+import RouteMap from "./RouteMap";
 
 const RouteMapModal = ({ isOpen, onClose, hikeData }) => {
   const [showWaypoints, setShowWaypoints] = useState(true);
@@ -17,75 +18,13 @@ const RouteMapModal = ({ isOpen, onClose, hikeData }) => {
     elevation: hikeData?.elevation || 0
   };
 
-  // Generate mock map visualization (since we don't have external map API yet)
+  // Render the real map with waypoints
   const renderMapVisualization = () => {
-    if (!hikeData?.waypoints || hikeData.waypoints.length === 0) {
-      return (
-        <div className="flex flex-col items-center justify-center h-64 bg-muted/20 rounded-lg border-2 border-dashed border-border">
-          <MapPin className="h-12 w-12 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-semibold text-foreground mb-2">No GPS Data</h3>
-          <p className="text-muted-foreground text-center">
-            This hike doesn't have any recorded waypoints or GPS tracking data.
-          </p>
-        </div>
-      );
-    }
-
-    // Simple visualization of waypoints as connected dots
-    const waypoints = hikeData.waypoints;
-    const startPoint = waypoints[0];
-    const endPoint = waypoints[waypoints.length - 1];
-
     return (
-      <div className="relative bg-gradient-to-br from-green-50 to-blue-50 rounded-lg border border-border p-4 h-64">
-        {/* Mock map background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-green-100 to-blue-100 rounded-lg opacity-30"></div>
-        
-        {/* Waypoints visualization */}
-        <div className="relative z-10 h-full">
-          <div className="flex items-center justify-between h-full px-4">
-            {/* Start point */}
-            <div className="flex flex-col items-center">
-              <div className="w-4 h-4 bg-green-600 rounded-full border-2 border-white shadow-lg mb-2"></div>
-              <Badge variant="secondary" className="text-xs">Start</Badge>
-            </div>
-
-            {/* Route line with intermediate waypoints */}
-            <div className="flex-1 flex items-center justify-center">
-              <div className="flex items-center space-x-2">
-                {waypoints.slice(1, -1).map((waypoint, index) => (
-                  <div key={index} className="flex items-center">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    {index < waypoints.slice(1, -1).length - 1 && (
-                      <div className="w-8 h-0.5 bg-blue-300"></div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* End point */}
-            <div className="flex flex-col items-center">
-              <div className="w-4 h-4 bg-red-600 rounded-full border-2 border-white shadow-lg mb-2"></div>
-              <Badge variant="secondary" className="text-xs">End</Badge>
-            </div>
-          </div>
-
-          {/* Route info overlay */}
-          <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm rounded-lg p-2 shadow-sm">
-            <div className="text-xs text-muted-foreground">
-              <div className="flex items-center gap-1 mb-1">
-                <Navigation className="h-3 w-3" />
-                <span>{routeStats.totalWaypoints} waypoints</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Mountain className="h-3 w-3" />
-                <span>{routeStats.totalDistance} mi</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <RouteMap 
+        waypoints={hikeData?.waypoints || []} 
+        hikeData={hikeData}
+      />
     );
   };
 
@@ -150,7 +89,7 @@ const RouteMapModal = ({ isOpen, onClose, hikeData }) => {
                     )}
                     {waypoint.distance && (
                       <div>
-                        <span className="font-medium">Distance:</span> {waypoint.distance.toFixed(1)} mi
+                        <span className="font-medium">Distance:</span> {waypoint.distance.toFixed(1)} km
                       </div>
                     )}
                   </div>
@@ -191,7 +130,7 @@ const RouteMapModal = ({ isOpen, onClose, hikeData }) => {
             <Card className="bg-gradient-card text-center border-border">
               <CardContent className="p-4">
                 <div className="text-2xl font-bold text-trail">{routeStats.totalDistance}</div>
-                <div className="text-sm text-muted-foreground">Miles</div>
+                <div className="text-sm text-muted-foreground">km</div>
               </CardContent>
             </Card>
             <Card className="bg-gradient-card text-center border-border">

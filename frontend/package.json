@@ -55,6 +55,7 @@
     "hiking-logbook-root": "file:..",
     "input-otp": "^1.4.2",
     "jest": "^27.5.1",
+    "leaflet": "^1.9.4",
     "lucide-react": "^0.263.1",
     "next-themes": "^0.3.0",
     "react": "^18.3.1",
@@ -62,6 +63,7 @@
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.61.1",
     "react-icons": "^5.5.0",
+    "react-leaflet": "^4.2.1",
     "react-resizable-panels": "^2.1.9",
     "react-router-dom": "^6.30.1",
     "react-scripts": "^5.0.1",
@@ -91,37 +93,42 @@
       "react-app/jest"
     ]
   },
-  "jest": {
-    "moduleNameMapper": {
-      "^firebase/(.*)$": "<rootDir>/src/mocks/firebase/$1.js"
-    },
-    "collectCoverageFrom": [
-      "src/**/*.{js,jsx,ts,tsx}",
-      "!src/mocks/**",
-      "!src/tests/**",
-      "!src/pages/**",
-      "!src/contexts/AuthContext.jsx",
-      "!src/components/RouteExplorer.jsx",
-      "!src/components/ProgressCharts.jsx",
-      "!src/components/logbook-section.jsx",
-      "!src/components/ui/users.js",
-      "!src/components/ui/profile-view.jsx",
-      "!src/components/ui/view-friend-profile.jsx",
-      "!src/components/ui/navigation.jsx"
-    ],
-    "coveragePathIgnorePatterns": [
-      "/node_modules/",
-      "<rootDir>/src/pages/",
-      "<rootDir>/src/contexts/AuthContext.jsx",
-      "<rootDir>/src/components/RouteExplorer.jsx",
-      "<rootDir>/src/components/ProgressCharts.jsx",
-      "<rootDir>/src/components/logbook-section.jsx",
-      "<rootDir>/src/components/ui/users.js",
-      "<rootDir>/src/components/ui/profile-view.jsx",
-      "<rootDir>/src/components/ui/view-friend-profile.jsx",
-      "<rootDir>/src/components/ui/navigation.jsx"
-    ]
-  },
+        "jest": {
+          "moduleNameMapper": {
+            "^firebase/(.*)$": "<rootDir>/src/mocks/firebase/$1.js",
+            "^leaflet$": "<rootDir>/src/mocks/leaflet.js",
+            "^react-leaflet$": "<rootDir>/src/mocks/react-leaflet.js"
+          },
+          "transformIgnorePatterns": [
+            "/node_modules/(?!(react-leaflet|leaflet)/)"
+          ],
+          "collectCoverageFrom": [
+            "src/**/*.{js,jsx,ts,tsx}",
+            "!src/mocks/**",
+            "!src/tests/**",
+            "!src/pages/**",
+            "!src/contexts/AuthContext.jsx",
+            "!src/components/RouteExplorer.jsx",
+            "!src/components/ProgressCharts.jsx",
+            "!src/components/logbook-section.jsx",
+            "!src/components/ui/users.js",
+            "!src/components/ui/profile-view.jsx",
+            "!src/components/ui/view-friend-profile.jsx",
+            "!src/components/ui/navigation.jsx"
+          ],
+          "coveragePathIgnorePatterns": [
+            "/node_modules/",
+            "<rootDir>/src/pages/",
+            "<rootDir>/src/contexts/AuthContext.jsx",
+            "<rootDir>/src/components/RouteExplorer.jsx",
+            "<rootDir>/src/components/ProgressCharts.jsx",
+            "<rootDir>/src/components/logbook-section.jsx",
+            "<rootDir>/src/components/ui/users.js",
+            "<rootDir>/src/components/ui/profile-view.jsx",
+            "<rootDir>/src/components/ui/view-friend-profile.jsx",
+            "<rootDir>/src/components/ui/navigation.jsx"
+          ]
+        },
   "browserslist": {
     "production": [
       ">0.2%",
