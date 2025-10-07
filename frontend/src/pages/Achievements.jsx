@@ -25,7 +25,8 @@ import {
   Plus,
   Pin,
   Thermometer,
-  Share
+  Share,
+  Star
 } from "lucide-react";
 
 import { createFeed } from "../services/feed";
@@ -351,7 +352,7 @@ const Achievements = () => {
             date: hike.date ? formatDate(hike.date) : 'No date',
             pinnedAt: formatDate(hike.updatedAt),
 
-            distance: hike.distance ? `${hike.distance} mi` : '0 mi',
+            distance: hike.distance ? `${hike.distance} km` : '0 km',
             elevation: hike.elevation ? `${hike.elevation} ft` : '0 ft',
             duration: hike.duration ? `${hike.duration} min` : '0 min'
           }));
@@ -383,7 +384,7 @@ const Achievements = () => {
                 ...hike,
                 date: hike.date ? formatDate(hike.date) : 'No date',
                 pinnedAt: formatDate(hike.updatedAt),
-                distance: hike.distance ? `${hike.distance} mi` : '0 mi',
+                distance: hike.distance ? `${hike.distance} km` : '0 km',
                 elevation: hike.elevation ? `${hike.elevation} ft` : '0 ft',
                 duration: hike.duration ? `${hike.duration} min` : '0 min'
               }));
@@ -1165,6 +1166,36 @@ const Achievements = () => {
                     </div>
                   )}
                 </div>
+
+                {/* Accomplishments Section */}
+                {selectedHike.accomplishments && selectedHike.accomplishments.length > 0 && (
+                  <div className="bg-card border border-border rounded-lg p-6">
+                    <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                      <Star className="h-5 w-5 text-forest" />
+                      Accomplishments ({selectedHike.accomplishments.length})
+                    </h3>
+                    <div className="space-y-3">
+                      {selectedHike.accomplishments.map((accomplishment, index) => (
+                        <div key={accomplishment.id || index} className="flex items-start gap-4 p-4 bg-gradient-to-r from-forest/5 to-meadow/5 rounded-lg border border-forest/20">
+                          <div className="flex-shrink-0 w-8 h-8 bg-forest rounded-full flex items-center justify-center text-white text-sm font-bold">
+                            {index + 1}
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-foreground font-medium">{accomplishment.text}</p>
+                            <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                              {accomplishment.distance !== undefined && accomplishment.distance > 0 && (
+                                <span>📏 {accomplishment.distance.toFixed(1)} km</span>
+                              )}
+                              {accomplishment.timestamp && (
+                                <span>🕐 {new Date(accomplishment.timestamp).toLocaleTimeString()}</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* GPS Information */}
                 {(selectedHike.waypoints && selectedHike.waypoints.length > 0) && (

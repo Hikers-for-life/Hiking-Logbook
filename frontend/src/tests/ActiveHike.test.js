@@ -104,7 +104,7 @@ describe('ActiveHike Component', () => {
   test('updates distance manually', async () => {
     render(<ActiveHike {...mockProps} />);
     
-    const distanceInput = screen.getByDisplayValue('0');
+    const distanceInput = screen.getByDisplayValue('0.0');
     
     await act(async () => {
       fireEvent.change(distanceInput, { target: { value: '2.5' } });
@@ -279,22 +279,22 @@ describe('ActiveHike Component', () => {
   test('quick distance update buttons work', async () => {
     render(<ActiveHike {...mockProps} />);
     
-    const plusButton = screen.getByText('+0.1');
-    const minusButton = screen.getByText('-0.1');
-    const distanceInput = screen.getByDisplayValue('0');
+    const plusButton = screen.getByText('+0.5');
+    const minusButton = screen.getByText('-0.5');
+    const distanceInput = screen.getByDisplayValue('0.0');
 
     // Test plus button
     await act(async () => {
       fireEvent.click(plusButton);
     });
-    expect(distanceInput.value).toBe('0.1');
+    expect(distanceInput.value).toBe('0.5');
 
     // Test minus button (should not go below 0)
     await act(async () => {
       fireEvent.click(minusButton);
       fireEvent.click(minusButton);
     });
-    expect(distanceInput.value).toBe('0');
+    expect(distanceInput.value).toBe('0.0');
   });
 
   test('auto-save functionality works', async () => {

@@ -92,7 +92,7 @@ const loadHikes = useCallback(async () => {
             // ...other conversions and defaults
             title: hike.title || "Untitled Hike",
             location: hike.location || "Unknown Location",
-            distance: hike.distance || "0 miles",
+            distance: hike.distance || "0 km",
             duration: hike.duration || "0 min",
             difficulty: hike.difficulty || "Easy",
           };
@@ -307,7 +307,7 @@ useEffect(() => {
             </Card>
             <Card>
               <CardContent className="p-4 text-center">
-                <p className="text-2xl font-bold text-forest">{userStats.totalDistance} miles</p>
+                <p className="text-2xl font-bold text-forest">{userStats.totalDistance} km</p>
                 <p className="text-sm text-muted-foreground">Distance</p>
               </CardContent>
             </Card>

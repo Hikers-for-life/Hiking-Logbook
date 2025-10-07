@@ -509,7 +509,7 @@ const handleDeletePost = async (activityId) => {
                         <p className="text-xs text-muted-foreground">Hikes</p>
                       </div>
                       <div>
-                        <p className="text-2xl font-bold text-forest">{friend.totalDistance} miles</p>
+                        <p className="text-2xl font-bold text-forest">{friend.totalDistance} km</p>
                         <p className="text-xs text-muted-foreground">Distance</p>
                       </div>
                     </div>

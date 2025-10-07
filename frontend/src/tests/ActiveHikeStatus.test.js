@@ -33,7 +33,7 @@ describe('ActiveHikeStatus Component', () => {
     expect(screen.getByText('Hike in Progress')).toBeInTheDocument();
     expect(screen.getByText('Mountain Trail')).toBeInTheDocument();
     expect(screen.getByText('1h 0m')).toBeInTheDocument();
-    expect(screen.getByText('0.0 mi')).toBeInTheDocument();
+    expect(screen.getByText('0.0 km')).toBeInTheDocument();
     expect(screen.getByText('Continue')).toBeInTheDocument();
   });
 
@@ -52,7 +52,7 @@ describe('ActiveHikeStatus Component', () => {
     expect(screen.getByText('Hike in Progress')).toBeInTheDocument();
     expect(screen.getByText('Forest Walk')).toBeInTheDocument();
     expect(screen.getByText('30m')).toBeInTheDocument();
-    expect(screen.getByText('0.0 mi')).toBeInTheDocument();
+    expect(screen.getByText('0.0 km')).toBeInTheDocument();
   });
 
   test('calls onResume when Resume Hike button is clicked', () => {
@@ -135,7 +135,7 @@ describe('ActiveHikeStatus Component', () => {
     render(<ActiveHikeStatus activeHike={newHike} onResume={mockOnResume} />);
     
     expect(screen.getByText('0m')).toBeInTheDocument();
-    expect(screen.getByText('0.0 mi')).toBeInTheDocument();
+    expect(screen.getByText('0.0 km')).toBeInTheDocument();
   });
 
   test('handles missing title gracefully', () => {

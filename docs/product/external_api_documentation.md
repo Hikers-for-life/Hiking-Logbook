@@ -1,10 +1,10 @@
-# External API Usage Documentation - GPS/Geolocation API
+# External API Usage Documentation - GPS/Geolocation & Map Visualization APIs
 
 ## Overview
 This document details the external API usage implemented in the Hiking Logbook application to meet the sprint requirements for external API integration.
 
 ---
-## API Used: Web Geolocation API
+## API 1: Web Geolocation API
 
 ### **What is it?**
 The **Web Geolocation API** is a browser-provided JavaScript API that allows web applications to access the user's geographical location information through GPS, Wi-Fi, cellular towers, or IP address.
@@ -210,15 +210,198 @@ Browser → "Allow location access?" → User grants permission
 
 ---
 
+## API 2: Map Visualization APIs
+
+### **What are they?**
+The map visualization system uses three complementary technologies to display interactive hiking routes:
+
+1. **Leaflet** - Lightweight JavaScript library for interactive maps
+2. **React-Leaflet** - React components that wrap Leaflet functionality  
+3. **OpenStreetMap** - Free, open-source map tile service
+
+### **Why We Used Them**
+The map visualization APIs were added to enhance the hiking experience because:
+
+1. **Route Visualization Requirement**: Users need to see their hiking path on a real map
+2. **Interactive Experience**: Clickable markers and route lines improve user engagement
+3. **Cost-Effective Solution**: OpenStreetMap provides free map tiles without API key requirements
+4. **Mobile-Friendly**: Leaflet is optimized for touch interactions on mobile devices
+5. **Real-Time Display**: Shows GPS waypoints and route tracing as users hike
+
+### **Brief Alignment**
+The brief specifically mentioned:
+- "Route map" functionality
+- GPS waypoint visualization
+- Interactive hiking experience
+
+The map APIs directly enable these features by providing visual representation of hiking data.
+
+---
+
+### **Implementation Details**
+
+#### **API Integration Location**
+**File:** `frontend/src/components/RouteMap.jsx`  
+**Lines:** 1-150 (map component implementation)
+
+#### **Leaflet Integration**
+```javascript
+import { MapContainer, TileLayer, Polyline, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+// Custom icons for start/end points
+const startIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41]
+});
+```
+
+#### **OpenStreetMap Tile Integration**
+```javascript
+<TileLayer
+  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+/>
+```
+
+### **Map Features Implemented**
+
+#### **1. Route Line Visualization**
+```javascript
+<Polyline
+  positions={routeCoordinates}
+  pathOptions={{
+    color: '#10b981',
+    weight: 4,
+    opacity: 0.8
+  }}
+/>
+```
+**Purpose**: Draws a green line connecting all GPS waypoints to show the hiking route
+
+#### **2. Custom Markers**
+- **Start Marker**: Green marker at the first waypoint
+- **End Marker**: Red marker at the final waypoint  
+- **Waypoint Markers**: Blue markers for intermediate points
+- **Interactive Popups**: Click markers to see coordinates, distance, elevation
+
+#### **3. Auto-Fit Map Bounds**
+```javascript
+useEffect(() => {
+  if (mapRef.current && waypoints && waypoints.length > 1) {
+    const bounds = getMapBounds();
+    if (bounds) {
+      mapRef.current.fitBounds(bounds, { padding: [20, 20] });
+    }
+  }
+}, [waypoints]);
+```
+**Purpose**: Automatically zooms map to show the entire hiking route
+
+### **Data Integration with GPS API**
+
+#### **Waypoint Processing**
+```javascript
+const routeCoordinates = waypoints.map(wp => [wp.latitude, wp.longitude]);
+
+{waypoints.map((waypoint, index) => (
+  <Marker
+    key={index}
+    position={[waypoint.latitude, waypoint.longitude]}
+    icon={index === 0 ? startIcon : index === waypoints.length - 1 ? endIcon : waypointIcon}
+  >
+    <Popup>
+      <div>
+        <h4>{index === 0 ? 'Start' : index === waypoints.length - 1 ? 'End' : `Waypoint ${index + 1}`}</h4>
+        <div><strong>Lat:</strong> {waypoint.latitude?.toFixed(6)}</div>
+        <div><strong>Lng:</strong> {waypoint.longitude?.toFixed(6)}</div>
+        {waypoint.altitude && (
+          <div><strong>Elevation:</strong> {Math.round(waypoint.altitude * 3.28084)} ft</div>
+        )}
+        {waypoint.distance && (
+          <div><strong>Distance:</strong> {waypoint.distance.toFixed(1)} km</div>
+        )}
+      </div>
+    </Popup>
+  </Marker>
+))}
+```
+
+### **User Experience Flow**
+
+#### **1. Map Display**
+- Route map modal opens when user clicks "View Route" on completed hikes
+- Map automatically loads with OpenStreetMap tiles
+- Route line and markers render based on GPS waypoint data
+
+#### **2. Interactive Features**
+- **Zoom/Pan**: Users can explore different areas of their route
+- **Marker Popups**: Click any marker to see detailed waypoint information
+- **Auto-fit**: Map automatically shows the complete route
+
+#### **3. Mobile Optimization**
+- Touch-friendly map interactions
+- Responsive design adapts to different screen sizes
+- Efficient rendering for mobile devices
+
+### **Technical Benefits**
+
+#### **Performance**
+- **Lightweight**: Leaflet is much smaller than Google Maps
+- **Fast Loading**: OpenStreetMap tiles load quickly
+- **Efficient Rendering**: Only renders visible map tiles
+
+#### **Cost Effectiveness**
+- **No API Keys**: OpenStreetMap doesn't require authentication
+- **No Usage Limits**: Unlimited map tile requests
+- **Free Service**: No licensing costs for commercial use
+
+#### **Customization**
+- **Custom Icons**: Easy to modify marker appearance
+- **Route Styling**: Configurable colors and line weights
+- **Responsive Design**: Adapts to different screen sizes
+
+### **Error Handling**
+
+#### **Fallback Behavior**
+```javascript
+if (!waypoints || waypoints.length === 0) {
+  return (
+    <div className="flex flex-col items-center justify-center h-64 bg-muted/20 rounded-lg border-2 border-dashed border-border">
+      <div className="text-6xl mb-4">🗺️</div>
+      <h3 className="text-lg font-semibold text-foreground mb-2">No GPS Data</h3>
+      <p className="text-muted-foreground text-center">
+        This hike doesn't have any recorded waypoints or GPS tracking data.
+      </p>
+    </div>
+  );
+}
+```
+
+#### **Browser Compatibility**
+- **Modern Browsers**: Full support in Chrome, Firefox, Safari, Edge
+- **Mobile Browsers**: Optimized for iOS Safari and Chrome Mobile
+- **Graceful Degradation**: Falls back to text display if maps fail to load
+
+---
 
 ## Conclusion
 
-The Web Geolocation API successfully fulfills the external API requirement by providing essential GPS functionality that enables:
+The combination of Web Geolocation API and Map Visualization APIs successfully fulfills the external API requirement by providing comprehensive GPS and mapping functionality that enables:
 
+**GPS Functionality:**
 - Real-time location tracking during hikes
 - GPS waypoint creation and storage  
 - Elevation monitoring from altitude data
 - Location-based accomplishment tracking
-- Foundation for future route mapping features
 
-This API integration is fundamental to the hiking application's core functionality and directly supports the brief's requirements for location tracking and GPS waypoint management.
+**Map Visualization:**
+- Interactive route mapping with real map tiles
+- Visual representation of hiking paths
+- Custom markers for start/end/waypoints
+- Route line tracing and auto-fit zoom
+
+These API integrations are fundamental to the hiking application's core functionality and directly support the brief's requirements for location tracking, GPS waypoint management, and route visualization. The combination provides a complete hiking experience from real-time tracking to post-hike route analysis.

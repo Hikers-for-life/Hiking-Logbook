@@ -42,6 +42,9 @@ const hikeSchema = {
   
   //Sharing field
   shared: "boolean",         // Whether the hike is shared with friends
+  
+  // Accomplishments during hike
+  accomplishments: "array",  // Array of accomplishments recorded during the hike
 };
 
 // GPS waypoint structure

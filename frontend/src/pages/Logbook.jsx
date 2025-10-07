@@ -9,7 +9,7 @@ import NewHikeEntryForm from "../components/NewHikeEntryForm";
 import ActiveHike from "../components/ActiveHike";
 import ActiveHikeStatus from "../components/ActiveHikeStatus";
 import RouteMapModal from "../components/RouteMapModal";
-import { MapPin, Clock, Mountain, Thermometer, Plus, Search, Map, Play, Trash2, Edit3, Pin, PinOff, Share2, Share } from "lucide-react";
+import { MapPin, Clock, Mountain, Thermometer, Plus, Search, Map, Play, Trash2, Edit3, Pin, PinOff, Share2, Share, Star } from "lucide-react";
 import { hikeApiService } from "../services/hikeApiService.js";
 import { useAuth } from "../contexts/AuthContext.jsx";
 import { createFeed } from "../services/feed";
@@ -73,7 +73,7 @@ const Logbook = () => {
           endTime: hike.endTime ? (hike.endTime.toDate ? hike.endTime.toDate() : new Date(hike.endTime)) : null,
           title: hike.title || 'Untitled Hike',
           location: hike.location || 'Unknown Location',
-          distance: hike.distance || '0 miles',
+          distance: hike.distance || '0 km',
           elevation: hike.elevation || '0 ft',
           duration: hike.duration || '0 min',
           weather: hike.weather || 'Unknown',
@@ -299,7 +299,7 @@ const Logbook = () => {
         action: "completed a hike",
         hike: hike.title || hike.name || "Untitled Hike",
         description: hike.notes || hike.description || "",
-        stats: `${hike.distance || "0 mi"} • ${hike.elevation || "0 ft"} • ${hike.duration || "0s"}`,
+        stats: `${hike.distance || "0 km"} • ${hike.elevation || "0 ft"} • ${hike.duration || "0s"}`,
         photo: hike.photo || null,
         hikeId: hike.id || hikeId,
         userId: hike.userId || hike.ownerId || null,
@@ -544,6 +544,38 @@ const Logbook = () => {
                     <div className="bg-muted/50 rounded-lg p-4 border border-border">
                       <p className="text-foreground italic">"{hike.notes}"</p>
                     </div>
+
+                    {/* Accomplishments Section */}
+                    {hike.accomplishments && hike.accomplishments.length > 0 && (
+                      <div className="space-y-3">
+                        <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                          <Star className="h-4 w-4 text-forest" />
+                          Accomplishments ({hike.accomplishments.length})
+                        </h4>
+                        <div className="space-y-2">
+                          {hike.accomplishments.map((accomplishment, index) => (
+                            <div key={accomplishment.id || index} className="flex items-start gap-3 p-3 bg-gradient-to-r from-forest/5 to-meadow/5 rounded-lg border border-forest/20">
+                              <div className="flex-shrink-0 w-6 h-6 bg-forest rounded-full flex items-center justify-center text-white text-xs font-bold">
+                                {index + 1}
+                              </div>
+                              <div className="flex-1">
+                                <p className="text-sm text-foreground font-medium">{accomplishment.text}</p>
+                                {accomplishment.distance !== undefined && accomplishment.distance > 0 && (
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    Recorded at {accomplishment.distance.toFixed(1)} km
+                                  </p>
+                                )}
+                                {accomplishment.timestamp && (
+                                  <p className="text-xs text-muted-foreground">
+                                    {new Date(accomplishment.timestamp).toLocaleTimeString()}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center pt-2 space-y-2 sm:space-y-0">
                       <div className="flex items-center space-x-2">

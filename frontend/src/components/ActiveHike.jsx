@@ -41,10 +41,24 @@ const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
   const [currentLocation, setCurrentLocation] = useState(null);
   const [watchId, setWatchId] = useState(null);
   const intervalRef = useRef(null);
+  const [previousLocation, setPreviousLocation] = useState(null);
 
   // Accomplishment dialog state
   const [isAccomplishmentDialogOpen, setIsAccomplishmentDialogOpen] = useState(false);
   const [accomplishmentText, setAccomplishmentText] = useState("");
+
+  // Calculate distance between two GPS points (Haversine formula)
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371; // Earth's radius in km
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c; // Distance in km
+  };
 
   // Auto-save timer
   const autoSaveRef = useRef(null);
@@ -57,7 +71,25 @@ const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
         const id = navigator.geolocation.watchPosition(
           (position) => {
             const { latitude, longitude, altitude } = position.coords;
-            setCurrentLocation({ latitude, longitude, altitude });
+            const newLocation = { latitude, longitude, altitude };
+            
+            // Calculate distance from previous location
+            if (previousLocation && isActive) {
+              const distanceKm = calculateDistance(
+                previousLocation.latitude, 
+                previousLocation.longitude, 
+                latitude, 
+                longitude
+              );
+              
+              // Only add distance if it's significant (avoid GPS noise)
+              if (distanceKm > 0.01) { // 10 meters threshold
+                setCurrentDistance(prev => prev + distanceKm);
+              }
+            }
+            
+            setCurrentLocation(newLocation);
+            setPreviousLocation(newLocation);
             
             // Update elevation if available
             if (altitude) {
@@ -167,7 +199,7 @@ const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
       startTime,
       endTime: new Date(),
       duration: formatTime(elapsedTime),
-      distance: `${currentDistance.toFixed(1)} miles`,
+      distance: `${currentDistance.toFixed(1)} km`,
       elevation: `${currentElevation} ft`,
       status: 'completed'
     };
@@ -300,7 +332,7 @@ const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
                 <div className="text-center">
                   <Mountain className="h-6 w-6 mx-auto mb-2 text-green-600" />
                   <div className="text-2xl font-bold">{currentDistance.toFixed(1)}</div>
-                  <div className="text-sm text-muted-foreground">Miles</div>
+                  <div className="text-sm text-muted-foreground">km</div>
                 </div>
                 <div className="text-center">
                   <Navigation className="h-6 w-6 mx-auto mb-2 text-purple-600" />
@@ -356,21 +388,24 @@ const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
                 />
               </div>
               <div>
-                <label className="text-sm font-medium mb-2 block">Distance Progress</label>
+                <label className="text-sm font-medium mb-2 block">
+                  Distance Progress 
+                  <span className="text-xs text-muted-foreground ml-1">(Auto-tracked)</span>
+                </label>
                 <div className="flex items-center gap-2">
                   <Button
                     type="button"
                     size="sm"
                     variant="outline"
-                    onClick={() => quickUpdateDistance(-0.1)}
+                    onClick={() => quickUpdateDistance(-0.5)}
                     className="px-2"
                   >
-                    -0.1
+                    -0.5
                   </Button>
                   <Input
                     type="number"
                     step="0.1"
-                    value={currentDistance}
+                    value={currentDistance.toFixed(1)}
                     onChange={(e) => updateDistance(e.target.value)}
                     placeholder="0.0"
                     className="text-center"
@@ -379,12 +414,13 @@ const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
                     type="button"
                     size="sm"
                     variant="outline"
-                    onClick={() => quickUpdateDistance(0.1)}
+                    onClick={() => quickUpdateDistance(0.5)}
                     className="px-2"
                   >
-                    +0.1
+                    +0.5
                   </Button>
                 </div>
+                <p className="text-xs text-muted-foreground mt-1">km (GPS auto-calculated)</p>
                 <div className="flex gap-1 mt-1">
                   <Button
                     type="button"
@@ -393,7 +429,7 @@ const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
                     onClick={() => quickUpdateDistance(0.5)}
                     className="text-xs"
                   >
-                    +0.5mi
+                    +0.5km
                   </Button>
                   <Button
                     type="button"
@@ -402,7 +438,7 @@ const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
                     onClick={() => quickUpdateDistance(1.0)}
                     className="text-xs"
                   >
-                    +1mi
+                    +1km
                   </Button>
                 </div>
               </div>
@@ -504,7 +540,7 @@ const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
                     </div>
                     <div className="text-right">
                       <Badge variant="outline">
-                        {waypoint.distance.toFixed(1)} mi
+                        {waypoint.distance.toFixed(1)} km
                       </Badge>
                     </div>
                   </div>
@@ -553,7 +589,7 @@ const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
                     </div>
                     <div className="text-right">
                       <Badge variant="outline">
-                        {accomplishment.distance.toFixed(1)} mi
+                        {accomplishment.distance.toFixed(1)} km
                       </Badge>
                       {accomplishment.location && (
                         <div className="text-xs text-muted-foreground mt-1">

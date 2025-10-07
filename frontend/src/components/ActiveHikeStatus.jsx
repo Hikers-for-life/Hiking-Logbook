@@ -36,7 +36,7 @@ const ActiveHikeStatus = ({ activeHike, onResume }) => {
               </div>
               <div className="flex items-center gap-1">
                 <Mountain className="h-4 w-4" />
-                <span>{(activeHike.currentDistance || 0).toFixed(1)} mi</span>
+                <span>{(activeHike.currentDistance || 0).toFixed(1)} km</span>
               </div>
               {activeHike.title && (
                 <span className="font-medium">{activeHike.title}</span>

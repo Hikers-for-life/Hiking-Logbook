@@ -718,6 +718,7 @@ export const dbUtils = {
         elevation: endData.elevation || 0,
         distance: endData.distance || 0,
         waypoints: endData.waypoints || [],
+        accomplishments: endData.accomplishments || [],
         notes: endData.notes || '',
         weather: endData.weather || '',
         difficulty: endData.difficulty || 'Easy',

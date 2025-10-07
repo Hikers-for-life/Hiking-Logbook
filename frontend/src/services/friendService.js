@@ -48,7 +48,7 @@ export async function getFriendProfile(uid, limit = 2) {
               : null,
             title: hike.title || "Untitled Hike",
             location: hike.location || "Unknown Location",
-            distance: hike.distance || "0 miles",
+            distance: hike.distance || "0 km",
             duration: hike.duration || "0 min",
             difficulty: hike.difficulty || "Easy",
           };

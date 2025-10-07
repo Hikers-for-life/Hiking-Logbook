@@ -153,7 +153,7 @@ describe('friendService', () => {
 
       expect(result.recentHikes[0].title).toBe('Untitled Hike');
       expect(result.recentHikes[0].location).toBe('Unknown Location');
-      expect(result.recentHikes[0].distance).toBe('0 miles');
+      expect(result.recentHikes[0].distance).toBe('0 km');
       expect(result.recentHikes[0].duration).toBe('0 min');
       expect(result.recentHikes[0].difficulty).toBe('Easy');
     });

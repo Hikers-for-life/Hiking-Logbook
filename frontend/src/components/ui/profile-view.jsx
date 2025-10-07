@@ -115,7 +115,7 @@ export const ProfileView = ({ open, onOpenChange, showAddFriend = false }) => {
                 : null,
               title: hike.title || "Untitled Hike",
               location: hike.location || "Unknown Location",
-              distance: hike.distance || "0 miles",
+              distance: hike.distance || "0 km",
               elevation: hike.elevation || "0 ft",
               duration: hike.duration || "0 min",
               weather: hike.weather || "Unknown",
@@ -239,7 +239,7 @@ export const ProfileView = ({ open, onOpenChange, showAddFriend = false }) => {
             <Card>
               <CardContent className="p-4 text-center">
 
-                <p className="text-2xl font-bold text-forest">{userStats.totalDistance} miles</p>
+                <p className="text-2xl font-bold text-forest">{userStats.totalDistance} km</p>
 
                 <p className="text-sm text-muted-foreground">Distance</p>
               </CardContent>
