@@ -25,7 +25,7 @@ This file serves as a **table of contents** and guide to navigate both **product
      - [API Setup](product/architecture/developer_guides/api_setup.md)
      - [Site Setup](product/architecture/developer_guides/site_setup.md)
      - [Deployment](product/architecture/developer_guides/deployment.md)
-   - [Tech Stack](process/technology.md)
+   - [Tech Stack](product/technology.md)
    - [Third-Party Code Documentation](product/architecture/third_party_documentation.md)
 4. [Testing Documentation](product/testing.md)
 
@@ -113,6 +113,7 @@ To measure project quality and progress, we track:
 ##  Purpose of this Documentation
 
 This documentation is designed not just to explain the final product but to demonstrate the **process, quality standards, and intentionality** behind its development. It reflects both the *engineering mindset* and *collaborative teamwork* that went into the Hiking Logbook project.
+
 
 
 
