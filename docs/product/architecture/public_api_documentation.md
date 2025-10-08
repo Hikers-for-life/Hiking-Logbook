@@ -202,5 +202,5 @@ curl http://localhost:3001/api/public/health
 
 ---
 
-**Last Updated**: September 2024  
+**Last Updated**: October 2025  
 **API Version**: 1.0.0

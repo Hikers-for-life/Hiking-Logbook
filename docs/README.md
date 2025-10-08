@@ -13,29 +13,23 @@ This file serves as a **table of contents** and guide to navigate both **product
 
 ##  Table of Contents
 
-### Product Documentation
-1. [Functional & Non-Functional Requirements](https://hikers-for-life.github.io/Hiking-Logbook/product/requirements.html)
-2. [UX Documentation](https://hikers-for-life.github.io/Hiking-Logbook/product/ux.html)
-3. **Architecture & Design**
-     - [API specifications](https://hikers-for-life.github.io/Hiking-Logbook/product/architecture/api_specifications.html)
-     - [Database schema](https://hikers-for-life.github.io/Hiking-Logbook/product/architecture/database_schema.html)
-     - [Module interactions](https://hikers-for-life.github.io/Hiking-Logbook/product/architecture/module_interactions.html)
-4. [Testing Documentation](https://hikers-for-life.github.io/Hiking-Logbook/product/testing.html)
+        ### Product Documentation
+        1. [Functional & Non-Functional Requirements](https://hikers-for-life.github.io/Hiking-Logbook/product/requirements.html)
+        2. [UX Documentation](https://hikers-for-life.github.io/Hiking-Logbook/product/ux.html)
+        3. **Architecture**
+            - [API Documentation](https://hikers-for-life.github.io/Hiking-Logbook/product/architecture/api_documentation.html)
+            - [Public API Documentation](https://hikers-for-life.github.io/Hiking-Logbook/product/architecture/public_api_documentation.html)
+            - [Database Documentation](https://hikers-for-life.github.io/Hiking-Logbook/product/architecture/database_documentation.html)
+            - [Developer Guides](https://hikers-for-life.github.io/Hiking-Logbook/product/architecture/developer_guides/)
+            - [Tech Stack](https://hikers-for-life.github.io/Hiking-Logbook/process/technology.html)
+            - [Third-Party Code Documentation](https://hikers-for-life.github.io/Hiking-Logbook/product/architecture/third_party_documentation.html)
+        4. [Testing Documentation](https://hikers-for-life.github.io/Hiking-Logbook/product/testing.html)
 
 ### Process Documentation
-5. [Strategy Roadmap](https://hikers-for-life.github.io/Hiking-Logbook/process/strategy.html) : Project structure, project management           methodology, goals, project alignment, and development roadmap. 
+5. [Strategy Roadmap](https://hikers-for-life.github.io/Hiking-Logbook/process/strategy.html) : Project structure, project management methodology, goals, project alignment, and development roadmap. 
 6. [Technology Roadmap](https://hikers-for-life.github.io/Hiking-Logbook/process/technology.html) : Tech Stack
 7. [Release Roadmap](https://hikers-for-life.github.io/Hiking-Logbook/process/release.html)
-8. [Metrics](https://hikers-for-life.github.io/Hiking-Logbook/process/metrics.html)
-9. [Standards](https://hikers-for-life.github.io/Hiking-Logbook/process/standards.html) : Coding standards, commit conventions, Git           methodology, testing standards, documentation standards, branch rules and CI pipeline, Developer setup.
-10. **Development guides**
-
-      - [Contributing](https://hikers-for-life.github.io/Hiking-Logbook/process/development/contributing.html)
-
-      - [API setup](https://hikers-for-life.github.io/Hiking-Logbook/process/development/api_setup.html)
-      - [Database setup](https://hikers-for-life.github.io/Hiking-Logbook/process/development/database_setup.html)
-      - [Site setup](https://hikers-for-life.github.io/Hiking-Logbook/process/development/site_setup.html)
-      - [Running locally](https://hikers-for-life.github.io/Hiking-Logbook/process/development/running_locally.html)
+8. [Standards](https://hikers-for-life.github.io/Hiking-Logbook/process/standards.html) : Coding standards, commit conventions, Git methodology, testing standards, documentation standards, branch rules and CI pipeline.
 
 
 

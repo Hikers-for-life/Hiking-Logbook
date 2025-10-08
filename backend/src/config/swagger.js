@@ -22,8 +22,8 @@ const options = {
 - **Production**: https://hiking-logbook-hezw.onrender.com
 - **Development**: http://localhost:3001`,
       contact: {
-        name: 'Hiking Logbook API Support',
-        url: 'https://hiking-logbook-hezw.onrender.com'
+        name: 'Hiking Logbook API Documentation',
+        url: 'https://hiking-logbook-hezw.onrender.com/api-docs'
       },
       license: {
         name: 'MIT',

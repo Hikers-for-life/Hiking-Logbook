@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import { initializeFirebase } from './config/firebase.js';
 import * as middleware from './middleware/index.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
+import { swaggerUi, specs } from './config/swagger.js';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
 import hikeRoutes from './routes/hikes.js';
@@ -24,6 +25,13 @@ middleware.applyParsingMiddleware(app);
 middleware.applyLoggingMiddleware(app);
 
 
+
+// Swagger API documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
+  explorer: true,
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'Hiking Logbook API Documentation'
+}));
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -64,6 +72,8 @@ async function startServer() {
       console.log(`Server running on port ${PORT}`);
       console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`Health check: http://localhost:${PORT}/health`);
+      console.log(`API Docs: http://localhost:${PORT}/api-docs`);
+      console.log(`Public API: http://localhost:${PORT}/api/public`);
       console.log(`Auth API: http://localhost:${PORT}/api/auth`);
       console.log(`Users API: http://localhost:${PORT}/api/users`);
       console.log(`Hikes API: http://localhost:${PORT}/api/hikes`);
