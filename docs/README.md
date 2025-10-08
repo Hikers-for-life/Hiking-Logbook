@@ -20,7 +20,11 @@ This file serves as a **table of contents** and guide to navigate both **product
             - [API Documentation](https://hikers-for-life.github.io/Hiking-Logbook/product/architecture/api_documentation.html)
             - [Public API Documentation](https://hikers-for-life.github.io/Hiking-Logbook/product/architecture/public_api_documentation.html)
             - [Database Documentation](https://hikers-for-life.github.io/Hiking-Logbook/product/architecture/database_documentation.html)
-            - [Developer Guides](https://hikers-for-life.github.io/Hiking-Logbook/product/architecture/developer_guides/)
+            - **Developer Guides**
+              - [Database Setup](https://hikers-for-life.github.io/Hiking-Logbook/product/architecture/developer_guides/database_setup.html)
+              - [API Setup](https://hikers-for-life.github.io/Hiking-Logbook/product/architecture/developer_guides/api_setup.html)
+              - [Site Setup](https://hikers-for-life.github.io/Hiking-Logbook/product/architecture/developer_guides/site_setup.html)
+              - [Deployment](https://hikers-for-life.github.io/Hiking-Logbook/product/architecture/developer_guides/deployment.html)
             - [Tech Stack](https://hikers-for-life.github.io/Hiking-Logbook/process/technology.html)
             - [Third-Party Code Documentation](https://hikers-for-life.github.io/Hiking-Logbook/product/architecture/third_party_documentation.html)
         4. [Testing Documentation](https://hikers-for-life.github.io/Hiking-Logbook/product/testing.html)
@@ -37,7 +41,42 @@ This file serves as a **table of contents** and guide to navigate both **product
 
 ##  Documentation Structure
 
-![text](doc_structure.png)  
+### Current Structure (Updated for Marking Rubric Compliance)
+
+```
+docs/
+├── product/                          # Product Documentation
+│   ├── requirements.html            # Functional & Non-Functional Requirements
+│   ├── ux.html                      # UX Documentation
+│   ├── testing.html                 # Testing Documentation
+│   └── architecture/                # Architecture & Design
+│       ├── api_documentation.html   # Internal API Documentation
+│       ├── public_api_documentation.html  # Public API Documentation
+│       ├── database_documentation.html    # Database Schema & Structure
+│       ├── third_party_documentation.html # Third-Party Code Documentation
+│       ├── technology.html          # Tech Stack Documentation
+│       └── developer_guides/        # Developer Setup Guides
+│           ├── database_setup.html  # Database Setup Instructions
+│           ├── api_setup.html       # API Setup Instructions
+│           ├── site_setup.html      # Frontend Setup Instructions
+│           └── deployment.html      # Deployment Instructions
+└── process/                         # Process Documentation
+    ├── strategy.html                # Strategy Roadmap
+    ├── technology.html              # Technology Roadmap
+    ├── release.html                 # Release Roadmap
+    └── standards.html               # Development Standards
+```
+
+### Architecture Documentation Alignment
+
+The architecture documentation is now structured to match the marking rubric requirements:
+
+- **API Documentation** - Complete internal API reference
+- **Public API Documentation** - External developer API with examples
+- **Database Documentation** - Complete schema and data structures
+- **Developer Guides** - Setup instructions for all components
+- **Tech Stack** - Technology choices and rationale
+- **Third-Party Code Documentation** - All external integrations (25+ libraries)
 
 
 
