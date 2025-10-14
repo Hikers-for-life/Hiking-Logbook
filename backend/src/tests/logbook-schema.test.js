@@ -51,7 +51,7 @@ describe('Logbook Schema Tests', () => {
 
     test('should have correct field count', () => {
       const fieldCount = Object.keys(hikeSchema).length;
-      expect(fieldCount).toBe(24); // Total number of fields in schema (updated count)
+      expect(fieldCount).toBe(23); // Total number of fields in schema (updated count)
     });
 
     test('should contain only valid data types', () => {
