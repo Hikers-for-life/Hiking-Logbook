@@ -39,6 +39,126 @@ const Logbook = () => {
     statesExplored: 0
   });
 
+  const [detectedLocation, setDetectedLocation] = useState('');
+  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+  const [detectedWeather, setDetectedWeather] = useState('');
+  const [isDetectingWeather, setIsDetectingWeather] = useState(false);
+
+  // Auto-detect GPS location when start hike form opens
+  useEffect(() => {
+    if (isStartHikeFormOpen && !detectedLocation) {
+      detectGPSLocation();
+    }
+  }, [isStartHikeFormOpen]);
+
+  // GPS location detection function
+  const detectGPSLocation = async () => {
+    if (!navigator.geolocation) {
+      console.log("Geolocation is not supported by this browser.");
+      return;
+    }
+
+    setIsDetectingLocation(true);
+    setIsDetectingWeather(true);
+    
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        
+        try {
+          // Try to get location name using reverse geocoding
+          const locationName = await reverseGeocode(latitude, longitude);
+          if (locationName) {
+            setDetectedLocation(locationName);
+          } else {
+            // Fallback to coordinates if reverse geocoding fails
+            setDetectedLocation(`${latitude.toFixed(4)}°N, ${longitude.toFixed(4)}°W`);
+          }
+        } catch (error) {
+          console.error("Reverse geocoding failed:", error);
+          // Fallback to coordinates
+          setDetectedLocation(`${latitude.toFixed(4)}°N, ${longitude.toFixed(4)}°W`);
+        }
+        
+        setIsDetectingLocation(false);
+
+        // Fetch weather data for the current location
+        try {
+          const weatherInfo = await fetchWeatherData(latitude, longitude);
+          if (weatherInfo) {
+            setDetectedWeather(weatherInfo);
+          }
+        } catch (error) {
+          console.error("Weather detection failed:", error);
+        }
+        
+        setIsDetectingWeather(false);
+      },
+      (error) => {
+        console.error("Geolocation error:", error);
+        setIsDetectingLocation(false);
+        setIsDetectingWeather(false);
+        // Don't show alert, just leave field empty for manual entry
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 60000
+      }
+    );
+  };
+
+  // Simple reverse geocoding function (using OpenStreetMap Nominatim API)
+  const reverseGeocode = async (latitude, longitude) => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`
+      );
+      const data = await response.json();
+      
+      if (data.display_name) {
+        // Extract meaningful location name
+        const parts = data.display_name.split(',');
+        if (parts.length >= 2) {
+          // Return the most relevant parts (usually first 2-3)
+          return parts.slice(0, 3).join(',').trim();
+        }
+        return data.display_name;
+      }
+      return null;
+    } catch (error) {
+      console.error("Reverse geocoding API error:", error);
+      return null;
+    }
+  };
+
+  // Fetch weather data using OpenWeather API
+  const fetchWeatherData = async (latitude, longitude) => {
+    try {
+      const apiKey = process.env.REACT_APP_OPENWEATHER_API_KEY;
+      if (!apiKey) {
+        console.log("OpenWeather API key not configured");
+        return null;
+      }
+
+      const url = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&units=metric&appid=${apiKey}`;
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.weather && data.weather[0] && data.main) {
+        // Format weather string: "Sunny, 22°C"
+        const description = data.weather[0].description;
+        const temp = Math.round(data.main.temp);
+        const capitalizedDescription = description.charAt(0).toUpperCase() + description.slice(1);
+        return `${capitalizedDescription}, ${temp}°C`;
+      }
+      return null;
+    } catch (error) {
+      console.error("Weather API error:", error);
+      return null;
+    }
+  };
+
   const loadHikes = useCallback(async (searchTerm = '', difficultyFilter = 'All') => {
     if (!user) {
       return;
@@ -412,12 +532,12 @@ const Logbook = () => {
                 className="pl-10"
               />
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 overflow-x-auto pb-2">
               <Button
                 variant={difficultyFilter === "All" ? "default" : "outline"}
                 size="sm"
                 onClick={() => handleDifficultyChange("All")}
-                className="min-w-[80px]"
+                className="min-w-[80px] flex-shrink-0"
               >
                 All
               </Button>
@@ -425,7 +545,7 @@ const Logbook = () => {
                 variant={difficultyFilter === "Easy" ? "default" : "outline"}
                 size="sm"
                 onClick={() => handleDifficultyChange("Easy")}
-                className="min-w-[80px]"
+                className="min-w-[80px] flex-shrink-0"
               >
                 Easy
               </Button>
@@ -433,7 +553,7 @@ const Logbook = () => {
                 variant={difficultyFilter === "Moderate" ? "default" : "outline"}
                 size="sm"
                 onClick={() => handleDifficultyChange("Moderate")}
-                className="min-w-[80px]"
+                className="min-w-[80px] flex-shrink-0"
               >
                 Moderate
               </Button>
@@ -441,7 +561,7 @@ const Logbook = () => {
                 variant={difficultyFilter === "Hard" ? "default" : "outline"}
                 size="sm"
                 onClick={() => handleDifficultyChange("Hard")}
-                className="min-w-[80px]"
+                className="min-w-[80px] flex-shrink-0"
               >
                 Hard
               </Button>
@@ -687,7 +807,13 @@ const Logbook = () => {
             title="Edit Hike"
           />
 
-          <Dialog open={isStartHikeFormOpen} onOpenChange={setIsStartHikeFormOpen}>
+          <Dialog open={isStartHikeFormOpen} onOpenChange={(open) => {
+            setIsStartHikeFormOpen(open);
+            if (!open) {
+              setDetectedLocation(''); // Reset when closing
+              setDetectedWeather(''); // Reset weather when closing
+            }
+          }}>
             <DialogContent className="sm:max-w-[500px]">
               <DialogHeader>
                 <DialogTitle className="text-2xl text-foreground flex items-center gap-2">
@@ -712,9 +838,18 @@ const Logbook = () => {
                   </label>
                   <Input
                     id="start-location"
-                    placeholder="Where are you starting from?"
+                    value={detectedLocation}
+                    onChange={(e) => setDetectedLocation(e.target.value)}
+                    placeholder={isDetectingLocation ? "Detecting your location..." : "Where are you starting from?"}
                     className="border-border"
+                    disabled={isDetectingLocation}
                   />
+                  {isDetectingLocation && (
+                    <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary"></div>
+                      Detecting location...
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">
@@ -729,13 +864,22 @@ const Logbook = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">
-                    Current Weather (Optional)
+                    Current Weather
                   </label>
                   <Input
                     id="start-weather"
-                    placeholder="e.g., Sunny, 22°C"
+                    value={detectedWeather}
+                    onChange={(e) => setDetectedWeather(e.target.value)}
+                    placeholder={isDetectingWeather ? "Detecting weather..." : "e.g., Sunny, 22°C"}
                     className="border-border"
+                    disabled={isDetectingWeather}
                   />
+                  {isDetectingWeather && (
+                    <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary"></div>
+                      Detecting weather...
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">
@@ -759,14 +903,16 @@ const Logbook = () => {
                     onClick={() => {
                       const formData = {
                         title: document.getElementById('start-title').value || 'New Hike',
-                        location: document.getElementById('start-location').value || 'Unknown Location',
+                        location: detectedLocation || 'Unknown Location',
                         date: document.getElementById('start-date').value || new Date().toISOString().split('T')[0],
-                        weather: document.getElementById('start-weather').value || '',
+                        weather: detectedWeather || '',
                         notes: document.getElementById('start-notes').value || '',
-                        difficulty: 'Easy'
+                        difficulty: 'Easy' // Default to Easy, user can change during hike
                       };
                       handleStartActiveHike(formData);
                       setIsStartHikeFormOpen(false);
+                      setDetectedLocation(''); // Reset for next time
+                      setDetectedWeather(''); // Reset weather too
                     }}
                     className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                   >

@@ -23,19 +23,21 @@ const RouteMapModal = ({ isOpen, onClose, hikeData }) => {
     return (
       <RouteMap 
         waypoints={hikeData?.waypoints || []} 
+        gpsTrack={hikeData?.gpsTrack || []}
         hikeData={hikeData}
       />
     );
   };
 
   const renderWaypointsList = () => {
-    if (!hikeData?.waypoints || hikeData.waypoints.length === 0) {
+    const waypoints = hikeData?.gpsTrack && hikeData.gpsTrack.length > 0 ? hikeData.gpsTrack : hikeData?.waypoints;
+    if (!waypoints || waypoints.length === 0) {
       return null;
     }
 
     return (
       <div className="space-y-3 max-h-48 overflow-y-auto">
-        {hikeData.waypoints.map((waypoint, index) => (
+        {waypoints.map((waypoint, index) => (
           <Card 
             key={index} 
             className={`cursor-pointer transition-colors ${
@@ -48,12 +50,12 @@ const RouteMapModal = ({ isOpen, onClose, hikeData }) => {
                 <div className="flex items-center gap-3">
                   <div className={`w-3 h-3 rounded-full ${
                     index === 0 ? 'bg-green-600' : 
-                    index === hikeData.waypoints.length - 1 ? 'bg-red-600' : 'bg-blue-500'
+                    index === waypoints.length - 1 ? 'bg-red-600' : 'bg-blue-500'
                   }`}></div>
                   <div>
                     <div className="font-medium text-sm">
                       {index === 0 ? 'Start Point' : 
-                       index === hikeData.waypoints.length - 1 ? 'End Point' : 
+                       index === waypoints.length - 1 ? 'End Point' : 
                        `Waypoint ${index}`}
                     </div>
                     <div className="text-xs text-muted-foreground">
@@ -75,7 +77,7 @@ const RouteMapModal = ({ isOpen, onClose, hikeData }) => {
               
               {selectedWaypoint === index && (
                 <div className="mt-3 pt-3 border-t border-border">
-                  <div className="grid grid-cols-2 gap-4 text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-xs">
                     <div>
                       <span className="font-medium">Latitude:</span> {waypoint.latitude?.toFixed(6)}
                     </div>
@@ -110,39 +112,39 @@ const RouteMapModal = ({ isOpen, onClose, hikeData }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[800px] sm:max-h-[700px] overflow-y-auto">
+      <DialogContent className="w-[95vw] max-w-[800px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl text-foreground flex items-center gap-2">
-            <MapPin className="h-6 w-6 text-summit" />
-            {hikeData?.title} - Route Map
+          <DialogTitle className="text-xl sm:text-2xl text-foreground flex items-center gap-2">
+            <MapPin className="h-5 w-5 sm:h-6 sm:w-6 text-summit" />
+            <span className="truncate">{hikeData?.title} - Route Map</span>
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Route Statistics */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
             <Card className="bg-gradient-card text-center border-border">
-              <CardContent className="p-4">
-                <div className="text-2xl font-bold text-forest">{routeStats.totalWaypoints}</div>
-                <div className="text-sm text-muted-foreground">Waypoints</div>
+              <CardContent className="p-3 sm:p-4">
+                <div className="text-xl sm:text-2xl font-bold text-forest">{routeStats.totalWaypoints}</div>
+                <div className="text-xs sm:text-sm text-muted-foreground">Waypoints</div>
               </CardContent>
             </Card>
             <Card className="bg-gradient-card text-center border-border">
-              <CardContent className="p-4">
-                <div className="text-2xl font-bold text-trail">{routeStats.totalDistance}</div>
-                <div className="text-sm text-muted-foreground">km</div>
+              <CardContent className="p-3 sm:p-4">
+                <div className="text-xl sm:text-2xl font-bold text-trail">{routeStats.totalDistance}</div>
+                <div className="text-xs sm:text-sm text-muted-foreground">km</div>
               </CardContent>
             </Card>
             <Card className="bg-gradient-card text-center border-border">
-              <CardContent className="p-4">
-                <div className="text-2xl font-bold text-summit">{routeStats.elevation}</div>
-                <div className="text-sm text-muted-foreground">Elevation (ft)</div>
+              <CardContent className="p-3 sm:p-4">
+                <div className="text-xl sm:text-2xl font-bold text-summit">{routeStats.elevation}</div>
+                <div className="text-xs sm:text-sm text-muted-foreground">Elevation (ft)</div>
               </CardContent>
             </Card>
             <Card className="bg-gradient-card text-center border-border">
-              <CardContent className="p-4">
-                <div className="text-2xl font-bold text-forest">{routeStats.duration}</div>
-                <div className="text-sm text-muted-foreground">Duration</div>
+              <CardContent className="p-3 sm:p-4">
+                <div className="text-xl sm:text-2xl font-bold text-forest">{routeStats.duration}</div>
+                <div className="text-xs sm:text-sm text-muted-foreground">Duration</div>
               </CardContent>
             </Card>
           </div>
@@ -152,19 +154,20 @@ const RouteMapModal = ({ isOpen, onClose, hikeData }) => {
 
           {/* Waypoints List */}
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                <Navigation className="h-5 w-5" />
-                GPS Waypoints
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <h3 className="text-base sm:text-lg font-semibold text-foreground flex items-center gap-2">
+                <Navigation className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="hidden sm:inline">GPS Waypoints</span>
+                <span className="sm:hidden">Waypoints</span>
               </h3>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setShowWaypoints(!showWaypoints)}
-                className="flex items-center gap-2"
+                className="flex items-center gap-1 sm:gap-2 min-h-[44px] min-w-[44px]"
               >
                 {showWaypoints ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                {showWaypoints ? 'Hide' : 'Show'} Details
+                <span className="hidden sm:inline">{showWaypoints ? 'Hide' : 'Show'} Details</span>
               </Button>
             </div>
             

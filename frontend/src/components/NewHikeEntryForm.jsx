@@ -93,7 +93,7 @@ const NewHikeEntryForm = ({ open, onOpenChange, onSubmit, initialData = null, ti
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] sm:max-w-[600px] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl text-foreground">
             {title}
@@ -154,7 +154,7 @@ const NewHikeEntryForm = ({ open, onOpenChange, onSubmit, initialData = null, ti
                   <FormItem>
                     <FormLabel className="text-foreground flex items-center gap-1">
                       <MapPin className="h-4 w-4" />
-                      Location
+                      Starting Location
                     </FormLabel>
                     <FormControl>
                       <Input 
