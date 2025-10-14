@@ -65,14 +65,13 @@ describe('Dashboard Component', () => {
 
   test('displays stats with total hikes and distance', async () => {
 
-    hikeApiService.getHikes.mockResolvedValueOnce({
-      success: true,
-      data: [
-        { id: 1, name: 'Trail One', distance: 5, date: '2024-01-01' },
-        { id: 2, name: 'Trail Two', distance: 10, date: '2024-02-01' },
-      ]
-    });
+    // Mock the API to return data in the format the component expects
+    const mockHikes = [
+      { id: 1, name: 'Trail One', distance: 5, date: '2024-01-01' },
+      { id: 2, name: 'Trail Two', distance: 10, date: '2024-02-01' },
+    ];
 
+    hikeApiService.getHikes.mockResolvedValueOnce(mockHikes);
 
     renderDashboard();
 
