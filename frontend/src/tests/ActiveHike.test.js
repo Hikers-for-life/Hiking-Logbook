@@ -23,12 +23,12 @@ const mockProps = {
 };
 
 describe.skip('ActiveHike Component', () => {
-  // TODO: Fix hanging tests - timers not properly cleaned up
+  // SKIPPED: Tests hang due to timer/interval cleanup issues
+  // TODO: Fix timer mocking and cleanup
   // Set timeout for all tests in this suite
-  jest.setTimeout(5000);
+  jest.setTimeout(10000);
 
   beforeEach(() => {
-    jest.useFakeTimers();
     jest.clearAllMocks();
     // Reset geolocation mocks
     mockGeolocation.getCurrentPosition.mockClear();
@@ -37,9 +37,8 @@ describe.skip('ActiveHike Component', () => {
   });
 
   afterEach(() => {
-    // Clean up any intervals and timers
-    jest.clearAllTimers();
-    jest.useRealTimers();
+    // Clean up
+    jest.clearAllMocks();
   });
 
   test('renders initial state correctly', () => {
