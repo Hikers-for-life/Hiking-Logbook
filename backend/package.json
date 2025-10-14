@@ -26,13 +26,11 @@
   },
   "jest": {
     "testEnvironment": "node",
-
     "roots": ["<rootDir>/src"],
     "collectCoverage": true,
     "collectCoverageFrom": [
       "src/**/*.js",
       "!src/tests/**/*.js",
-
       "!src/**/index.js"
     ],
     "coverageDirectory": "coverage",
