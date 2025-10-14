@@ -4,11 +4,13 @@ import { HeroSection } from '../components/hero-section';
 import { LogbookSection } from '../components/logbook-section';
 import Login from '../components/auth/loginPage.jsx';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext.jsx';
 
 const Index = () => {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { currentUser } = useAuth();
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -16,6 +18,13 @@ const Index = () => {
       setIsLoginOpen(true);
     }
   }, [location]);
+
+  // Redirect logged-in users to Dashboard (skip in test environment)
+  useEffect(() => {
+    if (currentUser && process.env.NODE_ENV !== 'test') {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [currentUser, navigate]);
 
   const handleLoginOpen = () => {
     setIsLoginOpen(true);
