@@ -57,6 +57,20 @@ jest.mock('../config/firebase.js', () => ({
   }
 }));
 
+jest.mock('../services/userService', () => ({
+  userApiService: {
+    getCurrentProfile: jest.fn().mockResolvedValue({ 
+      displayName: 'Test User', 
+      bio: 'Test bio', 
+      location: 'Test location' 
+    }),
+    updateProfile: jest.fn().mockResolvedValue({ success: true })
+  },
+  locationService: {
+    getUserLocation: jest.fn().mockResolvedValue({ success: true, data: { location: 'Test location' } })
+  }
+}));
+
 // Pages
 import Dashboard from '../pages/Dashboard.jsx';
 import Friends from '../pages/Friends.jsx';
