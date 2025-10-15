@@ -441,7 +441,7 @@ const Friends = () => {
     if (orig.type === 'share') {
       return (
         <div className="space-y-3">
-          <div className="p-3 bg-muted/40 rounded-lg">
+              <div className="p-3 border border-border rounded-lg">
             <div className="flex items-center gap-3 mb-2">
               <Avatar className="h-8 w-8">
                 <AvatarFallback>{orig.avatar}</AvatarFallback>
@@ -467,7 +467,7 @@ const Friends = () => {
 
     // Normal original
     return (
-      <Card className="bg-muted/30 border-border/50">
+  <Card className="bg-card border-border/50">
         <CardContent className="p-4">
           <div className="flex items-center gap-3 mb-3">
             <Avatar className="h-8 w-8">
@@ -732,7 +732,7 @@ const Friends = () => {
 
                               {/* Share caption */}
                               {activity.shareCaption && (
-                                <div className="mb-4 p-3 bg-muted/50 rounded-lg">
+                                <div className="mb-4 p-3 border border-border rounded-lg">
                                   <p className="text-sm text-foreground italic">{activity.shareCaption}</p>
                                 </div>
                               )}
@@ -967,7 +967,7 @@ const Friends = () => {
                     suggestions.map((suggestion) => (
                       <div
                         key={suggestion.id}
-                        className="flex items-center justify-between p-4 rounded-lg bg-muted hover:bg-muted/80 transition-colors cursor-pointer"
+                        className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-muted/80 transition-colors cursor-pointer"
                         onClick={() => handleViewProfile(suggestion.id, true)}
                       >
                         <div className="flex items-center gap-3">
@@ -1024,7 +1024,7 @@ const Friends = () => {
           </DialogHeader>
           <div className="space-y-4">
             {postToShare && (
-              <div className="p-3 bg-muted/50 rounded-lg">
+              <div className="p-3 border border-border rounded-lg">
                 <div className="flex items-center gap-3 mb-2">
                   <Avatar className="h-8 w-8">
                     <AvatarFallback>{postToShare.avatar}</AvatarFallback>
