@@ -11,9 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from "../components/ui/textarea";
 import { searchUsers } from "../services/userServices";
 import { ProfileView } from "../components/ui/view-friend-profile";
-import { fetchFeed, likeFeed, commentFeed, shareFeed, fetchComments, deleteCommentFeed, deleteFeed, updateFeed } from "../services/feed";//ANNAH HERE
+import { fetchFeed, likeFeed, commentFeed, shareFeed, deleteCommentFeed, deleteFeed, updateFeed } from "../services/feed";//ANNAH HERE
 import { discoverFriends, addFriend } from "../services/discover";//ANNAH HERE
-import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";//NOT SURE ABOUT THIS IMPORT//ANNA HERE
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useToast } from "../hooks/use-toast";
@@ -34,7 +33,6 @@ import {
   Heart,
   MessageSquare,
   Edit3,
-  MoreHorizontal,
   Trash2,
   Camera
 } from "lucide-react";
@@ -48,7 +46,7 @@ const Friends = () => {
   //ANNAH HERE
 
   const [recentActivity, setRecentActivity] = useState([]);
-  const [commentsMap, setCommentsMap] = useState({});
+  const [commentsMap] = useState({});
   const [expandedComments, setExpandedComments] = useState({});
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -63,7 +61,7 @@ const Friends = () => {
   const [searchError, setSearchError] = useState("");
   const { currentUser } = useAuth();
   const [friends, setFriends] = useState([]);
-  const [userStats, setUserStats] = useState([]);
+  const [, setUserStats] = useState([]);
   const { toast } = useToast();
 
   const handleSearch = async () => {
@@ -210,7 +208,6 @@ const Friends = () => {
     try {
       const res = await likeFeed(activity.id, !activity.likes?.includes(uid));
       if (res && res.likes) {
-        // Update the activity's likes with authoritative array from backend
         setRecentActivity(prev => prev.map(a => a.id === activity.id ? { ...a, likes: res.likes } : a));
       }
     } catch (err) {
@@ -307,15 +304,11 @@ const Friends = () => {
 
     const user = auth.currentUser;
 
-    // If sharing a share, nest the previous share in the new share's original
+    // If sharing a share, preserve the whole share object (including nested original)
     let originalData;
     if (postToShare.type === 'share') {
-      // Nest the previous share (including its original)
-      originalData = {
-        ...postToShare,
-      };
+      originalData = { ...postToShare };
     } else {
-      // Normal post
       originalData = {
         id: postToShare.id,
         name: postToShare.name,
@@ -352,6 +345,7 @@ const Friends = () => {
     setShareCaption('');
 
     try {
+      // ✅ use service function instead of fetch
       const data = await shareFeed(postToShare.id, {
         sharerId: user.uid,
         sharerName: user.displayName || user.email,
@@ -360,9 +354,10 @@ const Friends = () => {
         caption: shareCaption.trim(),
       });
 
-      // Replace temp with persisted version (backend returns { id, ... })
+      // Replace temp with persisted version (backend returns either `id` or `newActivityId`)
+      const returnedId = data.id || data.newActivityId || null;
       setRecentActivity((prev) =>
-        prev.map((a) => (a.id === tempShare.id ? { ...tempShare, id: data.id, ...data } : a))
+        prev.map((a) => (a.id === tempShare.id ? { ...a, id: returnedId, ...data } : a))
       );
     } catch (err) {
       console.error("Failed to share:", err);
@@ -372,17 +367,17 @@ const Friends = () => {
   };
 
   const handleDeletePost = async (activityId) => {
+    // Optimistic UI update: remove the post locally first
+    const prevActivity = [...recentActivity];
+    setRecentActivity(prev => prev.filter(a => a.id !== activityId));
+
     try {
-      // Call backend to delete the post
-      await deleteFeed(activityId);
-
-      // Remove from UI only after successful deletion
-      setRecentActivity(prev => prev.filter(a => a.id !== activityId));
-
-      toast({ title: 'Post deleted', description: 'Your post was removed.' });
+      // Call a backend/service function to delete the post
+      await deleteFeed(activityId); // <-- you need to implement this in services/feed.js
     } catch (err) {
-      console.error('Failed to delete post:', err);
-      toast({ title: 'Delete failed', description: 'Could not delete post. Please try again.' });
+      console.error("Failed to delete post:", err);
+      // Rollback if deletion fails
+      setRecentActivity(prevActivity);
     }
   };
 
@@ -390,14 +385,19 @@ const Friends = () => {
   const handleEditPost = async (activityId, updatedDescription) => {
     if (!updatedDescription.trim()) return;
 
-    // Keep previous for rollback
+    // keep previous list for rollback
     const prev = [...recentActivity];
     setEditingPost(null);
 
-    // Determine whether we're editing a share caption or a normal description
+    // find activity to decide whether it's a share (edit caption) or original (edit description)
     const activity = recentActivity.find(a => a.id === activityId) || {};
     const isShare = activity.type === 'share';
-    const payload = isShare ? { shareCaption: updatedDescription.trim() } : { description: updatedDescription.trim() };
+    const payload = isShare
+      ? { shareCaption: updatedDescription.trim() }
+      : { description: updatedDescription.trim() };
+
+    // Optimistic UI update
+    setRecentActivity(curr => curr.map(a => a.id === activityId ? { ...a, ...(isShare ? { shareCaption: payload.shareCaption } : { description: payload.description }) } : a));
 
     try {
       const updated = await updateFeed(activityId, payload);
@@ -414,25 +414,23 @@ const Friends = () => {
   };
 
 
-  // (removed unused handlePostAchievement)
+  
 
-
-  useEffect(() => {
-    if (!auth?.currentUser) return;
-    const loadSuggestions = async () => {
-      try {
-        setLoading(true);
-        const data = await discoverFriends();
-        console.log("suggestion :", data)
-        setSuggestions(data);
-      } catch (err) {
-        console.error("Failed to fetch suggestions:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadSuggestions();
-  }, [auth?.currentUser]);
+  // helper to format ISO timestamps to relative times (e.g., '5m', '2h')
+  const timeAgo = (iso) => {
+    if (!iso) return 'Just now';
+    const d = new Date(iso);
+    const diff = Date.now() - d.getTime();
+    const sec = Math.floor(diff / 1000);
+    if (sec < 5) return 'Just now';
+    if (sec < 60) return `${sec}s`;
+    const min = Math.floor(sec / 60);
+    if (min < 60) return `${min}m`;
+    const hrs = Math.floor(min / 60);
+    if (hrs < 24) return `${hrs}h`;
+    const days = Math.floor(hrs / 24);
+    return `${days}d`;
+  };
 
   // Render nested original/share chains recursively
   const renderOriginal = (orig, depth = 0) => {
@@ -453,7 +451,7 @@ const Friends = () => {
                   <span className="font-medium text-foreground">{orig.name}</span>{' '}
                   <span className="text-muted-foreground">shared</span>
                 </p>
-                <p className="text-xs text-muted-foreground">{orig.time}</p>
+                <p className="text-xs text-muted-foreground">{timeAgo(orig.time || orig.created_at)}</p>
               </div>
             </div>
             {orig.shareCaption && <p className="text-sm italic">{orig.shareCaption}</p>}
@@ -484,7 +482,7 @@ const Friends = () => {
               <div className="flex items-center gap-4 mt-1">
                 <p className="text-xs text-muted-foreground flex items-center gap-1">
                   <Clock className="h-3 w-3" />
-                  {orig.time}
+                  {timeAgo(orig.time || orig.created_at)}
                 </p>
                 <p className="text-xs text-muted-foreground">{orig.stats}</p>
               </div>
@@ -496,6 +494,24 @@ const Friends = () => {
       </Card>
     );
   };
+
+
+  useEffect(() => {
+    if (!auth?.currentUser) return;
+    const loadSuggestions = async () => {
+      try {
+        setLoading(true);
+        const data = await discoverFriends();
+        console.log("suggestion :", data)
+        setSuggestions(data);
+      } catch (err) {
+        console.error("Failed to fetch suggestions:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadSuggestions();
+  }, [auth?.currentUser]);
 
 
 
@@ -689,7 +705,7 @@ const Friends = () => {
                                   </p>
                                   <p className="text-xs text-muted-foreground mt-1">
                                     <Clock className="h-3 w-3 inline mr-1" />
-                                    {activity.time || 'Just now'}
+                                    {timeAgo(activity.time || activity.created_at)}
                                   </p>
                                 </div>
                                 {isOwnPost && (
@@ -750,7 +766,7 @@ const Friends = () => {
                                   <div className="flex items-center gap-4 mt-1">
                                     <p className="text-xs text-muted-foreground flex items-center gap-1">
                                       <Clock className="h-3 w-3" />
-                                      {activity.time}
+                                      {timeAgo(activity.time || activity.created_at)}
                                     </p>
                                     <p className="text-xs text-muted-foreground">{activity.stats}</p>
                                     {activity.photo && (
@@ -973,8 +989,8 @@ const Friends = () => {
                           </div>
                         </div>
                         <Button
-                          onClick={async (e) => {
-                            e.stopPropagation(); // prevent opening profile modal
+                              onClick={async () => {
+                                // prevent opening profile modal handled by not bubbling - no event required
                             try {
 
                               await addFriend(suggestion.id); // ✅ uses service

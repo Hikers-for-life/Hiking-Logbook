@@ -34,9 +34,24 @@ router.get('/', verifyAuth, async (req, res) => {
           ...c.data(),
         }));
 
+        // ensure top-level time exists (fallback to created_at)
+        const activityTime = data.time || data.created_at || null;
+
+        // recursively ensure nested originals (for shares) have a time field
+        const ensureNestedTimes = (obj) => {
+          if (!obj || typeof obj !== 'object') return;
+          if (!obj.time && obj.created_at) obj.time = obj.created_at;
+          if (obj.original) ensureNestedTimes(obj.original);
+        };
+
+        if (data.type === 'share' && data.original) {
+          ensureNestedTimes(data.original);
+        }
+
         return {
           id: doc.id,
           ...data,
+          time: activityTime,
           name: safeName,
           avatar: safeAvatar,
           comments: comments || [],
@@ -221,9 +236,12 @@ router.post('/:feedId/share', verifyAuth, async (req, res) => {
     const safeOriginal = original || {};
 
     // Store the provided original object verbatim so share-chains are preserved.
+    const nowIso = new Date().toISOString();
+
     const newActivity = {
       type: 'share',
-      created_at: new Date().toISOString(),
+      created_at: nowIso,
+      time: nowIso,
       likes: [],
       userId: req.user.uid,
       name: safeSharerName,
