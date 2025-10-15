@@ -457,7 +457,7 @@ const Friends = () => {
               <div className="p-3 border border-border rounded-lg">
             <div className="flex items-center gap-3 mb-2">
               <Avatar className="h-8 w-8">
-                <AvatarFallback>{orig.avatar}</AvatarFallback>
+                <AvatarFallback className="bg-gradient-trail text-primary-foreground">{orig.avatar}</AvatarFallback>
               </Avatar>
               <div>
                 <p className="text-sm">
@@ -484,7 +484,7 @@ const Friends = () => {
         <CardContent className="p-4">
           <div className="flex items-center gap-3 mb-3">
             <Avatar className="h-8 w-8">
-              <AvatarFallback>{orig.avatar}</AvatarFallback>
+              <AvatarFallback className="bg-gradient-trail text-primary-foreground">{orig.avatar}</AvatarFallback>
             </Avatar>
             <div className="flex-1">
               <p className="text-sm">
@@ -706,7 +706,7 @@ const Friends = () => {
                               {/* Share header */}
                               <div className="flex items-center gap-3 mb-4">
                                 <Avatar className="h-10 w-10">
-                                  <AvatarFallback className="bg-primary text-primary-foreground">
+                                  <AvatarFallback className="bg-gradient-trail text-primary-foreground">
                                     {activity.name[0]}
                                   </AvatarFallback>
                                 </Avatar>
@@ -761,7 +761,7 @@ const Friends = () => {
                                   className="h-12 w-12 cursor-pointer"
                                   onClick={() => handleViewProfile({ name: activity.name, avatar: activity.avatar })}
                                 >
-                                  <AvatarFallback className="bg-primary text-primary-foreground text-lg">
+                                  <AvatarFallback className="bg-gradient-trail text-primary-foreground text-lg">
                                     {activity.avatar}
                                   </AvatarFallback>
                                 </Avatar>
@@ -871,7 +871,7 @@ const Friends = () => {
                                 >
                                   <div className="flex items-start gap-2 flex-1">
                                     <Avatar className="h-6 w-6 mt-0.5">
-                                      <AvatarFallback className="text-xs">
+                                      <AvatarFallback className="bg-gradient-trail text-primary-foreground text-xs">
                                         {(comment.name || comment.email)?.[0]?.toUpperCase()}
                                       </AvatarFallback>
                                     </Avatar>
@@ -897,7 +897,7 @@ const Friends = () => {
 
                               <div className="flex gap-2">
                                 <Avatar className="h-8 w-8">
-                                  <AvatarFallback className="text-xs">
+                                  <AvatarFallback className="bg-gradient-trail text-primary-foreground text-xs">
                                     {(auth.currentUser?.displayName || auth.currentUser?.email)?.[0]?.toUpperCase()}
                                   </AvatarFallback>
                                 </Avatar>
@@ -985,7 +985,7 @@ const Friends = () => {
                       >
                         <div className="flex items-center gap-3">
                           <Avatar className="h-12 w-12">
-                            <AvatarFallback>{suggestion.avatar}</AvatarFallback>
+                            <AvatarFallback className="bg-gradient-trail text-primary-foreground">{suggestion.avatar}</AvatarFallback>
                           </Avatar>
                           <div>
                             <h4 className="font-medium text-foreground">{suggestion.name}</h4>
@@ -1002,6 +1002,7 @@ const Friends = () => {
                           </div>
                         </div>
                         <Button
+                          className="bg-gradient-trail text-primary-foreground"
                               onClick={async () => {
                                 // prevent opening profile modal handled by not bubbling - no event required
                             try {
@@ -1040,7 +1041,7 @@ const Friends = () => {
               <div className="p-3 border border-border rounded-lg">
                 <div className="flex items-center gap-3 mb-2">
                   <Avatar className="h-8 w-8">
-                    <AvatarFallback>{postToShare.avatar}</AvatarFallback>
+                    <AvatarFallback className="bg-gradient-trail text-primary-foreground">{postToShare.avatar}</AvatarFallback>
                   </Avatar>
                   <div>
                     <p className="text-sm font-medium">{postToShare.name}</p>
