@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from "react";
+import { useLocation } from 'react-router-dom';
 import { Navigation } from "../components/ui/navigation";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -159,6 +160,18 @@ const Friends = () => {
 
   //ANNAH HERE
   const auth = getAuth();
+
+  // Determine which tab should be active based on the current route
+  const location = useLocation();
+  const initialTab = location.pathname && location.pathname.includes('/activity-feed') ? 'activity' : 'friends';
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  useEffect(() => {
+    // If the route changes to /activity-feed, switch to the activity tab
+    if (location.pathname && location.pathname.includes('/activity-feed')) {
+      setActiveTab('activity');
+    }
+  }, [location.pathname]);
 
 
   useEffect(() => {
@@ -587,7 +600,7 @@ const Friends = () => {
 
 
 
-        <Tabs defaultValue="friends" className="space-y-6">
+  <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="friends">My Friends</TabsTrigger>
             <TabsTrigger value="activity">Activity Feed</TabsTrigger>
