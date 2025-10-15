@@ -133,6 +133,26 @@ export async function shareFeed(feedId, payload) {
   return res.json(); // returns new shared activity
 }
 
+// ---- Update a Feed Post ----
+export async function updateFeed(feedId, updateData) {
+  const token = await getToken();
+  const res = await fetch(`${API_URL}/feed/${feedId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(updateData),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Failed to update feed: ${res.status} ${errText}`);
+  }
+
+  return res.json(); // returns updated activity object
+}
+
 // ---- Delete a Feed Post ----
 export async function deleteFeed(feedId) {
   const token = await getToken();
