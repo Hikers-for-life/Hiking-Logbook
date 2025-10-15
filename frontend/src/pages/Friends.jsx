@@ -614,7 +614,7 @@ const Friends = () => {
                   <CardHeader className="pb-4">
                     <div className="flex items-center gap-3">
                       <Avatar className="h-12 w-12">
-                        <AvatarFallback className="text-l">
+                        <AvatarFallback className="bg-gradient-trail text-white text-l">
                           {friend.displayName
                             .split(' ')
                             .map((n) => n[0])
@@ -669,8 +669,7 @@ const Friends = () => {
                     </Button>
 
                     <Button
-                      variant="destructive"
-                      className="w-full"
+                      className="w-full bg-gradient-trail text-primary-foreground hover:opacity-90"
                       size="sm"
                       onClick={() => handleBlockFriend(friend.id)}
                     >
