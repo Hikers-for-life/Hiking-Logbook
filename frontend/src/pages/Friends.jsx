@@ -394,8 +394,13 @@ const Friends = () => {
     const prev = [...recentActivity];
     setEditingPost(null);
 
+    // Determine whether we're editing a share caption or a normal description
+    const activity = recentActivity.find(a => a.id === activityId) || {};
+    const isShare = activity.type === 'share';
+    const payload = isShare ? { shareCaption: updatedDescription.trim() } : { description: updatedDescription.trim() };
+
     try {
-      const updated = await updateFeed(activityId, { description: updatedDescription.trim() });
+      const updated = await updateFeed(activityId, payload);
 
       // Replace activity with server-returned object (updated)
       setRecentActivity(curr => curr.map(a => (a.id === activityId ? { ...a, ...updated } : a)));
@@ -428,6 +433,69 @@ const Friends = () => {
     };
     loadSuggestions();
   }, [auth?.currentUser]);
+
+  // Render nested original/share chains recursively
+  const renderOriginal = (orig, depth = 0) => {
+    if (!orig) return null;
+    // guard against too deep recursion
+    if (depth > 5) return null;
+
+    if (orig.type === 'share') {
+      return (
+        <div className="space-y-3">
+          <div className="p-3 bg-muted/40 rounded-lg">
+            <div className="flex items-center gap-3 mb-2">
+              <Avatar className="h-8 w-8">
+                <AvatarFallback>{orig.avatar}</AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="text-sm">
+                  <span className="font-medium text-foreground">{orig.name}</span>{' '}
+                  <span className="text-muted-foreground">shared</span>
+                </p>
+                <p className="text-xs text-muted-foreground">{orig.time}</p>
+              </div>
+            </div>
+            {orig.shareCaption && <p className="text-sm italic">{orig.shareCaption}</p>}
+          </div>
+
+          {/* Render the nested original inside */}
+          <div className="pl-4 border-l border-border">
+            {renderOriginal(orig.original, depth + 1)}
+          </div>
+        </div>
+      );
+    }
+
+    // Normal original
+    return (
+      <Card className="bg-muted/30 border-border/50">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-3 mb-3">
+            <Avatar className="h-8 w-8">
+              <AvatarFallback>{orig.avatar}</AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
+              <p className="text-sm">
+                <span className="font-medium text-foreground">{orig.name}</span>{' '}
+                <span className="text-muted-foreground">{orig.action}</span>{' '}
+                <span className="font-medium text-foreground">{orig.hike}</span>
+              </p>
+              <div className="flex items-center gap-4 mt-1">
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  {orig.time}
+                </p>
+                <p className="text-xs text-muted-foreground">{orig.stats}</p>
+              </div>
+            </div>
+          </div>
+
+          {orig.description && <p className="text-sm text-foreground">{orig.description}</p>}
+        </CardContent>
+      </Card>
+    );
+  };
 
 
 
@@ -653,40 +721,8 @@ const Friends = () => {
                                 </div>
                               )}
 
-                              {/* Original post preview */}
-                              <Card className="bg-muted/30 border-border/50">
-                                <CardContent className="p-4">
-                                  <div className="flex items-center gap-3 mb-3">
-                                    <Avatar className="h-8 w-8">
-                                      <AvatarFallback>{activity.original.avatar}</AvatarFallback>
-                                    </Avatar>
-                                    <div className="flex-1">
-                                      <p className="text-sm">
-                                        <span className="font-medium text-foreground">{activity.original.name}</span>{" "}
-                                        <span className="text-muted-foreground">{activity.original.action}</span>{" "}
-                                        <span className="font-medium text-foreground">{activity.original.hike}</span>
-                                      </p>
-                                      <div className="flex items-center gap-4 mt-1">
-                                        <p className="text-xs text-muted-foreground flex items-center gap-1">
-                                          <Clock className="h-3 w-3" />
-                                          {activity.original.time}
-                                        </p>
-                                        <p className="text-xs text-muted-foreground">{activity.original.stats}</p>
-                                        {activity.original.photo && (
-                                          <Badge variant="outline" className="text-xs">
-                                            <Camera className="h-3 w-3 mr-1" />
-                                            Photo
-                                          </Badge>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  {activity.original.description && (
-                                    <p className="text-sm text-foreground">{activity.original.description}</p>
-                                  )}
-                                </CardContent>
-                              </Card>
+                              {/* Original post preview (supports nested shares) */}
+                              {renderOriginal(activity.original)}
                             </>
                           ) : (
                             /* ---- Normal post ---- */
@@ -788,7 +824,7 @@ const Friends = () => {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleShare(activity.type === "share" ? activity.original : activity)}
+                              onClick={() => handleShare(activity)}
                               className="flex items-center gap-2 h-8 px-3 text-muted-foreground hover:text-foreground"
                             >
                               <Share2 className="h-4 w-4" />
@@ -860,10 +896,10 @@ const Friends = () => {
                                 </DialogHeader>
                                 <div className="space-y-4">
                                   <Textarea
-                                    defaultValue={activity.description || ''}
-                                    placeholder="Describe your adventure..."
+                                    defaultValue={activity.type === 'share' ? activity.shareCaption || '' : activity.description || ''}
+                                    placeholder={activity.type === 'share' ? "Edit your share caption..." : "Describe your adventure..."}
                                     className="min-h-[100px]"
-                                    id="edit-description"
+                                    id={`edit-description-${activity.id}`}
                                   />
                                   <div className="flex justify-end gap-2">
                                     <Button
@@ -874,7 +910,7 @@ const Friends = () => {
                                     </Button>
                                     <Button
                                       onClick={() => {
-                                        const textarea = document.getElementById('edit-description');
+                                        const textarea = document.getElementById(`edit-description-${activity.id}`);
                                         handleEditPost(activity.id, textarea.value);
                                       }}
                                     >
