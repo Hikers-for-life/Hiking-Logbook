@@ -220,11 +220,12 @@ router.post('/:feedId/share', verifyAuth, async (req, res) => {
     // ✅ Safely handle original activity data
     const safeOriginal = original || {};
 
+    // Store the provided original object verbatim so share-chains are preserved.
     const newActivity = {
       type: 'share',
       created_at: new Date().toISOString(),
       likes: [],
-      userId: req.user.uid, 
+      userId: req.user.uid,
       name: safeSharerName,
       avatar: safeSharerAvatar,
       sharer: {
@@ -233,17 +234,7 @@ router.post('/:feedId/share', verifyAuth, async (req, res) => {
         avatar: safeSharerAvatar,
       },
       shareCaption: caption,
-      original: {
-        id: safeOriginal.id || null,
-        name: safeOriginal.name || "Unknown Hiker",
-        avatar: safeOriginal.avatar || safeOriginal.name?.[0]?.toUpperCase() || "U",
-        action: safeOriginal.action || "shared a hike",
-        hike: safeOriginal.hike || "Unknown trail",
-        description: safeOriginal.description || "",
-        stats: safeOriginal.stats || "",
-        photo: safeOriginal.photo || null,
-        time: safeOriginal.time || new Date().toISOString(),
-      },
+      original: safeOriginal, // keep the full object including nested originals
     };
 
     const docRef = await db.collection('feed_items').add(newActivity);

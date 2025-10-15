@@ -208,7 +208,11 @@ const Friends = () => {
     }));
 
     try {
-      await likeFeed(activity.id, !activity.likes?.includes(uid));
+      const res = await likeFeed(activity.id, !activity.likes?.includes(uid));
+      if (res && res.likes) {
+        // Update the activity's likes with authoritative array from backend
+        setRecentActivity(prev => prev.map(a => a.id === activity.id ? { ...a, likes: res.likes } : a));
+      }
     } catch (err) {
       console.error("Failed to like:", err);
       // rollback if needed
@@ -303,20 +307,29 @@ const Friends = () => {
 
     const user = auth.currentUser;
 
-    // Embed the original activity data directly
-    const originalData = {
-      id: postToShare.id,
-      name: postToShare.name,
-      avatar: postToShare.avatar,
-      action: postToShare.action,
-      hike: postToShare.hike,
-      description: postToShare.description,
-      time: postToShare.time,
-      stats: postToShare.stats,
-      photo: postToShare.photo,
-      likes: postToShare.likes || [],
-      comments: postToShare.comments || [],
-    };
+    // If sharing a share, nest the previous share in the new share's original
+    let originalData;
+    if (postToShare.type === 'share') {
+      // Nest the previous share (including its original)
+      originalData = {
+        ...postToShare,
+      };
+    } else {
+      // Normal post
+      originalData = {
+        id: postToShare.id,
+        name: postToShare.name,
+        avatar: postToShare.avatar,
+        action: postToShare.action,
+        hike: postToShare.hike,
+        description: postToShare.description,
+        time: postToShare.time,
+        stats: postToShare.stats,
+        photo: postToShare.photo,
+        likes: postToShare.likes || [],
+        comments: postToShare.comments || [],
+      };
+    }
 
     // Optimistic share object
     const tempShare = {
@@ -339,7 +352,6 @@ const Friends = () => {
     setShareCaption('');
 
     try {
-      // ✅ use service function instead of fetch
       const data = await shareFeed(postToShare.id, {
         sharerId: user.uid,
         sharerName: user.displayName || user.email,
@@ -348,11 +360,9 @@ const Friends = () => {
         caption: shareCaption.trim(),
       });
 
-      // Replace temp with persisted version
+      // Replace temp with persisted version (backend returns { id, ... })
       setRecentActivity((prev) =>
-        prev.map((a) =>
-          a.id === tempShare.id ? { ...tempShare, id: data.newActivityId } : a
-        )
+        prev.map((a) => (a.id === tempShare.id ? { ...tempShare, id: data.id, ...data } : a))
       );
     } catch (err) {
       console.error("Failed to share:", err);
@@ -399,27 +409,7 @@ const Friends = () => {
   };
 
 
-  const handlePostAchievement = async () => {
-    const user = auth?.currentUser;
-    const displayName = user.displayName || user.email.split("@")[0];
-
-    const mockedActivity = {
-      id: Math.random().toString(36).substr(2, 9),
-      type: "achievement", // optional, helps distinguish achievements
-      userId: user.uid,     // very important for ownership & delete button
-      name: displayName,    // match the activity feed key
-      avatar: displayName[0].toUpperCase(),
-      action: "completed",
-      hike: "Mount Rainier Trail",
-      description: "Beautiful day!",
-      stats: "5km in 1h 30min",
-      time: "just now",
-      likes: [],
-      comments: [],
-    };
-
-    setRecentActivity(prev => [mockedActivity, ...prev]);
-  };//ANNAH HERE
+  // (removed unused handlePostAchievement)
 
 
   useEffect(() => {
@@ -659,7 +649,7 @@ const Friends = () => {
                               {/* Share caption */}
                               {activity.shareCaption && (
                                 <div className="mb-4 p-3 bg-muted/50 rounded-lg">
-                                  <p className="text-sm text-foreground italic">"{activity.shareCaption}"</p>
+                                  <p className="text-sm text-foreground italic">{activity.shareCaption}</p>
                                 </div>
                               )}
 
@@ -883,7 +873,7 @@ const Friends = () => {
                                       Cancel
                                     </Button>
                                     <Button
-                                      onClick={(e) => {
+                                      onClick={() => {
                                         const textarea = document.getElementById('edit-description');
                                         handleEditPost(activity.id, textarea.value);
                                       }}
