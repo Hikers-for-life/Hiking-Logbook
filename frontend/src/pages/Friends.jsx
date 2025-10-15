@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from "react";
+import { getUserProfile } from '../services/userServices';
 import { useLocation } from 'react-router-dom';
 import { Navigation } from "../components/ui/navigation";
 import { Button } from "../components/ui/button";
@@ -12,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from "../components/ui/textarea";
 import { searchUsers } from "../services/userServices";
 import { ProfileView } from "../components/ui/view-friend-profile";
-import { fetchFeed, likeFeed, commentFeed, shareFeed, deleteCommentFeed, deleteFeed, updateFeed } from "../services/feed";//ANNAH HERE
+import { fetchFeed, likeFeed, commentFeed, shareFeed, deleteCommentFeed, deleteFeed, updateFeed, getFeedById } from "../services/feed";//ANNAH HERE
 import { discoverFriends, addFriend } from "../services/discover";//ANNAH HERE
 import { getAuth } from "firebase/auth";//NOT SURE ABOUT THIS IMPORT//ANNA HERE
 import { useAuth } from '../contexts/AuthContext.jsx';
@@ -47,11 +48,16 @@ const Friends = () => {
   //ANNAH HERE
 
   const [recentActivity, setRecentActivity] = useState([]);
+  const [highlightedId, setHighlightedId] = useState(null);
   const [commentsMap] = useState({});
   const [expandedComments, setExpandedComments] = useState({});
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingPost, setEditingPost] = useState(null);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [shareCaption, setShareCaption] = useState('');
   const [postToShare, setPostToShare] = useState(null);
@@ -153,9 +159,42 @@ const Friends = () => {
       console.error("Error blocking friend:", err);
     }
   };
-  const handleViewProfile = (person, showAddFriend = false) => {
-    setSelectedProfile({ ...person, showAddFriend });
-    setIsProfileOpen(true);
+  const handleViewProfile = async (personOrId, showAddFriend = false) => {
+    // Accept either uid string or a person object
+    try {
+      let uid = null;
+      let base = {};
+      if (!personOrId) return;
+      if (typeof personOrId === 'string') {
+        uid = personOrId;
+      } else {
+        uid = personOrId.uid || personOrId.id || personOrId.userId || null;
+        base = { ...(personOrId.displayName ? { displayName: personOrId.displayName } : {}), ...(personOrId.name ? { displayName: personOrId.name } : {}), avatar: personOrId.avatar || personOrId?.displayName?.[0] };
+      }
+
+      if (uid) {
+        // fetch profile basics from firestore via userServices.getUserProfile
+        const up = await getUserProfile(uid);
+        const person = {
+          uid,
+          displayName: up.userName || base.displayName || '',
+          location: up.location || base.location || '',
+          bio: up.bio || '',
+          createdAt: up.joinDate || undefined,
+          ...base,
+        };
+        setSelectedProfile({ ...person, showAddFriend });
+        setIsProfileOpen(true);
+        return;
+      }
+
+      // fallback: use provided object as-is
+      setSelectedProfile({ ...base, ...(typeof personOrId === 'object' ? personOrId : {}), showAddFriend });
+      setIsProfileOpen(true);
+    } catch (err) {
+      console.error('Failed to load profile:', err);
+      toast({ title: 'Profile error', description: 'Could not load user profile.' });
+    }
   };
 
   //ANNAH HERE
@@ -165,6 +204,7 @@ const Friends = () => {
   const location = useLocation();
   const initialTab = location.pathname && location.pathname.includes('/activity-feed') ? 'activity' : 'friends';
   const [activeTab, setActiveTab] = useState(initialTab);
+  
 
   useEffect(() => {
     // If the route changes to /activity-feed, switch to the activity tab
@@ -177,27 +217,38 @@ const Friends = () => {
   useEffect(() => {
     let isMounted = true;
 
-    const loadFeed = async () => {
+    const loadFeed = async (p = 1) => {
       try {
-        setLoading(true);
-        const data = await fetchFeed(); // fetches activities WITH comments included
+        if (p === 1) setLoading(true);
+        else setLoadingMore(true);
+
+        const data = await fetchFeed(p, limit); // fetches activities page
         if (!isMounted) return;
 
-        // Each activity object can now include a comments array
-        const activitiesWithComments = (Array.isArray(data) ? data : data.activities || []).map(a => ({
+        const activities = (Array.isArray(data) ? data : data.activities || []).map(a => ({
           ...a,
-          comments: a.comments || [], // default empty array if backend doesn’t include
+          comments: a.comments || [],
         }));
 
-        setRecentActivity(activitiesWithComments);
+        if (p === 1) {
+          setRecentActivity(activities);
+        } else {
+          setRecentActivity(prev => [...prev, ...activities]);
+        }
+
+        // If fewer than limit returned, no more pages
+        if (activities.length < limit) setHasMore(false);
       } catch (err) {
         console.error("Failed to fetch feed:", err);
       } finally {
-        if (isMounted) setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+          setLoadingMore(false);
+        }
       }
     };
 
-    loadFeed();
+    loadFeed(page);
     return () => { isMounted = false; };
   }, []);
 
@@ -233,6 +284,26 @@ const Friends = () => {
         }
         return a;
       }));
+    }
+  };
+
+  // Load next page of feed
+  const loadNextPage = async () => {
+    if (!hasMore || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const nextPage = page + 1;
+      const data = await fetchFeed(nextPage, limit);
+      const activities = (Array.isArray(data) ? data : data.activities || []).map(a => ({ ...a, comments: a.comments || [] }));
+      if (activities.length > 0) {
+        setRecentActivity(prev => [...prev, ...activities]);
+        setPage(nextPage);
+      }
+      if (activities.length < limit) setHasMore(false);
+    } catch (err) {
+      console.error('Failed to load more feed:', err);
+    } finally {
+      setLoadingMore(false);
     }
   };
 
@@ -456,12 +527,12 @@ const Friends = () => {
         <div className="space-y-3">
               <div className="p-3 border border-border rounded-lg">
             <div className="flex items-center gap-3 mb-2">
-              <Avatar className="h-8 w-8">
+              <Avatar className="h-8 w-8 cursor-pointer" onClick={(e) => { e.stopPropagation(); handleViewProfile(orig.userId || orig.uid || orig.id); }}>
                 <AvatarFallback className="bg-gradient-trail text-primary-foreground">{orig.avatar}</AvatarFallback>
               </Avatar>
               <div>
                 <p className="text-sm">
-                  <span className="font-medium text-foreground">{orig.name}</span>{' '}
+                  <span className="font-medium text-foreground cursor-pointer" onClick={(e) => { e.stopPropagation(); handleViewProfile(orig.userId || orig.uid || orig.id); }}>{orig.name}</span>{' '}
                   <span className="text-muted-foreground">shared</span>
                 </p>
                 <p className="text-xs text-muted-foreground">{timeAgo(orig.time || orig.created_at)}</p>
@@ -478,17 +549,17 @@ const Friends = () => {
       );
     }
 
-    // Normal original
+    // Normal original — instead of navigating away, try to scroll to the original in-page
     return (
-  <Card className="bg-card border-border/50">
+  <Card className="bg-card border-border/50 cursor-pointer" onClick={() => { if (orig.id) handleScrollToOriginal(orig.id); }}>
         <CardContent className="p-4">
           <div className="flex items-center gap-3 mb-3">
-            <Avatar className="h-8 w-8">
+            <Avatar className="h-8 w-8 cursor-pointer" onClick={(e) => { e.stopPropagation(); handleViewProfile(orig.userId || orig.uid || orig.id); }}>
               <AvatarFallback className="bg-gradient-trail text-primary-foreground">{orig.avatar}</AvatarFallback>
             </Avatar>
-            <div className="flex-1">
+              <div className="flex-1">
               <p className="text-sm">
-                <span className="font-medium text-foreground">{orig.name}</span>{' '}
+                <span className="font-medium text-foreground cursor-pointer" onClick={(e) => { e.stopPropagation(); handleViewProfile(orig.userId || orig.uid || orig.id); }}>{orig.name}</span>{' '}
                 <span className="text-muted-foreground">{orig.action}</span>{' '}
                 <span className="font-medium text-foreground">{orig.hike}</span>
               </p>
@@ -507,6 +578,50 @@ const Friends = () => {
       </Card>
     );
   };
+
+
+    // Scroll to an original activity in-page. If it's not present, fetch it and insert then scroll.
+    const handleScrollToOriginal = async (origId) => {
+      if (!origId) return;
+
+      try {
+        // If it's already loaded in the current feed, scroll to it
+        const existing = recentActivity.find((a) => a.id === origId);
+        if (existing) {
+          const el = document.getElementById(`feed-item-${origId}`);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setHighlightedId(origId);
+            setTimeout(() => setHighlightedId(null), 3000);
+          }
+          return;
+        }
+
+        // Otherwise fetch the single item from the backend and insert it near the top
+        const fetched = await getFeedById(origId);
+        const activity = fetched && fetched.data ? fetched.data : fetched;
+        if (!activity) throw new Error('Original not found');
+
+        setRecentActivity((prev) => {
+          // avoid duplicates
+          if (prev.some((p) => p.id === activity.id)) return prev;
+          return [activity, ...prev];
+        });
+
+        // wait a brief moment for DOM to update, then scroll
+        setTimeout(() => {
+          const el = document.getElementById(`feed-item-${activity.id}`);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setHighlightedId(activity.id);
+            setTimeout(() => setHighlightedId(null), 3000);
+          }
+        }, 150);
+      } catch (err) {
+        console.error('Failed to fetch original post:', err);
+        toast({ title: 'Could not find original', description: 'The original post could not be loaded.' });
+      }
+    };
 
 
   useEffect(() => {
@@ -696,24 +811,24 @@ const Friends = () => {
                   {recentActivity.map((activity) => {
                     const isOwnPost = activity.userId === auth.currentUser.uid;
 
-                    return (
-                      <Card key={activity.id} className="bg-background border-border shadow-sm hover:shadow-md transition-shadow">
+            return (
+              <Card id={`feed-item-${activity.id}`} key={activity.id} className={`bg-background border-border shadow-sm hover:shadow-md transition-shadow ${highlightedId === activity.id ? 'ring-2 ring-amber-300' : ''}`}>
                         <CardContent className="p-6">
                           {/* ---- If shared post ---- */}
                           {activity.type === "share" ? (
                             <>
                               {/* Share header */}
                               <div className="flex items-center gap-3 mb-4">
-                                <Avatar className="h-10 w-10">
+                                <Avatar className="h-10 w-10 cursor-pointer" onClick={(e) => { e.stopPropagation(); handleViewProfile(activity.userId || activity.id); }}>
                                   <AvatarFallback className="bg-gradient-trail text-primary-foreground">
                                     {activity.name[0]}
                                   </AvatarFallback>
                                 </Avatar>
                                 <div className="flex-1">
                                   <p className="text-sm">
-                                    <span className="font-semibold text-foreground">{activity.name}</span>{" "}
+                                    <span className="font-semibold text-foreground cursor-pointer" onClick={(e) => { e.stopPropagation(); handleViewProfile(activity.userId || activity.id); }}>{activity.name}</span>{" "}
                                     <span className="text-muted-foreground">shared</span>{" "}
-                                    <span className="font-medium text-foreground">{activity.original.name}</span>'s post
+                                    <span className="font-medium text-foreground cursor-pointer" onClick={(e) => { e.stopPropagation(); handleViewProfile(activity.original?.userId || activity.original?.uid || activity.original?.id); }}>{activity.original.name}</span>'s post
                                   </p>
                                   <p className="text-xs text-muted-foreground mt-1">
                                     <Clock className="h-3 w-3 inline mr-1" />
@@ -758,7 +873,7 @@ const Friends = () => {
                               <div className="flex items-center gap-3 mb-4">
                                 <Avatar
                                   className="h-12 w-12 cursor-pointer"
-                                  onClick={() => handleViewProfile({ name: activity.name, avatar: activity.avatar })}
+                                  onClick={(e) => { e.stopPropagation(); handleViewProfile(activity.userId || activity.id); }}
                                 >
                                   <AvatarFallback className="bg-gradient-trail text-primary-foreground text-lg">
                                     {activity.avatar}
@@ -768,7 +883,7 @@ const Friends = () => {
                                   <p className="text-sm">
                                     <span
                                       className="font-semibold text-foreground cursor-pointer hover:underline"
-                                      onClick={() => handleViewProfile({ name: activity.name, avatar: activity.avatar })}
+                                      onClick={() => handleViewProfile(activity.userId || activity.id)}
                                     >
                                       {activity.name}
                                     </span>
@@ -953,6 +1068,18 @@ const Friends = () => {
                       </Card>
                     );
                   })}
+                    {/* Load more button */}
+                    {hasMore && (
+                      <div className="flex justify-center mt-4">
+                        <button
+                          onClick={loadNextPage}
+                          className="px-4 py-2 text-sm text-foreground hover:underline focus:outline-none"
+                          aria-label="Load more feeds"
+                        >
+                          {loadingMore ? 'Loading...' : 'Load more'}
+                        </button>
+                      </div>
+                    )}
                 </div>
               </CardContent>
             </Card>

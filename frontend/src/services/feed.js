@@ -171,3 +171,18 @@ export async function deleteFeed(feedId) {
 
   return res.json(); // confirmation of deletion
 }
+
+// ---- Get single feed item ----
+export async function getFeedById(feedId) {
+  const token = await getToken();
+  const res = await fetch(`${API_URL}/feed/${feedId}`, {
+    headers: { Authorization: token ? `Bearer ${token}` : '' },
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Failed to fetch feed item: ${res.status} ${errText}`);
+  }
+
+  return res.json();
+}

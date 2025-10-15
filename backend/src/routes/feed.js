@@ -353,4 +353,43 @@ router.delete('/:id', verifyAuth, async (req, res) => {
 });
 
 
+// GET /feed/:id - fetch a single activity by id
+router.get('/:id', verifyAuth, async (req, res) => {
+  try {
+    const db = getDatabase();
+    const { id } = req.params;
+    const docRef = db.collection('feed_items').doc(id);
+    const docSnap = await docRef.get();
+
+    if (!docSnap.exists) return res.status(404).json({ error: 'Feed item not found' });
+
+    const data = docSnap.data() || {};
+
+    // Fetch comments
+    const commentsSnapshot = await docRef.collection('comments').orderBy('created_at', 'asc').get();
+    const comments = commentsSnapshot.docs.map((c) => ({ id: c.id, ...c.data() }));
+
+    const safeName = data.name || 'Unknown Hiker';
+    const safeAvatar = data.avatar || safeName[0]?.toUpperCase() || 'U';
+
+    // ensure nested original times
+    const ensureNestedTimes = (obj) => {
+      if (!obj || typeof obj !== 'object') return;
+      if (!obj.time && obj.created_at) obj.time = obj.created_at;
+      if (obj.original) ensureNestedTimes(obj.original);
+    };
+
+    if (data.type === 'share' && data.original) ensureNestedTimes(data.original);
+
+    const activityTime = data.time || data.created_at || null;
+
+    res.json({ id: docSnap.id, ...data, time: activityTime, name: safeName, avatar: safeAvatar, comments });
+  } catch (err) {
+    console.error('Error fetching feed item:', err);
+    res.status(500).json({ error: 'Failed to fetch feed item' });
+  }
+});
+
+
 export default router;
+
