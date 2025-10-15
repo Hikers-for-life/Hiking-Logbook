@@ -14,20 +14,26 @@ router.get("/", verifyAuth, async (req, res) => {
 
     const currentUserDoc = snapshot.docs.find(doc => doc.id === req.user.uid);
     const currentUserData = currentUserDoc?.data() || {};
-    const friendsSet = new Set(currentUserData.friends || []);
+    
 
-    const suggestions = snapshot.docs
-    .filter(doc => doc.id !== req.user.uid && !(currentUserData.friends || []).includes(doc.id))
-    .map(doc => {
+    let suggestions = snapshot.docs
+      .filter(doc => doc.id !== req.user.uid && !(currentUserData.friends || []).includes(doc.id))
+      .map(doc => {
         const data = doc.data();
         return {
-        id: doc.id,
-        name: data.displayName || data.name || "Unknown",
-        avatar: data.avatar || (data.displayName?.[0] ?? "?"),
-        mutualFriends: (data.friends || []).filter(f => (currentUserData.friends || []).includes(f)).length,
-        commonTrails: data.trails || [],
+          id: doc.id,
+          name: data.displayName || data.name || "Unknown",
+          avatar: data.avatar || (data.displayName?.[0] ?? "?"),
+          mutualFriends: (data.friends || []).filter(f => (currentUserData.friends || []).includes(f)).length,
+          commonTrails: data.trails || [],
         };
-    });
+      });
+
+    // Only return suggestions that have at least one mutual friend
+    suggestions = suggestions.filter(s => s.mutualFriends > 0);
+
+    // Sort by mutual friends descending to show best matches first
+    suggestions.sort((a, b) => b.mutualFriends - a.mutualFriends);
 
     res.json(suggestions);
   } catch (err) {
