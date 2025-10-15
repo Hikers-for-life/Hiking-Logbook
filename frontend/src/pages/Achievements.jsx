@@ -14,6 +14,7 @@ import { hikeApiService } from "../services/hikeApiService";
 import { achievementApiService } from "../services/achievementApiService";
 import StatsOverview from "../components/StatsOverview";
 import { AuthContext } from "../contexts/AuthContext";
+import { useToast } from "../hooks/use-toast";
 import {
   Trophy,
   Target,
@@ -80,6 +81,7 @@ const ProgressUpdateForm = ({ goal, onSubmit, onCancel }) => {
 
 const Achievements = () => {
   const { currentUser } = useContext(AuthContext);
+  const { toast } = useToast();
 
   // State for goal management
   const [isGoalFormOpen, setIsGoalFormOpen] = useState(false);
@@ -573,11 +575,11 @@ const Achievements = () => {
       const created = await createFeed(postBody);
       console.log("Achievement posted to feed:", created);
 
-      // Show success message instead of using Web Share API
-      alert(`🎉 Achievement shared to your activity feed! Your friends can now see that you achieved: ${achievement.title || achievement.name}`);
+      // Show success toast instead of alert
+      toast({ title: 'Achievement shared', description: `🎉 Your achievement '${achievement.title || achievement.name}' was shared to your activity feed.` });
     } catch (error) {
       console.error("Failed to share achievement:", error);
-      alert("Something went wrong while sharing your achievement. Please try again.");
+      toast({ title: 'Share failed', description: 'Something went wrong while sharing your achievement. Please try again.', variant: 'destructive' });
     }
   };
 

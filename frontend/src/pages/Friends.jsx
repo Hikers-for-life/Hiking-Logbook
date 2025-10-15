@@ -273,6 +273,12 @@ const Friends = () => {
       const res = await likeFeed(activity.id, !activity.likes?.includes(uid));
       if (res && res.likes) {
         setRecentActivity(prev => prev.map(a => a.id === activity.id ? { ...a, likes: res.likes } : a));
+        try {
+          const likedNow = res.likes.includes(uid);
+          toast({ title: likedNow ? 'Liked' : 'Unliked', description: likedNow ? 'You liked this post.' : 'You removed your like.' });
+        } catch (e) {
+          // ignore toast errors
+        }
       }
     } catch (err) {
       console.error("Failed to like:", err);
@@ -284,6 +290,7 @@ const Friends = () => {
         }
         return a;
       }));
+      toast({ title: 'Like failed', description: 'Could not update like. Please try again.', variant: 'destructive' });
     }
   };
 
@@ -341,6 +348,7 @@ const Friends = () => {
             : a
         )
       );
+      toast({ title: 'Comment added', description: 'Your comment was posted.' });
     } catch (err) {
       console.error("Failed to add comment:", err);
       // rollback temp comment
@@ -354,6 +362,7 @@ const Friends = () => {
             : a
         )
       );
+      toast({ title: 'Comment failed', description: 'Could not post your comment. Please try again.', variant: 'destructive' });
     }
   };
   const handleDeleteComment = async (activityId, commentId) => {
@@ -368,9 +377,11 @@ const Friends = () => {
 
     try {
       await deleteCommentFeed(activityId, commentId);
+      toast({ title: 'Comment deleted', description: 'The comment was removed.' });
     } catch (err) {
       console.error("Failed to delete comment:", err);
       // Optional: refetch comments here if you want rollback
+      toast({ title: 'Delete failed', description: 'Could not delete the comment. Please try again.', variant: 'destructive' });
     }
   };
 
@@ -443,10 +454,13 @@ const Friends = () => {
       setRecentActivity((prev) =>
         prev.map((a) => (a.id === tempShare.id ? { ...a, id: returnedId, ...data } : a))
       );
+      // Notify user of success
+      toast({ title: 'Post shared', description: 'Your post was shared to your feed.' });
     } catch (err) {
       console.error("Failed to share:", err);
       // rollback optimistic
       setRecentActivity((prev) => prev.filter((a) => a.id !== tempShare.id));
+      toast({ title: 'Share failed', description: 'Could not share the post. Please try again.', variant: 'destructive' });
     }
   };
 
@@ -458,10 +472,12 @@ const Friends = () => {
     try {
       // Call a backend/service function to delete the post
       await deleteFeed(activityId); // <-- you need to implement this in services/feed.js
+      toast({ title: 'Post deleted', description: 'The post has been removed.' });
     } catch (err) {
       console.error("Failed to delete post:", err);
       // Rollback if deletion fails
       setRecentActivity(prevActivity);
+      toast({ title: 'Delete failed', description: 'Could not delete the post. Please try again.', variant: 'destructive' });
     }
   };
 
