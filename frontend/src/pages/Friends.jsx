@@ -35,6 +35,7 @@ import {
   MessageSquare,
   Edit3,
   MoreHorizontal,
+  Trash2,
   Camera
 } from "lucide-react";
 
@@ -361,17 +362,17 @@ const Friends = () => {
   };
 
   const handleDeletePost = async (activityId) => {
-    // Optimistic UI update: remove the post locally first
-    const prevActivity = [...recentActivity];
-    setRecentActivity(prev => prev.filter(a => a.id !== activityId));
-
     try {
-      // Call a backend/service function to delete the post
-      await deleteFeed(activityId); // <-- you need to implement this in services/feed.js
+      // Call backend to delete the post
+      await deleteFeed(activityId);
+
+      // Remove from UI only after successful deletion
+      setRecentActivity(prev => prev.filter(a => a.id !== activityId));
+
+      toast({ title: 'Post deleted', description: 'Your post was removed.' });
     } catch (err) {
-      console.error("Failed to delete post:", err);
-      // Rollback if deletion fails
-      setRecentActivity(prevActivity);
+      console.error('Failed to delete post:', err);
+      toast({ title: 'Delete failed', description: 'Could not delete post. Please try again.' });
     }
   };
 
@@ -379,19 +380,21 @@ const Friends = () => {
   const handleEditPost = async (activityId, updatedDescription) => {
     if (!updatedDescription.trim()) return;
 
-    // Optimistic UI update
-    setRecentActivity(prev => prev.map(a =>
-      a.id === activityId
-        ? { ...a, description: updatedDescription.trim() }
-        : a
-    ));
+    // Keep previous for rollback
+    const prev = [...recentActivity];
     setEditingPost(null);
 
     try {
-      await updateFeed(activityId, { description: updatedDescription.trim() });
+      const updated = await updateFeed(activityId, { description: updatedDescription.trim() });
+
+      // Replace activity with server-returned object (updated)
+      setRecentActivity(curr => curr.map(a => (a.id === activityId ? { ...a, ...updated } : a)));
+      toast({ title: 'Post updated', description: 'Your changes were saved.' });
     } catch (err) {
-      console.error("Failed to update post:", err);
-      // Could add rollback logic here if needed
+      console.error('Failed to update post:', err);
+      // rollback
+      setRecentActivity(prev);
+      toast({ title: 'Update failed', description: 'Could not save changes. Please try again.' });
     }
   };
 
@@ -647,7 +650,7 @@ const Friends = () => {
                                       onClick={() => handleDeletePost(activity.id)}
                                       className="h-8 w-8 p-0 text-destructive hover:text-destructive"
                                     >
-                                      <MoreHorizontal className="h-4 w-4" />
+                                      <Trash2 className="h-4 w-4" />
                                     </Button>
                                   </div>
                                 )}
@@ -748,7 +751,7 @@ const Friends = () => {
                                       onClick={() => handleDeletePost(activity.id)}
                                       className="h-8 w-8 p-0 text-destructive hover:text-destructive"
                                     >
-                                      <MoreHorizontal className="h-4 w-4" />
+                                      <Trash2 className="h-4 w-4" />
                                     </Button>
                                   </div>
                                 )}
@@ -831,7 +834,7 @@ const Friends = () => {
                                       onClick={() => handleDeleteComment(activity.id, comment.id)}
                                       className="h-6 w-6 p-0 text-destructive hover:text-destructive"
                                     >
-                                      <MoreHorizontal className="h-3 w-3" />
+                                      <Trash2 className="h-3 w-3" />
                                     </Button>
                                   )}
                                 </div>

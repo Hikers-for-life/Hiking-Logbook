@@ -205,6 +205,7 @@ router.post('/:feedId/share', verifyAuth, async (req, res) => {
   try {
     const db = getDatabase();
     const { sharerId, sharerName, sharerAvatar, original } = req.body;
+    const caption = req.body.caption || '';
 
     // ✅ Fallbacks for sharer info
     const safeSharerName =
@@ -231,6 +232,7 @@ router.post('/:feedId/share', verifyAuth, async (req, res) => {
         name: safeSharerName,
         avatar: safeSharerAvatar,
       },
+      shareCaption: caption,
       original: {
         id: safeOriginal.id || null,
         name: safeOriginal.name || "Unknown Hiker",
@@ -251,6 +253,49 @@ router.post('/:feedId/share', verifyAuth, async (req, res) => {
   } catch (err) {
     console.error('Error sharing activity:', err);
     res.status(500).json({ error: 'Failed to share activity' });
+  }
+});
+
+
+// PUT /feed/:id - update a feed post (description, caption for shares, stats, etc.)
+router.put('/:id', verifyAuth, async (req, res) => {
+  try {
+    const db = getDatabase();
+    const { id } = req.params;
+    const updateData = req.body || {};
+
+    const docRef = db.collection('feed_items').doc(id);
+    const docSnap = await docRef.get();
+    if (!docSnap.exists) return res.status(404).json({ error: 'Feed item not found' });
+
+    const postData = docSnap.data() || {};
+    const ownerId = postData.userId || postData.sharer?.id;
+    const uid = req.user?.uid;
+
+    if (ownerId !== uid) {
+      return res.status(403).json({ error: 'Not authorized to edit this post' });
+    }
+
+    // Only allow updating a whitelist of fields
+    const allowed = ['description', 'action', 'hike', 'stats', 'photo', 'shareCaption'];
+    const toUpdate = {};
+    allowed.forEach((k) => {
+      if (Object.prototype.hasOwnProperty.call(updateData, k)) toUpdate[k] = updateData[k];
+    });
+
+    if (Object.keys(toUpdate).length === 0) {
+      return res.status(400).json({ error: 'No valid fields provided for update' });
+    }
+
+    await docRef.update(toUpdate);
+
+    // Return the updated document
+    const updatedSnap = await docRef.get();
+    const updatedData = { id: updatedSnap.id, ...updatedSnap.data() };
+    res.json(updatedData);
+  } catch (err) {
+    console.error('Error updating feed item:', err);
+    res.status(500).json({ error: 'Failed to update feed item' });
   }
 });
 

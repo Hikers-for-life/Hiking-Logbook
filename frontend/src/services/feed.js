@@ -113,6 +113,7 @@ export async function deleteCommentFeed(feedId, commentId) {
 }
 
 // ---- Share a Post ----
+// payload may include { sharerId, sharerName, sharerAvatar, original, caption }
 export async function shareFeed(feedId, payload) {
   // payload example: { sharerId, sharerName, sharerAvatar, original }
   const token = await getToken();
