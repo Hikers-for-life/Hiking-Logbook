@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import mountain from '../assets/forest-waterfall.jpg';
 import { useAuth } from '../../contexts/AuthContext.jsx';
+import { validateEmail, validatePassword } from '../../services/userServices.js';
 import { ArrowLeft } from 'lucide-react';
 import "@fortawesome/fontawesome-free/css/all.min.css";
 
@@ -42,6 +43,17 @@ export default function LoginPage({ open, onOpenChange, onLogin, onSignup }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // Client-side validation
+    const emailCheck = validateEmail(email);
+    if (!emailCheck.valid) {
+      setError(emailCheck.message);
+      return;
+    }
+    const passCheck = validatePassword(password);
+    if (!passCheck.valid) {
+      setError(passCheck.message);
+      return;
+    }
     try {
       setError('');
       setLoading(true);

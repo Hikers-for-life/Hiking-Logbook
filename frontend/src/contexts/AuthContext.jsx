@@ -86,6 +86,11 @@ export const AuthProvider = ({ children }) => {
 
       if (!response.ok) {
         const errorData = await response.json();
+        // Backend may return structured errors: { errors: [{ field, message }] }
+        if (errorData && Array.isArray(errorData.errors) && errorData.errors.length > 0) {
+          const msg = errorData.errors.map(e => e.message || e).join('; ');
+          throw new Error(msg);
+        }
         throw new Error(errorData.error || 'Signup failed');
       }
 

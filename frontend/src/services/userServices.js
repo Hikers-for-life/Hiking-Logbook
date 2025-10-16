@@ -83,3 +83,22 @@ export const getUserProfile = async (userId) => {
 
   return { userName, location, joinDate, bio };
 };
+
+// Simple client-side validation helpers
+export const validateEmail = (email) => {
+  if (!email || typeof email !== 'string') return { valid: false, message: 'Email is required' };
+  const trimmed = email.trim();
+  // Basic RFC-like email regex (not perfect but good enough for client-side)
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!re.test(trimmed)) return { valid: false, message: 'Please enter a valid email address' };
+  return { valid: true };
+};
+
+export const validatePassword = (password) => {
+  if (!password || typeof password !== 'string') return { valid: false, message: 'Password is required' };
+  if (password.length < 8) return { valid: false, message: 'Password must be at least 8 characters long' };
+  if (!/[A-Za-z]/.test(password) || !/\d/.test(password)) {
+    return { valid: false, message: 'Password must include at least one letter and one number' };
+  }
+  return { valid: true };
+};

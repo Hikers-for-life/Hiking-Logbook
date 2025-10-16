@@ -30,6 +30,19 @@ router.post('/create-profile', verifyAuth, async (req, res) => {
       });
     }
 
+    // Basic validation
+    if (!uid || !email || !displayName) {
+      return res.status(400).json({ errors: [
+        { field: 'uid', message: 'uid is required' },
+        { field: 'email', message: 'email is required' },
+        { field: 'displayName', message: 'displayName is required' },
+      ] });
+    }
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRe.test(String(email).toLowerCase())) {
+      return res.status(400).json({ errors: [{ field: 'email', message: 'Invalid email format' }] });
+    }
+
     // Check if profile already exists
     const existingProfile = await dbUtils.getUserProfile(uid);
     if (existingProfile) {
