@@ -22,7 +22,7 @@ export async function discoverFriends() {
 }
 
 // Add a friend
-export async function addFriend(friendId) {
+export async function sendFriendRequest(friendId) {
   const token = await getToken();
   const res = await fetch(`${API_URL}/add`, {
     method: "POST",
@@ -32,8 +32,34 @@ export async function addFriend(friendId) {
     },
     body: JSON.stringify({ friendId }),
   });
-  if (!res.ok) throw new Error("Failed to add friend");
-  return res.json(); // returns { success: true }
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Failed to send request: ${res.status} ${text}`);
+  }
+  return res.json(); // returns { success: true, requestId }
+}
+
+export async function getIncomingRequests() {
+  const token = await getToken();
+  const res = await fetch(`${API_URL}/requests/incoming`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Failed to fetch incoming requests');
+  return res.json();
+}
+
+export async function respondToRequest(requestId, action) {
+  const token = await getToken();
+  const res = await fetch(`${API_URL}/requests/${requestId}/respond`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ action }),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Failed to respond: ${res.status} ${text}`);
+  }
+  return res.json();
 }
 
 export const getUserDetails = async (userId) => {

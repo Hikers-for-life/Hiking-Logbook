@@ -7,7 +7,7 @@ import { getUserHikeCount } from "../../services/userServices";
 import { hikeApiService } from "../../services/hikeApiService.js";
 import { useEffect, useState, useCallback } from "react";
 import { getUserStats } from "../../services/statistics";
-import { discoverFriends, addFriend } from "../../services/discover";
+import { sendFriendRequest } from "../../services/discover";
 import { useToast } from "../../hooks/use-toast";
 import { 
  Calendar, 
@@ -54,6 +54,7 @@ export const ProfileView = ({ open, onOpenChange, person, showAddFriend = false 
   const { toast } = useToast();
   const [isAdding, setIsAdding] = useState(false);
   const [isFriend, setIsFriend] = useState(false);
+  const [requestSent, setRequestSent] = useState(false);
   const [userStats, setUserStats] = useState({
     totalDistance: 0,
     totalElevation: 0,
@@ -257,14 +258,12 @@ useEffect(() => {
 
                     try {
                       setIsAdding(true);
-                      await addFriend(person.uid);
-                      toast({
-                        title: "Friend added",
-                        description: "Friendship created successfully!",
-                      });
-                      setIsFriend(true); // ✅ switch to "already friends"
+                      const resp = await sendFriendRequest(person.uid);
+                      toast({ title: 'Request sent', description: 'Friend request sent.' });
+                      setRequestSent(true);
                     } catch (err) {
-                      console.error("Failed to add friend:", err);
+                      console.error("Failed to send friend request:", err);
+                      toast({ title: 'Request failed', description: 'Could not send friend request.', variant: 'destructive' });
                     } finally {
                       setIsAdding(false);
                     }

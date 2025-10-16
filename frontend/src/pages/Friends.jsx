@@ -14,7 +14,7 @@ import { Textarea } from "../components/ui/textarea";
 import { searchUsers } from "../services/userServices";
 import { ProfileView } from "../components/ui/view-friend-profile";
 import { fetchFeed, likeFeed, commentFeed, shareFeed, deleteCommentFeed, deleteFeed, updateFeed, getFeedById } from "../services/feed";//ANNAH HERE
-import { discoverFriends, addFriend } from "../services/discover";//ANNAH HERE
+import { discoverFriends, sendFriendRequest, getIncomingRequests, respondToRequest } from "../services/discover";//ANNAH HERE
 import { getAuth } from "firebase/auth";//NOT SURE ABOUT THIS IMPORT//ANNA HERE
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useToast } from "../hooks/use-toast";
@@ -52,6 +52,7 @@ const Friends = () => {
   const [commentsMap] = useState({});
   const [expandedComments, setExpandedComments] = useState({});
   const [suggestions, setSuggestions] = useState([]);
+  const [incomingRequests, setIncomingRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingPost, setEditingPost] = useState(null);
   const [page, setPage] = useState(1);
@@ -655,6 +656,17 @@ const Friends = () => {
       }
     };
     loadSuggestions();
+
+    // load incoming friend requests for current user
+    const loadIncoming = async () => {
+      try {
+        const reqs = await getIncomingRequests();
+        setIncomingRequests(reqs || []);
+      } catch (err) {
+        console.error('Failed to load incoming requests:', err);
+      }
+    };
+    loadIncoming();
   }, [auth?.currentUser]);
 
 
@@ -824,6 +836,29 @@ const Friends = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
+                  {/* Incoming friend requests */}
+                  {incomingRequests && incomingRequests.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-semibold">Friend requests</h4>
+                      {incomingRequests.map((r) => (
+                        <div key={r.id} className="flex items-center justify-between p-2 border border-border rounded">
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-8 w-8">
+                              <AvatarFallback className="bg-gradient-trail text-primary-foreground">{r.fromAvatar}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <div className="font-medium">{r.fromName}</div>
+                              <div className="text-xs text-muted-foreground">Requested you</div>
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button size="sm" onClick={async (e) => { e.stopPropagation(); try { await respondToRequest(r.id, 'accept'); setIncomingRequests(prev => prev.filter(x => x.id !== r.id)); toast({ title: 'Friend added', description: `${r.fromName} is now your friend.` }); } catch (err) { console.error(err); toast({ title: 'Accept failed', description: 'Could not accept request.', variant: 'destructive' }); } }}>Accept</Button>
+                            <Button size="sm" variant="outline" onClick={async (e) => { e.stopPropagation(); try { await respondToRequest(r.id, 'decline'); setIncomingRequests(prev => prev.filter(x => x.id !== r.id)); toast({ title: 'Request declined', description: `You declined ${r.fromName}` }); } catch (err) { console.error(err); toast({ title: 'Decline failed', description: 'Could not decline request.', variant: 'destructive' }); } }}>Decline</Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   {recentActivity.map((activity) => {
                     const isOwnPost = activity.userId === auth.currentUser.uid;
 
@@ -1145,21 +1180,23 @@ const Friends = () => {
                         </div>
                         <Button
                           className="bg-gradient-trail text-primary-foreground"
-                              onClick={async () => {
-                                // prevent opening profile modal handled by not bubbling - no event required
+                          disabled={suggestion._requestSent}
+                          onClick={async (e) => {
+                            e.stopPropagation(); // don't open profile modal
                             try {
-
-                              await addFriend(suggestion.id); // ✅ uses service
-                              setSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
-                              console.log(`Friend ${suggestion.name} added!`);
+                              // send friend request (new API)
+                              const resp = await sendFriendRequest(suggestion.id);
+                              // mark locally as requested so UI shows 'Request Sent'
+                              setSuggestions(prev => prev.map(s => s.id === suggestion.id ? { ...s, _requestSent: true, _requestId: resp.requestId } : s));
+                              toast({ title: 'Friend request sent', description: `A request was sent to ${suggestion.name}.` });
                             } catch (err) {
-                              console.error("Failed to add friend:", err);
+                              console.error("Failed to send friend request:", err);
+                              toast({ title: 'Request failed', description: 'Could not send friend request. Please try again.', variant: 'destructive' });
                             }
                           }}
                         >
                           <UserPlus className="h-4 w-4 mr-2" />
-                          Add Friend
-
+                          {suggestion._requestSent ? 'Request Sent' : 'Add Friend'}
                         </Button>
                       </div>
                     ))
