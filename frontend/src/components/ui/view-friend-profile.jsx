@@ -9,6 +9,7 @@ import { useEffect, useState, useCallback } from "react";
 import { getUserStats } from "../../services/statistics";
 import { discoverFriends, addFriend } from "../../services/discover";
 import { useToast } from "../../hooks/use-toast";
+import { ChatBox } from "./chat-box";
 import { 
  Calendar, 
   MapPin, 
@@ -58,6 +59,7 @@ export const ProfileView = ({ open, onOpenChange, person, showAddFriend = false 
     totalDistance: 0,
     totalElevation: 0,
   });
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   // replace inside view-friend-profile.jsx
 const loadHikes = useCallback(async () => {
@@ -288,7 +290,10 @@ useEffect(() => {
                   )}
                 </Button>
                 ) : (
-                  <Button variant="outline">
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsChatOpen(true)}
+                  >
                     <MessageCircle className="h-4 w-4 mr-2" />
                     Message
                   </Button>
@@ -433,6 +438,13 @@ useEffect(() => {
               </Card>
         </div>
       </DialogContent>
+
+      {/* Chat Dialog */}
+      <ChatBox
+        open={isChatOpen}
+        onOpenChange={setIsChatOpen}
+        otherUser={person}
+      />
     </Dialog>
   );
 };

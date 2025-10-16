@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { searchUsers } from "../services/userServices";
 import { ProfileView } from "../components/ui/view-friend-profile";
+import { ProfileView as OwnProfileView } from "../components/ui/profile-view";
 import { fetchFeed, likeFeed, commentFeed, shareFeed, fetchComments, deleteCommentFeed,deleteFeed } from "../services/feed";//ANNAH HERE
 import { discoverFriends, addFriend } from "../services/discover";//ANNAH HERE
 import { getFirestore} from "firebase/firestore";
@@ -38,6 +39,7 @@ const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api
 const Friends = () => {
   const [selectedProfile, setSelectedProfile] = useState(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isOwnProfile, setIsOwnProfile] = useState(false);
 
 //ANNAH HERE
 
@@ -145,6 +147,9 @@ const handleBlockFriend = async (fid) => {
   }
 };
   const handleViewProfile = (person, showAddFriend = false) => {
+    // Check if viewing own profile
+    const isOwn = person.uid === currentUser.uid || person.id === currentUser.uid;
+    setIsOwnProfile(isOwn);
     setSelectedProfile({ ...person, showAddFriend });
     setIsProfileOpen(true);
   };
@@ -449,8 +454,9 @@ const handleDeletePost = async (activityId) => {
                           <span
                             className="font-semibold text-foreground cursor-pointer hover:underline"
                             onClick={() => {
-                              const isFriend = friends.some((f) => f.id === user.id); 
-                              handleViewProfile(user, !isFriend); // showAddFriend = false if already friend
+                              const isFriend = friends.some((f) => f.id === user.id);
+                              // Pass user object with uid property for profile view
+                              handleViewProfile({ ...user, uid: user.id }, !isFriend); // showAddFriend = false if already friend
                             }}
                           >
                             {user.displayName}
@@ -808,12 +814,19 @@ const handleDeletePost = async (activityId) => {
         </Tabs>
       </main>
 
-      <ProfileView 
-        open={isProfileOpen}
-        onOpenChange={setIsProfileOpen}
-        person={selectedProfile}
-        showAddFriend={selectedProfile?.showAddFriend || false}
-      />
+      {isOwnProfile ? (
+        <OwnProfileView
+          open={isProfileOpen}
+          onOpenChange={setIsProfileOpen}
+        />
+      ) : (
+        <ProfileView
+          open={isProfileOpen}
+          onOpenChange={setIsProfileOpen}
+          person={selectedProfile}
+          showAddFriend={selectedProfile?.showAddFriend || false}
+        />
+      )}
     </div>
   );
 };

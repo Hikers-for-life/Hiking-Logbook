@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import {
   Menu,
@@ -9,20 +9,44 @@ import {
   Calendar,
   Book,
   Activity,
+  MessageSquare,
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { ProfileDropdown } from './profile-dropdown.jsx';
 import { ProfileView } from './profile-view.jsx';
+import { chatService } from '../../services/chatService';
 
 
 export const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const { currentUser, logout } = useAuth();
 
   const navigate = useNavigate();
+
+  // Fetch unread message count
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const fetchUnreadCount = async () => {
+      try {
+        const count = await chatService.getUnreadCount();
+        setUnreadCount(count);
+      } catch (error) {
+        console.error('Error fetching unread count:', error);
+      }
+    };
+
+    fetchUnreadCount();
+
+    // Refresh unread count every 30 seconds
+    const interval = setInterval(fetchUnreadCount, 30000);
+
+    return () => clearInterval(interval);
+  }, [currentUser]);
 
 
   // Define navigation items based on authentication state
@@ -34,6 +58,7 @@ export const Navigation = () => {
     { name: 'Logbook', icon: Book, href: '/logbook' },
     { name: 'Hike Planner', icon: Calendar, href: '/hike-planner' },
     { name: 'Activity Feed', icon: Activity, href: '/activity-feed' },
+    { name: 'Messages', icon: MessageSquare, href: '/messages' },
     { name: 'Achievements', icon: Trophy, href: '/achievements' },
   ];
 
@@ -83,10 +108,15 @@ export const Navigation = () => {
               <Link
                 key={item.name}
                 to={item.href}
-                className="flex items-center space-x-1 text-muted-foreground hover:text-forest transition-colors duration-200"
+                className="flex items-center space-x-1 text-muted-foreground hover:text-forest transition-colors duration-200 relative"
               >
                 <item.icon className="h-4 w-4" />
                 <span>{item.name}</span>
+                {item.name === 'Messages' && unreadCount > 0 && (
+                  <span className="absolute -top-2 -left bg-red-500 text-white text-xs font-bold rounded-full h-4 w-4 flex items-center justify-center">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
               </Link>
             ))}
             {currentUser ? (
