@@ -544,12 +544,12 @@ const Friends = () => {
         <div className="space-y-3">
               <div className="p-3 border border-border rounded-lg">
             <div className="flex items-center gap-3 mb-2">
-              <Avatar className="h-8 w-8 cursor-pointer" onClick={(e) => { e.stopPropagation(); handleViewProfile(orig.userId || orig.uid || orig.id); }}>
+              <Avatar className="h-8 w-8 cursor-pointer" onClick={(e) => { e.stopPropagation(); const targetId = orig.userId || orig.uid || orig.id; handleViewProfile(targetId, !friends.some(f => f.id === targetId)); }}>
                 <AvatarFallback className="bg-gradient-trail text-primary-foreground">{orig.avatar}</AvatarFallback>
               </Avatar>
               <div>
                 <p className="text-sm">
-                  <span className="font-medium text-foreground cursor-pointer" onClick={(e) => { e.stopPropagation(); handleViewProfile(orig.userId || orig.uid || orig.id); }}>{orig.name}</span>{' '}
+                  <span className="font-medium text-foreground cursor-pointer" onClick={(e) => { e.stopPropagation(); const targetId = orig.userId || orig.uid || orig.id; handleViewProfile(targetId, !friends.some(f => f.id === targetId)); }}>{orig.name}</span>{' '}
                   <span className="text-muted-foreground">shared</span>
                 </p>
                 <p className="text-xs text-muted-foreground">{timeAgo(orig.time || orig.created_at)}</p>
@@ -571,12 +571,12 @@ const Friends = () => {
   <Card className="bg-card border-border/50 cursor-pointer" onClick={() => { if (orig.id) handleScrollToOriginal(orig.id); }}>
         <CardContent className="p-4">
           <div className="flex items-center gap-3 mb-3">
-            <Avatar className="h-8 w-8 cursor-pointer" onClick={(e) => { e.stopPropagation(); handleViewProfile(orig.userId || orig.uid || orig.id); }}>
+            <Avatar className="h-8 w-8 cursor-pointer" onClick={(e) => { e.stopPropagation(); const targetId = orig.userId || orig.uid || orig.id; handleViewProfile(targetId, !friends.some(f => f.id === targetId)); }}>
               <AvatarFallback className="bg-gradient-trail text-primary-foreground">{orig.avatar}</AvatarFallback>
             </Avatar>
               <div className="flex-1">
               <p className="text-sm">
-                <span className="font-medium text-foreground cursor-pointer" onClick={(e) => { e.stopPropagation(); handleViewProfile(orig.userId || orig.uid || orig.id); }}>{orig.name}</span>{' '}
+                <span className="font-medium text-foreground cursor-pointer" onClick={(e) => { e.stopPropagation(); const targetId = orig.userId || orig.uid || orig.id; handleViewProfile(targetId, !friends.some(f => f.id === targetId)); }}>{orig.name}</span>{' '}
                 <span className="text-muted-foreground">{orig.action}</span>{' '}
                 <span className="font-medium text-foreground">{orig.hike}</span>
               </p>
@@ -900,16 +900,16 @@ const Friends = () => {
                             <>
                               {/* Share header */}
                               <div className="flex items-center gap-3 mb-4">
-                                <Avatar className="h-10 w-10 cursor-pointer" onClick={(e) => { e.stopPropagation(); handleViewProfile(activity.userId || activity.id); }}>
+                                <Avatar className="h-10 w-10 cursor-pointer" onClick={(e) => { e.stopPropagation(); const targetId = activity.userId || activity.id; handleViewProfile(targetId, !friends.some(f => f.id === targetId)); }}>
                                   <AvatarFallback className="bg-gradient-trail text-primary-foreground">
                                     {activity.name[0]}
                                   </AvatarFallback>
                                 </Avatar>
                                 <div className="flex-1">
                                   <p className="text-sm">
-                                    <span className="font-semibold text-foreground cursor-pointer" onClick={(e) => { e.stopPropagation(); handleViewProfile(activity.userId || activity.id); }}>{activity.name}</span>{" "}
+                                    <span className="font-semibold text-foreground cursor-pointer" onClick={(e) => { e.stopPropagation(); const targetId = activity.userId || activity.id; handleViewProfile(targetId, !friends.some(f => f.id === targetId)); }}>{activity.name}</span>{" "}
                                     <span className="text-muted-foreground">shared</span>{" "}
-                                    <span className="font-medium text-foreground cursor-pointer" onClick={(e) => { e.stopPropagation(); handleViewProfile(activity.original?.userId || activity.original?.uid || activity.original?.id); }}>{activity.original.name}</span>'s post
+                                    <span className="font-medium text-foreground cursor-pointer" onClick={(e) => { e.stopPropagation(); const origId = activity.original?.userId || activity.original?.uid || activity.original?.id; handleViewProfile(origId, origId ? !friends.some(f => f.id === origId) : false); }}>{activity.original.name}</span>'s post
                                   </p>
                                   <p className="text-xs text-muted-foreground mt-1">
                                     <Clock className="h-3 w-3 inline mr-1" />
@@ -954,7 +954,7 @@ const Friends = () => {
                               <div className="flex items-center gap-3 mb-4">
                                 <Avatar
                                   className="h-12 w-12 cursor-pointer"
-                                  onClick={(e) => { e.stopPropagation(); handleViewProfile(activity.userId || activity.id); }}
+                                  onClick={(e) => { e.stopPropagation(); const targetId = activity.userId || activity.id; handleViewProfile(targetId, !friends.some(f => f.id === targetId)); }}
                                 >
                                   <AvatarFallback className="bg-gradient-trail text-primary-foreground text-lg">
                                     {activity.avatar}
@@ -964,7 +964,7 @@ const Friends = () => {
                                   <p className="text-sm">
                                     <span
                                       className="font-semibold text-foreground cursor-pointer hover:underline"
-                                      onClick={() => handleViewProfile(activity.userId || activity.id)}
+                                      onClick={() => { const targetId = activity.userId || activity.id; handleViewProfile(targetId, !friends.some(f => f.id === targetId)); }}
                                     >
                                       {activity.name}
                                     </span>
