@@ -250,8 +250,8 @@ useEffect(() => {
                 {showAddFriend ? (
                   <Button
                   className={`bg-gradient-trail text-primary-foreground hover:bg-gradient-to-r hover:from-green-600 hover:to-green-400 
-                    ${isFriend ? "opacity-50 cursor-not-allowed" : ""}`}
-                  disabled={isFriend || isAdding}
+                    ${isFriend || requestSent ? "opacity-50 cursor-not-allowed" : ""}`}
+                  disabled={isFriend || isAdding || requestSent}
                   onClick={async (e) => {
                     e.stopPropagation();
                     if (isFriend) return;
@@ -261,6 +261,12 @@ useEffect(() => {
                       const resp = await sendFriendRequest(person.uid);
                       toast({ title: 'Request sent', description: 'Friend request sent.' });
                       setRequestSent(true);
+                      // persist small local marker so Discover UI can reflect immediately
+                      try { if (resp?.requestId) localStorage.setItem(`pending_request_${person.uid}`, resp.requestId); } catch(e) {}
+                      // Notify other parts of the UI (Discover) that a request was sent
+                      try {
+                        window.dispatchEvent(new CustomEvent('friend-request-sent', { detail: { id: person.uid, requestId: resp?.requestId } }));
+                      } catch (e) {}
                     } catch (err) {
                       console.error("Failed to send friend request:", err);
                       toast({ title: 'Request failed', description: 'Could not send friend request.', variant: 'destructive' });
@@ -273,6 +279,11 @@ useEffect(() => {
                     <>
                       <Check className="h-4 w-4 mr-2" />
                       Friend Added
+                    </>
+                  ) : requestSent ? (
+                    <>
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      Request Sent
                     </>
                   ) : isAdding ? (
                     <>

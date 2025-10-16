@@ -648,7 +648,18 @@ const Friends = () => {
         setLoading(true);
         const data = await discoverFriends();
         console.log("suggestion :", data)
-        setSuggestions(data);
+        // reflect local pending markers
+        let marked = data;
+        try {
+          marked = data.map(s => {
+            try {
+              const pending = localStorage.getItem(`pending_request_${s.id}`);
+              if (pending) return { ...s, _requestSent: true, _requestId: pending };
+            } catch (e) {}
+            return s;
+          });
+        } catch (e) { marked = data; }
+        setSuggestions(marked);
       } catch (err) {
         console.error("Failed to fetch suggestions:", err);
       } finally {
@@ -667,6 +678,25 @@ const Friends = () => {
       }
     };
     loadIncoming();
+
+    // listen for friend-request-sent events from other UI (profile view)
+    const onRequestSent = async (e) => {
+      const { id, requestId } = e.detail || {};
+      if (!id) return;
+      // Try to re-fetch suggestions from backend (backend excludes pending requests)
+      try {
+        const refreshed = await discoverFriends();
+        setSuggestions(refreshed || []);
+      } catch (err) {
+        // fallback: mark locally
+        setSuggestions(prev => prev.map(s => s.id === id ? { ...s, _requestSent: true, _requestId: requestId } : s));
+      }
+    };
+    window.addEventListener('friend-request-sent', onRequestSent);
+
+    return () => {
+      window.removeEventListener('friend-request-sent', onRequestSent);
+    };
   }, [auth?.currentUser]);
 
 
@@ -1188,6 +1218,7 @@ const Friends = () => {
                               const resp = await sendFriendRequest(suggestion.id);
                               // mark locally as requested so UI shows 'Request Sent'
                               setSuggestions(prev => prev.map(s => s.id === suggestion.id ? { ...s, _requestSent: true, _requestId: resp.requestId } : s));
+                              try { localStorage.setItem(`pending_request_${suggestion.id}`, resp.requestId); } catch(e) {}
                               toast({ title: 'Friend request sent', description: `A request was sent to ${suggestion.name}.` });
                             } catch (err) {
                               console.error("Failed to send friend request:", err);
