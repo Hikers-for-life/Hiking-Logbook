@@ -41,25 +41,27 @@ const waypointIcon = typeof window !== 'undefined' && L?.Icon ? new L.Icon({
   shadowSize: [32, 32]
 }) : {};
 
-const RouteMap = ({ waypoints }) => {
+const RouteMap = ({ waypoints, gpsTrack }) => {
   const mapRef = useRef();
 
   // Calculate center point and bounds for the map
   const getMapCenter = () => {
-    if (!waypoints || waypoints.length === 0) {
+    const trackData = gpsTrack && gpsTrack.length > 0 ? gpsTrack : waypoints;
+    if (!trackData || trackData.length === 0) {
       return [39.8283, -98.5795]; // Default to center of US
     }
     
-    const lat = waypoints.reduce((sum, wp) => sum + wp.latitude, 0) / waypoints.length;
-    const lng = waypoints.reduce((sum, wp) => sum + wp.longitude, 0) / waypoints.length;
+    const lat = trackData.reduce((sum, wp) => sum + wp.latitude, 0) / trackData.length;
+    const lng = trackData.reduce((sum, wp) => sum + wp.longitude, 0) / trackData.length;
     return [lat, lng];
   };
 
   const getMapBounds = () => {
-    if (!waypoints || waypoints.length < 2) return null;
+    const trackData = gpsTrack && gpsTrack.length > 0 ? gpsTrack : waypoints;
+    if (!trackData || trackData.length < 2) return null;
     
-    const lats = waypoints.map(wp => wp.latitude);
-    const lngs = waypoints.map(wp => wp.longitude);
+    const lats = trackData.map(wp => wp.latitude);
+    const lngs = trackData.map(wp => wp.longitude);
     
     return [
       [Math.min(...lats), Math.min(...lngs)],
@@ -69,13 +71,14 @@ const RouteMap = ({ waypoints }) => {
 
   // Auto-fit map to route when waypoints change
   useEffect(() => {
-    if (mapRef.current && waypoints && waypoints.length > 1) {
+    const trackData = gpsTrack && gpsTrack.length > 0 ? gpsTrack : waypoints;
+    if (mapRef.current && trackData && trackData.length > 1) {
       const bounds = getMapBounds();
       if (bounds) {
         mapRef.current.fitBounds(bounds, { padding: [20, 20] });
       }
     }
-  }, [waypoints]);
+  }, [waypoints, gpsTrack]);
 
   if (!waypoints || waypoints.length === 0) {
     return (

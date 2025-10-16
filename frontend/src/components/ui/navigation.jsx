@@ -31,7 +31,6 @@ export const Navigation = () => {
   ];
 
   const authenticatedNavItems = [
-    { name: 'Home', icon: MapPin, href: '/' },
     { name: 'Logbook', icon: Book, href: '/logbook' },
     { name: 'Hike Planner', icon: Calendar, href: '/hike-planner' },
     { name: 'Activity Feed', icon: Activity, href: '/activity-feed' },
@@ -123,9 +122,9 @@ export const Navigation = () => {
           <div className="md:hidden">
             <Button
               variant="ghost"
-              size="sm"
+              size="icon"
               onClick={() => setIsOpen(!isOpen)}
-              className="text-foreground"
+              className="text-foreground min-h-[44px] min-w-[44px]"
             >
               {isOpen ? (
                 <X className="h-6 w-6" />

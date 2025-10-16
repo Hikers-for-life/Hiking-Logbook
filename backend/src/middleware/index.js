@@ -51,9 +51,15 @@ export function applySecurityMiddleware(app) {
             },
             credentials: true,
             methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-            allowedHeaders: ['Content-Type', 'Authorization'],
+            allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
+            exposedHeaders: ['Content-Length', 'X-Request-Id'],
+            preflightContinue: false,
+            optionsSuccessStatus: 204
         })
     );
+    
+    // Handle OPTIONS requests explicitly
+    app.options('*', cors());
     app.use(limiter);
 }
 

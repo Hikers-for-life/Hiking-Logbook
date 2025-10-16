@@ -10,7 +10,7 @@ The Hiking Logbook uses **Firebase Firestore (NoSQL)** to store all application 
 - Hike logging with GPS tracking
 - Goal and achievement tracking
 - Social features (friends, activity feed)
-- Gear management
+- Gear checklist management
 - Planned hikes
 
 ---
@@ -31,6 +31,7 @@ Stores user profile information and preferences.
 | `location` | GeoPoint | User's location (lat, lng) |
 | `preferences` | Object | User preferences (difficulty, terrain) |
 | `stats` | Object | User statistics (totalHikes, totalDistance, etc.) |
+| `gearChecklist` | Array | User's gear checklist items |
 | `createdAt` | Timestamp | Account creation date |
 | `updatedAt` | Timestamp | Last profile update |
 
@@ -53,6 +54,24 @@ Stores user profile information and preferences.
   },
   "createdAt": "2024-01-15T10:00:00Z"
 }
+```
+
+**Gear Checklist Structure:**
+```json
+{
+  "item": "Hiking Boots",
+  "checked": false
+}
+```
+
+**Default Gear Checklist:**
+```json
+[
+  { "item": "Hiking Boots", "checked": false },
+  { "item": "Water (3L)", "checked": false },
+  { "item": "Trail Snacks", "checked": false },
+  { "item": "First Aid Kit", "checked": false }
+]
 ```
 
 ---
@@ -187,23 +206,7 @@ Stores activity feed entries.
 
 ---
 
-### 7. `gear/`
-
-Stores user gear items.
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | String | Unique gear ID |
-| `userId` | String | Owner user ID |
-| `name` | String | Gear item name |
-| `category` | String | Gear category |
-| `weight` | Number | Item weight |
-| `notes` | String | Gear notes |
-| `createdAt` | Timestamp | Creation timestamp |
-
----
-
-### 8. `externalHikes/`
+### 7. `externalHikes/`
 
 Stores hikes submitted via public API.
 

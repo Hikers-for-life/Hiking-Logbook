@@ -193,10 +193,12 @@ const Dashboard = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground">
             Welcome back,{' '}
-            {userProfile?.displayName || currentUser?.displayName || 'Hiker'}!
-            🏔️
+            <span className="text-forest">
+              {userProfile?.displayName || currentUser?.displayName || 'Hiker'}
+            </span>
+            !
           </h1>
-          <p className="text-muted-foreground mt-2">
+          <p className="text-muted-foreground text-lg mt-2">
             Ready for your next adventure? Let's see what you've accomplished.
           </p>
         </div>
@@ -323,33 +325,33 @@ const Dashboard = () => {
                     };
 
                     return (
-                      <div key={hike.id} className="flex items-center justify-between p-3 rounded-lg bg-muted">
+                      <div key={hike.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 rounded-lg bg-muted gap-3">
                         <div className="flex-1">
-                          <h4 className="font-medium">{hike.name || hike.title || 'Unnamed Hike'}</h4>
-                          <div className="flex items-center gap-4 mt-1">
-                            <span className="text-sm text-muted-foreground flex items-center gap-1">
-                              <Calendar className="h-3 w-3" />
-                              {formattedDate}
+                          <h4 className="font-medium text-sm sm:text-base">{hike.name || hike.title || 'Unnamed Hike'}</h4>
+                          <div className="grid grid-cols-2 sm:flex sm:items-center sm:gap-4 mt-2 gap-2">
+                            <span className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1">
+                              <Calendar className="h-3 w-3 flex-shrink-0" />
+                              <span className="truncate">{formattedDate}</span>
                             </span>
-                            <span className="text-sm text-muted-foreground flex items-center gap-1">
-                              <Compass className="h-3 w-3" />
-                              {(parseFloat(hike.distance || hike.totalDistance) || 0).toFixed(1)} km
+                            <span className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1">
+                              <Compass className="h-3 w-3 flex-shrink-0" />
+                              <span className="truncate">{(parseFloat(hike.distance || hike.totalDistance) || 0).toFixed(1)} km</span>
                             </span>
-                            <span className="text-sm text-muted-foreground flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              {hike.duration || hike.estimatedDuration || 'N/A'}
+                            <span className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1">
+                              <Clock className="h-3 w-3 flex-shrink-0" />
+                              <span className="truncate">{hike.duration || hike.estimatedDuration || 'N/A'}</span>
                             </span>
                             {hike.location && (
-                              <span className="text-sm text-muted-foreground flex items-center gap-1">
-                                <MapPin className="h-3 w-3" />
-                                {hike.location}
+                              <span className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1 col-span-2 sm:col-span-1">
+                                <MapPin className="h-3 w-3 flex-shrink-0" />
+                                <span className="truncate">{hike.location}</span>
                               </span>
                             )}
                           </div>
                         </div>
                         <Badge 
                           variant={getDifficultyVariant(hike.difficulty)}
-                          className="text-xs ml-4"
+                          className="text-xs self-start sm:self-center"
                         >
                           {hike.difficulty || 'Unknown'}
                         </Badge>

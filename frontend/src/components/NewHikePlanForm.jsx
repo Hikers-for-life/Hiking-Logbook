@@ -109,7 +109,7 @@ const NewHikePlanForm = ({ open, onOpenChange, onSubmit, editingHike, isEditMode
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl text-foreground">
             {isEditMode ? "Edit Hike Plan" : "Plan New Hike"}
