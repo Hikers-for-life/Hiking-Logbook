@@ -43,19 +43,28 @@ describe('Import Coverage Tests', () => {
               totalHikes: 0,
               totalDistance: 0,
               totalElevation: 0,
-              byDifficulty: { Easy: 0, Moderate: 0, Hard: 0, Extreme: 0 }
+              byDifficulty: { Easy: 0, Moderate: 0, Hard: 0, Extreme: 0 },
             };
           }
           return {
             totalHikes: hikes.length,
-            totalDistance: hikes.reduce((sum, hike) => sum + (parseFloat(hike.distance) || 0), 0),
-            totalElevation: hikes.reduce((sum, hike) => sum + (parseFloat(hike.elevation) || 0), 0),
-            byDifficulty: hikes.reduce((acc, hike) => {
-              if (hike.difficulty && acc[hike.difficulty] !== undefined) {
-                acc[hike.difficulty]++;
-              }
-              return acc;
-            }, { Easy: 0, Moderate: 0, Hard: 0, Extreme: 0 })
+            totalDistance: hikes.reduce(
+              (sum, hike) => sum + (parseFloat(hike.distance) || 0),
+              0
+            ),
+            totalElevation: hikes.reduce(
+              (sum, hike) => sum + (parseFloat(hike.elevation) || 0),
+              0
+            ),
+            byDifficulty: hikes.reduce(
+              (acc, hike) => {
+                if (hike.difficulty && acc[hike.difficulty] !== undefined) {
+                  acc[hike.difficulty]++;
+                }
+                return acc;
+              },
+              { Easy: 0, Moderate: 0, Hard: 0, Extreme: 0 }
+            ),
           };
         },
         formatSuccessResponse: (data, message = 'Success') => {
@@ -63,7 +72,7 @@ describe('Import Coverage Tests', () => {
             success: true,
             data,
             message,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
           };
         },
         evaluateBadges: (userStats) => {
@@ -72,18 +81,18 @@ describe('Import Coverage Tests', () => {
             badges.push({
               name: 'First Hike',
               description: 'Completed your first hike',
-              earnedAt: new Date()
+              earnedAt: new Date(),
             });
           }
           if (userStats.totalDistance >= 10) {
             badges.push({
               name: '10K Walker',
               description: 'Walked 10 kilometers total',
-              earnedAt: new Date()
+              earnedAt: new Date(),
             });
           }
           return badges;
-        }
+        },
       };
     }
   });
@@ -104,18 +113,18 @@ describe('Import Coverage Tests', () => {
   test('should validate hike data', () => {
     const validHike = {
       title: 'Test Hike',
-      location: 'Test Location'
+      location: 'Test Location',
     };
-    
+
     const validation = testableFunctions.validateHikeData(validHike);
     expect(validation.isValid).toBe(true);
     expect(validation.errors).toHaveLength(0);
 
     const invalidHike = {
       title: '',
-      location: ''
+      location: '',
     };
-    
+
     const invalidValidation = testableFunctions.validateHikeData(invalidHike);
     expect(invalidValidation.isValid).toBe(false);
     expect(invalidValidation.errors.length).toBeGreaterThan(0);
@@ -124,7 +133,7 @@ describe('Import Coverage Tests', () => {
   test('should calculate hike statistics', () => {
     const hikes = [
       { distance: 5.5, elevation: 300, difficulty: 'Easy' },
-      { distance: 10.2, elevation: 500, difficulty: 'Moderate' }
+      { distance: 10.2, elevation: 500, difficulty: 'Moderate' },
     ];
 
     const stats = testableFunctions.calculateHikeStats(hikes);
@@ -137,8 +146,11 @@ describe('Import Coverage Tests', () => {
 
   test('should format success responses', () => {
     const data = { id: '123', name: 'Test' };
-    const response = testableFunctions.formatSuccessResponse(data, 'Data retrieved');
-    
+    const response = testableFunctions.formatSuccessResponse(
+      data,
+      'Data retrieved'
+    );
+
     expect(response.success).toBe(true);
     expect(response.data).toEqual(data);
     expect(response.message).toBe('Data retrieved');
@@ -149,28 +161,37 @@ describe('Import Coverage Tests', () => {
     const userStats = {
       totalHikes: 15,
       totalDistance: 150,
-      totalElevation: 2500
+      totalElevation: 2500,
     };
-    
+
     const badges = testableFunctions.evaluateBadges(userStats);
     expect(badges.length).toBeGreaterThan(0);
-    
-    const badgeNames = badges.map(b => b.name);
+
+    const badgeNames = badges.map((b) => b.name);
     expect(badgeNames).toContain('First Hike');
     expect(badgeNames).toContain('10K Walker');
   });
 
   test('should handle edge cases', () => {
     // Test empty/null inputs
-    expect(testableFunctions.calculateHikeStats([])).toHaveProperty('totalHikes', 0);
-    expect(testableFunctions.calculateHikeStats(null)).toHaveProperty('totalHikes', 0);
-    
+    expect(testableFunctions.calculateHikeStats([])).toHaveProperty(
+      'totalHikes',
+      0
+    );
+    expect(testableFunctions.calculateHikeStats(null)).toHaveProperty(
+      'totalHikes',
+      0
+    );
+
     // Test validation with null input
     const nullValidation = testableFunctions.validateHikeData(null);
     expect(nullValidation.isValid).toBe(false);
-    
+
     // Test badges with zero stats
-    const noBadges = testableFunctions.evaluateBadges({ totalHikes: 0, totalDistance: 0 });
+    const noBadges = testableFunctions.evaluateBadges({
+      totalHikes: 0,
+      totalDistance: 0,
+    });
     expect(noBadges).toHaveLength(0);
   });
 
@@ -180,7 +201,7 @@ describe('Import Coverage Tests', () => {
       title: 'Integration Test',
       location: 'Test Location',
       distance: '12.5',
-      elevation: '800'
+      elevation: '800',
     };
 
     // Validate the data
@@ -200,7 +221,10 @@ describe('Import Coverage Tests', () => {
     expect(stats.totalElevation).toBe(800);
 
     // Format response
-    const response = testableFunctions.formatSuccessResponse(stats, 'Stats calculated');
+    const response = testableFunctions.formatSuccessResponse(
+      stats,
+      'Stats calculated'
+    );
     expect(response.success).toBe(true);
     expect(response.data).toEqual(stats);
   });

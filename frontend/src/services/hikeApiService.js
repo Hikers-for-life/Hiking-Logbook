@@ -1,7 +1,8 @@
 import { auth } from '../config/firebase.js';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 
-  (window.location.hostname === 'hiking-logbook.web.app' 
+const API_BASE_URL =
+  process.env.REACT_APP_API_URL ||
+  (window.location.hostname === 'hiking-logbook.web.app'
     ? 'https://hiking-logbook-hezw.onrender.com/api'
     : 'http://localhost:3001/api');
 
@@ -19,23 +20,25 @@ const getAuthToken = async () => {
 const makeAuthenticatedRequest = async (endpoint, options = {}) => {
   try {
     const token = await getAuthToken();
-    
+
     const config = {
       ...options,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
         ...options.headers,
       },
     };
 
     const fullUrl = `${API_BASE_URL}${endpoint}`;
-    
+
     const response = await fetch(fullUrl, config);
-    
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      throw new Error(
+        errorData.message || `HTTP error! status: ${response.status}`
+      );
     }
 
     const responseData = await response.json();
@@ -51,25 +54,32 @@ export const hikeApiService = {
   // Get all hikes for the current user
   async getHikes(filters = {}) {
     const queryParams = new URLSearchParams();
-    
+
     if (filters.status) queryParams.append('status', filters.status);
-    if (filters.difficulty) queryParams.append('difficulty', filters.difficulty);
+    if (filters.difficulty)
+      queryParams.append('difficulty', filters.difficulty);
     if (filters.dateFrom) queryParams.append('dateFrom', filters.dateFrom);
     if (filters.dateTo) queryParams.append('dateTo', filters.dateTo);
-    if (filters.pinned !== undefined) queryParams.append('pinned', filters.pinned);
+    if (filters.pinned !== undefined)
+      queryParams.append('pinned', filters.pinned);
     if (filters.search) queryParams.append('search', filters.search);
-    
+
     const queryString = queryParams.toString();
     const endpoint = `/hikes${queryString ? `?${queryString}` : ''}`;
-    
+
     return makeAuthenticatedRequest(endpoint);
   },
 
   async startHikeFromPlanned(plannedHikeId, additionalData = {}) {
     try {
       // Import planned hike service
-      const { plannedHikeApiService } = await import('./plannedHikesService.js');
-      return await plannedHikeApiService.startPlannedHike(plannedHikeId, additionalData);
+      const { plannedHikeApiService } = await import(
+        './plannedHikesService.js'
+      );
+      return await plannedHikeApiService.startPlannedHike(
+        plannedHikeId,
+        additionalData
+      );
     } catch (error) {
       console.error('Failed to start hike from planned:', error);
       throw error;
@@ -95,7 +105,6 @@ export const hikeApiService = {
 
   // Update an existing hike
   async updateHike(hikeId, updateData) {
-
     const result = await makeAuthenticatedRequest(`/hikes/${hikeId}`, {
       method: 'PUT',
       body: JSON.stringify(updateData),
@@ -106,9 +115,6 @@ export const hikeApiService = {
 
   // Delete a hike
   async deleteHike(hikeId) {
-
-
-    
     const result = await makeAuthenticatedRequest(`/hikes/${hikeId}`, {
       method: 'DELETE',
     });
@@ -180,4 +186,3 @@ export const hikeApiService = {
 };
 
 export default hikeApiService;
-

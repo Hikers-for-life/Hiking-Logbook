@@ -5,20 +5,18 @@ import ProtectedRoute from './components/auth/ProtectedRoute.jsx';
 import Index from './pages/Index.jsx';
 import Logbook from './pages/Logbook.jsx';
 import HikePlanner from './pages/HikePlanner.jsx';
-import EditProfile from "./pages/EditProfile.jsx";
+import EditProfile from './pages/EditProfile.jsx';
 import NotFound from './pages/NotFound.jsx';
-import ProfileView from "./components/ui/profile-view.jsx";
+import ProfileView from './components/ui/profile-view.jsx';
 import Signup from './pages/Signup.jsx';
 import LoginPage from './components/auth/loginPage.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Friends from './pages/Friends.jsx';
 import Post from './pages/Post.jsx';
-import  {Toaster}  from "./components/ui/toaster.jsx"
+import { Toaster } from './components/ui/toaster.jsx';
 import Achievements from './pages/Achievements.jsx';
 
-import { API_BASE } from './api/api.js';//ANNAH
-
-
+import { API_BASE } from './api/api.js'; //ANNAH
 
 const App = () => {
   useEffect(() => {
@@ -26,12 +24,10 @@ const App = () => {
     document.title = 'Hiking Logbook';
   }, []);
 
-
   return (
     <AuthProvider>
-      
       <BrowserRouter>
-      <Toaster />
+        <Toaster />
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Index />} />
@@ -39,47 +35,47 @@ const App = () => {
           <Route path="/signup" element={<Signup />} />
           <Route path="/edit-profile" element={<EditProfile />} />
           <Route path="/profile" element={<ProfileView />} />
-        {/* Protected Routes */}
-        <Route
-          path="/logbook"
-          element={
-            <ProtectedRoute>
-              <Logbook />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/hike-planner"
-          element={
-            <ProtectedRoute>
-              <HikePlanner />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/activity-feed"
-          element={
-            <ProtectedRoute>
-              <Friends/>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/post/:id"
-          element={
-            <ProtectedRoute>
-              <Post />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/achievements"
-          element={
-            <ProtectedRoute>
-              <Achievements />
-            </ProtectedRoute>
-          }
-        />
+          {/* Protected Routes */}
+          <Route
+            path="/logbook"
+            element={
+              <ProtectedRoute>
+                <Logbook />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/hike-planner"
+            element={
+              <ProtectedRoute>
+                <HikePlanner />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/activity-feed"
+            element={
+              <ProtectedRoute>
+                <Friends />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/post/:id"
+            element={
+              <ProtectedRoute>
+                <Post />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/achievements"
+            element={
+              <ProtectedRoute>
+                <Achievements />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/dashboard"
             element={
@@ -96,6 +92,5 @@ const App = () => {
     </AuthProvider>
   );
 };
-
 
 export default App;

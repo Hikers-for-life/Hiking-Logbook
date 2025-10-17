@@ -1,15 +1,12 @@
 import { getAuth } from '../config/firebase.js';
-import { collections,dbUtils } from '../config/database.js';
+import { collections, dbUtils } from '../config/database.js';
 import { getDatabase } from '../config/firebase.js';
-
-
 
 export class AuthService {
   // Create a new user account
   static async createUser(userData) {
     //const auth = getAuth();//ANNAH HERE
     try {
-
       const { email, password, displayName, bio, location } = userData;
 
       // Create user in Firebase Authentication
@@ -29,8 +26,8 @@ export class AuthService {
         bio: bio || '',
         location: location || null,
         photoURL: '',
-        friends: [],     // ✅ initialize
-        trails: [],    
+        friends: [], // ✅ initialize
+        trails: [],
         preferences: {
           difficulty: 'beginner',
           terrain: 'mixed',
@@ -44,11 +41,10 @@ export class AuthService {
         },
 
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       await dbUtils.createUserProfile(userRecord.uid, profileData);
-
 
       return {
         success: true,
@@ -74,7 +70,7 @@ export class AuthService {
   }
 
   // Update user profile
-    static async updateUserProfile(uid, updateData) {
+  static async updateUserProfile(uid, updateData) {
     try {
       // Remove sensitive fields that shouldn't be updated
       const { email, uid: _, ...safeUpdateData } = updateData;
@@ -89,7 +85,7 @@ export class AuthService {
       const mergedData = {
         ...currentProfile,
         ...safeUpdateData,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       // Update using the database reference directly since dbUtils doesn't have a generic update method
@@ -129,10 +125,10 @@ export class AuthService {
     try {
       const auth = getAuth();
       await auth.updateUser(uid, { emailVerified: true });
-      
+
       // Update in Firestore as well
       await this.updateUserProfile(uid, { emailVerified: true });
-      
+
       return { success: true };
     } catch (error) {
       throw new Error(`Failed to verify email: ${error.message}`);
@@ -143,14 +139,15 @@ export class AuthService {
   static async getUserAchievements(userId) {
     try {
       const db = getDatabase();
-      const snapshot = await db.collection('users')
+      const snapshot = await db
+        .collection('users')
         .doc(userId)
         .collection('achievements')
         .get();
 
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
     } catch (error) {
-      console.error("Error fetching achievements:", error);
+      console.error('Error fetching achievements:', error);
       throw new Error(`Failed to get user achievements: ${error.message}`);
     }
   }
@@ -160,18 +157,17 @@ export class AuthService {
     try {
       return await dbUtils.getUserHikes(userId, filters);
     } catch (error) {
-      console.error("Error fetching hikes:", error);
+      console.error('Error fetching hikes:', error);
       throw new Error(`Failed to get user hikes: ${error.message}`);
     }
   }
-
 
   // Get user planned hikes
   static async getUserPlannedHikes(userId, filters = {}) {
     try {
       return await dbUtils.getUserPlannedHikes(userId, filters);
     } catch (error) {
-      console.error("Error fetching planned hikes:", error);
+      console.error('Error fetching planned hikes:', error);
       throw new Error(`Failed to get user planned hikes: ${error.message}`);
     }
   }
@@ -180,14 +176,15 @@ export class AuthService {
   static async getUserGoals(userId) {
     try {
       const db = getDatabase();
-      const snapshot = await db.collection('users')
+      const snapshot = await db
+        .collection('users')
         .doc(userId)
         .collection('goals')
         .get();
 
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
     } catch (error) {
-      console.error("Error fetching goals:", error);
+      console.error('Error fetching goals:', error);
       throw new Error(`Failed to get user goals: ${error.message}`);
     }
   }
@@ -197,7 +194,7 @@ export class AuthService {
     try {
       return await dbUtils.getUserHikeStats(userId);
     } catch (error) {
-      console.error("Error fetching user stats:", error);
+      console.error('Error fetching user stats:', error);
       throw new Error(`Failed to get user stats: ${error.message}`);
     }
   }
@@ -205,7 +202,6 @@ export class AuthService {
   // Reset user password
   static async resetPassword(email) {
     try {
-
       const auth = getAuth();
 
       const userRecord = await auth.getUserByEmail(email);
@@ -222,16 +218,16 @@ export class AuthService {
     try {
       const auth = getAuth();
       const userRecord = await auth.getUserByEmail(email);
-      
+
       // Also get the profile data
       const profile = await this.getUserProfile(userRecord.uid);
-      
+
       return {
         uid: userRecord.uid,
         email: userRecord.email,
         displayName: userRecord.displayName,
         emailVerified: userRecord.emailVerified,
-        ...profile
+        ...profile,
       };
     } catch (error) {
       throw new Error(`Failed to get user by email: ${error.message}`);

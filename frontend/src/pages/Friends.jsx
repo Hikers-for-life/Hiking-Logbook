@@ -1,26 +1,54 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 import { getUserProfile } from '../services/userServices';
 import { useLocation } from 'react-router-dom';
-import { Navigation } from "../components/ui/navigation";
-import { Button } from "../components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Input } from "../components/ui/input";
-import { Badge } from "../components/ui/badge";
-import { Avatar, AvatarFallback } from "../components/ui/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../components/ui/dialog";
-import { Textarea } from "../components/ui/textarea";
-import { searchUsers } from "../services/userServices";
-import { ProfileView } from "../components/ui/view-friend-profile";
-import { fetchFeed, likeFeed, commentFeed, shareFeed, deleteCommentFeed, deleteFeed, updateFeed, getFeedById } from "../services/feed";//ANNAH HERE
-import { discoverFriends, sendFriendRequest, getIncomingRequests, respondToRequest } from "../services/discover";//ANNAH HERE
-import { getAuth } from "firebase/auth";//NOT SURE ABOUT THIS IMPORT//ANNA HERE
+import { Navigation } from '../components/ui/navigation';
+import { Button } from '../components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '../components/ui/card';
+import { Input } from '../components/ui/input';
+import { Badge } from '../components/ui/badge';
+import { Avatar, AvatarFallback } from '../components/ui/avatar';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '../components/ui/tabs';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '../components/ui/dialog';
+import { Textarea } from '../components/ui/textarea';
+import { searchUsers } from '../services/userServices';
+import { ProfileView } from '../components/ui/view-friend-profile';
+import {
+  fetchFeed,
+  likeFeed,
+  commentFeed,
+  shareFeed,
+  deleteCommentFeed,
+  deleteFeed,
+  updateFeed,
+  getFeedById,
+} from '../services/feed'; //ANNAH HERE
+import {
+  discoverFriends,
+  sendFriendRequest,
+  getIncomingRequests,
+  respondToRequest,
+} from '../services/discover'; //ANNAH HERE
+import { getAuth } from 'firebase/auth'; //NOT SURE ABOUT THIS IMPORT//ANNA HERE
 import { useAuth } from '../contexts/AuthContext.jsx';
-import { useToast } from "../hooks/use-toast";
-import { getUserStats } from "../services/statistics";
-import { getFriendProfile } from "../services/friendService.js";
-
+import { useToast } from '../hooks/use-toast';
+import { getUserStats } from '../services/statistics';
+import { getFriendProfile } from '../services/friendService.js';
 
 import {
   Search,
@@ -36,10 +64,11 @@ import {
   MessageSquare,
   Edit3,
   Trash2,
-  Camera
-} from "lucide-react";
+  Camera,
+} from 'lucide-react';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL =
+  process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
 const Friends = () => {
   const [selectedProfile, setSelectedProfile] = useState(null);
@@ -64,9 +93,9 @@ const Friends = () => {
   const [postToShare, setPostToShare] = useState(null);
   //ANNAH HERE
 
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState([]);
-  const [searchError, setSearchError] = useState("");
+  const [searchError, setSearchError] = useState('');
   const { currentUser } = useAuth();
   const [friends, setFriends] = useState([]);
   const [, setUserStats] = useState([]);
@@ -76,10 +105,10 @@ const Friends = () => {
     if (!searchTerm.trim()) return;
     const results = await searchUsers(searchTerm.trim());
     if (results.length === 0) {
-      setSearchError("No hikers found with that name.");
+      setSearchError('No hikers found with that name.');
       setSearchResults([]);
     } else {
-      setSearchError("");
+      setSearchError('');
       setSearchResults(results);
     }
   };
@@ -97,8 +126,8 @@ const Friends = () => {
               totalHikes: profile.totalHikes,
               totalDistance: profile.totalDistance,
               totalElevation: profile.totalElevation,
-              lastHike: profile.recentHikes[0]?.title || "No hikes yet",
-              lastHikeDate: profile.recentHikes[0]?.date || "",
+              lastHike: profile.recentHikes[0]?.title || 'No hikes yet',
+              lastHikeDate: profile.recentHikes[0]?.date || '',
             };
           }
           return f; // fallback if fetch fails
@@ -111,12 +140,11 @@ const Friends = () => {
     loadFriendProfiles();
   }, [friends.length]);
 
-
   useEffect(() => {
     if (!currentUser) return;
 
     getUserStats(currentUser.uid).then((stats) => {
-      console.log("User stats:", stats);
+      console.log('User stats:', stats);
       setUserStats(stats); // { totalDistance: X, totalElevation: Y }
     });
   }, [currentUser]);
@@ -129,35 +157,37 @@ const Friends = () => {
         if (data.success) {
           setFriends(data.data);
         } else {
-          console.error("Failed to fetch friends:", data.error);
+          console.error('Failed to fetch friends:', data.error);
         }
       } catch (err) {
-        console.error("Error fetching friends:", err);
+        console.error('Error fetching friends:', err);
       }
     };
 
     if (currentUser) fetchFriends();
   }, [currentUser]);
 
-
-  console.log("Fetching friends:", friends);
+  console.log('Fetching friends:', friends);
   const handleBlockFriend = async (fid) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/friends/${currentUser.uid}/block/${fid}`, {
-        method: "DELETE",
-      });
+      const res = await fetch(
+        `${API_BASE_URL}/friends/${currentUser.uid}/block/${fid}`,
+        {
+          method: 'DELETE',
+        }
+      );
       const data = await res.json();
       if (data.success) {
-        setFriends(prev => prev.filter(f => f.id !== fid)); // update UI
+        setFriends((prev) => prev.filter((f) => f.id !== fid)); // update UI
         toast({
-          title: "User blocked",
-          description: "Friendship removed successfully!",
+          title: 'User blocked',
+          description: 'Friendship removed successfully!',
         });
       } else {
-        console.error("Failed to block friend:", data.error);
+        console.error('Failed to block friend:', data.error);
       }
     } catch (err) {
-      console.error("Error blocking friend:", err);
+      console.error('Error blocking friend:', err);
     }
   };
   const handleViewProfile = async (personOrId, showAddFriend = false) => {
@@ -170,7 +200,13 @@ const Friends = () => {
         uid = personOrId;
       } else {
         uid = personOrId.uid || personOrId.id || personOrId.userId || null;
-        base = { ...(personOrId.displayName ? { displayName: personOrId.displayName } : {}), ...(personOrId.name ? { displayName: personOrId.name } : {}), avatar: personOrId.avatar || personOrId?.displayName?.[0] };
+        base = {
+          ...(personOrId.displayName
+            ? { displayName: personOrId.displayName }
+            : {}),
+          ...(personOrId.name ? { displayName: personOrId.name } : {}),
+          avatar: personOrId.avatar || personOrId?.displayName?.[0],
+        };
       }
 
       if (uid) {
@@ -190,11 +226,18 @@ const Friends = () => {
       }
 
       // fallback: use provided object as-is
-      setSelectedProfile({ ...base, ...(typeof personOrId === 'object' ? personOrId : {}), showAddFriend });
+      setSelectedProfile({
+        ...base,
+        ...(typeof personOrId === 'object' ? personOrId : {}),
+        showAddFriend,
+      });
       setIsProfileOpen(true);
     } catch (err) {
       console.error('Failed to load profile:', err);
-      toast({ title: 'Profile error', description: 'Could not load user profile.' });
+      toast({
+        title: 'Profile error',
+        description: 'Could not load user profile.',
+      });
     }
   };
 
@@ -203,9 +246,11 @@ const Friends = () => {
 
   // Determine which tab should be active based on the current route
   const location = useLocation();
-  const initialTab = location.pathname && location.pathname.includes('/activity-feed') ? 'activity' : 'friends';
+  const initialTab =
+    location.pathname && location.pathname.includes('/activity-feed')
+      ? 'activity'
+      : 'friends';
   const [activeTab, setActiveTab] = useState(initialTab);
-  
 
   useEffect(() => {
     // If the route changes to /activity-feed, switch to the activity tab
@@ -213,7 +258,6 @@ const Friends = () => {
       setActiveTab('activity');
     }
   }, [location.pathname]);
-
 
   useEffect(() => {
     let isMounted = true;
@@ -226,7 +270,9 @@ const Friends = () => {
         const data = await fetchFeed(p, limit); // fetches activities page
         if (!isMounted) return;
 
-        const activities = (Array.isArray(data) ? data : data.activities || []).map(a => ({
+        const activities = (
+          Array.isArray(data) ? data : data.activities || []
+        ).map((a) => ({
           ...a,
           comments: a.comments || [],
         }));
@@ -234,13 +280,13 @@ const Friends = () => {
         if (p === 1) {
           setRecentActivity(activities);
         } else {
-          setRecentActivity(prev => [...prev, ...activities]);
+          setRecentActivity((prev) => [...prev, ...activities]);
         }
 
         // If fewer than limit returned, no more pages
         if (activities.length < limit) setHasMore(false);
       } catch (err) {
-        console.error("Failed to fetch feed:", err);
+        console.error('Failed to fetch feed:', err);
       } finally {
         if (isMounted) {
           setLoading(false);
@@ -250,9 +296,10 @@ const Friends = () => {
     };
 
     loadFeed(page);
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, []);
-
 
   // ---- Like handler ----
   const handleLike = async (activity) => {
@@ -260,38 +307,55 @@ const Friends = () => {
     if (!uid) return;
 
     // Optimistic UI update
-    setRecentActivity(prev => prev.map(a => {
-      if (a.id === activity.id) {
-        const likes = a.likes?.includes(uid)
-          ? a.likes.filter(l => l !== uid)
-          : [...(a.likes || []), uid];
-        return { ...a, likes };
-      }
-      return a;
-    }));
+    setRecentActivity((prev) =>
+      prev.map((a) => {
+        if (a.id === activity.id) {
+          const likes = a.likes?.includes(uid)
+            ? a.likes.filter((l) => l !== uid)
+            : [...(a.likes || []), uid];
+          return { ...a, likes };
+        }
+        return a;
+      })
+    );
 
     try {
       const res = await likeFeed(activity.id, !activity.likes?.includes(uid));
       if (res && res.likes) {
-        setRecentActivity(prev => prev.map(a => a.id === activity.id ? { ...a, likes: res.likes } : a));
+        setRecentActivity((prev) =>
+          prev.map((a) =>
+            a.id === activity.id ? { ...a, likes: res.likes } : a
+          )
+        );
         try {
           const likedNow = res.likes.includes(uid);
-          toast({ title: likedNow ? 'Liked' : 'Unliked', description: likedNow ? 'You liked this post.' : 'You removed your like.' });
+          toast({
+            title: likedNow ? 'Liked' : 'Unliked',
+            description: likedNow
+              ? 'You liked this post.'
+              : 'You removed your like.',
+          });
         } catch (e) {
           // ignore toast errors
         }
       }
     } catch (err) {
-      console.error("Failed to like:", err);
+      console.error('Failed to like:', err);
       // rollback if needed
-      setRecentActivity(prev => prev.map(a => {
-        if (a.id === activity.id) {
-          const likes = activity.likes || [];
-          return { ...a, likes };
-        }
-        return a;
-      }));
-      toast({ title: 'Like failed', description: 'Could not update like. Please try again.', variant: 'destructive' });
+      setRecentActivity((prev) =>
+        prev.map((a) => {
+          if (a.id === activity.id) {
+            const likes = activity.likes || [];
+            return { ...a, likes };
+          }
+          return a;
+        })
+      );
+      toast({
+        title: 'Like failed',
+        description: 'Could not update like. Please try again.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -302,9 +366,11 @@ const Friends = () => {
     try {
       const nextPage = page + 1;
       const data = await fetchFeed(nextPage, limit);
-      const activities = (Array.isArray(data) ? data : data.activities || []).map(a => ({ ...a, comments: a.comments || [] }));
+      const activities = (
+        Array.isArray(data) ? data : data.activities || []
+      ).map((a) => ({ ...a, comments: a.comments || [] }));
       if (activities.length > 0) {
-        setRecentActivity(prev => [...prev, ...activities]);
+        setRecentActivity((prev) => [...prev, ...activities]);
         setPage(nextPage);
       }
       if (activities.length < limit) setHasMore(false);
@@ -327,8 +393,8 @@ const Friends = () => {
       name: user.displayName || user.email,
       content,
     };
-    setRecentActivity(prev =>
-      prev.map(a =>
+    setRecentActivity((prev) =>
+      prev.map((a) =>
         a.id === activityId
           ? { ...a, comments: [...(a.comments || []), tempComment] }
           : a
@@ -336,57 +402,71 @@ const Friends = () => {
     );
     try {
       const res = await commentFeed(activityId, content);
-      setRecentActivity(prev =>
-        prev.map(a =>
+      setRecentActivity((prev) =>
+        prev.map((a) =>
           a.id === activityId
             ? {
-              ...a,
-              comments: [
-                ...(a.comments || []).filter(c => c.id !== tempComment.id),
-                res.comment,
-              ],
-            }
+                ...a,
+                comments: [
+                  ...(a.comments || []).filter((c) => c.id !== tempComment.id),
+                  res.comment,
+                ],
+              }
             : a
         )
       );
-      toast({ title: 'Comment added', description: 'Your comment was posted.' });
+      toast({
+        title: 'Comment added',
+        description: 'Your comment was posted.',
+      });
     } catch (err) {
-      console.error("Failed to add comment:", err);
+      console.error('Failed to add comment:', err);
       // rollback temp comment
-      setRecentActivity(prev =>
-        prev.map(a =>
+      setRecentActivity((prev) =>
+        prev.map((a) =>
           a.id === activityId
             ? {
-              ...a,
-              comments: (a.comments || []).filter(c => c.id !== tempComment.id),
-            }
+                ...a,
+                comments: (a.comments || []).filter(
+                  (c) => c.id !== tempComment.id
+                ),
+              }
             : a
         )
       );
-      toast({ title: 'Comment failed', description: 'Could not post your comment. Please try again.', variant: 'destructive' });
+      toast({
+        title: 'Comment failed',
+        description: 'Could not post your comment. Please try again.',
+        variant: 'destructive',
+      });
     }
   };
   const handleDeleteComment = async (activityId, commentId) => {
     // Optimistic update
-    setRecentActivity(prev =>
-      prev.map(a =>
+    setRecentActivity((prev) =>
+      prev.map((a) =>
         a.id === activityId
-          ? { ...a, comments: a.comments.filter(c => c.id !== commentId) }
+          ? { ...a, comments: a.comments.filter((c) => c.id !== commentId) }
           : a
       )
     );
 
     try {
       await deleteCommentFeed(activityId, commentId);
-      toast({ title: 'Comment deleted', description: 'The comment was removed.' });
+      toast({
+        title: 'Comment deleted',
+        description: 'The comment was removed.',
+      });
     } catch (err) {
-      console.error("Failed to delete comment:", err);
+      console.error('Failed to delete comment:', err);
       // Optional: refetch comments here if you want rollback
-      toast({ title: 'Delete failed', description: 'Could not delete the comment. Please try again.', variant: 'destructive' });
+      toast({
+        title: 'Delete failed',
+        description: 'Could not delete the comment. Please try again.',
+        variant: 'destructive',
+      });
     }
   };
-
-
 
   // ---- Share handler with caption ----
   const handleShare = async (activity) => {
@@ -423,11 +503,11 @@ const Friends = () => {
     // Optimistic share object
     const tempShare = {
       id: Math.random().toString(36).substr(2, 9),
-      type: "share",
+      type: 'share',
       original: originalData,
       userId: user.uid,
       name: user.displayName || user.email,
-      avatar: user.displayName?.[0] || user.email?.[0] || "?",
+      avatar: user.displayName?.[0] || user.email?.[0] || '?',
       created_at: new Date().toISOString(),
       likes: [],
       comments: [],
@@ -453,32 +533,48 @@ const Friends = () => {
       // Replace temp with persisted version (backend returns either `id` or `newActivityId`)
       const returnedId = data.id || data.newActivityId || null;
       setRecentActivity((prev) =>
-        prev.map((a) => (a.id === tempShare.id ? { ...a, id: returnedId, ...data } : a))
+        prev.map((a) =>
+          a.id === tempShare.id ? { ...a, id: returnedId, ...data } : a
+        )
       );
       // Notify user of success
-      toast({ title: 'Post shared', description: 'Your post was shared to your feed.' });
+      toast({
+        title: 'Post shared',
+        description: 'Your post was shared to your feed.',
+      });
     } catch (err) {
-      console.error("Failed to share:", err);
+      console.error('Failed to share:', err);
       // rollback optimistic
       setRecentActivity((prev) => prev.filter((a) => a.id !== tempShare.id));
-      toast({ title: 'Share failed', description: 'Could not share the post. Please try again.', variant: 'destructive' });
+      toast({
+        title: 'Share failed',
+        description: 'Could not share the post. Please try again.',
+        variant: 'destructive',
+      });
     }
   };
 
   const handleDeletePost = async (activityId) => {
     // Optimistic UI update: remove the post locally first
     const prevActivity = [...recentActivity];
-    setRecentActivity(prev => prev.filter(a => a.id !== activityId));
+    setRecentActivity((prev) => prev.filter((a) => a.id !== activityId));
 
     try {
       // Call a backend/service function to delete the post
       await deleteFeed(activityId); // <-- you need to implement this in services/feed.js
-      toast({ title: 'Post deleted', description: 'The post has been removed.' });
+      toast({
+        title: 'Post deleted',
+        description: 'The post has been removed.',
+      });
     } catch (err) {
-      console.error("Failed to delete post:", err);
+      console.error('Failed to delete post:', err);
       // Rollback if deletion fails
       setRecentActivity(prevActivity);
-      toast({ title: 'Delete failed', description: 'Could not delete the post. Please try again.', variant: 'destructive' });
+      toast({
+        title: 'Delete failed',
+        description: 'Could not delete the post. Please try again.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -491,31 +587,44 @@ const Friends = () => {
     setEditingPost(null);
 
     // find activity to decide whether it's a share (edit caption) or original (edit description)
-    const activity = recentActivity.find(a => a.id === activityId) || {};
+    const activity = recentActivity.find((a) => a.id === activityId) || {};
     const isShare = activity.type === 'share';
     const payload = isShare
       ? { shareCaption: updatedDescription.trim() }
       : { description: updatedDescription.trim() };
 
     // Optimistic UI update
-    setRecentActivity(curr => curr.map(a => a.id === activityId ? { ...a, ...(isShare ? { shareCaption: payload.shareCaption } : { description: payload.description }) } : a));
+    setRecentActivity((curr) =>
+      curr.map((a) =>
+        a.id === activityId
+          ? {
+              ...a,
+              ...(isShare
+                ? { shareCaption: payload.shareCaption }
+                : { description: payload.description }),
+            }
+          : a
+      )
+    );
 
     try {
       const updated = await updateFeed(activityId, payload);
 
       // Replace activity with server-returned object (updated)
-      setRecentActivity(curr => curr.map(a => (a.id === activityId ? { ...a, ...updated } : a)));
+      setRecentActivity((curr) =>
+        curr.map((a) => (a.id === activityId ? { ...a, ...updated } : a))
+      );
       toast({ title: 'Post updated', description: 'Your changes were saved.' });
     } catch (err) {
       console.error('Failed to update post:', err);
       // rollback
       setRecentActivity(prev);
-      toast({ title: 'Update failed', description: 'Could not save changes. Please try again.' });
+      toast({
+        title: 'Update failed',
+        description: 'Could not save changes. Please try again.',
+      });
     }
   };
-
-
-  
 
   // helper to format ISO timestamps to relative times (e.g., '5m', '2h')
   const timeAgo = (iso) => {
@@ -542,20 +651,48 @@ const Friends = () => {
     if (orig.type === 'share') {
       return (
         <div className="space-y-3">
-              <div className="p-3 border border-border rounded-lg">
+          <div className="p-3 border border-border rounded-lg">
             <div className="flex items-center gap-3 mb-2">
-              <Avatar className="h-8 w-8 cursor-pointer" onClick={(e) => { e.stopPropagation(); const targetId = orig.userId || orig.uid || orig.id; handleViewProfile(targetId, !friends.some(f => f.id === targetId)); }}>
-                <AvatarFallback className="bg-gradient-trail text-primary-foreground">{orig.avatar}</AvatarFallback>
+              <Avatar
+                className="h-8 w-8 cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const targetId = orig.userId || orig.uid || orig.id;
+                  handleViewProfile(
+                    targetId,
+                    !friends.some((f) => f.id === targetId)
+                  );
+                }}
+              >
+                <AvatarFallback className="bg-gradient-trail text-primary-foreground">
+                  {orig.avatar}
+                </AvatarFallback>
               </Avatar>
               <div>
                 <p className="text-sm">
-                  <span className="font-medium text-foreground cursor-pointer" onClick={(e) => { e.stopPropagation(); const targetId = orig.userId || orig.uid || orig.id; handleViewProfile(targetId, !friends.some(f => f.id === targetId)); }}>{orig.name}</span>{' '}
+                  <span
+                    className="font-medium text-foreground cursor-pointer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const targetId = orig.userId || orig.uid || orig.id;
+                      handleViewProfile(
+                        targetId,
+                        !friends.some((f) => f.id === targetId)
+                      );
+                    }}
+                  >
+                    {orig.name}
+                  </span>{' '}
                   <span className="text-muted-foreground">shared</span>
                 </p>
-                <p className="text-xs text-muted-foreground">{timeAgo(orig.time || orig.created_at)}</p>
+                <p className="text-xs text-muted-foreground">
+                  {timeAgo(orig.time || orig.created_at)}
+                </p>
               </div>
             </div>
-            {orig.shareCaption && <p className="text-sm italic">{orig.shareCaption}</p>}
+            {orig.shareCaption && (
+              <p className="text-sm italic">{orig.shareCaption}</p>
+            )}
           </div>
 
           {/* Render the nested original inside */}
@@ -568,15 +705,44 @@ const Friends = () => {
 
     // Normal original — instead of navigating away, try to scroll to the original in-page
     return (
-  <Card className="bg-card border-border/50 cursor-pointer" onClick={() => { if (orig.id) handleScrollToOriginal(orig.id); }}>
+      <Card
+        className="bg-card border-border/50 cursor-pointer"
+        onClick={() => {
+          if (orig.id) handleScrollToOriginal(orig.id);
+        }}
+      >
         <CardContent className="p-4">
           <div className="flex items-center gap-3 mb-3">
-            <Avatar className="h-8 w-8 cursor-pointer" onClick={(e) => { e.stopPropagation(); const targetId = orig.userId || orig.uid || orig.id; handleViewProfile(targetId, !friends.some(f => f.id === targetId)); }}>
-              <AvatarFallback className="bg-gradient-trail text-primary-foreground">{orig.avatar}</AvatarFallback>
+            <Avatar
+              className="h-8 w-8 cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation();
+                const targetId = orig.userId || orig.uid || orig.id;
+                handleViewProfile(
+                  targetId,
+                  !friends.some((f) => f.id === targetId)
+                );
+              }}
+            >
+              <AvatarFallback className="bg-gradient-trail text-primary-foreground">
+                {orig.avatar}
+              </AvatarFallback>
             </Avatar>
-              <div className="flex-1">
+            <div className="flex-1">
               <p className="text-sm">
-                <span className="font-medium text-foreground cursor-pointer" onClick={(e) => { e.stopPropagation(); const targetId = orig.userId || orig.uid || orig.id; handleViewProfile(targetId, !friends.some(f => f.id === targetId)); }}>{orig.name}</span>{' '}
+                <span
+                  className="font-medium text-foreground cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const targetId = orig.userId || orig.uid || orig.id;
+                    handleViewProfile(
+                      targetId,
+                      !friends.some((f) => f.id === targetId)
+                    );
+                  }}
+                >
+                  {orig.name}
+                </span>{' '}
                 <span className="text-muted-foreground">{orig.action}</span>{' '}
                 <span className="font-medium text-foreground">{orig.hike}</span>
               </p>
@@ -590,56 +756,59 @@ const Friends = () => {
             </div>
           </div>
 
-          {orig.description && <p className="text-sm text-foreground">{orig.description}</p>}
+          {orig.description && (
+            <p className="text-sm text-foreground">{orig.description}</p>
+          )}
         </CardContent>
       </Card>
     );
   };
 
+  // Scroll to an original activity in-page. If it's not present, fetch it and insert then scroll.
+  const handleScrollToOriginal = async (origId) => {
+    if (!origId) return;
 
-    // Scroll to an original activity in-page. If it's not present, fetch it and insert then scroll.
-    const handleScrollToOriginal = async (origId) => {
-      if (!origId) return;
-
-      try {
-        // If it's already loaded in the current feed, scroll to it
-        const existing = recentActivity.find((a) => a.id === origId);
-        if (existing) {
-          const el = document.getElementById(`feed-item-${origId}`);
-          if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            setHighlightedId(origId);
-            setTimeout(() => setHighlightedId(null), 3000);
-          }
-          return;
+    try {
+      // If it's already loaded in the current feed, scroll to it
+      const existing = recentActivity.find((a) => a.id === origId);
+      if (existing) {
+        const el = document.getElementById(`feed-item-${origId}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          setHighlightedId(origId);
+          setTimeout(() => setHighlightedId(null), 3000);
         }
-
-        // Otherwise fetch the single item from the backend and insert it near the top
-        const fetched = await getFeedById(origId);
-        const activity = fetched && fetched.data ? fetched.data : fetched;
-        if (!activity) throw new Error('Original not found');
-
-        setRecentActivity((prev) => {
-          // avoid duplicates
-          if (prev.some((p) => p.id === activity.id)) return prev;
-          return [activity, ...prev];
-        });
-
-        // wait a brief moment for DOM to update, then scroll
-        setTimeout(() => {
-          const el = document.getElementById(`feed-item-${activity.id}`);
-          if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            setHighlightedId(activity.id);
-            setTimeout(() => setHighlightedId(null), 3000);
-          }
-        }, 150);
-      } catch (err) {
-        console.error('Failed to fetch original post:', err);
-        toast({ title: 'Could not find original', description: 'The original post could not be loaded.' });
+        return;
       }
-    };
 
+      // Otherwise fetch the single item from the backend and insert it near the top
+      const fetched = await getFeedById(origId);
+      const activity = fetched && fetched.data ? fetched.data : fetched;
+      if (!activity) throw new Error('Original not found');
+
+      setRecentActivity((prev) => {
+        // avoid duplicates
+        if (prev.some((p) => p.id === activity.id)) return prev;
+        return [activity, ...prev];
+      });
+
+      // wait a brief moment for DOM to update, then scroll
+      setTimeout(() => {
+        const el = document.getElementById(`feed-item-${activity.id}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          setHighlightedId(activity.id);
+          setTimeout(() => setHighlightedId(null), 3000);
+        }
+      }, 150);
+    } catch (err) {
+      console.error('Failed to fetch original post:', err);
+      toast({
+        title: 'Could not find original',
+        description: 'The original post could not be loaded.',
+      });
+    }
+  };
 
   useEffect(() => {
     if (!auth?.currentUser) return;
@@ -647,21 +816,24 @@ const Friends = () => {
       try {
         setLoading(true);
         const data = await discoverFriends();
-        console.log("suggestion :", data)
+        console.log('suggestion :', data);
         // reflect local pending markers
         let marked = data;
         try {
-          marked = data.map(s => {
+          marked = data.map((s) => {
             try {
               const pending = localStorage.getItem(`pending_request_${s.id}`);
-              if (pending) return { ...s, _requestSent: true, _requestId: pending };
+              if (pending)
+                return { ...s, _requestSent: true, _requestId: pending };
             } catch (e) {}
             return s;
           });
-        } catch (e) { marked = data; }
+        } catch (e) {
+          marked = data;
+        }
         setSuggestions(marked);
       } catch (err) {
-        console.error("Failed to fetch suggestions:", err);
+        console.error('Failed to fetch suggestions:', err);
       } finally {
         setLoading(false);
       }
@@ -689,7 +861,13 @@ const Friends = () => {
         setSuggestions(refreshed || []);
       } catch (err) {
         // fallback: mark locally
-        setSuggestions(prev => prev.map(s => s.id === id ? { ...s, _requestSent: true, _requestId: requestId } : s));
+        setSuggestions((prev) =>
+          prev.map((s) =>
+            s.id === id
+              ? { ...s, _requestSent: true, _requestId: requestId }
+              : s
+          )
+        );
       }
     };
     window.addEventListener('friend-request-sent', onRequestSent);
@@ -699,17 +877,18 @@ const Friends = () => {
     };
   }, [auth?.currentUser]);
 
-
-
-
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Friends & Community</h1>
-          <p className="text-muted-foreground">Connect with fellow hikers and share your adventures.</p>
+          <h1 className="text-3xl font-bold text-foreground mb-2">
+            Friends & Community
+          </h1>
+          <p className="text-muted-foreground">
+            Connect with fellow hikers and share your adventures.
+          </p>
         </div>
 
         <div className="relative mb-4">
@@ -718,7 +897,7 @@ const Friends = () => {
             placeholder="Search for friends or hikers..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             className="pl-10"
           />
         </div>
@@ -731,7 +910,9 @@ const Friends = () => {
           >
             {/* Close button */}
             <button
-              onClick={() => setSearchResults(searchResults.filter(u => u.id !== user.id))}
+              onClick={() =>
+                setSearchResults(searchResults.filter((u) => u.id !== user.id))
+              }
               className="absolute top-2 right-2 text-gray-400 hover:text-red-500 transition-colors"
             >
               ✕
@@ -743,9 +924,9 @@ const Friends = () => {
                   <Avatar className="h-12 w-12">
                     <AvatarFallback className="text-xl">
                       {user.displayName
-                        .split(" ")
+                        .split(' ')
                         .map((n) => n[0])
-                        .join("")}
+                        .join('')}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
@@ -753,7 +934,9 @@ const Friends = () => {
                       <span
                         className="font-semibold text-foreground cursor-pointer hover:underline"
                         onClick={() => {
-                          const isFriend = friends.some((f) => f.id === user.id);
+                          const isFriend = friends.some(
+                            (f) => f.id === user.id
+                          );
                           handleViewProfile(user, !isFriend); // showAddFriend = false if already friend
                         }}
                       >
@@ -762,7 +945,7 @@ const Friends = () => {
                     </div>
                     <p className="text-sm text-muted-foreground flex items-center gap-1">
                       <MapPin className="h-3 w-3" />
-                      {user.location || "Not yet set"}
+                      {user.location || 'Not yet set'}
                     </p>
                   </div>
                 </div>
@@ -771,9 +954,11 @@ const Friends = () => {
           </Card>
         ))}
 
-
-
-  <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="space-y-6"
+        >
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="friends">My Friends</TabsTrigger>
             <TabsTrigger value="activity">Activity Feed</TabsTrigger>
@@ -783,7 +968,10 @@ const Friends = () => {
           <TabsContent value="friends" className="space-y-6">
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {friends.map((friend) => (
-                <Card key={friend.id} className="bg-card border-border shadow-elevation">
+                <Card
+                  key={friend.id}
+                  className="bg-card border-border shadow-elevation"
+                >
                   <CardHeader className="pb-4">
                     <div className="flex items-center gap-3">
                       <Avatar className="h-12 w-12">
@@ -796,12 +984,16 @@ const Friends = () => {
                       </Avatar>
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <h3 className="font-semibold text-foreground">{friend.displayName}</h3>
-                          <div className={`w-2 h-2 rounded-full ${friend.status === 'online' ? 'bg-green-500' : 'bg-gray-400'}`} />
+                          <h3 className="font-semibold text-foreground">
+                            {friend.displayName}
+                          </h3>
+                          <div
+                            className={`w-2 h-2 rounded-full ${friend.status === 'online' ? 'bg-green-500' : 'bg-gray-400'}`}
+                          />
                         </div>
                         <p className="text-sm text-muted-foreground flex items-center gap-1">
                           <MapPin className="h-3 w-3" />
-                          {friend.location || "Not yet set"}
+                          {friend.location || 'Not yet set'}
                         </p>
                       </div>
                     </div>
@@ -809,22 +1001,32 @@ const Friends = () => {
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 gap-4 text-center">
                       <div>
-                        <p className="text-2xl font-bold text-summit">{friend.totalHikes}</p>
+                        <p className="text-2xl font-bold text-summit">
+                          {friend.totalHikes}
+                        </p>
                         <p className="text-xs text-muted-foreground">Hikes</p>
                       </div>
                       <div>
-                        <p className="text-2xl font-bold text-forest">{friend.totalDistance} km</p>
-                        <p className="text-xs text-muted-foreground">Distance</p>
+                        <p className="text-2xl font-bold text-forest">
+                          {friend.totalDistance} km
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Distance
+                        </p>
                       </div>
                     </div>
 
                     <div className="space-y-2">
                       <div className="flex items-center gap-2 text-sm">
                         <Mountain className="h-4 w-4 text-trail" />
-                        <span className="text-muted-foreground">Last hike:</span>
+                        <span className="text-muted-foreground">
+                          Last hike:
+                        </span>
                       </div>
                       <p className="text-sm font-medium">{friend.lastHike}</p>
-                      <p className="text-xs text-muted-foreground">{friend.lastHikeDate}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {friend.lastHikeDate}
+                      </p>
                     </div>
 
                     <Badge variant="secondary" className="text-xs">
@@ -848,7 +1050,6 @@ const Friends = () => {
                     >
                       Block Friend
                     </Button>
-
                   </CardContent>
                 </Card>
               ))}
@@ -871,19 +1072,75 @@ const Friends = () => {
                     <div className="space-y-2">
                       <h4 className="text-sm font-semibold">Friend requests</h4>
                       {incomingRequests.map((r) => (
-                        <div key={r.id} className="flex items-center justify-between p-2 border border-border rounded">
+                        <div
+                          key={r.id}
+                          className="flex items-center justify-between p-2 border border-border rounded"
+                        >
                           <div className="flex items-center gap-3">
                             <Avatar className="h-8 w-8">
-                              <AvatarFallback className="bg-gradient-trail text-primary-foreground">{r.fromAvatar}</AvatarFallback>
+                              <AvatarFallback className="bg-gradient-trail text-primary-foreground">
+                                {r.fromAvatar}
+                              </AvatarFallback>
                             </Avatar>
                             <div>
                               <div className="font-medium">{r.fromName}</div>
-                              <div className="text-xs text-muted-foreground">Requested you</div>
+                              <div className="text-xs text-muted-foreground">
+                                Requested you
+                              </div>
                             </div>
                           </div>
                           <div className="flex gap-2">
-                            <Button size="sm" onClick={async (e) => { e.stopPropagation(); try { await respondToRequest(r.id, 'accept'); setIncomingRequests(prev => prev.filter(x => x.id !== r.id)); toast({ title: 'Friend added', description: `${r.fromName} is now your friend.` }); } catch (err) { console.error(err); toast({ title: 'Accept failed', description: 'Could not accept request.', variant: 'destructive' }); } }}>Accept</Button>
-                            <Button size="sm" variant="outline" onClick={async (e) => { e.stopPropagation(); try { await respondToRequest(r.id, 'decline'); setIncomingRequests(prev => prev.filter(x => x.id !== r.id)); toast({ title: 'Request declined', description: `You declined ${r.fromName}` }); } catch (err) { console.error(err); toast({ title: 'Decline failed', description: 'Could not decline request.', variant: 'destructive' }); } }}>Decline</Button>
+                            <Button
+                              size="sm"
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                try {
+                                  await respondToRequest(r.id, 'accept');
+                                  setIncomingRequests((prev) =>
+                                    prev.filter((x) => x.id !== r.id)
+                                  );
+                                  toast({
+                                    title: 'Friend added',
+                                    description: `${r.fromName} is now your friend.`,
+                                  });
+                                } catch (err) {
+                                  console.error(err);
+                                  toast({
+                                    title: 'Accept failed',
+                                    description: 'Could not accept request.',
+                                    variant: 'destructive',
+                                  });
+                                }
+                              }}
+                            >
+                              Accept
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                try {
+                                  await respondToRequest(r.id, 'decline');
+                                  setIncomingRequests((prev) =>
+                                    prev.filter((x) => x.id !== r.id)
+                                  );
+                                  toast({
+                                    title: 'Request declined',
+                                    description: `You declined ${r.fromName}`,
+                                  });
+                                } catch (err) {
+                                  console.error(err);
+                                  toast({
+                                    title: 'Decline failed',
+                                    description: 'Could not decline request.',
+                                    variant: 'destructive',
+                                  });
+                                }
+                              }}
+                            >
+                              Decline
+                            </Button>
                           </div>
                         </div>
                       ))}
@@ -892,28 +1149,82 @@ const Friends = () => {
                   {recentActivity.map((activity) => {
                     const isOwnPost = activity.userId === auth.currentUser.uid;
 
-            return (
-              <Card id={`feed-item-${activity.id}`} key={activity.id} className={`bg-background border-border shadow-sm hover:shadow-md transition-shadow ${highlightedId === activity.id ? 'ring-2 ring-amber-300' : ''}`}>
+                    return (
+                      <Card
+                        id={`feed-item-${activity.id}`}
+                        key={activity.id}
+                        className={`bg-background border-border shadow-sm hover:shadow-md transition-shadow ${highlightedId === activity.id ? 'ring-2 ring-amber-300' : ''}`}
+                      >
                         <CardContent className="p-6">
                           {/* ---- If shared post ---- */}
-                          {activity.type === "share" ? (
+                          {activity.type === 'share' ? (
                             <>
                               {/* Share header */}
                               <div className="flex items-center gap-3 mb-4">
-                                <Avatar className="h-10 w-10 cursor-pointer" onClick={(e) => { e.stopPropagation(); const targetId = activity.userId || activity.id; handleViewProfile(targetId, !friends.some(f => f.id === targetId)); }}>
+                                <Avatar
+                                  className="h-10 w-10 cursor-pointer"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const targetId =
+                                      activity.userId || activity.id;
+                                    handleViewProfile(
+                                      targetId,
+                                      !friends.some((f) => f.id === targetId)
+                                    );
+                                  }}
+                                >
                                   <AvatarFallback className="bg-gradient-trail text-primary-foreground">
                                     {activity.name[0]}
                                   </AvatarFallback>
                                 </Avatar>
                                 <div className="flex-1">
                                   <p className="text-sm">
-                                    <span className="font-semibold text-foreground cursor-pointer" onClick={(e) => { e.stopPropagation(); const targetId = activity.userId || activity.id; handleViewProfile(targetId, !friends.some(f => f.id === targetId)); }}>{activity.name}</span>{" "}
-                                    <span className="text-muted-foreground">shared</span>{" "}
-                                    <span className="font-medium text-foreground cursor-pointer" onClick={(e) => { e.stopPropagation(); const origId = activity.original?.userId || activity.original?.uid || activity.original?.id; handleViewProfile(origId, origId ? !friends.some(f => f.id === origId) : false); }}>{activity.original.name}</span>'s post
+                                    <span
+                                      className="font-semibold text-foreground cursor-pointer"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        const targetId =
+                                          activity.userId || activity.id;
+                                        handleViewProfile(
+                                          targetId,
+                                          !friends.some(
+                                            (f) => f.id === targetId
+                                          )
+                                        );
+                                      }}
+                                    >
+                                      {activity.name}
+                                    </span>{' '}
+                                    <span className="text-muted-foreground">
+                                      shared
+                                    </span>{' '}
+                                    <span
+                                      className="font-medium text-foreground cursor-pointer"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        const origId =
+                                          activity.original?.userId ||
+                                          activity.original?.uid ||
+                                          activity.original?.id;
+                                        handleViewProfile(
+                                          origId,
+                                          origId
+                                            ? !friends.some(
+                                                (f) => f.id === origId
+                                              )
+                                            : false
+                                        );
+                                      }}
+                                    >
+                                      {activity.original.name}
+                                    </span>
+                                    's post
                                   </p>
                                   <p className="text-xs text-muted-foreground mt-1">
                                     <Clock className="h-3 w-3 inline mr-1" />
-                                    {timeAgo(activity.time || activity.created_at)}
+                                    {timeAgo(
+                                      activity.time || activity.created_at
+                                    )}
                                   </p>
                                 </div>
                                 {isOwnPost && (
@@ -921,7 +1232,9 @@ const Friends = () => {
                                     <Button
                                       variant="ghost"
                                       size="sm"
-                                      onClick={() => setEditingPost(activity.id)}
+                                      onClick={() =>
+                                        setEditingPost(activity.id)
+                                      }
                                       className="h-8 w-8 p-0"
                                     >
                                       <Edit3 className="h-4 w-4" />
@@ -929,7 +1242,9 @@ const Friends = () => {
                                     <Button
                                       variant="ghost"
                                       size="sm"
-                                      onClick={() => handleDeletePost(activity.id)}
+                                      onClick={() =>
+                                        handleDeletePost(activity.id)
+                                      }
                                       className="h-8 w-8 p-0 text-destructive hover:text-destructive"
                                     >
                                       <Trash2 className="h-4 w-4" />
@@ -941,7 +1256,9 @@ const Friends = () => {
                               {/* Share caption */}
                               {activity.shareCaption && (
                                 <div className="mb-4 p-3 border border-border rounded-lg">
-                                  <p className="text-sm text-foreground italic">{activity.shareCaption}</p>
+                                  <p className="text-sm text-foreground italic">
+                                    {activity.shareCaption}
+                                  </p>
                                 </div>
                               )}
 
@@ -954,7 +1271,15 @@ const Friends = () => {
                               <div className="flex items-center gap-3 mb-4">
                                 <Avatar
                                   className="h-12 w-12 cursor-pointer"
-                                  onClick={(e) => { e.stopPropagation(); const targetId = activity.userId || activity.id; handleViewProfile(targetId, !friends.some(f => f.id === targetId)); }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const targetId =
+                                      activity.userId || activity.id;
+                                    handleViewProfile(
+                                      targetId,
+                                      !friends.some((f) => f.id === targetId)
+                                    );
+                                  }}
                                 >
                                   <AvatarFallback className="bg-gradient-trail text-primary-foreground text-lg">
                                     {activity.avatar}
@@ -964,21 +1289,42 @@ const Friends = () => {
                                   <p className="text-sm">
                                     <span
                                       className="font-semibold text-foreground cursor-pointer hover:underline"
-                                      onClick={() => { const targetId = activity.userId || activity.id; handleViewProfile(targetId, !friends.some(f => f.id === targetId)); }}
+                                      onClick={() => {
+                                        const targetId =
+                                          activity.userId || activity.id;
+                                        handleViewProfile(
+                                          targetId,
+                                          !friends.some(
+                                            (f) => f.id === targetId
+                                          )
+                                        );
+                                      }}
                                     >
                                       {activity.name}
                                     </span>
-                                    <span className="text-muted-foreground"> {activity.action} </span>
-                                    <span className="font-medium text-foreground">{activity.hike}</span>
+                                    <span className="text-muted-foreground">
+                                      {' '}
+                                      {activity.action}{' '}
+                                    </span>
+                                    <span className="font-medium text-foreground">
+                                      {activity.hike}
+                                    </span>
                                   </p>
                                   <div className="flex items-center gap-4 mt-1">
                                     <p className="text-xs text-muted-foreground flex items-center gap-1">
                                       <Clock className="h-3 w-3" />
-                                      {timeAgo(activity.time || activity.created_at)}
+                                      {timeAgo(
+                                        activity.time || activity.created_at
+                                      )}
                                     </p>
-                                    <p className="text-xs text-muted-foreground">{activity.stats}</p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {activity.stats}
+                                    </p>
                                     {activity.photo && (
-                                      <Badge variant="outline" className="text-xs">
+                                      <Badge
+                                        variant="outline"
+                                        className="text-xs"
+                                      >
                                         <Camera className="h-3 w-3 mr-1" />
                                         Photo
                                       </Badge>
@@ -990,7 +1336,9 @@ const Friends = () => {
                                     <Button
                                       variant="ghost"
                                       size="sm"
-                                      onClick={() => setEditingPost(activity.id)}
+                                      onClick={() =>
+                                        setEditingPost(activity.id)
+                                      }
                                       className="h-8 w-8 p-0"
                                     >
                                       <Edit3 className="h-4 w-4" />
@@ -998,7 +1346,9 @@ const Friends = () => {
                                     <Button
                                       variant="ghost"
                                       size="sm"
-                                      onClick={() => handleDeletePost(activity.id)}
+                                      onClick={() =>
+                                        handleDeletePost(activity.id)
+                                      }
                                       className="h-8 w-8 p-0 text-destructive hover:text-destructive"
                                     >
                                       <Trash2 className="h-4 w-4" />
@@ -1010,7 +1360,9 @@ const Friends = () => {
                               {/* Description */}
                               {activity.description && (
                                 <div className="mb-4">
-                                  <p className="text-sm text-foreground leading-relaxed">{activity.description}</p>
+                                  <p className="text-sm text-foreground leading-relaxed">
+                                    {activity.description}
+                                  </p>
                                 </div>
                               )}
                             </>
@@ -1022,10 +1374,10 @@ const Friends = () => {
                               variant="ghost"
                               size="sm"
                               onClick={() => handleLike(activity)}
-                              className={`flex items-center gap-2 h-8 px-3 ${activity.likes?.includes(auth.currentUser.uid) ? "text-red-500" : "text-muted-foreground hover:text-foreground"}`}
+                              className={`flex items-center gap-2 h-8 px-3 ${activity.likes?.includes(auth.currentUser.uid) ? 'text-red-500' : 'text-muted-foreground hover:text-foreground'}`}
                             >
                               <Heart
-                                className={`h-4 w-4 ${activity.likes?.includes(auth.currentUser.uid) ? "text-red-500 fill-red-500" : ""}`}
+                                className={`h-4 w-4 ${activity.likes?.includes(auth.currentUser.uid) ? 'text-red-500 fill-red-500' : ''}`}
                               />
                               {activity.likes?.length || 0}
                             </Button>
@@ -1042,7 +1394,9 @@ const Friends = () => {
                               className="flex items-center gap-2 h-8 px-3 text-muted-foreground hover:text-foreground"
                             >
                               <MessageSquare className="h-4 w-4" />
-                              {commentsMap[activity.id]?.length || activity.comments?.length || 0}
+                              {commentsMap[activity.id]?.length ||
+                                activity.comments?.length ||
+                                0}
                             </Button>
 
                             <Button
@@ -1067,21 +1421,29 @@ const Friends = () => {
                                   <div className="flex items-start gap-2 flex-1">
                                     <Avatar className="h-6 w-6 mt-0.5">
                                       <AvatarFallback className="bg-gradient-trail text-primary-foreground text-xs">
-                                        {(comment.name || comment.email)?.[0]?.toUpperCase()}
+                                        {(comment.name ||
+                                          comment.email)?.[0]?.toUpperCase()}
                                       </AvatarFallback>
                                     </Avatar>
                                     <div className="flex-1">
                                       <p className="text-xs font-medium text-foreground">
                                         {comment.name || comment.email}
                                       </p>
-                                      <p className="text-sm text-muted-foreground">{comment.content}</p>
+                                      <p className="text-sm text-muted-foreground">
+                                        {comment.content}
+                                      </p>
                                     </div>
                                   </div>
                                   {comment.userId === auth.currentUser.uid && (
                                     <Button
                                       variant="ghost"
                                       size="sm"
-                                      onClick={() => handleDeleteComment(activity.id, comment.id)}
+                                      onClick={() =>
+                                        handleDeleteComment(
+                                          activity.id,
+                                          comment.id
+                                        )
+                                      }
                                       className="h-6 w-6 p-0 text-destructive hover:text-destructive"
                                     >
                                       <Trash2 className="h-3 w-3" />
@@ -1093,17 +1455,22 @@ const Friends = () => {
                               <div className="flex gap-2">
                                 <Avatar className="h-8 w-8">
                                   <AvatarFallback className="bg-gradient-trail text-primary-foreground text-xs">
-                                    {(auth.currentUser?.displayName || auth.currentUser?.email)?.[0]?.toUpperCase()}
+                                    {(auth.currentUser?.displayName ||
+                                      auth.currentUser
+                                        ?.email)?.[0]?.toUpperCase()}
                                   </AvatarFallback>
                                 </Avatar>
                                 <Textarea
                                   placeholder="Add a comment..."
                                   className="flex-1 min-h-[40px] resize-none"
                                   onKeyDown={(e) => {
-                                    if (e.key === "Enter" && !e.shiftKey) {
+                                    if (e.key === 'Enter' && !e.shiftKey) {
                                       e.preventDefault();
-                                      handleAddComment(activity.id, e.target.value);
-                                      e.target.value = "";
+                                      handleAddComment(
+                                        activity.id,
+                                        e.target.value
+                                      );
+                                      e.target.value = '';
                                     }
                                   }}
                                 />
@@ -1113,15 +1480,26 @@ const Friends = () => {
 
                           {/* Edit Post Modal */}
                           {editingPost === activity.id && (
-                            <Dialog open={editingPost === activity.id} onOpenChange={() => setEditingPost(null)}>
+                            <Dialog
+                              open={editingPost === activity.id}
+                              onOpenChange={() => setEditingPost(null)}
+                            >
                               <DialogContent className="sm:max-w-[425px]">
                                 <DialogHeader>
                                   <DialogTitle>Edit Post</DialogTitle>
                                 </DialogHeader>
                                 <div className="space-y-4">
                                   <Textarea
-                                    defaultValue={activity.type === 'share' ? activity.shareCaption || '' : activity.description || ''}
-                                    placeholder={activity.type === 'share' ? "Edit your share caption..." : "Describe your adventure..."}
+                                    defaultValue={
+                                      activity.type === 'share'
+                                        ? activity.shareCaption || ''
+                                        : activity.description || ''
+                                    }
+                                    placeholder={
+                                      activity.type === 'share'
+                                        ? 'Edit your share caption...'
+                                        : 'Describe your adventure...'
+                                    }
                                     className="min-h-[100px]"
                                     id={`edit-description-${activity.id}`}
                                   />
@@ -1134,8 +1512,14 @@ const Friends = () => {
                                     </Button>
                                     <Button
                                       onClick={() => {
-                                        const textarea = document.getElementById(`edit-description-${activity.id}`);
-                                        handleEditPost(activity.id, textarea.value);
+                                        const textarea =
+                                          document.getElementById(
+                                            `edit-description-${activity.id}`
+                                          );
+                                        handleEditPost(
+                                          activity.id,
+                                          textarea.value
+                                        );
                                       }}
                                     >
                                       Save Changes
@@ -1149,24 +1533,22 @@ const Friends = () => {
                       </Card>
                     );
                   })}
-                    {/* Load more button */}
-                    {hasMore && (
-                      <div className="flex justify-center mt-4">
-                        <button
-                          onClick={loadNextPage}
-                          className="px-4 py-2 text-sm text-foreground hover:underline focus:outline-none"
-                          aria-label="Load more feeds"
-                        >
-                          {loadingMore ? 'Loading...' : 'Load more'}
-                        </button>
-                      </div>
-                    )}
+                  {/* Load more button */}
+                  {hasMore && (
+                    <div className="flex justify-center mt-4">
+                      <button
+                        onClick={loadNextPage}
+                        className="px-4 py-2 text-sm text-foreground hover:underline focus:outline-none"
+                        aria-label="Load more feeds"
+                      >
+                        {loadingMore ? 'Loading...' : 'Load more'}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
-
-
 
           {/* DISCOVER */}
           <TabsContent value="discover" className="space-y-6">
@@ -1180,9 +1562,13 @@ const Friends = () => {
               <CardContent>
                 <div className="space-y-4">
                   {loading ? (
-                    <p className="text-muted-foreground text-sm">Loading suggestions...</p>
+                    <p className="text-muted-foreground text-sm">
+                      Loading suggestions...
+                    </p>
                   ) : suggestions.length === 0 ? (
-                    <p className="text-muted-foreground text-sm">No suggestions at the moment.</p>
+                    <p className="text-muted-foreground text-sm">
+                      No suggestions at the moment.
+                    </p>
                   ) : (
                     suggestions.map((suggestion) => (
                       <div
@@ -1192,16 +1578,24 @@ const Friends = () => {
                       >
                         <div className="flex items-center gap-3">
                           <Avatar className="h-12 w-12">
-                            <AvatarFallback className="bg-gradient-trail text-primary-foreground">{suggestion.avatar}</AvatarFallback>
+                            <AvatarFallback className="bg-gradient-trail text-primary-foreground">
+                              {suggestion.avatar}
+                            </AvatarFallback>
                           </Avatar>
                           <div>
-                            <h4 className="font-medium text-foreground">{suggestion.name}</h4>
+                            <h4 className="font-medium text-foreground">
+                              {suggestion.name}
+                            </h4>
                             <p className="text-sm text-muted-foreground">
                               {suggestion.mutualFriends} mutual friends
                             </p>
                             <div className="flex gap-1 mt-1">
                               {suggestion.commonTrails.map((trail) => (
-                                <Badge key={trail} variant="outline" className="text-xs">
+                                <Badge
+                                  key={trail}
+                                  variant="outline"
+                                  className="text-xs"
+                                >
                                   {trail}
                                 </Badge>
                               ))}
@@ -1215,19 +1609,49 @@ const Friends = () => {
                             e.stopPropagation(); // don't open profile modal
                             try {
                               // send friend request (new API)
-                              const resp = await sendFriendRequest(suggestion.id);
+                              const resp = await sendFriendRequest(
+                                suggestion.id
+                              );
                               // mark locally as requested so UI shows 'Request Sent'
-                              setSuggestions(prev => prev.map(s => s.id === suggestion.id ? { ...s, _requestSent: true, _requestId: resp.requestId } : s));
-                              try { localStorage.setItem(`pending_request_${suggestion.id}`, resp.requestId); } catch(e) {}
-                              toast({ title: 'Friend request sent', description: `A request was sent to ${suggestion.name}.` });
+                              setSuggestions((prev) =>
+                                prev.map((s) =>
+                                  s.id === suggestion.id
+                                    ? {
+                                        ...s,
+                                        _requestSent: true,
+                                        _requestId: resp.requestId,
+                                      }
+                                    : s
+                                )
+                              );
+                              try {
+                                localStorage.setItem(
+                                  `pending_request_${suggestion.id}`,
+                                  resp.requestId
+                                );
+                              } catch (e) {}
+                              toast({
+                                title: 'Friend request sent',
+                                description: `A request was sent to ${suggestion.name}.`,
+                              });
                             } catch (err) {
-                              console.error("Failed to send friend request:", err);
-                              toast({ title: 'Request failed', description: 'Could not send friend request. Please try again.', variant: 'destructive' });
+                              console.error(
+                                'Failed to send friend request:',
+                                err
+                              );
+                              toast({
+                                title: 'Request failed',
+                                description:
+                                  'Could not send friend request. Please try again.',
+                                variant: 'destructive',
+                              });
                             }
                           }}
                         >
                           <UserPlus className="h-4 w-4 mr-2" />
-                          {suggestion._requestSent ? 'Request Sent' : 'Add Friend'}
+                          {suggestion._requestSent
+                            ? 'Request Sent'
+                            : 'Add Friend'}
                         </Button>
                       </div>
                     ))
@@ -1236,7 +1660,6 @@ const Friends = () => {
               </CardContent>
             </Card>
           </TabsContent>
-
         </Tabs>
       </main>
 
@@ -1251,15 +1674,21 @@ const Friends = () => {
               <div className="p-3 border border-border rounded-lg">
                 <div className="flex items-center gap-3 mb-2">
                   <Avatar className="h-8 w-8">
-                    <AvatarFallback className="bg-gradient-trail text-primary-foreground">{postToShare.avatar}</AvatarFallback>
+                    <AvatarFallback className="bg-gradient-trail text-primary-foreground">
+                      {postToShare.avatar}
+                    </AvatarFallback>
                   </Avatar>
                   <div>
                     <p className="text-sm font-medium">{postToShare.name}</p>
-                    <p className="text-xs text-muted-foreground">{postToShare.action} {postToShare.hike}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {postToShare.action} {postToShare.hike}
+                    </p>
                   </div>
                 </div>
                 {postToShare.description && (
-                  <p className="text-sm text-muted-foreground">{postToShare.description}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {postToShare.description}
+                  </p>
                 )}
               </div>
             )}
@@ -1280,9 +1709,7 @@ const Friends = () => {
               >
                 Cancel
               </Button>
-              <Button onClick={confirmShare}>
-                Share Post
-              </Button>
+              <Button onClick={confirmShare}>Share Post</Button>
             </div>
           </div>
         </DialogContent>

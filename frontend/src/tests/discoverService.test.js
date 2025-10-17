@@ -1,10 +1,14 @@
-import { getAuth } from "firebase/auth";
-import { discoverFriends, sendFriendRequest, getUserDetails } from '../services/discover.js';
+import { getAuth } from 'firebase/auth';
+import {
+  discoverFriends,
+  sendFriendRequest,
+  getUserDetails,
+} from '../services/discover.js';
 
 // Mock Firebase auth and fetch
-jest.mock("firebase/auth");
+jest.mock('firebase/auth');
 jest.mock('../api/api.js', () => ({
-  API_BASE: 'http://localhost:3001/api'
+  API_BASE: 'http://localhost:3001/api',
 }));
 
 // Mock fetch globally
@@ -18,26 +22,32 @@ describe('Discover Service', () => {
     jest.clearAllMocks();
     mockUser.getIdToken.mockResolvedValue(mockToken);
     getAuth.mockReturnValue({
-      currentUser: mockUser
+      currentUser: mockUser,
     });
   });
 
   describe('getToken', () => {
     it('should use token for authenticated requests', async () => {
       const mockSuggestions = [
-        { id: 'user1', name: 'John Doe', avatar: 'avatar1.jpg', mutualFriends: 3, commonTrails: 2 }
+        {
+          id: 'user1',
+          name: 'John Doe',
+          avatar: 'avatar1.jpg',
+          mutualFriends: 3,
+          commonTrails: 2,
+        },
       ];
       fetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => mockSuggestions
+        json: async () => mockSuggestions,
       });
 
       await discoverFriends();
 
       expect(fetch).toHaveBeenCalledWith(
-        'http://localhost:3001/api/discover',  // Fixed URL
+        'http://localhost:3001/api/discover', // Fixed URL
         {
-          headers: { Authorization: `Bearer ${mockToken}` }
+          headers: { Authorization: `Bearer ${mockToken}` },
         }
       );
     });
@@ -48,30 +58,44 @@ describe('Discover Service', () => {
 
       fetch.mockResolvedValueOnce({
         ok: false,
-        status: 401
+        status: 401,
       });
 
-      await expect(discoverFriends()).rejects.toThrow('Failed to fetch suggestions');
+      await expect(discoverFriends()).rejects.toThrow(
+        'Failed to fetch suggestions'
+      );
     });
   });
 
   describe('discoverFriends', () => {
     it('should fetch suggested friends successfully', async () => {
       const mockSuggestions = [
-        { id: 'user1', name: 'John Doe', avatar: 'avatar1.jpg', mutualFriends: 3, commonTrails: 2 },
-        { id: 'user2', name: 'Jane Smith', avatar: 'avatar2.jpg', mutualFriends: 1, commonTrails: 5 }
+        {
+          id: 'user1',
+          name: 'John Doe',
+          avatar: 'avatar1.jpg',
+          mutualFriends: 3,
+          commonTrails: 2,
+        },
+        {
+          id: 'user2',
+          name: 'Jane Smith',
+          avatar: 'avatar2.jpg',
+          mutualFriends: 1,
+          commonTrails: 5,
+        },
       ];
       fetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => mockSuggestions
+        json: async () => mockSuggestions,
       });
 
       const result = await discoverFriends();
 
       expect(fetch).toHaveBeenCalledWith(
-        'http://localhost:3001/api/discover',  // Fixed URL
+        'http://localhost:3001/api/discover', // Fixed URL
         {
-          headers: { Authorization: `Bearer ${mockToken}` }
+          headers: { Authorization: `Bearer ${mockToken}` },
         }
       );
       expect(result).toEqual(mockSuggestions);
@@ -80,10 +104,12 @@ describe('Discover Service', () => {
     it('should throw error when fetch fails', async () => {
       fetch.mockResolvedValueOnce({
         ok: false,
-        status: 500
+        status: 500,
       });
 
-      await expect(discoverFriends()).rejects.toThrow('Failed to fetch suggestions');
+      await expect(discoverFriends()).rejects.toThrow(
+        'Failed to fetch suggestions'
+      );
     });
   });
 
@@ -92,20 +118,20 @@ describe('Discover Service', () => {
       const mockResponse = { success: true, friendId: 'user123' };
       fetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => mockResponse
+        json: async () => mockResponse,
       });
 
       const result = await sendFriendRequest('user123');
 
       expect(fetch).toHaveBeenCalledWith(
-        'http://localhost:3001/api/discover/add',  // Fixed URL
+        'http://localhost:3001/api/discover/add', // Fixed URL
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${mockToken}`
+            Authorization: `Bearer ${mockToken}`,
           },
-          body: JSON.stringify({ friendId: 'user123' })
+          body: JSON.stringify({ friendId: 'user123' }),
         }
       );
       expect(result).toEqual(mockResponse);
@@ -115,10 +141,12 @@ describe('Discover Service', () => {
       fetch.mockResolvedValueOnce({
         ok: false,
         status: 400,
-         text: async () => 'Bad request',
+        text: async () => 'Bad request',
       });
 
-      await expect(sendFriendRequest('user123')).rejects.toThrow('Failed to send request: 400 Bad request');
+      await expect(sendFriendRequest('user123')).rejects.toThrow(
+        'Failed to send request: 400 Bad request'
+      );
     });
   });
 
@@ -129,19 +157,19 @@ describe('Discover Service', () => {
         name: 'John Doe',
         avatar: 'avatar.jpg',
         bio: 'Hiking enthusiast',
-        trailCount: 15
+        trailCount: 15,
       };
       fetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => mockUserDetails
+        json: async () => mockUserDetails,
       });
 
       const result = await getUserDetails('user123');
 
       expect(fetch).toHaveBeenCalledWith(
-        'http://localhost:3001/api/discover/user123',  // Fixed URL
+        'http://localhost:3001/api/discover/user123', // Fixed URL
         {
-          headers: { Authorization: `Bearer ${mockToken}` }
+          headers: { Authorization: `Bearer ${mockToken}` },
         }
       );
       expect(result).toEqual(mockUserDetails);
@@ -150,10 +178,12 @@ describe('Discover Service', () => {
     it('should throw error when getUserDetails fails', async () => {
       fetch.mockResolvedValueOnce({
         ok: false,
-        status: 404
+        status: 404,
       });
 
-      await expect(getUserDetails('invalid-user')).rejects.toThrow('Failed to fetch user details');
+      await expect(getUserDetails('invalid-user')).rejects.toThrow(
+        'Failed to fetch user details'
+      );
     });
   });
 
@@ -170,17 +200,29 @@ describe('Discover Service', () => {
       // Test discoverFriends endpoint
       fetch.mockResolvedValueOnce({ ok: true, json: async () => [] });
       await discoverFriends();
-      expect(fetch).toHaveBeenCalledWith('http://localhost:3001/api/discover', expect.any(Object));
+      expect(fetch).toHaveBeenCalledWith(
+        'http://localhost:3001/api/discover',
+        expect.any(Object)
+      );
 
       // Test addFriend endpoint
-      fetch.mockResolvedValueOnce({ ok: true, json: async () => ({ success: true }) });
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true }),
+      });
       await sendFriendRequest('user123');
-      expect(fetch).toHaveBeenCalledWith('http://localhost:3001/api/discover/add', expect.any(Object));
+      expect(fetch).toHaveBeenCalledWith(
+        'http://localhost:3001/api/discover/add',
+        expect.any(Object)
+      );
 
       // Test getUserDetails endpoint
       fetch.mockResolvedValueOnce({ ok: true, json: async () => ({}) });
       await getUserDetails('user123');
-      expect(fetch).toHaveBeenCalledWith('http://localhost:3001/api/discover/user123', expect.any(Object));
+      expect(fetch).toHaveBeenCalledWith(
+        'http://localhost:3001/api/discover/user123',
+        expect.any(Object)
+      );
     });
   });
 });

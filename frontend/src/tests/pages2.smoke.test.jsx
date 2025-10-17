@@ -3,24 +3,28 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
 // Common mocks
-jest.mock('../components/ui/navigation', () => ({ Navigation: () => <nav>Navigation</nav> }));
+jest.mock('../components/ui/navigation', () => ({
+  Navigation: () => <nav>Navigation</nav>,
+}));
 jest.mock('../hooks/usePageTitle', () => ({ usePageTitle: () => {} }));
 
 jest.mock('../contexts/AuthContext.jsx', () => {
   const React = require('react');
   return {
     useAuth: () => ({ currentUser: { uid: 'u1', displayName: 'Tester' } }),
-    AuthContext: React.createContext({ currentUser: { uid: 'u1' } })
+    AuthContext: React.createContext({ currentUser: { uid: 'u1' } }),
   };
 });
 
 jest.mock('../services/hikeApiService.js', () => ({
   hikeApiService: {
     getHikes: jest.fn().mockResolvedValue({ success: true, data: [] }),
-    createHike: jest.fn().mockResolvedValue({ success: true, data: { id: '1' } }),
+    createHike: jest
+      .fn()
+      .mockResolvedValue({ success: true, data: { id: '1' } }),
     updateHike: jest.fn().mockResolvedValue({ success: true }),
-    deleteHike: jest.fn().mockResolvedValue({ success: true })
-  }
+    deleteHike: jest.fn().mockResolvedValue({ success: true }),
+  },
 }));
 
 jest.mock('../services/plannedHikesService.js', () => ({
@@ -29,46 +33,78 @@ jest.mock('../services/plannedHikesService.js', () => ({
     createPlannedHike: jest.fn().mockResolvedValue({ success: true }),
     updatePlannedHike: jest.fn().mockResolvedValue({ success: true }),
     deletePlannedHike: jest.fn().mockResolvedValue({ success: true }),
-    startPlannedHike: jest.fn().mockResolvedValue({ success: true, id: 'active-1' })
-  }
+    startPlannedHike: jest
+      .fn()
+      .mockResolvedValue({ success: true, id: 'active-1' }),
+  },
 }));
 
 jest.mock('../services/goalsApiService', () => ({
   goalsApi: {
     getGoals: jest.fn().mockResolvedValue([]),
-    createGoal: jest.fn().mockResolvedValue({ id: 'g1', title: 'Goal', description: '', targetValue: 1, status: 'in_progress' }),
-    updateGoal: jest.fn().mockResolvedValue({ id: 'g1', title: 'Goal', description: '', targetValue: 1, status: 'in_progress' }),
-    deleteGoal: jest.fn().mockResolvedValue({ success: true })
-  }
+    createGoal: jest
+      .fn()
+      .mockResolvedValue({
+        id: 'g1',
+        title: 'Goal',
+        description: '',
+        targetValue: 1,
+        status: 'in_progress',
+      }),
+    updateGoal: jest
+      .fn()
+      .mockResolvedValue({
+        id: 'g1',
+        title: 'Goal',
+        description: '',
+        targetValue: 1,
+        status: 'in_progress',
+      }),
+    deleteGoal: jest.fn().mockResolvedValue({ success: true }),
+  },
 }));
 
 jest.mock('../services/achievementApiService', () => ({
   achievementApiService: {
     getBadges: jest.fn().mockResolvedValue({ data: [] }),
-    getStats: jest.fn().mockResolvedValue({ data: { totalHikes: 0, totalDistance: 0, totalDuration: 0, currentStreak: 0 } })
-  }
+    getStats: jest
+      .fn()
+      .mockResolvedValue({
+        data: {
+          totalHikes: 0,
+          totalDistance: 0,
+          totalDuration: 0,
+          currentStreak: 0,
+        },
+      }),
+  },
 }));
 
 jest.mock('../config/firebase.js', () => ({
   auth: {
     currentUser: {
-      getIdToken: jest.fn().mockResolvedValue('mock-token')
-    }
-  }
+      getIdToken: jest.fn().mockResolvedValue('mock-token'),
+    },
+  },
 }));
 
 jest.mock('../services/userService', () => ({
   userApiService: {
-    getCurrentProfile: jest.fn().mockResolvedValue({ 
-      displayName: 'Test User', 
-      bio: 'Test bio', 
-      location: 'Test location' 
+    getCurrentProfile: jest.fn().mockResolvedValue({
+      displayName: 'Test User',
+      bio: 'Test bio',
+      location: 'Test location',
     }),
-    updateProfile: jest.fn().mockResolvedValue({ success: true })
+    updateProfile: jest.fn().mockResolvedValue({ success: true }),
   },
   locationService: {
-    getUserLocation: jest.fn().mockResolvedValue({ success: true, data: { location: 'Test location' } })
-  }
+    getUserLocation: jest
+      .fn()
+      .mockResolvedValue({
+        success: true,
+        data: { location: 'Test location' },
+      }),
+  },
 }));
 
 // Pages
@@ -84,8 +120,15 @@ function renderWithRouter(ui) {
 beforeEach(() => {
   global.fetch = jest.fn(async (url) => {
     const u = typeof url === 'string' ? url : '';
-    if (u.includes('/api/users/') && !u.includes('/hikes') && !u.includes('/planned')) {
-      return { ok: true, json: async () => ({ displayName: 'Tester', bio: '', location: '' }) };
+    if (
+      u.includes('/api/users/') &&
+      !u.includes('/hikes') &&
+      !u.includes('/planned')
+    ) {
+      return {
+        ok: true,
+        json: async () => ({ displayName: 'Tester', bio: '', location: '' }),
+      };
     }
     if (u.includes('/api/friends/')) {
       return { ok: true, json: async () => ({ success: true, data: [] }) };
@@ -109,7 +152,9 @@ describe('Additional page smoke tests', () => {
 
   test('EditProfile renders form and Save Changes button', async () => {
     renderWithRouter(<EditProfile />);
-    expect(await screen.findByText(/Edit Your Hiking Profile/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Edit Your Hiking Profile/i)
+    ).toBeInTheDocument();
     expect(screen.getByText(/Save Changes/i)).toBeInTheDocument();
   });
 

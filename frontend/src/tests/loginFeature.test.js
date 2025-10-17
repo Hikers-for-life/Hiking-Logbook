@@ -1,13 +1,19 @@
-import React from "react";
-import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
-import LoginPage from "../components/auth/loginPage.jsx";
-import { MemoryRouter } from "react-router-dom";
+import React from 'react';
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  act,
+} from '@testing-library/react';
+import LoginPage from '../components/auth/loginPage.jsx';
+import { MemoryRouter } from 'react-router-dom';
 
 // Mock AuthContext
 const mockLogin = jest.fn(() => Promise.resolve());
 const mockGoogle = jest.fn(() => Promise.resolve());
 
-jest.mock("../contexts/AuthContext.jsx", () => ({
+jest.mock('../contexts/AuthContext.jsx', () => ({
   useAuth: () => ({
     login: mockLogin,
     signInWithGoogle: mockGoogle,
@@ -16,8 +22,8 @@ jest.mock("../contexts/AuthContext.jsx", () => ({
 
 // Mock useNavigate
 const mockNavigate = jest.fn();
-jest.mock("react-router-dom", () => {
-  const actual = jest.requireActual("react-router-dom");
+jest.mock('react-router-dom', () => {
+  const actual = jest.requireActual('react-router-dom');
   return {
     ...actual,
     useNavigate: () => mockNavigate,
@@ -25,24 +31,23 @@ jest.mock("react-router-dom", () => {
 });
 
 // Mock FontAwesome CSS
-jest.mock("@fortawesome/fontawesome-free/css/all.min.css", () => ({}));
+jest.mock('@fortawesome/fontawesome-free/css/all.min.css', () => ({}));
 
 // Mock the mountain image
-jest.mock("../components/assets/forest-waterfall.jpg", () => "mock-image.jpg");
+jest.mock('../components/assets/forest-waterfall.jpg', () => 'mock-image.jpg');
 
-describe("LoginPage Component (full coverage)", () => {
+describe('LoginPage Component (full coverage)', () => {
   const mockOnOpenChange = jest.fn();
   const mockOnLogin = jest.fn();
   const mockOnSignup = jest.fn();
 
-  const renderWithRouter = (ui) =>
-    render(<MemoryRouter>{ui}</MemoryRouter>);
+  const renderWithRouter = (ui) => render(<MemoryRouter>{ui}</MemoryRouter>);
 
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  test("renders login modal when open is true", () => {
+  test('renders login modal when open is true', () => {
     renderWithRouter(
       <LoginPage
         open={true}
@@ -52,9 +57,15 @@ describe("LoginPage Component (full coverage)", () => {
     );
 
     expect(screen.getByText(/Welcome Back/i)).toBeInTheDocument();
-    expect(screen.getByText(/Continue your hiking journey/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/Enter your email address/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/Enter your password/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Continue your hiking journey/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText(/Enter your email address/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText(/Enter your password/i)
+    ).toBeInTheDocument();
     expect(screen.getByText(/Sign In to Dashboard/i)).toBeInTheDocument();
     expect(screen.getByText(/Google/i)).toBeInTheDocument();
     expect(screen.getByText(/Don't have an account/i)).toBeInTheDocument();
@@ -62,7 +73,7 @@ describe("LoginPage Component (full coverage)", () => {
     expect(screen.getByText(/Back to Home/i)).toBeInTheDocument();
   });
 
-  test("does not render modal when open is false", () => {
+  test('does not render modal when open is false', () => {
     const { container } = renderWithRouter(
       <LoginPage
         open={false}
@@ -73,7 +84,7 @@ describe("LoginPage Component (full coverage)", () => {
     expect(container.firstChild).toBeNull();
   });
 
-  test("updates input values correctly", () => {
+  test('updates input values correctly', () => {
     renderWithRouter(
       <LoginPage
         open={true}
@@ -85,14 +96,14 @@ describe("LoginPage Component (full coverage)", () => {
     const emailInput = screen.getByPlaceholderText(/Enter your email address/i);
     const passwordInput = screen.getByPlaceholderText(/Enter your password/i);
 
-    fireEvent.change(emailInput, { target: { value: "test@example.com" } });
-    fireEvent.change(passwordInput, { target: { value: "password123" } });
+    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+    fireEvent.change(passwordInput, { target: { value: 'password123' } });
 
-    expect(emailInput.value).toBe("test@example.com");
-    expect(passwordInput.value).toBe("password123");
+    expect(emailInput.value).toBe('test@example.com');
+    expect(passwordInput.value).toBe('password123');
   });
 
-  test("calls login and navigates on submit", async () => {
+  test('calls login and navigates on submit', async () => {
     renderWithRouter(
       <LoginPage
         open={true}
@@ -105,20 +116,20 @@ describe("LoginPage Component (full coverage)", () => {
     const passwordInput = screen.getByPlaceholderText(/Enter your password/i);
     const submitButton = screen.getByText(/Sign In to Dashboard/i);
 
-    fireEvent.change(emailInput, { target: { value: "test@example.com" } });
-    fireEvent.change(passwordInput, { target: { value: "password123" } });
+    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+    fireEvent.change(passwordInput, { target: { value: 'password123' } });
 
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(mockLogin).toHaveBeenCalledWith("test@example.com", "password123");
+      expect(mockLogin).toHaveBeenCalledWith('test@example.com', 'password123');
       expect(mockOnOpenChange).toHaveBeenCalledWith(false);
-      expect(mockNavigate).toHaveBeenCalledWith("/dashboard");
+      expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
     });
   });
 
-  test("shows error on login failure", async () => {
-    mockLogin.mockRejectedValueOnce(new Error("bad creds"));
+  test('shows error on login failure', async () => {
+    mockLogin.mockRejectedValueOnce(new Error('bad creds'));
 
     renderWithRouter(
       <LoginPage
@@ -132,15 +143,17 @@ describe("LoginPage Component (full coverage)", () => {
     const passwordInput = screen.getByPlaceholderText(/Enter your password/i);
     const submitButton = screen.getByText(/Sign In to Dashboard/i);
 
-    fireEvent.change(emailInput, { target: { value: "fail@test.com" } });
-    fireEvent.change(passwordInput, { target: { value: "wrong" } });
+    fireEvent.change(emailInput, { target: { value: 'fail@test.com' } });
+    fireEvent.change(passwordInput, { target: { value: 'wrong' } });
 
     fireEvent.click(submitButton);
 
-    expect(await screen.findByText(/Password must be at least 8 characters long/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Password must be at least 8 characters long/i)
+    ).toBeInTheDocument();
   });
 
-  test("social Google button works", async () => {
+  test('social Google button works', async () => {
     renderWithRouter(
       <LoginPage
         open={true}
@@ -155,12 +168,12 @@ describe("LoginPage Component (full coverage)", () => {
     await waitFor(() => {
       expect(mockGoogle).toHaveBeenCalled();
       expect(mockOnOpenChange).toHaveBeenCalledWith(false);
-      expect(mockNavigate).toHaveBeenCalledWith("/dashboard");
+      expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
     });
   });
 
-  test("shows error on Google sign-in failure", async () => {
-    mockGoogle.mockRejectedValueOnce(new Error("google error"));
+  test('shows error on Google sign-in failure', async () => {
+    mockGoogle.mockRejectedValueOnce(new Error('google error'));
 
     renderWithRouter(
       <LoginPage
@@ -177,7 +190,7 @@ describe("LoginPage Component (full coverage)", () => {
     ).toBeInTheDocument();
   });
 
-  test("back button closes modal and navigates home", () => {
+  test('back button closes modal and navigates home', () => {
     renderWithRouter(
       <LoginPage
         open={true}
@@ -186,14 +199,14 @@ describe("LoginPage Component (full coverage)", () => {
       />
     );
 
-    const backBtn = screen.getByRole("button", { name: /back to home/i });
+    const backBtn = screen.getByRole('button', { name: /back to home/i });
     fireEvent.click(backBtn);
 
     expect(mockOnOpenChange).toHaveBeenCalledWith(false);
-    expect(mockNavigate).toHaveBeenCalledWith("/");
+    expect(mockNavigate).toHaveBeenCalledWith('/');
   });
 
-  test("signup button triggers onSignup", () => {
+  test('signup button triggers onSignup', () => {
     renderWithRouter(
       <LoginPage
         open={true}
@@ -203,14 +216,14 @@ describe("LoginPage Component (full coverage)", () => {
       />
     );
 
-    const signupBtn = screen.getByRole("button", { name: /sign up/i });
+    const signupBtn = screen.getByRole('button', { name: /sign up/i });
     fireEvent.click(signupBtn);
 
     expect(mockOnOpenChange).toHaveBeenCalledWith(false);
     expect(mockOnSignup).toHaveBeenCalled();
   });
 
-  test("hover states do not throw", () => {
+  test('hover states do not throw', () => {
     renderWithRouter(
       <LoginPage
         open={true}
@@ -219,7 +232,7 @@ describe("LoginPage Component (full coverage)", () => {
       />
     );
 
-    const backBtn = screen.getByRole("button", { name: /back to home/i });
+    const backBtn = screen.getByRole('button', { name: /back to home/i });
     fireEvent.mouseEnter(backBtn);
     fireEvent.mouseLeave(backBtn);
     // Just ensure no crash
@@ -228,7 +241,7 @@ describe("LoginPage Component (full coverage)", () => {
 
   // NEW TESTS FOR ADDITIONAL FUNCTIONALITY
 
-  test("form fields are cleared when modal opens", () => {
+  test('form fields are cleared when modal opens', () => {
     const { rerender } = renderWithRouter(
       <LoginPage
         open={false}
@@ -249,11 +262,11 @@ describe("LoginPage Component (full coverage)", () => {
     const emailInput = screen.getByPlaceholderText(/Enter your email address/i);
     const passwordInput = screen.getByPlaceholderText(/Enter your password/i);
 
-    expect(emailInput.value).toBe("");
-    expect(passwordInput.value).toBe("");
+    expect(emailInput.value).toBe('');
+    expect(passwordInput.value).toBe('');
   });
 
-  test("form fields are cleared on component mount", () => {
+  test('form fields are cleared on component mount', () => {
     renderWithRouter(
       <LoginPage
         open={true}
@@ -265,11 +278,11 @@ describe("LoginPage Component (full coverage)", () => {
     const emailInput = screen.getByPlaceholderText(/Enter your email address/i);
     const passwordInput = screen.getByPlaceholderText(/Enter your password/i);
 
-    expect(emailInput.value).toBe("");
-    expect(passwordInput.value).toBe("");
+    expect(emailInput.value).toBe('');
+    expect(passwordInput.value).toBe('');
   });
 
-  test("loading state is shown during login", async () => {
+  test('loading state is shown during login', async () => {
     // Make login promise pending
     let resolveLogin;
     const loginPromise = new Promise((resolve) => {
@@ -289,8 +302,8 @@ describe("LoginPage Component (full coverage)", () => {
     const passwordInput = screen.getByPlaceholderText(/Enter your password/i);
     const submitButton = screen.getByText(/Sign In to Dashboard/i);
 
-    fireEvent.change(emailInput, { target: { value: "test@example.com" } });
-    fireEvent.change(passwordInput, { target: { value: "password123" } });
+    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+    fireEvent.change(passwordInput, { target: { value: 'password123' } });
 
     fireEvent.click(submitButton);
 
@@ -308,7 +321,7 @@ describe("LoginPage Component (full coverage)", () => {
     });
   });
 
-  test("loading state is shown during Google sign-in", async () => {
+  test('loading state is shown during Google sign-in', async () => {
     // Make Google sign-in promise pending
     let resolveGoogle;
     const googlePromise = new Promise((resolve) => {
@@ -340,9 +353,9 @@ describe("LoginPage Component (full coverage)", () => {
     });
   });
 
-  test("error message is cleared when form is submitted", async () => {
+  test('error message is cleared when form is submitted', async () => {
     // First, create an error
-    mockLogin.mockRejectedValueOnce(new Error("bad creds"));
+    mockLogin.mockRejectedValueOnce(new Error('bad creds'));
 
     renderWithRouter(
       <LoginPage
@@ -356,29 +369,33 @@ describe("LoginPage Component (full coverage)", () => {
     const passwordInput = screen.getByPlaceholderText(/Enter your password/i);
     const submitButton = screen.getByText(/Sign In to Dashboard/i);
 
-    fireEvent.change(emailInput, { target: { value: "fail@test.com" } });
-    fireEvent.change(passwordInput, { target: { value: "wrongpass1" } });
+    fireEvent.change(emailInput, { target: { value: 'fail@test.com' } });
+    fireEvent.change(passwordInput, { target: { value: 'wrongpass1' } });
     fireEvent.click(submitButton);
 
     // Wait for error to appear
     await waitFor(() => {
-      expect(screen.getByText(/Failed to log in. Please check your credentials/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Failed to log in. Please check your credentials/i)
+      ).toBeInTheDocument();
     });
 
     // Reset mock and try again
     mockLogin.mockResolvedValueOnce();
 
-    fireEvent.change(emailInput, { target: { value: "success@test.com" } });
-    fireEvent.change(passwordInput, { target: { value: "correctpass1" } });
+    fireEvent.change(emailInput, { target: { value: 'success@test.com' } });
+    fireEvent.change(passwordInput, { target: { value: 'correctpass1' } });
     fireEvent.click(submitButton);
 
     // Error should be cleared
     await waitFor(() => {
-      expect(screen.queryByText(/Failed to log in. Please check your credentials/i)).not.toBeInTheDocument();
+      expect(
+        screen.queryByText(/Failed to log in. Please check your credentials/i)
+      ).not.toBeInTheDocument();
     });
   });
 
-  test("form submission triggers login process", async () => {
+  test('form submission triggers login process', async () => {
     renderWithRouter(
       <LoginPage
         open={true}
@@ -391,19 +408,19 @@ describe("LoginPage Component (full coverage)", () => {
     const passwordInput = screen.getByPlaceholderText(/Enter your password/i);
     const submitButton = screen.getByText(/Sign In to Dashboard/i);
 
-    fireEvent.change(emailInput, { target: { value: "test@example.com" } });
-    fireEvent.change(passwordInput, { target: { value: "password123" } });
+    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+    fireEvent.change(passwordInput, { target: { value: 'password123' } });
 
     // Click the submit button to trigger form submission
     fireEvent.click(submitButton);
 
     // Verify that the login process is triggered (which includes preventDefault)
     await waitFor(() => {
-      expect(mockLogin).toHaveBeenCalledWith("test@example.com", "password123");
+      expect(mockLogin).toHaveBeenCalledWith('test@example.com', 'password123');
     });
   });
 
-  test("back button has proper hover styling", () => {
+  test('back button has proper hover styling', () => {
     renderWithRouter(
       <LoginPage
         open={true}
@@ -412,7 +429,7 @@ describe("LoginPage Component (full coverage)", () => {
       />
     );
 
-    const backBtn = screen.getByRole("button", { name: /back to home/i });
+    const backBtn = screen.getByRole('button', { name: /back to home/i });
 
     // Test mouse enter
     fireEvent.mouseEnter(backBtn);
@@ -423,38 +440,38 @@ describe("LoginPage Component (full coverage)", () => {
     expect(backBtn).toBeInTheDocument();
   });
 
-  test("handles missing onOpenChange prop gracefully", () => {
+  test('handles missing onOpenChange prop gracefully', () => {
     renderWithRouter(
       <LoginPage
         open={true}
         onLogin={mockOnLogin}
-      // onOpenChange is undefined
+        // onOpenChange is undefined
       />
     );
 
-    const backBtn = screen.getByRole("button", { name: /back to home/i });
+    const backBtn = screen.getByRole('button', { name: /back to home/i });
 
     // Should not throw when clicked
     expect(() => fireEvent.click(backBtn)).not.toThrow();
   });
 
-  test("handles missing onSignup prop gracefully", () => {
+  test('handles missing onSignup prop gracefully', () => {
     renderWithRouter(
       <LoginPage
         open={true}
         onLogin={mockOnLogin}
         onOpenChange={mockOnOpenChange}
-      // onSignup is undefined
+        // onSignup is undefined
       />
     );
 
-    const signupBtn = screen.getByRole("button", { name: /sign up/i });
+    const signupBtn = screen.getByRole('button', { name: /sign up/i });
 
     // Should not throw when clicked
     expect(() => fireEvent.click(signupBtn)).not.toThrow();
   });
 
-  test("input fields have correct attributes", () => {
+  test('input fields have correct attributes', () => {
     renderWithRouter(
       <LoginPage
         open={true}
@@ -466,16 +483,16 @@ describe("LoginPage Component (full coverage)", () => {
     const emailInput = screen.getByPlaceholderText(/Enter your email address/i);
     const passwordInput = screen.getByPlaceholderText(/Enter your password/i);
 
-    expect(emailInput).toHaveAttribute("type", "email");
-    expect(emailInput).toHaveAttribute("required");
-    expect(emailInput).toHaveAttribute("autoComplete", "off");
+    expect(emailInput).toHaveAttribute('type', 'email');
+    expect(emailInput).toHaveAttribute('required');
+    expect(emailInput).toHaveAttribute('autoComplete', 'off');
 
-    expect(passwordInput).toHaveAttribute("type", "password");
-    expect(passwordInput).toHaveAttribute("required");
-    expect(passwordInput).toHaveAttribute("autoComplete", "new-password");
+    expect(passwordInput).toHaveAttribute('type', 'password');
+    expect(passwordInput).toHaveAttribute('required');
+    expect(passwordInput).toHaveAttribute('autoComplete', 'new-password');
   });
 
-  test("banner displays correct background image", () => {
+  test('banner displays correct background image', () => {
     renderWithRouter(
       <LoginPage
         open={true}
@@ -485,14 +502,18 @@ describe("LoginPage Component (full coverage)", () => {
     );
 
     // Find the banner div that contains the background image
-    const banner = screen.getByText(/Welcome Back/i).closest("div");
+    const banner = screen.getByText(/Welcome Back/i).closest('div');
     const bannerWithBackground = banner?.parentElement;
-    expect(bannerWithBackground).toHaveStyle("background-image: url(mock-image.jpg)");
+    expect(bannerWithBackground).toHaveStyle(
+      'background-image: url(mock-image.jpg)'
+    );
   });
 
-  test("console.error is called on login failure", async () => {
-    const consoleSpy = jest.spyOn(console, "error").mockImplementation(() => { });
-    mockLogin.mockRejectedValueOnce(new Error("bad creds"));
+  test('console.error is called on login failure', async () => {
+    const consoleSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+    mockLogin.mockRejectedValueOnce(new Error('bad creds'));
 
     renderWithRouter(
       <LoginPage
@@ -506,20 +527,22 @@ describe("LoginPage Component (full coverage)", () => {
     const passwordInput = screen.getByPlaceholderText(/Enter your password/i);
     const submitButton = screen.getByText(/Sign In to Dashboard/i);
 
-    fireEvent.change(emailInput, { target: { value: "fail@test.com" } });
-    fireEvent.change(passwordInput, { target: { value: "wrong" } });
+    fireEvent.change(emailInput, { target: { value: 'fail@test.com' } });
+    fireEvent.change(passwordInput, { target: { value: 'wrong' } });
     fireEvent.click(submitButton);
 
     //await waitFor(() => {
-      //expect(consoleSpy).toHaveBeenCalledWith("Login error:", expect.any(Error));
+    //expect(consoleSpy).toHaveBeenCalledWith("Login error:", expect.any(Error));
     //});
 
     consoleSpy.mockRestore();
   });
 
-  test("console.error is called on Google sign-in failure", async () => {
-    const consoleSpy = jest.spyOn(console, "error").mockImplementation(() => { });
-    mockGoogle.mockRejectedValueOnce(new Error("google error"));
+  test('console.error is called on Google sign-in failure', async () => {
+    const consoleSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+    mockGoogle.mockRejectedValueOnce(new Error('google error'));
 
     renderWithRouter(
       <LoginPage
@@ -533,7 +556,10 @@ describe("LoginPage Component (full coverage)", () => {
     fireEvent.click(googleButton);
 
     await waitFor(() => {
-      expect(consoleSpy).toHaveBeenCalledWith("Google sign-in error:", expect.any(Error));
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'Google sign-in error:',
+        expect.any(Error)
+      );
     });
 
     consoleSpy.mockRestore();

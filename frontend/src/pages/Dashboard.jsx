@@ -57,9 +57,10 @@ const Dashboard = () => {
   useEffect(() => {
     const loadProfile = async () => {
       try {
-        const res = await fetch(`http://localhost:3001/api/users/${currentUser.uid}`);
+        const res = await fetch(
+          `http://localhost:3001/api/users/${currentUser.uid}`
+        );
         if (!res.ok) {
-
           const fallbackProfile = {
             displayName: currentUser.displayName || 'Hiker',
             bio: 'Passionate hiker exploring new trails',
@@ -94,13 +95,13 @@ const Dashboard = () => {
   useEffect(() => {
     const loadHikesAndStats = async () => {
       if (!currentUser) return;
-      
+
       try {
         setHikesLoading(true);
-        
+
         const result = await hikeApiService.getHikes();
         const hikes = result.data || result;
-        
+
         // Calculate statistics from all hikes
         const stats = {
           totalHikes: hikes.length,
@@ -108,8 +109,9 @@ const Dashboard = () => {
         };
 
         // Calculate totals from all hikes
-        hikes.forEach(hike => {
-          const distance = parseFloat(hike.distance) || parseFloat(hike.totalDistance) || 0;
+        hikes.forEach((hike) => {
+          const distance =
+            parseFloat(hike.distance) || parseFloat(hike.totalDistance) || 0;
           stats.totalDistance += distance;
         });
 
@@ -117,16 +119,16 @@ const Dashboard = () => {
         stats.totalDistance = Math.round(stats.totalDistance * 10) / 10;
 
         setHikeStats(stats);
-        
+
         // Process the hikes for recent hikes display
         const processedHikes = hikes
-          .map(hike => {
+          .map((hike) => {
             let jsDate;
-            
+
             // Handle different date formats
             if (hike.date?._seconds !== undefined) {
               jsDate = new Date(hike.date._seconds * 1000);
-            } else if (typeof hike.date === "string") {
+            } else if (typeof hike.date === 'string') {
               jsDate = new Date(hike.date);
             } else if (hike.date instanceof Date) {
               jsDate = hike.date;
@@ -137,11 +139,11 @@ const Dashboard = () => {
             return {
               ...hike,
               jsDate,
-              formattedDate: jsDate.toLocaleDateString('en-US', { 
-                month: 'short', 
-                day: 'numeric', 
-                year: 'numeric' 
-              })
+              formattedDate: jsDate.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+              }),
             };
           })
           .sort((a, b) => b.jsDate - a.jsDate)
@@ -236,7 +238,10 @@ const Dashboard = () => {
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={handleStartLogging}>
+          <Card
+            className="hover:shadow-lg transition-shadow cursor-pointer"
+            onClick={handleStartLogging}
+          >
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Plus className="h-5 w-5 text-green-600" />
@@ -253,7 +258,10 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={handlePlanTrip}>
+          <Card
+            className="hover:shadow-lg transition-shadow cursor-pointer"
+            onClick={handlePlanTrip}
+          >
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="h-5 w-5 text-blue-600" />
@@ -268,7 +276,10 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={handleExploreTrails}>
+          <Card
+            className="hover:shadow-lg transition-shadow cursor-pointer"
+            onClick={handleExploreTrails}
+          >
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Map className="h-5 w-5 text-purple-600" />
@@ -298,7 +309,9 @@ const Dashboard = () => {
               {hikesLoading ? (
                 <div className="text-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-4"></div>
-                  <p className="text-muted-foreground">Loading recent hikes...</p>
+                  <p className="text-muted-foreground">
+                    Loading recent hikes...
+                  </p>
                 </div>
               ) : recentHikes.length > 0 ? (
                 <div className="space-y-4">
@@ -307,10 +320,10 @@ const Dashboard = () => {
                     let formattedDate = 'Unknown date';
                     if (hike.date?._seconds !== undefined) {
                       const jsDate = new Date(hike.date._seconds * 1000);
-                      formattedDate = jsDate.toLocaleDateString('en-US', { 
-                        month: 'short', 
-                        day: 'numeric', 
-                        year: 'numeric' 
+                      formattedDate = jsDate.toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
                       });
                     } else if (hike.formattedDate) {
                       formattedDate = hike.formattedDate;
@@ -319,15 +332,22 @@ const Dashboard = () => {
                     // Handle difficulty badge variant
                     const getDifficultyVariant = (difficulty) => {
                       const diff = difficulty?.toLowerCase();
-                      if (diff === 'hard' || diff === 'difficult') return 'destructive';
-                      if (diff === 'medium' || diff === 'moderate') return 'default';
+                      if (diff === 'hard' || diff === 'difficult')
+                        return 'destructive';
+                      if (diff === 'medium' || diff === 'moderate')
+                        return 'default';
                       return 'secondary';
                     };
 
                     return (
-                      <div key={hike.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 rounded-lg bg-muted gap-3">
+                      <div
+                        key={hike.id}
+                        className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 rounded-lg bg-muted gap-3"
+                      >
                         <div className="flex-1">
-                          <h4 className="font-medium text-sm sm:text-base">{hike.name || hike.title || 'Unnamed Hike'}</h4>
+                          <h4 className="font-medium text-sm sm:text-base">
+                            {hike.name || hike.title || 'Unnamed Hike'}
+                          </h4>
                           <div className="grid grid-cols-2 sm:flex sm:items-center sm:gap-4 mt-2 gap-2">
                             <span className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1">
                               <Calendar className="h-3 w-3 flex-shrink-0" />
@@ -335,21 +355,34 @@ const Dashboard = () => {
                             </span>
                             <span className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1">
                               <Compass className="h-3 w-3 flex-shrink-0" />
-                              <span className="truncate">{(parseFloat(hike.distance || hike.totalDistance) || 0).toFixed(1)} km</span>
+                              <span className="truncate">
+                                {(
+                                  parseFloat(
+                                    hike.distance || hike.totalDistance
+                                  ) || 0
+                                ).toFixed(1)}{' '}
+                                km
+                              </span>
                             </span>
                             <span className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1">
                               <Clock className="h-3 w-3 flex-shrink-0" />
-                              <span className="truncate">{hike.duration || hike.estimatedDuration || 'N/A'}</span>
+                              <span className="truncate">
+                                {hike.duration ||
+                                  hike.estimatedDuration ||
+                                  'N/A'}
+                              </span>
                             </span>
                             {hike.location && (
                               <span className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1 col-span-2 sm:col-span-1">
                                 <MapPin className="h-3 w-3 flex-shrink-0" />
-                                <span className="truncate">{hike.location}</span>
+                                <span className="truncate">
+                                  {hike.location}
+                                </span>
                               </span>
                             )}
                           </div>
                         </div>
-                        <Badge 
+                        <Badge
                           variant={getDifficultyVariant(hike.difficulty)}
                           className="text-xs self-start sm:self-center"
                         >

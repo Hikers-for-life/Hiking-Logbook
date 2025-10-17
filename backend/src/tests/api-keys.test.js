@@ -6,17 +6,17 @@ describe('ApiKeyManager Tests', () => {
     test('should return invalid for null/undefined key', () => {
       expect(ApiKeyManager.validateKey(null)).toEqual({
         valid: false,
-        error: 'API key is required'
+        error: 'API key is required',
       });
-      
+
       expect(ApiKeyManager.validateKey(undefined)).toEqual({
         valid: false,
-        error: 'API key is required'
+        error: 'API key is required',
       });
-      
+
       expect(ApiKeyManager.validateKey('')).toEqual({
         valid: false,
-        error: 'API key is required'
+        error: 'API key is required',
       });
     });
 
@@ -24,7 +24,7 @@ describe('ApiKeyManager Tests', () => {
       const result = ApiKeyManager.validateKey('invalid-key-123');
       expect(result).toEqual({
         valid: false,
-        error: 'Invalid API key'
+        error: 'Invalid API key',
       });
     });
 
@@ -50,7 +50,7 @@ describe('ApiKeyManager Tests', () => {
       // Second validation - usage should be tracked
       const result2 = ApiKeyManager.validateKey('demo-key-12345');
       expect(result2.valid).toBe(true);
-      
+
       // Note: We can't easily test lastUsed and usageCount changes since they're internal
       // but we can verify the method runs without error
     });
@@ -89,13 +89,19 @@ describe('ApiKeyManager Tests', () => {
     });
 
     test('should return false for non-existent permission', () => {
-      expect(ApiKeyManager.hasPermission('demo-key-12345', 'delete')).toBe(false);
-      expect(ApiKeyManager.hasPermission('demo-key-12345', 'admin')).toBe(false);
+      expect(ApiKeyManager.hasPermission('demo-key-12345', 'delete')).toBe(
+        false
+      );
+      expect(ApiKeyManager.hasPermission('demo-key-12345', 'admin')).toBe(
+        false
+      );
     });
 
     test('should handle case-sensitive permissions', () => {
       expect(ApiKeyManager.hasPermission('demo-key-12345', 'READ')).toBe(false);
-      expect(ApiKeyManager.hasPermission('demo-key-12345', 'Write')).toBe(false);
+      expect(ApiKeyManager.hasPermission('demo-key-12345', 'Write')).toBe(
+        false
+      );
     });
   });
 
@@ -118,7 +124,7 @@ describe('ApiKeyManager Tests', () => {
         permissions: ['read', 'write'],
         createdAt: expect.any(Date),
         lastUsed: expect.any(Date),
-        usageCount: expect.any(Number)
+        usageCount: expect.any(Number),
       });
     });
 
@@ -129,7 +135,7 @@ describe('ApiKeyManager Tests', () => {
         permissions: ['read'],
         createdAt: expect.any(Date),
         lastUsed: expect.any(Date),
-        usageCount: expect.any(Number)
+        usageCount: expect.any(Number),
       });
     });
   });
@@ -139,9 +145,9 @@ describe('ApiKeyManager Tests', () => {
       const result = ApiKeyManager.listKeys();
       expect(Array.isArray(result)).toBe(true);
       expect(result.length).toBeGreaterThan(0);
-      
+
       // Check structure of returned keys
-      result.forEach(keyInfo => {
+      result.forEach((keyInfo) => {
         expect(keyInfo).toHaveProperty('key'); // Partially hidden key
         expect(keyInfo).toHaveProperty('name');
         expect(keyInfo).toHaveProperty('permissions');
@@ -154,7 +160,7 @@ describe('ApiKeyManager Tests', () => {
 
     test('should include both demo keys', () => {
       const result = ApiKeyManager.listKeys();
-      const names = result.map(key => key.name);
+      const names = result.map((key) => key.name);
       expect(names).toContain('Demo API Key');
       expect(names).toContain('Read-Only Demo Key');
     });
@@ -171,7 +177,7 @@ describe('ApiKeyManager Tests', () => {
     test('should generate key with default permissions', () => {
       const newKey = ApiKeyManager.generateKey('Default Permissions Key');
       expect(typeof newKey).toBe('string');
-      
+
       // Check that the key was added with default permissions
       const validation = ApiKeyManager.validateKey(newKey);
       expect(validation.valid).toBe(true);
@@ -179,9 +185,12 @@ describe('ApiKeyManager Tests', () => {
     });
 
     test('should generate key with custom permissions', () => {
-      const newKey = ApiKeyManager.generateKey('Custom Permissions Key', ['read', 'write']);
+      const newKey = ApiKeyManager.generateKey('Custom Permissions Key', [
+        'read',
+        'write',
+      ]);
       expect(typeof newKey).toBe('string');
-      
+
       // Check that the key was added with custom permissions
       const validation = ApiKeyManager.validateKey(newKey);
       expect(validation.valid).toBe(true);
@@ -200,30 +209,39 @@ describe('ApiKeyManager Tests', () => {
       // Simulate concurrent access
       const promises = [];
       for (let i = 0; i < 10; i++) {
-        promises.push(Promise.resolve(ApiKeyManager.validateKey('demo-key-12345')));
+        promises.push(
+          Promise.resolve(ApiKeyManager.validateKey('demo-key-12345'))
+        );
       }
 
-      return Promise.all(promises).then(results => {
-        results.forEach(result => {
+      return Promise.all(promises).then((results) => {
+        results.forEach((result) => {
           expect(result.valid).toBe(true);
         });
       });
     });
 
     test('should handle mixed valid and invalid keys', () => {
-      const keys = ['demo-key-12345', 'invalid-key', 'readonly-key-67890', 'another-invalid'];
-      const results = keys.map(key => ApiKeyManager.validateKey(key));
-      
-      expect(results[0].valid).toBe(true);  // demo-key-12345
+      const keys = [
+        'demo-key-12345',
+        'invalid-key',
+        'readonly-key-67890',
+        'another-invalid',
+      ];
+      const results = keys.map((key) => ApiKeyManager.validateKey(key));
+
+      expect(results[0].valid).toBe(true); // demo-key-12345
       expect(results[1].valid).toBe(false); // invalid-key
-      expect(results[2].valid).toBe(true);  // readonly-key-67890
+      expect(results[2].valid).toBe(true); // readonly-key-67890
       expect(results[3].valid).toBe(false); // another-invalid
     });
 
     test('should handle permission checks with various input types', () => {
       // Test with different falsy values
       expect(ApiKeyManager.hasPermission('demo-key-12345', null)).toBe(false);
-      expect(ApiKeyManager.hasPermission('demo-key-12345', undefined)).toBe(false);
+      expect(ApiKeyManager.hasPermission('demo-key-12345', undefined)).toBe(
+        false
+      );
       expect(ApiKeyManager.hasPermission('demo-key-12345', '')).toBe(false);
       expect(ApiKeyManager.hasPermission('demo-key-12345', 0)).toBe(false);
       expect(ApiKeyManager.hasPermission('demo-key-12345', false)).toBe(false);
@@ -233,17 +251,17 @@ describe('ApiKeyManager Tests', () => {
   describe('Integration scenarios', () => {
     test('should work with typical API workflow', () => {
       const apiKey = 'demo-key-12345';
-      
+
       // 1. Validate key
       const validation = ApiKeyManager.validateKey(apiKey);
       expect(validation.valid).toBe(true);
-      
+
       // 2. Check read permission
       expect(ApiKeyManager.hasPermission(apiKey, 'read')).toBe(true);
-      
+
       // 3. Check write permission
       expect(ApiKeyManager.hasPermission(apiKey, 'write')).toBe(true);
-      
+
       // 4. Get key stats
       const keyStats = ApiKeyManager.getKeyStats(apiKey);
       expect(keyStats.name).toBe('Demo API Key');
@@ -251,17 +269,17 @@ describe('ApiKeyManager Tests', () => {
 
     test('should work with readonly API workflow', () => {
       const apiKey = 'readonly-key-67890';
-      
+
       // 1. Validate key
       const validation = ApiKeyManager.validateKey(apiKey);
       expect(validation.valid).toBe(true);
-      
+
       // 2. Check read permission (should work)
       expect(ApiKeyManager.hasPermission(apiKey, 'read')).toBe(true);
-      
+
       // 3. Check write permission (should fail)
       expect(ApiKeyManager.hasPermission(apiKey, 'write')).toBe(false);
-      
+
       // 4. Get key stats
       const keyStats = ApiKeyManager.getKeyStats(apiKey);
       expect(keyStats.name).toBe('Read-Only Demo Key');

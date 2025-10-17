@@ -1,10 +1,8 @@
-
 import React from 'react';
-import { MemoryRouter } from "react-router-dom";
-import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from 'react-router-dom';
+import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import App from "../App";
-
+import App from '../App';
 
 // Mock AuthContext
 const mockAuthContext = {
@@ -20,7 +18,9 @@ const mockAuthContext = {
 };
 
 jest.mock('../contexts/AuthContext.jsx', () => ({
-  AuthProvider: ({ children }) => <div data-testid="auth-provider">{children}</div>,
+  AuthProvider: ({ children }) => (
+    <div data-testid="auth-provider">{children}</div>
+  ),
   useAuth: () => mockAuthContext,
 }));
 
@@ -32,14 +32,30 @@ jest.mock('../components/auth/ProtectedRoute.jsx', () => {
 });
 
 // Mock page components
-jest.mock('../pages/Index.jsx', () => () => <div data-testid="index-page">Index Page</div>);
-jest.mock('../pages/Logbook.jsx', () => () => <div data-testid="logbook-page">Logbook Page</div>);
-jest.mock('../pages/HikePlanner.jsx', () => () => <div data-testid="hike-planner-page">Hike Planner Page</div>);
-jest.mock('../components/auth/loginPage.jsx', () => () => <div data-testid="login-page">Login Page</div>);
-jest.mock('../pages/Signup.jsx', () => () => <div data-testid="signup-page">Signup Page</div>);
-jest.mock('../pages/EditProfile.jsx', () => () => <div data-testid="edit-profile-page">Edit Profile Page</div>);
-jest.mock('../pages/Dashboard.jsx', () => () => <div data-testid="dashboard-page">Dashboard Page</div>);
-jest.mock('../pages/NotFound.jsx', () => () => <div data-testid="not-found-page">Not Found Page</div>);
+jest.mock('../pages/Index.jsx', () => () => (
+  <div data-testid="index-page">Index Page</div>
+));
+jest.mock('../pages/Logbook.jsx', () => () => (
+  <div data-testid="logbook-page">Logbook Page</div>
+));
+jest.mock('../pages/HikePlanner.jsx', () => () => (
+  <div data-testid="hike-planner-page">Hike Planner Page</div>
+));
+jest.mock('../components/auth/loginPage.jsx', () => () => (
+  <div data-testid="login-page">Login Page</div>
+));
+jest.mock('../pages/Signup.jsx', () => () => (
+  <div data-testid="signup-page">Signup Page</div>
+));
+jest.mock('../pages/EditProfile.jsx', () => () => (
+  <div data-testid="edit-profile-page">Edit Profile Page</div>
+));
+jest.mock('../pages/Dashboard.jsx', () => () => (
+  <div data-testid="dashboard-page">Dashboard Page</div>
+));
+jest.mock('../pages/NotFound.jsx', () => () => (
+  <div data-testid="not-found-page">Not Found Page</div>
+));
 
 describe('App Component', () => {
   test('renders without crashing', () => {
@@ -64,7 +80,8 @@ describe('App Component', () => {
     expect(() => require('../components/auth/loginPage.jsx')).not.toThrow();
     expect(() => require('../pages/Signup.jsx')).not.toThrow();
     expect(() => require('../pages/Dashboard.jsx')).not.toThrow();
-    expect(() => require('../components/auth/ProtectedRoute.jsx')).not.toThrow();
+    expect(() =>
+      require('../components/auth/ProtectedRoute.jsx')
+    ).not.toThrow();
   });
 });
-

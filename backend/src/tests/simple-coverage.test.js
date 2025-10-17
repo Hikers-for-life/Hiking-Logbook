@@ -26,9 +26,9 @@ describe('Simple Coverage Tests', () => {
   test('validateHikeData works', () => {
     const validHike = {
       title: 'Test Hike',
-      location: 'Test Location'
+      location: 'Test Location',
     };
-    
+
     const validation = functions.validateHikeData(validHike);
     expect(validation.isValid).toBe(true);
     expect(validation.errors).toHaveLength(0);
@@ -37,7 +37,7 @@ describe('Simple Coverage Tests', () => {
   test('calculateHikeStats works', () => {
     const hikes = [
       { distance: 5, elevation: 300, difficulty: 'Easy' },
-      { distance: 10, elevation: 500, difficulty: 'Moderate' }
+      { distance: 10, elevation: 500, difficulty: 'Moderate' },
     ];
 
     const stats = functions.calculateHikeStats(hikes);
@@ -49,7 +49,7 @@ describe('Simple Coverage Tests', () => {
   test('formatSuccessResponse works', () => {
     const data = { test: 'data' };
     const response = functions.formatSuccessResponse(data, 'Test message');
-    
+
     expect(response.success).toBe(true);
     expect(response.data).toEqual(data);
     expect(response.message).toBe('Test message');
@@ -59,15 +59,34 @@ describe('Simple Coverage Tests', () => {
     expect(() => functions.parseDistance('5.5')).not.toThrow();
     expect(() => functions.parseElevation('300')).not.toThrow();
     expect(() => functions.parseDuration('2.5')).not.toThrow();
-    expect(() => functions.validateHikeData({ title: 'Test', location: 'Test' })).not.toThrow();
-    expect(() => functions.validateUserData({ email: 'test@test.com', displayName: 'Test' })).not.toThrow();
-    expect(() => functions.calculateHikeStats([{ distance: 5, elevation: 100 }])).not.toThrow();
-    expect(() => functions.calculateStreaks([{ date: new Date().toISOString() }])).not.toThrow();
-    expect(() => functions.generateMonthlyActivity([{ date: '2024-01-01', distance: 5 }])).not.toThrow();
+    expect(() =>
+      functions.validateHikeData({ title: 'Test', location: 'Test' })
+    ).not.toThrow();
+    expect(() =>
+      functions.validateUserData({
+        email: 'test@test.com',
+        displayName: 'Test',
+      })
+    ).not.toThrow();
+    expect(() =>
+      functions.calculateHikeStats([{ distance: 5, elevation: 100 }])
+    ).not.toThrow();
+    expect(() =>
+      functions.calculateStreaks([{ date: new Date().toISOString() }])
+    ).not.toThrow();
+    expect(() =>
+      functions.generateMonthlyActivity([{ date: '2024-01-01', distance: 5 }])
+    ).not.toThrow();
     expect(() => functions.formatSuccessResponse({ test: true })).not.toThrow();
-    expect(() => functions.formatErrorResponse(new Error('test'))).not.toThrow();
+    expect(() =>
+      functions.formatErrorResponse(new Error('test'))
+    ).not.toThrow();
     expect(() => functions.processHikeData({ title: 'Test' })).not.toThrow();
-    expect(() => functions.processUserData({ email: 'test@test.com' })).not.toThrow();
-    expect(() => functions.evaluateBadges({ totalHikes: 1, totalDistance: 10 })).not.toThrow();
+    expect(() =>
+      functions.processUserData({ email: 'test@test.com' })
+    ).not.toThrow();
+    expect(() =>
+      functions.evaluateBadges({ totalHikes: 1, totalDistance: 10 })
+    ).not.toThrow();
   });
 });

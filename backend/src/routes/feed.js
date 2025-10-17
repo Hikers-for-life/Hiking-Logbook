@@ -20,8 +20,8 @@ router.get('/', verifyAuth, async (req, res) => {
         const data = doc.data();
 
         // ✅ Ensure safe fallbacks for missing fields
-        const safeName = data.name || "Unknown Hiker";
-        const safeAvatar = data.avatar || safeName[0]?.toUpperCase() || "U";
+        const safeName = data.name || 'Unknown Hiker';
+        const safeAvatar = data.avatar || safeName[0]?.toUpperCase() || 'U';
 
         // Fetch comments with user names
         const commentsSnapshot = await doc.ref
@@ -67,7 +67,6 @@ router.get('/', verifyAuth, async (req, res) => {
   }
 });
 
-
 // POST /feed - create a new activity
 // POST /feed - create a new activity
 router.post('/', verifyAuth, async (req, res) => {
@@ -88,10 +87,10 @@ router.post('/', verifyAuth, async (req, res) => {
       userData.name ||
       userData.displayName ||
       req.user?.displayName ||
-      req.user?.email?.split("@")[0] ||
-      "Anonymous";
+      req.user?.email?.split('@')[0] ||
+      'Anonymous';
 
-    const fallbackAvatar = fallbackName[0]?.toUpperCase() || "U";
+    const fallbackAvatar = fallbackName[0]?.toUpperCase() || 'U';
 
     const newActivity = {
       type: 'original',
@@ -116,7 +115,6 @@ router.post('/', verifyAuth, async (req, res) => {
   }
 });
 
-
 // POST /feed/:id/like
 router.post('/:id/like', verifyAuth, async (req, res) => {
   try {
@@ -127,7 +125,8 @@ router.post('/:id/like', verifyAuth, async (req, res) => {
     const ref = db.collection('feed_items').doc(id);
     const doc = await ref.get();
 
-    if (!doc.exists) return res.status(404).json({ error: 'Feed item not found' });
+    if (!doc.exists)
+      return res.status(404).json({ error: 'Feed item not found' });
 
     let likes = doc.data().likes || [];
     if (likes.includes(uid)) {
@@ -202,7 +201,9 @@ router.delete('/:feedId/comments/:commentId', verifyAuth, async (req, res) => {
 
     // Allow delete only if comment belongs to current user
     if (commentData.userId !== req.user.uid) {
-      return res.status(403).json({ error: 'Not authorized to delete this comment' });
+      return res
+        .status(403)
+        .json({ error: 'Not authorized to delete this comment' });
     }
 
     await commentRef.delete();
@@ -227,10 +228,11 @@ router.post('/:feedId/share', verifyAuth, async (req, res) => {
       sharerName ||
       req.user?.name ||
       req.user?.displayName ||
-      req.user?.email?.split("@")[0] ||
-      "Anonymous";
+      req.user?.email?.split('@')[0] ||
+      'Anonymous';
 
-    const safeSharerAvatar = sharerAvatar || safeSharerName[0]?.toUpperCase() || "U";
+    const safeSharerAvatar =
+      sharerAvatar || safeSharerName[0]?.toUpperCase() || 'U';
 
     // ✅ Safely handle original activity data
     const safeOriginal = original || {};
@@ -265,7 +267,6 @@ router.post('/:feedId/share', verifyAuth, async (req, res) => {
   }
 });
 
-
 // PUT /feed/:id - update a feed post (description, caption for shares, stats, etc.)
 router.put('/:id', verifyAuth, async (req, res) => {
   try {
@@ -275,25 +276,38 @@ router.put('/:id', verifyAuth, async (req, res) => {
 
     const docRef = db.collection('feed_items').doc(id);
     const docSnap = await docRef.get();
-    if (!docSnap.exists) return res.status(404).json({ error: 'Feed item not found' });
+    if (!docSnap.exists)
+      return res.status(404).json({ error: 'Feed item not found' });
 
     const postData = docSnap.data() || {};
     const ownerId = postData.userId || postData.sharer?.id;
     const uid = req.user?.uid;
 
     if (ownerId !== uid) {
-      return res.status(403).json({ error: 'Not authorized to edit this post' });
+      return res
+        .status(403)
+        .json({ error: 'Not authorized to edit this post' });
     }
 
     // Only allow updating a whitelist of fields
-    const allowed = ['description', 'action', 'hike', 'stats', 'photo', 'shareCaption'];
+    const allowed = [
+      'description',
+      'action',
+      'hike',
+      'stats',
+      'photo',
+      'shareCaption',
+    ];
     const toUpdate = {};
     allowed.forEach((k) => {
-      if (Object.prototype.hasOwnProperty.call(updateData, k)) toUpdate[k] = updateData[k];
+      if (Object.prototype.hasOwnProperty.call(updateData, k))
+        toUpdate[k] = updateData[k];
     });
 
     if (Object.keys(toUpdate).length === 0) {
-      return res.status(400).json({ error: 'No valid fields provided for update' });
+      return res
+        .status(400)
+        .json({ error: 'No valid fields provided for update' });
     }
 
     await docRef.update(toUpdate);
@@ -332,7 +346,9 @@ router.delete('/:id', verifyAuth, async (req, res) => {
     const ownerId = postData.userId || postData.sharer?.id;
 
     if (ownerId !== uid) {
-      return res.status(403).json({ error: 'Not authorized to delete this post' });
+      return res
+        .status(403)
+        .json({ error: 'Not authorized to delete this post' });
     }
 
     // ✅ Delete all comments first (optional but clean)
@@ -352,7 +368,6 @@ router.delete('/:id', verifyAuth, async (req, res) => {
   }
 });
 
-
 // GET /feed/:id - fetch a single activity by id
 router.get('/:id', verifyAuth, async (req, res) => {
   try {
@@ -361,13 +376,20 @@ router.get('/:id', verifyAuth, async (req, res) => {
     const docRef = db.collection('feed_items').doc(id);
     const docSnap = await docRef.get();
 
-    if (!docSnap.exists) return res.status(404).json({ error: 'Feed item not found' });
+    if (!docSnap.exists)
+      return res.status(404).json({ error: 'Feed item not found' });
 
     const data = docSnap.data() || {};
 
     // Fetch comments
-    const commentsSnapshot = await docRef.collection('comments').orderBy('created_at', 'asc').get();
-    const comments = commentsSnapshot.docs.map((c) => ({ id: c.id, ...c.data() }));
+    const commentsSnapshot = await docRef
+      .collection('comments')
+      .orderBy('created_at', 'asc')
+      .get();
+    const comments = commentsSnapshot.docs.map((c) => ({
+      id: c.id,
+      ...c.data(),
+    }));
 
     const safeName = data.name || 'Unknown Hiker';
     const safeAvatar = data.avatar || safeName[0]?.toUpperCase() || 'U';
@@ -379,17 +401,23 @@ router.get('/:id', verifyAuth, async (req, res) => {
       if (obj.original) ensureNestedTimes(obj.original);
     };
 
-    if (data.type === 'share' && data.original) ensureNestedTimes(data.original);
+    if (data.type === 'share' && data.original)
+      ensureNestedTimes(data.original);
 
     const activityTime = data.time || data.created_at || null;
 
-    res.json({ id: docSnap.id, ...data, time: activityTime, name: safeName, avatar: safeAvatar, comments });
+    res.json({
+      id: docSnap.id,
+      ...data,
+      time: activityTime,
+      name: safeName,
+      avatar: safeAvatar,
+      comments,
+    });
   } catch (err) {
     console.error('Error fetching feed item:', err);
     res.status(500).json({ error: 'Failed to fetch feed item' });
   }
 });
 
-
 export default router;
-

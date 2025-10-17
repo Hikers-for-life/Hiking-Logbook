@@ -22,4 +22,3 @@ describe('api/API_BASE', () => {
     expect(RELOADED).toBe('http://localhost:3001/api');
   });
 });
-

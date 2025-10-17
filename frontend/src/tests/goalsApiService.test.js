@@ -4,18 +4,18 @@ import '@testing-library/jest-dom';
 jest.mock('../contexts/AuthContext.jsx', () => ({
   auth: {
     currentUser: {
-      getIdToken: jest.fn().mockResolvedValue('mock-token')
-    }
-  }
+      getIdToken: jest.fn().mockResolvedValue('mock-token'),
+    },
+  },
 }));
 
 // Mock Firebase auth before importing the service (module used by service)
 jest.mock('../config/firebase.js', () => ({
   auth: {
     currentUser: {
-      getIdToken: jest.fn().mockResolvedValue('mock-token')
-    }
-  }
+      getIdToken: jest.fn().mockResolvedValue('mock-token'),
+    },
+  },
 }));
 
 describe('goalsApiService', () => {
@@ -62,17 +62,17 @@ describe('goalsApiService', () => {
       const mockGoalData = {
         type: 'distance',
         target: 100,
-        period: 'monthly'
+        period: 'monthly',
       };
 
       const mockResponse = {
         success: true,
-        data: { id: 'goal-123', ...mockGoalData }
+        data: { id: 'goal-123', ...mockGoalData },
       };
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => mockResponse
+        json: async () => mockResponse,
       });
 
       const result = await goalsApi.createGoal(mockGoalData);
@@ -89,10 +89,12 @@ describe('goalsApiService', () => {
       global.fetch.mockResolvedValueOnce({
         ok: false,
         status: 400,
-        json: async () => ({ message: 'Invalid goal data' })
+        json: async () => ({ message: 'Invalid goal data' }),
       });
 
-      await expect(goalsApi.createGoal({})).rejects.toThrow('Invalid goal data');
+      await expect(goalsApi.createGoal({})).rejects.toThrow(
+        'Invalid goal data'
+      );
     });
   });
 
@@ -100,12 +102,12 @@ describe('goalsApiService', () => {
     test('should make GET request to fetch all goals', async () => {
       const mockGoals = [
         { id: 'goal-1', type: 'distance', target: 100 },
-        { id: 'goal-2', type: 'elevation', target: 500 }
+        { id: 'goal-2', type: 'elevation', target: 500 },
       ];
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true, data: mockGoals })
+        json: async () => ({ success: true, data: mockGoals }),
       });
 
       const result = await goalsApi.getGoals();
@@ -124,7 +126,7 @@ describe('goalsApiService', () => {
       global.fetch.mockResolvedValueOnce({
         ok: false,
         status: 500,
-        json: async () => ({ message: 'Server error' })
+        json: async () => ({ message: 'Server error' }),
       });
 
       await expect(goalsApi.getGoals()).rejects.toThrow('Server error');
@@ -138,7 +140,7 @@ describe('goalsApiService', () => {
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true, data: mockGoal })
+        json: async () => ({ success: true, data: mockGoal }),
       });
 
       const result = await goalsApi.getGoal(goalId);
@@ -156,10 +158,12 @@ describe('goalsApiService', () => {
       global.fetch.mockResolvedValueOnce({
         ok: false,
         status: 404,
-        json: async () => ({ message: 'Goal not found' })
+        json: async () => ({ message: 'Goal not found' }),
       });
 
-      await expect(goalsApi.getGoal('invalid-id')).rejects.toThrow('Goal not found');
+      await expect(goalsApi.getGoal('invalid-id')).rejects.toThrow(
+        'Goal not found'
+      );
     });
   });
 
@@ -170,12 +174,12 @@ describe('goalsApiService', () => {
 
       const mockResponse = {
         success: true,
-        data: { id: goalId, ...updateData }
+        data: { id: goalId, ...updateData },
       };
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => mockResponse
+        json: async () => mockResponse,
       });
 
       const result = await goalsApi.updateGoal(goalId, updateData);
@@ -184,7 +188,7 @@ describe('goalsApiService', () => {
         expect.stringContaining(`/goals/${goalId}`),
         expect.objectContaining({
           method: 'PUT',
-          body: JSON.stringify(updateData)
+          body: JSON.stringify(updateData),
         })
       );
 
@@ -195,10 +199,12 @@ describe('goalsApiService', () => {
       global.fetch.mockResolvedValueOnce({
         ok: false,
         status: 400,
-        json: async () => ({ message: 'Invalid update data' })
+        json: async () => ({ message: 'Invalid update data' }),
       });
 
-      await expect(goalsApi.updateGoal('goal-123', {})).rejects.toThrow('Invalid update data');
+      await expect(goalsApi.updateGoal('goal-123', {})).rejects.toThrow(
+        'Invalid update data'
+      );
     });
   });
 
@@ -208,7 +214,7 @@ describe('goalsApiService', () => {
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true, message: 'Goal deleted' })
+        json: async () => ({ success: true, message: 'Goal deleted' }),
       });
 
       const result = await goalsApi.deleteGoal(goalId);
@@ -216,7 +222,7 @@ describe('goalsApiService', () => {
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining(`/goals/${goalId}`),
         expect.objectContaining({
-          method: 'DELETE'
+          method: 'DELETE',
         })
       );
 
@@ -227,10 +233,12 @@ describe('goalsApiService', () => {
       global.fetch.mockResolvedValueOnce({
         ok: false,
         status: 404,
-        json: async () => ({ message: 'Goal not found' })
+        json: async () => ({ message: 'Goal not found' }),
       });
 
-      await expect(goalsApi.deleteGoal('invalid-id')).rejects.toThrow('Goal not found');
+      await expect(goalsApi.deleteGoal('invalid-id')).rejects.toThrow(
+        'Goal not found'
+      );
     });
   });
 
@@ -247,7 +255,7 @@ describe('goalsApiService', () => {
         status: 500,
         json: async () => {
           throw new Error('Invalid JSON');
-        }
+        },
       });
 
       await expect(goalsApi.getGoals()).rejects.toThrow();
@@ -258,7 +266,9 @@ describe('goalsApiService', () => {
       if (!auth.currentUser) {
         auth.currentUser = { getIdToken: jest.fn() };
       }
-      auth.currentUser.getIdToken.mockRejectedValueOnce(new Error('Auth failed'));
+      auth.currentUser.getIdToken.mockRejectedValueOnce(
+        new Error('Auth failed')
+      );
 
       await expect(goalsApi.getGoals()).rejects.toThrow('Auth failed');
     });
@@ -267,13 +277,15 @@ describe('goalsApiService', () => {
   describe('API Configuration', () => {
     test('should use correct API base URL from environment', () => {
       const originalEnv = process.env.REACT_APP_API_URL;
-      
+
       // Test with env var set
       process.env.REACT_APP_API_URL = 'http://test-api.com';
       delete require.cache[require.resolve('../services/goalsApiService')];
-      const { goalsApi: serviceWithEnv } = require('../services/goalsApiService');
+      const {
+        goalsApi: serviceWithEnv,
+      } = require('../services/goalsApiService');
       expect(serviceWithEnv).toBeDefined();
-      
+
       // Restore original env
       process.env.REACT_APP_API_URL = originalEnv;
     });
@@ -281,14 +293,14 @@ describe('goalsApiService', () => {
     test('should fallback to localhost when env var not set', () => {
       const originalEnv = process.env.REACT_APP_API_URL;
       delete process.env.REACT_APP_API_URL;
-      
+
       delete require.cache[require.resolve('../services/goalsApiService')];
-      const { goalsApi: serviceWithoutEnv } = require('../services/goalsApiService');
+      const {
+        goalsApi: serviceWithoutEnv,
+      } = require('../services/goalsApiService');
       expect(serviceWithoutEnv).toBeDefined();
-      
+
       process.env.REACT_APP_API_URL = originalEnv;
     });
   });
 });
-
-

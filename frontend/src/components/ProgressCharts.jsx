@@ -1,10 +1,17 @@
-import React, { useEffect, useState } from "react";
-import { achievementApiService } from "../services/achievementApiService";
+import React, { useEffect, useState } from 'react';
+import { achievementApiService } from '../services/achievementApiService';
 import {
-  LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer,
-  BarChart, Bar
-} from "recharts";
-import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+} from 'recharts';
+import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 
 export default function ProgressCharts() {
   const [progress, setProgress] = useState(null);
@@ -21,7 +28,7 @@ export default function ProgressCharts() {
         // Set empty data structure on error
         setProgress({
           hikesPerMonth: [],
-          distanceOverTime: []
+          distanceOverTime: [],
         });
       } finally {
         setLoading(false);
@@ -37,7 +44,9 @@ export default function ProgressCharts() {
     <div className="grid gap-6 md:grid-cols-2">
       {/* Hikes per Month Bar Chart */}
       <Card>
-        <CardHeader><CardTitle>Hikes Per Month</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle>Hikes Per Month</CardTitle>
+        </CardHeader>
         <CardContent className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={progress.hikesPerMonth}>
@@ -53,7 +62,9 @@ export default function ProgressCharts() {
 
       {/* Streak History Line Chart */}
       <Card>
-        <CardHeader><CardTitle>Streak History</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle>Streak History</CardTitle>
+        </CardHeader>
         <CardContent className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={progress.streakHistory}>

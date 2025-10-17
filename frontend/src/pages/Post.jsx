@@ -31,26 +31,39 @@ const Post = () => {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
-      <Link to="/activity-feed" className="text-sm text-muted-foreground mb-4 inline-block">← Back to feed</Link>
+      <Link
+        to="/activity-feed"
+        className="text-sm text-muted-foreground mb-4 inline-block"
+      >
+        ← Back to feed
+      </Link>
       <div className="bg-card border border-border rounded-lg p-6">
         <div className="flex items-start gap-4">
           <Avatar className="h-12 w-12">
-            <AvatarFallback className="bg-gradient-trail text-white">{activity.avatar}</AvatarFallback>
+            <AvatarFallback className="bg-gradient-trail text-white">
+              {activity.avatar}
+            </AvatarFallback>
           </Avatar>
           <div className="flex-1">
             <h3 className="font-semibold text-foreground">{activity.name}</h3>
-            <p className="text-sm text-muted-foreground">{activity.time || activity.created_at}</p>
+            <p className="text-sm text-muted-foreground">
+              {activity.time || activity.created_at}
+            </p>
             {activity.type === 'share' && (
               <div className="mt-4">
                 <p className="text-sm italic">{activity.shareCaption}</p>
                 <div className="mt-3 border border-border rounded p-3">
-                  <pre className="whitespace-pre-wrap">{JSON.stringify(activity.original, null, 2)}</pre>
+                  <pre className="whitespace-pre-wrap">
+                    {JSON.stringify(activity.original, null, 2)}
+                  </pre>
                 </div>
               </div>
             )}
             {activity.type === 'original' && (
               <div className="mt-4">
-                <p className="text-sm text-foreground">{activity.description}</p>
+                <p className="text-sm text-foreground">
+                  {activity.description}
+                </p>
               </div>
             )}
           </div>

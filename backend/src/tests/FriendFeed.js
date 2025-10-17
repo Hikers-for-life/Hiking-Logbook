@@ -16,7 +16,14 @@ jest.mock('../config/firebase.js', () => {
     getDatabase: () => ({
       collection: mockCollection,
     }),
-    __mocks: { mockCollection, mockDoc, mockAdd, mockGet, mockUpdate, mockDelete }
+    __mocks: {
+      mockCollection,
+      mockDoc,
+      mockAdd,
+      mockGet,
+      mockUpdate,
+      mockDelete,
+    },
   };
 });
 
@@ -27,7 +34,7 @@ jest.mock('../middleware/auth.js', () => ({
   verifyAuth: (req, res, next) => {
     req.user = { uid: 'user123', email: 'user@test.com', name: 'Test User' };
     next();
-  }
+  },
 }));
 
 // Setup express app for testing
@@ -109,7 +116,9 @@ describe('Feed Routes', () => {
 
   test('POST /feed/:id/comment should add a comment', async () => {
     const mockCommentAdd = jest.fn().mockResolvedValue({ id: 'cmt123' });
-    const mockUserDocGet = jest.fn().mockResolvedValue({ exists: true, data: () => ({ name: 'Test User' }) });
+    const mockUserDocGet = jest
+      .fn()
+      .mockResolvedValue({ exists: true, data: () => ({ name: 'Test User' }) });
 
     __mocks.mockCollection.mockReturnValue({
       doc: jest.fn().mockImplementation((id) => {

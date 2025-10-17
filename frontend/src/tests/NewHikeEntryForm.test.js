@@ -43,7 +43,10 @@ describe('NewHikeEntryForm Component Logic', () => {
       };
     };
 
-    const result = simulateHandleSubmit({ title: 'Test Hike', location: 'Test Location' });
+    const result = simulateHandleSubmit({
+      title: 'Test Hike',
+      location: 'Test Location',
+    });
     expect(result).not.toHaveProperty('id');
     expect(result).toEqual({
       title: 'Test Hike',
@@ -59,7 +62,7 @@ describe('NewHikeEntryForm Component Logic', () => {
 
     const simulateHandleDifficultySelect = (difficulty) => {
       mockSetSelectedDifficulty(difficulty);
-      mockSetValue("difficulty", difficulty);
+      mockSetValue('difficulty', difficulty);
     };
 
     simulateHandleDifficultySelect('Hard');
@@ -78,7 +81,7 @@ describe('NewHikeEntryForm Component Logic', () => {
         Object.entries(initialData).forEach(([key, value]) => {
           mockSetValue(key, value);
         });
-        mockSetSelectedDifficulty(initialData.difficulty || "");
+        mockSetSelectedDifficulty(initialData.difficulty || '');
       }
     };
 
@@ -86,7 +89,7 @@ describe('NewHikeEntryForm Component Logic', () => {
       title: 'Test Hike',
       location: 'Test Location',
       difficulty: 'Hard',
-      notes: 'Test notes'
+      notes: 'Test notes',
     };
 
     simulateInitialization(initialData);

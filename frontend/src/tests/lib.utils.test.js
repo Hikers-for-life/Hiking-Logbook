@@ -9,6 +9,3 @@ describe('lib/utils cn', () => {
     expect(result).toContain('e');
   });
 });
-
-
-

@@ -3,14 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
-import {
-  MapPin,
-  Calendar,
-  Clock,
-  Mountain,
-  Star,
-  Plus,
-} from 'lucide-react';
+import { MapPin, Calendar, Clock, Mountain, Star, Plus } from 'lucide-react';
 
 const sampleHikes = [
   {
@@ -104,10 +97,11 @@ export const LogbookSection = () => {
                     {[...Array(5)].map((_, i) => (
                       <Star
                         key={i}
-                        className={`h-4 w-4 ${i < hike.rating
-                          ? 'text-trail fill-current'
-                          : 'text-muted-foreground'
-                          }`}
+                        className={`h-4 w-4 ${
+                          i < hike.rating
+                            ? 'text-trail fill-current'
+                            : 'text-muted-foreground'
+                        }`}
                       />
                     ))}
                   </div>

@@ -60,7 +60,9 @@ describe('Post component', () => {
     getFeedById.mockResolvedValueOnce(null);
     renderWithRouter('invalid-post');
 
-    await waitFor(() => expect(getFeedById).toHaveBeenCalledWith('invalid-post'));
+    await waitFor(() =>
+      expect(getFeedById).toHaveBeenCalledWith('invalid-post')
+    );
 
     expect(await screen.findByText(/post not found/i)).toBeInTheDocument();
   });
@@ -83,17 +85,24 @@ describe('Post component', () => {
 
     expect(await screen.findByText(sharePost.name)).toBeInTheDocument();
     expect(await screen.findByText(sharePost.shareCaption)).toBeInTheDocument();
-    expect(await screen.findByText(/original post content/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/original post content/i)
+    ).toBeInTheDocument();
   });
 
   it('logs an error if fetch fails', async () => {
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
     getFeedById.mockRejectedValueOnce(new Error('Fetch failed'));
 
     renderWithRouter('post3');
 
     await waitFor(() => expect(getFeedById).toHaveBeenCalledWith('post3'));
-    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Failed to load post'), expect.any(Error));
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Failed to load post'),
+      expect.any(Error)
+    );
 
     consoleSpy.mockRestore();
   });

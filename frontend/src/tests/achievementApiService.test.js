@@ -5,32 +5,35 @@ jest.mock('../config/firebase.js', () => ({
   auth: {
     currentUser: {
       getIdToken: jest.fn().mockResolvedValue('mock-token'),
-      uid: 'test-user-123'
-    }
-  }
+      uid: 'test-user-123',
+    },
+  },
 }));
 
 describe('AchievementApiService', () => {
   let achievementApiService;
 
   beforeAll(() => {
-    achievementApiService = require('../services/achievementApiService').achievementApiService;
+    achievementApiService =
+      require('../services/achievementApiService').achievementApiService;
   });
 
   beforeEach(() => {
     global.fetch = jest.fn();
     jest.clearAllMocks();
-    
+
     // Ensure auth mock is properly set up for each test
     const { auth } = require('../config/firebase.js');
     if (!auth.currentUser) {
       auth.currentUser = {
         getIdToken: jest.fn().mockResolvedValue('mock-token'),
-        uid: 'test-user-123'
+        uid: 'test-user-123',
       };
     }
     // Force token to be stable regardless of auth wiring
-    jest.spyOn(achievementApiService, 'getAuthToken').mockResolvedValue('mock-token');
+    jest
+      .spyOn(achievementApiService, 'getAuthToken')
+      .mockResolvedValue('mock-token');
   });
 
   afterEach(() => {
@@ -68,12 +71,14 @@ describe('AchievementApiService', () => {
       const { auth } = require('../config/firebase.js');
       auth.currentUser = null;
 
-      await expect(achievementApiService.getAuthToken()).rejects.toThrow('No authenticated user');
-      
+      await expect(achievementApiService.getAuthToken()).rejects.toThrow(
+        'No authenticated user'
+      );
+
       // Restore for other tests
       auth.currentUser = {
         getIdToken: jest.fn().mockResolvedValue('mock-token'),
-        uid: 'test-user-123'
+        uid: 'test-user-123',
       };
     });
   });
@@ -83,7 +88,7 @@ describe('AchievementApiService', () => {
       const mockData = { success: true, data: { test: 'value' } };
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => mockData
+        json: async () => mockData,
       });
 
       const result = await achievementApiService.makeRequest('/test-endpoint');
@@ -93,8 +98,8 @@ describe('AchievementApiService', () => {
         expect.objectContaining({
           headers: expect.objectContaining({
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer mock-token'
-          })
+            Authorization: 'Bearer mock-token',
+          }),
         })
       );
 
@@ -102,26 +107,34 @@ describe('AchievementApiService', () => {
     });
 
     test('should handle API errors', async () => {
-      global.fetch.mockResolvedValueOnce({ ok: false, status: 500, statusText: 'Server Error' });
-      await expect(achievementApiService.makeRequest('/error-endpoint')).rejects.toThrow();
+      global.fetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        statusText: 'Server Error',
+      });
+      await expect(
+        achievementApiService.makeRequest('/error-endpoint')
+      ).rejects.toThrow();
     });
 
     test('should handle network errors', async () => {
       global.fetch.mockRejectedValueOnce(new Error('Network error'));
 
-      await expect(achievementApiService.makeRequest('/network-error')).rejects.toThrow('Network error');
+      await expect(
+        achievementApiService.makeRequest('/network-error')
+      ).rejects.toThrow('Network error');
     });
 
     test.skip('should include custom headers', async () => {
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true })
+        json: async () => ({ success: true }),
       });
 
       await achievementApiService.makeRequest('/test', {
         headers: {
-          'Custom-Header': 'custom-value'
-        }
+          'Custom-Header': 'custom-value',
+        },
       });
 
       expect(global.fetch).toHaveBeenCalledWith(
@@ -129,8 +142,8 @@ describe('AchievementApiService', () => {
         expect.objectContaining({
           headers: expect.objectContaining({
             'Custom-Header': 'custom-value',
-            'Authorization': 'Bearer mock-token'
-          })
+            Authorization: 'Bearer mock-token',
+          }),
         })
       );
     });
@@ -142,13 +155,13 @@ describe('AchievementApiService', () => {
         success: true,
         badges: [
           { id: 'badge-1', name: 'First Hike', earned: true },
-          { id: 'badge-2', name: '100km Club', earned: false }
-        ]
+          { id: 'badge-2', name: '100km Club', earned: false },
+        ],
       };
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => mockBadges
+        json: async () => mockBadges,
       });
 
       const result = await achievementApiService.getBadges();
@@ -157,8 +170,8 @@ describe('AchievementApiService', () => {
         expect.stringContaining('/users/badges'),
         expect.objectContaining({
           headers: expect.objectContaining({
-            'Authorization': 'Bearer mock-token'
-          })
+            Authorization: 'Bearer mock-token',
+          }),
         })
       );
 
@@ -169,7 +182,7 @@ describe('AchievementApiService', () => {
       global.fetch.mockResolvedValueOnce({
         ok: false,
         status: 404,
-        statusText: 'Not Found'
+        statusText: 'Not Found',
       });
 
       await expect(achievementApiService.getBadges()).rejects.toThrow();
@@ -180,14 +193,12 @@ describe('AchievementApiService', () => {
     test('should evaluate and award new badges', async () => {
       const mockResponse = {
         success: true,
-        newBadges: [
-          { id: 'badge-3', name: 'Mountain Climber' }
-        ]
+        newBadges: [{ id: 'badge-3', name: 'Mountain Climber' }],
       };
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => mockResponse
+        json: async () => mockResponse,
       });
 
       const result = await achievementApiService.evaluateBadges();
@@ -197,8 +208,8 @@ describe('AchievementApiService', () => {
         expect.objectContaining({
           method: 'POST',
           headers: expect.objectContaining({
-            'Authorization': 'Bearer mock-token'
-          })
+            Authorization: 'Bearer mock-token',
+          }),
         })
       );
 
@@ -209,7 +220,7 @@ describe('AchievementApiService', () => {
       global.fetch.mockResolvedValueOnce({
         ok: false,
         status: 500,
-        statusText: 'Internal Server Error'
+        statusText: 'Internal Server Error',
       });
 
       await expect(achievementApiService.evaluateBadges()).rejects.toThrow();
@@ -224,13 +235,13 @@ describe('AchievementApiService', () => {
           totalHikes: 42,
           totalDistance: 320,
           totalElevation: 8500,
-          longestHike: 25
-        }
+          longestHike: 25,
+        },
       };
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => mockStats
+        json: async () => mockStats,
       });
 
       const result = await achievementApiService.getStats();
@@ -239,8 +250,8 @@ describe('AchievementApiService', () => {
         expect.stringContaining('/users/stats'),
         expect.objectContaining({
           headers: expect.objectContaining({
-            'Authorization': 'Bearer mock-token'
-          })
+            Authorization: 'Bearer mock-token',
+          }),
         })
       );
 
@@ -251,7 +262,7 @@ describe('AchievementApiService', () => {
       global.fetch.mockResolvedValueOnce({
         ok: false,
         status: 403,
-        statusText: 'Forbidden'
+        statusText: 'Forbidden',
       });
 
       await expect(achievementApiService.getStats()).rejects.toThrow();
@@ -264,13 +275,13 @@ describe('AchievementApiService', () => {
         success: true,
         progress: {
           monthly: [10, 15, 20, 18],
-          weekly: [3, 5, 4, 6]
-        }
+          weekly: [3, 5, 4, 6],
+        },
       };
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => mockProgress
+        json: async () => mockProgress,
       });
 
       const result = await achievementApiService.getProgress();
@@ -279,8 +290,8 @@ describe('AchievementApiService', () => {
         expect.stringContaining('/hikes/progress'),
         expect.objectContaining({
           headers: expect.objectContaining({
-            'Authorization': 'Bearer mock-token'
-          })
+            Authorization: 'Bearer mock-token',
+          }),
         })
       );
 
@@ -291,7 +302,7 @@ describe('AchievementApiService', () => {
       global.fetch.mockResolvedValueOnce({
         ok: false,
         status: 400,
-        statusText: 'Bad Request'
+        statusText: 'Bad Request',
       });
 
       await expect(achievementApiService.getProgress()).rejects.toThrow();
@@ -305,13 +316,13 @@ describe('AchievementApiService', () => {
         stats: {
           averageDistance: 12.5,
           averageElevation: 450,
-          favoriteLocation: 'Table Mountain'
-        }
+          favoriteLocation: 'Table Mountain',
+        },
       };
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => mockHikeStats
+        json: async () => mockHikeStats,
       });
 
       const result = await achievementApiService.getHikeStats();
@@ -320,8 +331,8 @@ describe('AchievementApiService', () => {
         expect.stringContaining('/hikes/stats'),
         expect.objectContaining({
           headers: expect.objectContaining({
-            'Authorization': 'Bearer mock-token'
-          })
+            Authorization: 'Bearer mock-token',
+          }),
         })
       );
 
@@ -332,7 +343,7 @@ describe('AchievementApiService', () => {
       global.fetch.mockResolvedValueOnce({
         ok: false,
         status: 500,
-        statusText: 'Server Error'
+        statusText: 'Server Error',
       });
 
       await expect(achievementApiService.getHikeStats()).rejects.toThrow();
@@ -351,4 +362,3 @@ describe('AchievementApiService', () => {
     });
   });
 });
-

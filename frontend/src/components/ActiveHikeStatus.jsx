@@ -1,7 +1,7 @@
-import { Card, CardContent } from "./ui/card";
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
-import { Play, Pause, Clock, Mountain } from "lucide-react";
+import { Card, CardContent } from './ui/card';
+import { Badge } from './ui/badge';
+import { Button } from './ui/button';
+import { Play, Pause, Clock, Mountain } from 'lucide-react';
 
 const ActiveHikeStatus = ({ activeHike, onResume }) => {
   if (!activeHike) return null;
@@ -9,7 +9,7 @@ const ActiveHikeStatus = ({ activeHike, onResume }) => {
   const formatTime = (seconds) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
-    
+
     if (hours > 0) {
       return `${hours}h ${minutes}m`;
     } else {
@@ -24,11 +24,14 @@ const ActiveHikeStatus = ({ activeHike, onResume }) => {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <div className="h-3 w-3 bg-green-500 rounded-full animate-pulse"></div>
-              <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+              <Badge
+                variant="secondary"
+                className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+              >
                 Hike in Progress
               </Badge>
             </div>
-            
+
             <div className="flex items-center gap-4 text-sm">
               <div className="flex items-center gap-1">
                 <Clock className="h-4 w-4" />
@@ -43,9 +46,9 @@ const ActiveHikeStatus = ({ activeHike, onResume }) => {
               )}
             </div>
           </div>
-          
-          <Button 
-            onClick={onResume} 
+
+          <Button
+            onClick={onResume}
             size="sm"
             className="bg-green-600 hover:bg-green-700"
           >

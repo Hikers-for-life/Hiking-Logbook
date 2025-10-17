@@ -23,16 +23,43 @@ router.post('/signup', async (req, res) => {
     // Email format check
     const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRe.test(String(email).toLowerCase())) {
-      return res.status(400).json({ errors: [{ field: 'email', message: 'Invalid email format' }] });
+      return res
+        .status(400)
+        .json({
+          errors: [{ field: 'email', message: 'Invalid email format' }],
+        });
     }
 
     // Stronger password checks: min 8 chars, at least one letter and one number
-    if (password.length < 8 || !/[A-Za-z]/.test(password) || !/\d/.test(password)) {
-      return res.status(400).json({ errors: [{ field: 'password', message: 'Password must be at least 8 characters and include letters and numbers' }] });
+    if (
+      password.length < 8 ||
+      !/[A-Za-z]/.test(password) ||
+      !/\d/.test(password)
+    ) {
+      return res
+        .status(400)
+        .json({
+          errors: [
+            {
+              field: 'password',
+              message:
+                'Password must be at least 8 characters and include letters and numbers',
+            },
+          ],
+        });
     }
 
     if (displayName.length < 2) {
-      return res.status(400).json({ errors: [{ field: 'displayName', message: 'Display name must be at least 2 characters long' }] });
+      return res
+        .status(400)
+        .json({
+          errors: [
+            {
+              field: 'displayName',
+              message: 'Display name must be at least 2 characters long',
+            },
+          ],
+        });
     }
 
     const result = await AuthService.createUser({
@@ -52,10 +79,25 @@ router.post('/signup', async (req, res) => {
     console.error('Signup error:', error);
 
     if (error.message && error.message.includes('email already exists')) {
-      return res.status(409).json({ errors: [{ field: 'email', message: 'An account with this email already exists' }] });
+      return res
+        .status(409)
+        .json({
+          errors: [
+            {
+              field: 'email',
+              message: 'An account with this email already exists',
+            },
+          ],
+        });
     }
 
-    res.status(500).json({ errors: [{ message: 'Failed to create user account', detail: error.message }] });
+    res
+      .status(500)
+      .json({
+        errors: [
+          { message: 'Failed to create user account', detail: error.message },
+        ],
+      });
   }
 });
 
@@ -121,7 +163,6 @@ router.delete('/profile', verifyAuth, async (req, res) => {
     });
   }
 });
-
 
 // Health check endpoint
 router.get('/health', (req, res) => {

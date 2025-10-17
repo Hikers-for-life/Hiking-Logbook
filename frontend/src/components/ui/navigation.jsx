@@ -15,7 +15,6 @@ import { useAuth } from '../../contexts/AuthContext.jsx';
 import { ProfileDropdown } from './profile-dropdown.jsx';
 import { ProfileView } from './profile-view.jsx';
 
-
 export const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -24,11 +23,8 @@ export const Navigation = () => {
 
   const navigate = useNavigate();
 
-
   // Define navigation items based on authentication state
-  const publicNavItems = [
-    { name: 'Home', icon: MapPin, href: '/' },
-  ];
+  const publicNavItems = [{ name: 'Home', icon: MapPin, href: '/' }];
 
   const authenticatedNavItems = [
     { name: 'Logbook', icon: Book, href: '/logbook' },
@@ -54,12 +50,11 @@ export const Navigation = () => {
   };
 
   const handleEditProfile = () => {
-    navigate("/edit-profile");
+    navigate('/edit-profile');
   };
 
   const handleSignup = () => {
     navigate('/?auth=login');
-
   };
 
   return (

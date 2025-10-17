@@ -34,15 +34,17 @@ export class PlannedHikesService {
       const result = await dbUtils.addPlannedHike(userId, processedData);
 
       if (result.success) {
-        console.log(`Planned hike created successfully for user ${userId}:`, result.id);
+        console.log(
+          `Planned hike created successfully for user ${userId}:`,
+          result.id
+        );
         return {
           id: result.id,
-          ...processedData
+          ...processedData,
         };
       }
 
       throw new Error('Failed to create planned hike');
-
     } catch (error) {
       console.error('PlannedHikesService.createPlannedHike error:', error);
       throw error;
@@ -61,11 +63,14 @@ export class PlannedHikesService {
       const plannedHikes = await dbUtils.getUserPlannedHikes(userId, filters);
 
       // Enhance the data with computed fields
-      const enhancedPlannedHikes = plannedHikes.map(hike => this.enhancePlannedHikeData(hike));
+      const enhancedPlannedHikes = plannedHikes.map((hike) =>
+        this.enhancePlannedHikeData(hike)
+      );
 
-      console.log(`Retrieved ${enhancedPlannedHikes.length} planned hikes for user ${userId}`);
+      console.log(
+        `Retrieved ${enhancedPlannedHikes.length} planned hikes for user ${userId}`
+      );
       return enhancedPlannedHikes;
-
     } catch (error) {
       console.error('PlannedHikesService.getUserPlannedHikes error:', error);
       throw error;
@@ -83,7 +88,9 @@ export class PlannedHikesService {
       const plannedHike = await dbUtils.getPlannedHike(userId, plannedHikeId);
 
       if (!plannedHike) {
-        console.log(`Planned hike ${plannedHikeId} not found for user ${userId}`);
+        console.log(
+          `Planned hike ${plannedHikeId} not found for user ${userId}`
+        );
         return null;
       }
 
@@ -92,7 +99,6 @@ export class PlannedHikesService {
 
       console.log(`Retrieved planned hike ${plannedHikeId} for user ${userId}`);
       return enhancedPlannedHike;
-
     } catch (error) {
       console.error('PlannedHikesService.getPlannedHike error:', error);
       throw error;
@@ -111,15 +117,20 @@ export class PlannedHikesService {
       // Process and sanitize the update data
       const processedUpdateData = this.processPlannedHikeUpdateData(updateData);
 
-      const result = await dbUtils.updatePlannedHike(userId, plannedHikeId, processedUpdateData);
+      const result = await dbUtils.updatePlannedHike(
+        userId,
+        plannedHikeId,
+        processedUpdateData
+      );
 
       if (result.success) {
-        console.log(`Planned hike ${plannedHikeId} updated successfully for user ${userId}`);
+        console.log(
+          `Planned hike ${plannedHikeId} updated successfully for user ${userId}`
+        );
         return result;
       }
 
       throw new Error('Failed to update planned hike');
-
     } catch (error) {
       console.error('PlannedHikesService.updatePlannedHike error:', error);
       throw error;
@@ -134,18 +145,19 @@ export class PlannedHikesService {
    */
   async cancelPlannedHike(userId, plannedHikeId) {
     try {
-      const result = await dbUtils.updatePlannedHike(userId, plannedHikeId, { 
+      const result = await dbUtils.updatePlannedHike(userId, plannedHikeId, {
         status: 'cancelled',
-        updatedAt: new Date()
+        updatedAt: new Date(),
       });
 
       if (result.success) {
-        console.log(`Planned hike ${plannedHikeId} cancelled successfully for user ${userId}`);
+        console.log(
+          `Planned hike ${plannedHikeId} cancelled successfully for user ${userId}`
+        );
         return result;
       }
 
       throw new Error('Failed to cancel planned hike');
-
     } catch (error) {
       console.error('PlannedHikesService.cancelPlannedHike error:', error);
       throw error;
@@ -163,12 +175,13 @@ export class PlannedHikesService {
       const result = await dbUtils.deletePlannedHike(userId, plannedHikeId);
 
       if (result.success) {
-        console.log(`Planned hike ${plannedHikeId} deleted successfully for user ${userId}`);
+        console.log(
+          `Planned hike ${plannedHikeId} deleted successfully for user ${userId}`
+        );
         return result;
       }
 
       throw new Error('Failed to delete planned hike');
-
     } catch (error) {
       console.error('PlannedHikesService.deletePlannedHike error:', error);
       throw error;
@@ -184,15 +197,20 @@ export class PlannedHikesService {
    */
   async joinPlannedHike(userId, plannedHikeId, participantId) {
     try {
-      const result = await dbUtils.joinPlannedHike(userId, plannedHikeId, participantId);
+      const result = await dbUtils.joinPlannedHike(
+        userId,
+        plannedHikeId,
+        participantId
+      );
 
       if (result.success) {
-        console.log(`User ${participantId} joined planned hike ${plannedHikeId}`);
+        console.log(
+          `User ${participantId} joined planned hike ${plannedHikeId}`
+        );
         return result;
       }
 
       throw new Error('Failed to join planned hike');
-
     } catch (error) {
       console.error('PlannedHikesService.joinPlannedHike error:', error);
       throw error;
@@ -208,7 +226,11 @@ export class PlannedHikesService {
    */
   async leavePlannedHike(userId, plannedHikeId, participantId) {
     try {
-      const result = await dbUtils.leavePlannedHike(userId, plannedHikeId, participantId);
+      const result = await dbUtils.leavePlannedHike(
+        userId,
+        plannedHikeId,
+        participantId
+      );
 
       if (result.success) {
         console.log(`User ${participantId} left planned hike ${plannedHikeId}`);
@@ -216,7 +238,6 @@ export class PlannedHikesService {
       }
 
       throw new Error('Failed to leave planned hike');
-
     } catch (error) {
       console.error('PlannedHikesService.leavePlannedHike error:', error);
       throw error;
@@ -234,12 +255,13 @@ export class PlannedHikesService {
       const result = await dbUtils.startPlannedHike(userId, plannedHikeId);
 
       if (result.success) {
-        console.log(`Planned hike ${plannedHikeId} started as active hike ${result.id} for user ${userId}`);
+        console.log(
+          `Planned hike ${plannedHikeId} started as active hike ${result.id} for user ${userId}`
+        );
         return result;
       }
 
       throw new Error('Failed to start planned hike');
-
     } catch (error) {
       console.error('PlannedHikesService.startPlannedHike error:', error);
       throw error;
@@ -253,31 +275,45 @@ export class PlannedHikesService {
    */
   async getPlannedHikeStats(userId) {
     try {
-      const plannedHikes = await this.getUserPlannedHikes(userId, { includeCancelled: true });
+      const plannedHikes = await this.getUserPlannedHikes(userId, {
+        includeCancelled: true,
+      });
 
       const stats = {
         totalPlannedHikes: plannedHikes.length,
-        upcomingHikes: plannedHikes.filter(h => new Date(h.date) >= new Date() && h.status !== 'cancelled').length,
-        pastHikes: plannedHikes.filter(h => new Date(h.date) < new Date()).length,
-        totalEstimatedDistance: plannedHikes.reduce((sum, hike) => sum + (parseFloat(hike.distance) || 0), 0),
+        upcomingHikes: plannedHikes.filter(
+          (h) => new Date(h.date) >= new Date() && h.status !== 'cancelled'
+        ).length,
+        pastHikes: plannedHikes.filter((h) => new Date(h.date) < new Date())
+          .length,
+        totalEstimatedDistance: plannedHikes.reduce(
+          (sum, hike) => sum + (parseFloat(hike.distance) || 0),
+          0
+        ),
         byDifficulty: {
-          Easy: plannedHikes.filter(h => h.difficulty === 'Easy').length,
-          Moderate: plannedHikes.filter(h => h.difficulty === 'Moderate').length,
-          Hard: plannedHikes.filter(h => h.difficulty === 'Hard').length,
-          Extreme: plannedHikes.filter(h => h.difficulty === 'Extreme').length
+          Easy: plannedHikes.filter((h) => h.difficulty === 'Easy').length,
+          Moderate: plannedHikes.filter((h) => h.difficulty === 'Moderate')
+            .length,
+          Hard: plannedHikes.filter((h) => h.difficulty === 'Hard').length,
+          Extreme: plannedHikes.filter((h) => h.difficulty === 'Extreme')
+            .length,
         },
         byStatus: {
-          planning: plannedHikes.filter(h => h.status === 'planning').length,
-          started: plannedHikes.filter(h => h.status === 'started').length,
-          cancelled: plannedHikes.filter(h => h.status === 'cancelled').length
+          planning: plannedHikes.filter((h) => h.status === 'planning').length,
+          started: plannedHikes.filter((h) => h.status === 'started').length,
+          cancelled: plannedHikes.filter((h) => h.status === 'cancelled')
+            .length,
         },
-        averageParticipants: plannedHikes.length > 0 
-          ? plannedHikes.reduce((sum, hike) => sum + (hike.participants?.length || 0), 0) / plannedHikes.length 
-          : 0
+        averageParticipants:
+          plannedHikes.length > 0
+            ? plannedHikes.reduce(
+                (sum, hike) => sum + (hike.participants?.length || 0),
+                0
+              ) / plannedHikes.length
+            : 0,
       };
 
       return stats;
-
     } catch (error) {
       console.error('PlannedHikesService.getPlannedHikeStats error:', error);
       throw error;
@@ -293,7 +329,7 @@ export class PlannedHikesService {
    */
   validatePlannedHikeData(data) {
     const requiredFields = ['title', 'date', 'location', 'startTime'];
-    const missingFields = requiredFields.filter(field => !data[field]);
+    const missingFields = requiredFields.filter((field) => !data[field]);
 
     if (missingFields.length > 0) {
       throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
@@ -314,7 +350,9 @@ export class PlannedHikesService {
     // Validate difficulty
     const validDifficulties = ['Easy', 'Moderate', 'Hard', 'Extreme'];
     if (data.difficulty && !validDifficulties.includes(data.difficulty)) {
-      throw new Error(`Invalid difficulty. Must be one of: ${validDifficulties.join(', ')}`);
+      throw new Error(
+        `Invalid difficulty. Must be one of: ${validDifficulties.join(', ')}`
+      );
     }
   }
 
@@ -332,7 +370,7 @@ export class PlannedHikesService {
       distance: String(data.distance || '').trim(),
       difficulty: data.difficulty || 'Easy',
       description: String(data.description || '').trim(),
-      notes: String(data.notes || '').trim()
+      notes: String(data.notes || '').trim(),
     };
   }
 
@@ -346,11 +384,15 @@ export class PlannedHikesService {
 
     if (data.title !== undefined) processed.title = String(data.title).trim();
     if (data.date !== undefined) processed.date = new Date(data.date);
-    if (data.startTime !== undefined) processed.startTime = String(data.startTime).trim();
-    if (data.location !== undefined) processed.location = String(data.location).trim();
-    if (data.distance !== undefined) processed.distance = String(data.distance).trim();
+    if (data.startTime !== undefined)
+      processed.startTime = String(data.startTime).trim();
+    if (data.location !== undefined)
+      processed.location = String(data.location).trim();
+    if (data.distance !== undefined)
+      processed.distance = String(data.distance).trim();
     if (data.difficulty !== undefined) processed.difficulty = data.difficulty;
-    if (data.description !== undefined) processed.description = String(data.description).trim();
+    if (data.description !== undefined)
+      processed.description = String(data.description).trim();
     if (data.notes !== undefined) processed.notes = String(data.notes).trim();
     if (data.status !== undefined) processed.status = data.status;
 
@@ -369,7 +411,8 @@ export class PlannedHikesService {
     if (filters.difficulty) processed.difficulty = filters.difficulty;
     if (filters.dateFrom) processed.dateFrom = new Date(filters.dateFrom);
     if (filters.dateTo) processed.dateTo = new Date(filters.dateTo);
-    if (filters.includeCancelled !== undefined) processed.includeCancelled = filters.includeCancelled;
+    if (filters.includeCancelled !== undefined)
+      processed.includeCancelled = filters.includeCancelled;
 
     return processed;
   }
@@ -393,7 +436,7 @@ export class PlannedHikesService {
       isStarted: hike.status === 'started',
       formattedDate: hikeDate.toLocaleDateString(),
       formattedTime: hikeDate.toLocaleTimeString(),
-      formattedStartTime: hike.startTime || 'Not specified'
+      formattedStartTime: hike.startTime || 'Not specified',
     };
   }
 }

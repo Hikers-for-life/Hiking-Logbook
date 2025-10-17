@@ -21,22 +21,26 @@ export function initializeFirebase() {
 
   try {
     // Check if Firebase environment variables are set
-    if (!process.env.FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID === 'your-project-id') {
+    if (
+      !process.env.FIREBASE_PROJECT_ID ||
+      process.env.FIREBASE_PROJECT_ID === 'your-project-id'
+    ) {
       // Create mock instances for development
       db = {
         collection: () => ({
           limit: () => ({
-            get: () => Promise.resolve({ docs: [] })
-          })
-        })
+            get: () => Promise.resolve({ docs: [] }),
+          }),
+        }),
       };
       authInstance = {
         createUser: () => Promise.reject(new Error('Firebase not configured')),
-        getUserByEmail: () => Promise.reject(new Error('Firebase not configured')),
+        getUserByEmail: () =>
+          Promise.reject(new Error('Firebase not configured')),
         deleteUser: () => Promise.reject(new Error('Firebase not configured')),
-        updateUser: () => Promise.reject(new Error('Firebase not configured'))
+        updateUser: () => Promise.reject(new Error('Firebase not configured')),
       };
-      
+
       console.log('Mock Firebase initialized for development');
       return db;
     }
@@ -65,7 +69,7 @@ export function initializeFirebase() {
       databaseURL: process.env.FIREBASE_DATABASE_URL,
     });
 
-    // Initialize instances 
+    // Initialize instances
 
     db = admin.firestore();
     authInstance = admin.auth();
@@ -82,12 +86,16 @@ export function initializeFirebase() {
  * Helper getters
  */
 export function getDatabase() {
-  if (!db) throw new Error('Database not initialized. Call initializeFirebase() first.');
+  if (!db)
+    throw new Error(
+      'Database not initialized. Call initializeFirebase() first.'
+    );
   return db;
 }
 
 export function getAuth() {
-  if (!authInstance) throw new Error('Auth not initialized. Call initializeFirebase() first.');
+  if (!authInstance)
+    throw new Error('Auth not initialized. Call initializeFirebase() first.');
   return authInstance;
 }
 

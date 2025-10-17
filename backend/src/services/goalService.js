@@ -8,12 +8,16 @@ const ALLOWED_CATEGORIES = new Set([
   'elevation',
   'hikes',
   'streak',
-  'custom'
+  'custom',
 ]);
 
 function validatePayload(payload, requireAll = true) {
   if (requireAll) {
-    if (!payload.title || typeof payload.title !== 'string' || !payload.title.trim()) {
+    if (
+      !payload.title ||
+      typeof payload.title !== 'string' ||
+      !payload.title.trim()
+    ) {
       return 'title is required';
     }
     if (!payload.category || !ALLOWED_CATEGORIES.has(payload.category)) {
@@ -36,7 +40,12 @@ function validatePayload(payload, requireAll = true) {
     if (payload.category && !ALLOWED_CATEGORIES.has(payload.category)) {
       return `category must be one of: ${[...ALLOWED_CATEGORIES].join(', ')}`;
     }
-    if (payload.targetValue !== undefined && (typeof payload.targetValue !== 'number' || Number.isNaN(payload.targetValue) || payload.targetValue < 0)) {
+    if (
+      payload.targetValue !== undefined &&
+      (typeof payload.targetValue !== 'number' ||
+        Number.isNaN(payload.targetValue) ||
+        payload.targetValue < 0)
+    ) {
       return 'targetValue must be a non-negative number';
     }
   }
@@ -48,9 +57,12 @@ function normalizePayload(payload) {
     title: payload.title?.trim(),
     description: payload.description || '',
     category: payload.category,
-    targetValue: typeof payload.targetValue === 'number' ? payload.targetValue : Number(payload.targetValue),
+    targetValue:
+      typeof payload.targetValue === 'number'
+        ? payload.targetValue
+        : Number(payload.targetValue),
     unit: payload.unit || '',
-    targetDate: payload.targetDate ? new Date(payload.targetDate) : null
+    targetDate: payload.targetDate ? new Date(payload.targetDate) : null,
   };
 }
 
@@ -67,11 +79,15 @@ export async function addGoal(userId, payload) {
     currentProgress: 0,
     status: 'active', // active | completed | cancelled
     createdAt: now,
-    updatedAt: now
+    updatedAt: now,
   };
 
   try {
-    const ref = await db.collection('users').doc(userId).collection(GOALS_SUBCOL).add(doc);
+    const ref = await db
+      .collection('users')
+      .doc(userId)
+      .collection(GOALS_SUBCOL)
+      .add(doc);
     const snap = await ref.get();
     return { id: ref.id, ...snap.data() };
   } catch (e) {
@@ -82,14 +98,17 @@ export async function addGoal(userId, payload) {
 export async function listGoals(userId) {
   try {
     const db = getDatabase();
-    const snap = await db.collection('users').doc(userId).collection(GOALS_SUBCOL)
+    const snap = await db
+      .collection('users')
+      .doc(userId)
+      .collection(GOALS_SUBCOL)
       .orderBy('createdAt', 'desc')
       .get();
 
     const goals = [];
-    snap.forEach(doc => {
+    snap.forEach((doc) => {
       const goalData = doc.data();
-      
+
       // Convert Firestore timestamps to ISO strings
       if (goalData.createdAt && goalData.createdAt.toDate) {
         goalData.createdAt = goalData.createdAt.toDate().toISOString();
@@ -100,7 +119,7 @@ export async function listGoals(userId) {
       if (goalData.targetDate && goalData.targetDate.toDate) {
         goalData.targetDate = goalData.targetDate.toDate().toISOString();
       }
-      
+
       goals.push({ id: doc.id, ...goalData });
     });
     return goals;
@@ -112,12 +131,16 @@ export async function listGoals(userId) {
 export async function getGoal(userId, goalId) {
   try {
     const db = getDatabase();
-    const docRef = db.collection('users').doc(userId).collection(GOALS_SUBCOL).doc(goalId);
+    const docRef = db
+      .collection('users')
+      .doc(userId)
+      .collection(GOALS_SUBCOL)
+      .doc(goalId);
     const snap = await docRef.get();
     if (!snap.exists) throw { status: 404, message: 'Goal not found' };
-    
+
     const goalData = snap.data();
-    
+
     // Convert Firestore timestamps to ISO strings
     if (goalData.createdAt && goalData.createdAt.toDate) {
       goalData.createdAt = goalData.createdAt.toDate().toISOString();
@@ -128,7 +151,7 @@ export async function getGoal(userId, goalId) {
     if (goalData.targetDate && goalData.targetDate.toDate) {
       goalData.targetDate = goalData.targetDate.toDate().toISOString();
     }
-    
+
     return { id: snap.id, ...goalData };
   } catch (e) {
     if (e && e.status) throw e;
@@ -143,14 +166,19 @@ export async function updateGoal(userId, goalId, updates) {
 
   try {
     const db = getDatabase();
-    const docRef = db.collection('users').doc(userId).collection(GOALS_SUBCOL).doc(goalId);
+    const docRef = db
+      .collection('users')
+      .doc(userId)
+      .collection(GOALS_SUBCOL)
+      .doc(goalId);
     const snap = await docRef.get();
     if (!snap.exists) throw { status: 404, message: 'Goal not found' };
 
     // Ensure the goal belongs to the user (stored in subcollection - belongs by path)
     const now = new Date();
     const updateObj = { ...updates, updatedAt: now };
-    if (updateObj.targetDate) updateObj.targetDate = new Date(updateObj.targetDate);
+    if (updateObj.targetDate)
+      updateObj.targetDate = new Date(updateObj.targetDate);
 
     await docRef.update(updateObj);
     const updatedSnap = await docRef.get();
@@ -164,7 +192,11 @@ export async function updateGoal(userId, goalId, updates) {
 export async function removeGoal(userId, goalId) {
   try {
     const db = getDatabase();
-    const docRef = db.collection('users').doc(userId).collection(GOALS_SUBCOL).doc(goalId);
+    const docRef = db
+      .collection('users')
+      .doc(userId)
+      .collection(GOALS_SUBCOL)
+      .doc(goalId);
     const snap = await docRef.get();
     if (!snap.exists) throw { status: 404, message: 'Goal not found' };
 

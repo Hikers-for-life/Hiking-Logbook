@@ -7,7 +7,7 @@ jest.mock('../contexts/AuthContext.jsx', () => {
   const React = require('react');
   return {
     useAuth: () => ({ currentUser: null, logout: jest.fn() }),
-    AuthContext: React.createContext({ currentUser: null })
+    AuthContext: React.createContext({ currentUser: null }),
   };
 });
 
@@ -26,6 +26,3 @@ describe('Navigation component (public user)', () => {
     fireEvent.click(toggle);
   });
 });
-
-
-

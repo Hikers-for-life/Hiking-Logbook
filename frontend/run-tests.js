@@ -2,9 +2,9 @@ const { execSync } = require('child_process');
 
 try {
   console.log('Running frontend tests with coverage...');
-  execSync('npm test -- --coverage --watchAll=false --passWithNoTests', { 
+  execSync('npm test -- --coverage --watchAll=false --passWithNoTests', {
     stdio: 'inherit',
-    cwd: process.cwd()
+    cwd: process.cwd(),
   });
   console.log('Tests completed successfully!');
 } catch (error) {

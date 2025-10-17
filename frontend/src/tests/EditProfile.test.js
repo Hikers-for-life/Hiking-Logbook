@@ -7,15 +7,15 @@ import '@testing-library/jest-dom';
 jest.mock('../pages/EditProfile', () => {
   const React = require('react');
   const { Link } = require('react-router-dom');
-  
+
   return function MockEditProfile() {
     const [avatarUrl, setAvatarUrl] = React.useState('/placeholder.svg');
     const [bioLength, setBioLength] = React.useState(0);
-    
+
     const handleImageUpload = (event) => {
       const file = event.target.files?.[0];
       if (file) {
-        const reader = new (globalThis.FileReader)();
+        const reader = new globalThis.FileReader();
         reader.onload = (e) => {
           setAvatarUrl(e.target?.result);
         };
@@ -42,138 +42,259 @@ jest.mock('../pages/EditProfile', () => {
       setBioLength(e.target.value.length);
     };
 
-    return React.createElement('div', { className: 'min-h-screen bg-background' },
+    return React.createElement(
+      'div',
+      { className: 'min-h-screen bg-background' },
       // Header
-      React.createElement('div', { className: 'bg-gradient-to-r from-green-600 to-blue-600 text-white py-8' },
-        React.createElement('div', { className: 'container mx-auto px-4' },
-          React.createElement('div', { className: 'flex items-center gap-4 mb-6' },
-            React.createElement(Link, { to: '/', className: 'flex items-center gap-2 text-white/80 hover:text-white transition-colors' },
-              React.createElement('span', { 'data-testid': 'arrow-left-icon' }, '←'),
+      React.createElement(
+        'div',
+        {
+          className:
+            'bg-gradient-to-r from-green-600 to-blue-600 text-white py-8',
+        },
+        React.createElement(
+          'div',
+          { className: 'container mx-auto px-4' },
+          React.createElement(
+            'div',
+            { className: 'flex items-center gap-4 mb-6' },
+            React.createElement(
+              Link,
+              {
+                to: '/',
+                className:
+                  'flex items-center gap-2 text-white/80 hover:text-white transition-colors',
+              },
+              React.createElement(
+                'span',
+                { 'data-testid': 'arrow-left-icon' },
+                '←'
+              ),
               'Back to Profile'
             )
           ),
-          React.createElement('h1', { className: 'text-3xl font-bold' }, 'Edit Your Hiking Profile')
+          React.createElement(
+            'h1',
+            { className: 'text-3xl font-bold' },
+            'Edit Your Hiking Profile'
+          )
         )
       ),
-      
+
       // Main Content
-      React.createElement('div', { className: 'container mx-auto px-4 py-8' },
-        React.createElement('div', { className: 'max-w-2xl mx-auto' },
-          React.createElement('form', { onSubmit: handleSubmit },
-            
+      React.createElement(
+        'div',
+        { className: 'container mx-auto px-4 py-8' },
+        React.createElement(
+          'div',
+          { className: 'max-w-2xl mx-auto' },
+          React.createElement(
+            'form',
+            { onSubmit: handleSubmit },
+
             // Avatar Section
-            React.createElement('div', { className: 'text-center mb-8' },
-              React.createElement('div', { className: 'relative inline-block' },
-                React.createElement('div', { className: 'w-32 h-32 rounded-full overflow-hidden bg-gray-200 mx-auto mb-4' },
-                  React.createElement('img', { 
-                    src: avatarUrl, 
+            React.createElement(
+              'div',
+              { className: 'text-center mb-8' },
+              React.createElement(
+                'div',
+                { className: 'relative inline-block' },
+                React.createElement(
+                  'div',
+                  {
+                    className:
+                      'w-32 h-32 rounded-full overflow-hidden bg-gray-200 mx-auto mb-4',
+                  },
+                  React.createElement('img', {
+                    src: avatarUrl,
                     alt: 'Profile picture',
-                    className: 'w-full h-full object-cover'
+                    className: 'w-full h-full object-cover',
                   })
                 ),
-                React.createElement('label', { 
-                  htmlFor: 'avatar-upload',
-                  className: 'absolute bottom-4 right-4 bg-green-600 text-white p-2 rounded-full cursor-pointer hover:bg-green-700 transition-colors'
-                },
-                  React.createElement('span', { 'data-testid': 'camera-icon' }, '📷'),
+                React.createElement(
+                  'label',
+                  {
+                    htmlFor: 'avatar-upload',
+                    className:
+                      'absolute bottom-4 right-4 bg-green-600 text-white p-2 rounded-full cursor-pointer hover:bg-green-700 transition-colors',
+                  },
+                  React.createElement(
+                    'span',
+                    { 'data-testid': 'camera-icon' },
+                    '📷'
+                  ),
                   React.createElement('input', {
                     id: 'avatar-upload',
                     type: 'file',
                     accept: 'image/*',
                     className: 'sr-only',
                     'aria-label': 'Upload avatar',
-                    onChange: handleImageUpload
+                    onChange: handleImageUpload,
                   })
                 )
               )
             ),
 
             // Profile Settings Card
-            React.createElement('div', { className: 'bg-white rounded-lg shadow-sm border p-6 space-y-6' },
-              React.createElement('div', null,
-                React.createElement('h2', { className: 'text-xl font-semibold mb-4' }, 'Profile Settings')
+            React.createElement(
+              'div',
+              {
+                className: 'bg-white rounded-lg shadow-sm border p-6 space-y-6',
+              },
+              React.createElement(
+                'div',
+                null,
+                React.createElement(
+                  'h2',
+                  { className: 'text-xl font-semibold mb-4' },
+                  'Profile Settings'
+                )
               ),
 
               // Display Name Field
-              React.createElement('div', { className: 'space-y-2' },
-                React.createElement('label', { className: 'flex items-center gap-2 text-sm font-medium' },
-                  React.createElement('span', { 'data-testid': 'user-icon' }, '👤'),
+              React.createElement(
+                'div',
+                { className: 'space-y-2' },
+                React.createElement(
+                  'label',
+                  { className: 'flex items-center gap-2 text-sm font-medium' },
+                  React.createElement(
+                    'span',
+                    { 'data-testid': 'user-icon' },
+                    '👤'
+                  ),
                   'Display Name'
                 ),
                 React.createElement('input', {
                   type: 'text',
                   placeholder: 'Enter your hiking name',
-                  className: 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500',
-                  defaultValue: 'Trail Explorer'
+                  className:
+                    'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500',
+                  defaultValue: 'Trail Explorer',
                 }),
-                React.createElement('p', { className: 'text-xs text-gray-600' }, 
+                React.createElement(
+                  'p',
+                  { className: 'text-xs text-gray-600' },
                   'This is how other hikers will see you on the trail'
                 )
               ),
 
               // Location Field
-              React.createElement('div', { className: 'space-y-2' },
-                React.createElement('label', { className: 'flex items-center gap-2 text-sm font-medium' },
-                  React.createElement('span', { 'data-testid': 'mappin-icon' }, '📍'),
+              React.createElement(
+                'div',
+                { className: 'space-y-2' },
+                React.createElement(
+                  'label',
+                  { className: 'flex items-center gap-2 text-sm font-medium' },
+                  React.createElement(
+                    'span',
+                    { 'data-testid': 'mappin-icon' },
+                    '📍'
+                  ),
                   'Location'
                 ),
                 React.createElement('input', {
                   type: 'text',
                   placeholder: 'City, State/Country',
-                  className: 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500',
-                  defaultValue: 'Colorado, USA'
+                  className:
+                    'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500',
+                  defaultValue: 'Colorado, USA',
                 }),
-                React.createElement('p', { className: 'text-xs text-gray-600' }, 
+                React.createElement(
+                  'p',
+                  { className: 'text-xs text-gray-600' },
                   'Share your home base for local trail recommendations'
                 )
               ),
 
               // Password Field
-              React.createElement('div', { className: 'space-y-2' },
-                React.createElement('label', { className: 'flex items-center gap-2 text-sm font-medium' },
-                  React.createElement('span', { 'data-testid': 'lock-icon' }, '🔒'),
+              React.createElement(
+                'div',
+                { className: 'space-y-2' },
+                React.createElement(
+                  'label',
+                  { className: 'flex items-center gap-2 text-sm font-medium' },
+                  React.createElement(
+                    'span',
+                    { 'data-testid': 'lock-icon' },
+                    '🔒'
+                  ),
                   'New Password'
                 ),
                 React.createElement('input', {
                   type: 'password',
                   placeholder: 'Leave blank to keep current password',
-                  className: 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500'
+                  className:
+                    'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500',
                 }),
-                React.createElement('p', { className: 'text-xs text-gray-600' }, 
+                React.createElement(
+                  'p',
+                  { className: 'text-xs text-gray-600' },
                   'Only fill this out if you want to change your password'
                 )
               ),
 
               // Bio Field
-              React.createElement('div', { className: 'space-y-2' },
-                React.createElement('label', { className: 'flex items-center gap-2 text-sm font-medium' },
-                  React.createElement('span', { 'data-testid': 'filetext-icon' }, '📄'),
+              React.createElement(
+                'div',
+                { className: 'space-y-2' },
+                React.createElement(
+                  'label',
+                  { className: 'flex items-center gap-2 text-sm font-medium' },
+                  React.createElement(
+                    'span',
+                    { 'data-testid': 'filetext-icon' },
+                    '📄'
+                  ),
                   'About You'
                 ),
                 React.createElement('textarea', {
-                  placeholder: 'Tell fellow hikers about your outdoor adventures, favorite trails, and what drives your passion for hiking...',
-                  className: 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 min-h-[120px]',
-                  defaultValue: 'Passionate hiker exploring mountain trails and sharing adventures with fellow outdoor enthusiasts.',
-                  onChange: handleBioChange
+                  placeholder:
+                    'Tell fellow hikers about your outdoor adventures, favorite trails, and what drives your passion for hiking...',
+                  className:
+                    'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 min-h-[120px]',
+                  defaultValue:
+                    'Passionate hiker exploring mountain trails and sharing adventures with fellow outdoor enthusiasts.',
+                  onChange: handleBioChange,
                 }),
-                React.createElement('div', { className: 'flex justify-between items-center' },
-                  React.createElement('p', { className: 'text-xs text-gray-600' }, 
+                React.createElement(
+                  'div',
+                  { className: 'flex justify-between items-center' },
+                  React.createElement(
+                    'p',
+                    { className: 'text-xs text-gray-600' },
                     'Share your hiking story and connect with like-minded adventurers'
                   ),
-                  React.createElement('span', { className: 'text-xs text-gray-500' }, `(${bioLength}/500)`)
+                  React.createElement(
+                    'span',
+                    { className: 'text-xs text-gray-500' },
+                    `(${bioLength}/500)`
+                  )
                 )
               ),
 
               // Action Buttons
-              React.createElement('div', { className: 'flex gap-4 pt-6' },
-                React.createElement('button', {
-                  type: 'submit',
-                  className: 'flex-1 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors'
-                }, 'Save Changes'),
-                React.createElement(Link, {
-                  to: '/',
-                  className: 'flex-1 bg-gray-200 text-gray-700 py-2 px-4 rounded-md text-center hover:bg-gray-300 transition-colors'
-                }, 'Cancel')
+              React.createElement(
+                'div',
+                { className: 'flex gap-4 pt-6' },
+                React.createElement(
+                  'button',
+                  {
+                    type: 'submit',
+                    className:
+                      'flex-1 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors',
+                  },
+                  'Save Changes'
+                ),
+                React.createElement(
+                  Link,
+                  {
+                    to: '/',
+                    className:
+                      'flex-1 bg-gray-200 text-gray-700 py-2 px-4 rounded-md text-center hover:bg-gray-300 transition-colors',
+                  },
+                  'Cancel'
+                )
               )
             )
           )
@@ -194,10 +315,14 @@ jest.mock('../components/ui/button', () => {
       if (asChild && React.Children.count(children) === 1) {
         return React.cloneElement(React.Children.only(children), {
           className,
-          ...props
+          ...props,
         });
       }
-      return React.createElement('button', { className, type, ...props }, children);
+      return React.createElement(
+        'button',
+        { className, type, ...props },
+        children
+      );
     },
   };
 });
@@ -205,53 +330,53 @@ jest.mock('../components/ui/button', () => {
 jest.mock('../components/ui/input', () => {
   const React = require('react');
   return {
-    Input: React.forwardRef((props, ref) => (
+    Input: React.forwardRef((props, ref) =>
       React.createElement('input', { ref, ...props })
-    )),
+    ),
   };
 });
 
 jest.mock('../components/ui/textarea', () => {
   const React = require('react');
   return {
-    Textarea: React.forwardRef((props, ref) => (
+    Textarea: React.forwardRef((props, ref) =>
       React.createElement('textarea', { ref, ...props })
-    )),
+    ),
   };
 });
 
 jest.mock('../components/ui/label', () => ({
-  Label: ({ children, ...props }) => 
+  Label: ({ children, ...props }) =>
     require('react').createElement('label', props, children),
 }));
 
 jest.mock('../components/ui/card', () => ({
-  Card: ({ children, className, ...props }) => 
+  Card: ({ children, className, ...props }) =>
     require('react').createElement('div', { className, ...props }, children),
-  CardContent: ({ children, className, ...props }) => 
+  CardContent: ({ children, className, ...props }) =>
     require('react').createElement('div', { className, ...props }, children),
-  CardDescription: ({ children, className, ...props }) => 
+  CardDescription: ({ children, className, ...props }) =>
     require('react').createElement('div', { className, ...props }, children),
-  CardHeader: ({ children, className, ...props }) => 
+  CardHeader: ({ children, className, ...props }) =>
     require('react').createElement('div', { className, ...props }, children),
-  CardTitle: ({ children, className, ...props }) => 
+  CardTitle: ({ children, className, ...props }) =>
     require('react').createElement('h2', { className, ...props }, children),
 }));
 
 jest.mock('../components/ui/avatar', () => ({
-  Avatar: ({ children, className }) => 
+  Avatar: ({ children, className }) =>
     require('react').createElement('div', { className }, children),
-  AvatarFallback: ({ children, className }) => 
+  AvatarFallback: ({ children, className }) =>
     require('react').createElement('div', { className }, children),
-  AvatarImage: ({ src, alt, className }) => 
+  AvatarImage: ({ src, alt, className }) =>
     require('react').createElement('img', { src, alt, className }),
 }));
 
 // Mock the form components - adjust path as needed
 jest.mock('../components/ui/form', () => {
   const React = require('react');
-  
-  const Form = ({ children, ...props }) => 
+
+  const Form = ({ children, ...props }) =>
     React.createElement('div', props, children);
 
   const FormField = ({ render, name, control }) => {
@@ -260,10 +385,14 @@ jest.mock('../components/ui/form', () => {
   };
 
   const FormItem = ({ children }) => React.createElement('div', null, children);
-  const FormLabel = ({ children }) => React.createElement('label', null, children);
-  const FormControl = ({ children }) => React.createElement('div', null, children);
-  const FormDescription = ({ children }) => React.createElement('p', null, children);
-  const FormMessage = ({ children }) => children ? React.createElement('span', null, children) : null;
+  const FormLabel = ({ children }) =>
+    React.createElement('label', null, children);
+  const FormControl = ({ children }) =>
+    React.createElement('div', null, children);
+  const FormDescription = ({ children }) =>
+    React.createElement('p', null, children);
+  const FormMessage = ({ children }) =>
+    children ? React.createElement('span', null, children) : null;
 
   return {
     Form,
@@ -286,12 +415,42 @@ jest.mock('../hooks/use-toast', () => ({
 
 // Mock lucide-react icons
 jest.mock('lucide-react', () => ({
-  ArrowLeft: () => require('react').createElement('span', { 'data-testid': 'arrow-left-icon' }, '←'),
-  Camera: () => require('react').createElement('span', { 'data-testid': 'camera-icon' }, '📷'),
-  MapPin: () => require('react').createElement('span', { 'data-testid': 'mappin-icon' }, '📍'),
-  User: () => require('react').createElement('span', { 'data-testid': 'user-icon' }, '👤'),
-  Lock: () => require('react').createElement('span', { 'data-testid': 'lock-icon' }, '🔒'),
-  FileText: () => require('react').createElement('span', { 'data-testid': 'filetext-icon' }, '📄'),
+  ArrowLeft: () =>
+    require('react').createElement(
+      'span',
+      { 'data-testid': 'arrow-left-icon' },
+      '←'
+    ),
+  Camera: () =>
+    require('react').createElement(
+      'span',
+      { 'data-testid': 'camera-icon' },
+      '📷'
+    ),
+  MapPin: () =>
+    require('react').createElement(
+      'span',
+      { 'data-testid': 'mappin-icon' },
+      '📍'
+    ),
+  User: () =>
+    require('react').createElement(
+      'span',
+      { 'data-testid': 'user-icon' },
+      '👤'
+    ),
+  Lock: () =>
+    require('react').createElement(
+      'span',
+      { 'data-testid': 'lock-icon' },
+      '🔒'
+    ),
+  FileText: () =>
+    require('react').createElement(
+      'span',
+      { 'data-testid': 'filetext-icon' },
+      '📄'
+    ),
 }));
 
 // Mock react-hook-form
@@ -315,7 +474,8 @@ const TestWrapper = ({ children }) => {
 };
 
 // Get the mocked component
-const EditProfile = require('../pages/EditProfile').default || require('../pages/EditProfile');
+const EditProfile =
+  require('../pages/EditProfile').default || require('../pages/EditProfile');
 
 describe('EditProfile', () => {
   beforeEach(() => {
@@ -367,11 +527,11 @@ describe('EditProfile', () => {
 
     const avatarImage = screen.getByAltText('Profile picture');
     expect(avatarImage).toHaveAttribute('src', '/placeholder.svg');
-    
+
     const uploadInput = screen.getByLabelText('Upload avatar');
     expect(uploadInput).toHaveAttribute('type', 'file');
     expect(uploadInput).toHaveAttribute('accept', 'image/*');
-    
+
     expect(screen.getByTestId('camera-icon')).toBeInTheDocument();
   });
 
@@ -382,10 +542,20 @@ describe('EditProfile', () => {
       </TestWrapper>
     );
 
-    expect(screen.getByPlaceholderText('Enter your hiking name')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('City, State/Country')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Leave blank to keep current password')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/Tell fellow hikers about your outdoor adventures/)).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText('Enter your hiking name')
+    ).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText('City, State/Country')
+    ).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText('Leave blank to keep current password')
+    ).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText(
+        /Tell fellow hikers about your outdoor adventures/
+      )
+    ).toBeInTheDocument();
   });
 
   it('displays form field descriptions', () => {
@@ -395,10 +565,20 @@ describe('EditProfile', () => {
       </TestWrapper>
     );
 
-    expect(screen.getByText('This is how other hikers will see you on the trail')).toBeInTheDocument();
-    expect(screen.getByText('Share your home base for local trail recommendations')).toBeInTheDocument();
-    expect(screen.getByText('Only fill this out if you want to change your password')).toBeInTheDocument();
-    expect(screen.getByText(/Share your hiking story and connect with like-minded adventurers/)).toBeInTheDocument();
+    expect(
+      screen.getByText('This is how other hikers will see you on the trail')
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('Share your home base for local trail recommendations')
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('Only fill this out if you want to change your password')
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Share your hiking story and connect with like-minded adventurers/
+      )
+    ).toBeInTheDocument();
   });
 
   it('renders form field icons', () => {
@@ -464,7 +644,7 @@ describe('EditProfile', () => {
       onload: null,
       result: 'data:image/jpeg;base64,mockImageData',
     };
-    
+
     global.FileReader = jest.fn(() => mockFileReader);
 
     fireEvent.change(fileInput, { target: { files: [mockFile] } });
@@ -472,8 +652,10 @@ describe('EditProfile', () => {
     expect(mockFileReader.readAsDataURL).toHaveBeenCalledWith(mockFile);
 
     // Simulate FileReader onload
-    mockFileReader.onload({ target: { result: 'data:image/jpeg;base64,newImageData' } });
-    
+    mockFileReader.onload({
+      target: { result: 'data:image/jpeg;base64,newImageData' },
+    });
+
     expect(global.FileReader).toHaveBeenCalled();
   });
 
@@ -485,10 +667,10 @@ describe('EditProfile', () => {
     );
 
     const fileInput = screen.getByLabelText('Upload avatar');
-    
+
     // Simulate no file selected
     fireEvent.change(fileInput, { target: { files: [] } });
-    
+
     // Should not crash and FileReader should not be called
     expect(true).toBe(true); // Test passes if no error thrown
   });
@@ -516,7 +698,9 @@ describe('EditProfile', () => {
       </TestWrapper>
     );
 
-    const passwordInput = screen.getByPlaceholderText('Leave blank to keep current password');
+    const passwordInput = screen.getByPlaceholderText(
+      'Leave blank to keep current password'
+    );
     expect(passwordInput).toHaveAttribute('type', 'password');
   });
 
@@ -527,7 +711,9 @@ describe('EditProfile', () => {
       </TestWrapper>
     );
 
-    const bioTextarea = screen.getByPlaceholderText(/Tell fellow hikers about your outdoor adventures/);
+    const bioTextarea = screen.getByPlaceholderText(
+      /Tell fellow hikers about your outdoor adventures/
+    );
     expect(bioTextarea.tagName.toLowerCase()).toBe('textarea');
   });
 
@@ -542,10 +728,10 @@ describe('EditProfile', () => {
     expect(screen.getByText(/\(0\/500\)/)).toBeInTheDocument();
   });
 
-    describe('Form validation', () => {
-    it.skip('calls zodResolver with profile schema', () => { });
+  describe('Form validation', () => {
+    it.skip('calls zodResolver with profile schema', () => {});
     it.skip('sets up form with default values', () => {});
-    });
+  });
 
   describe('Error handling', () => {
     it('handles FileReader error gracefully', () => {
@@ -567,7 +753,7 @@ describe('EditProfile', () => {
         }),
         onload: null,
       };
-      
+
       global.FileReader = jest.fn(() => mockFileReader);
 
       // Should not crash when FileReader throws error
@@ -588,8 +774,12 @@ describe('EditProfile', () => {
       // Check that all form fields have associated labels
       const nameInput = screen.getByPlaceholderText('Enter your hiking name');
       const locationInput = screen.getByPlaceholderText('City, State/Country');
-      const passwordInput = screen.getByPlaceholderText('Leave blank to keep current password');
-      const bioTextarea = screen.getByPlaceholderText(/Tell fellow hikers about your outdoor adventures/);
+      const passwordInput = screen.getByPlaceholderText(
+        'Leave blank to keep current password'
+      );
+      const bioTextarea = screen.getByPlaceholderText(
+        /Tell fellow hikers about your outdoor adventures/
+      );
 
       // These should be connected to their labels via FormLabel components
       expect(nameInput).toBeInTheDocument();

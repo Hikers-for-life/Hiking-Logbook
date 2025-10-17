@@ -149,9 +149,7 @@ export default function Signup() {
               Full Name
             </label>
             <input
-
-              id = "name"
-
+              id="name"
               style={{
                 ...styles.input,
                 ...(focusStates.name && styles.inputFocus),
@@ -174,9 +172,7 @@ export default function Signup() {
               Email
             </label>
             <input
-
               id="email"
-
               style={{
                 ...styles.input,
                 ...(focusStates.email && styles.inputFocus),
@@ -199,9 +195,7 @@ export default function Signup() {
               Password
             </label>
             <input
-
               id="password"
-
               style={{
                 ...styles.input,
                 ...(focusStates.password && styles.inputFocus),
@@ -224,9 +218,7 @@ export default function Signup() {
               Confirm Password
             </label>
             <input
-
               id="confirmPassword"
-
               style={{
                 ...styles.input,
                 ...(focusStates.confirmPassword && styles.inputFocus),
@@ -306,9 +298,6 @@ export default function Signup() {
                 <i className="fa-brands fa-facebook"></i> Facebook
 
               </button>*/}
-
-
-
             </div>
 
             <p style={styles.signP}>Already have an account?</p>

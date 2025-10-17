@@ -25,60 +25,60 @@ const parseDuration = (value) => {
 
 const validateHikeData = (hikeData) => {
   const errors = [];
-  
+
   if (!hikeData || typeof hikeData !== 'object') {
     errors.push('Hike data is required');
     return { isValid: false, errors };
   }
-  
+
   if (!hikeData.title || hikeData.title.trim() === '') {
     errors.push('Title is required');
   }
-  
+
   if (!hikeData.location || hikeData.location.trim() === '') {
     errors.push('Location is required');
   }
-  
+
   if (hikeData.distance !== undefined && parseDistance(hikeData.distance) < 0) {
     errors.push('Distance must be positive');
   }
-  
+
   const validDifficulties = ['Easy', 'Moderate', 'Hard', 'Extreme'];
   if (hikeData.difficulty && !validDifficulties.includes(hikeData.difficulty)) {
     errors.push('Invalid difficulty level');
   }
-  
+
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
   };
 };
 
 const validateUserData = (userData) => {
   const errors = [];
-  
+
   if (!userData || typeof userData !== 'object') {
     errors.push('User data is required');
     return { isValid: false, errors };
   }
-  
+
   if (!userData.email || userData.email.trim() === '') {
     errors.push('Email is required');
   } else if (!userData.email.includes('@')) {
     errors.push('Invalid email format');
   }
-  
+
   if (!userData.displayName || userData.displayName.trim() === '') {
     errors.push('Display name is required');
   }
-  
+
   if (userData.password && userData.password.length < 6) {
     errors.push('Password must be at least 6 characters');
   }
-  
+
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
   };
 };
 
@@ -90,24 +90,33 @@ const calculateHikeStats = (hikes) => {
       totalElevation: 0,
       totalDuration: 0,
       byDifficulty: { Easy: 0, Moderate: 0, Hard: 0, Extreme: 0 },
-      byStatus: { completed: 0, active: 0, paused: 0 }
+      byStatus: { completed: 0, active: 0, paused: 0 },
     };
   }
 
   const stats = {
     totalHikes: hikes.length,
-    totalDistance: hikes.reduce((sum, hike) => sum + parseDistance(hike.distance), 0),
-    totalElevation: hikes.reduce((sum, hike) => sum + parseElevation(hike.elevation), 0),
-    totalDuration: hikes.reduce((sum, hike) => sum + parseDuration(hike.duration), 0),
+    totalDistance: hikes.reduce(
+      (sum, hike) => sum + parseDistance(hike.distance),
+      0
+    ),
+    totalElevation: hikes.reduce(
+      (sum, hike) => sum + parseElevation(hike.elevation),
+      0
+    ),
+    totalDuration: hikes.reduce(
+      (sum, hike) => sum + parseDuration(hike.duration),
+      0
+    ),
     byDifficulty: { Easy: 0, Moderate: 0, Hard: 0, Extreme: 0 },
-    byStatus: { completed: 0, active: 0, paused: 0 }
+    byStatus: { completed: 0, active: 0, paused: 0 },
   };
 
-  hikes.forEach(hike => {
+  hikes.forEach((hike) => {
     if (hike.difficulty && stats.byDifficulty.hasOwnProperty(hike.difficulty)) {
       stats.byDifficulty[hike.difficulty]++;
     }
-    
+
     if (hike.status && stats.byStatus.hasOwnProperty(hike.status)) {
       stats.byStatus[hike.status]++;
     }
@@ -122,7 +131,7 @@ const calculateStreaks = (hikes) => {
   }
 
   const completedHikes = hikes
-    .filter(hike => hike.status === 'completed' && hike.date)
+    .filter((hike) => hike.status === 'completed' && hike.date)
     .sort((a, b) => new Date(b.date) - new Date(a.date));
 
   if (completedHikes.length === 0) {
@@ -132,19 +141,19 @@ const calculateStreaks = (hikes) => {
   let currentStreak = 0;
   let longestStreak = 0;
   let tempStreak = 1;
-  
+
   const today = new Date();
   const lastHikeDate = new Date(completedHikes[0].date);
   const daysDiff = Math.floor((today - lastHikeDate) / (1000 * 60 * 60 * 24));
-  
+
   if (daysDiff <= 7) {
     currentStreak = 1;
-    
+
     for (let i = 1; i < completedHikes.length; i++) {
-      const prevDate = new Date(completedHikes[i-1].date);
+      const prevDate = new Date(completedHikes[i - 1].date);
       const currDate = new Date(completedHikes[i].date);
       const diff = Math.floor((prevDate - currDate) / (1000 * 60 * 60 * 24));
-      
+
       if (diff <= 14) {
         currentStreak++;
       } else {
@@ -154,10 +163,10 @@ const calculateStreaks = (hikes) => {
   }
 
   for (let i = 1; i < completedHikes.length; i++) {
-    const prevDate = new Date(completedHikes[i-1].date);
+    const prevDate = new Date(completedHikes[i - 1].date);
     const currDate = new Date(completedHikes[i].date);
     const diff = Math.floor((prevDate - currDate) / (1000 * 60 * 60 * 24));
-    
+
     if (diff <= 14) {
       tempStreak++;
     } else {
@@ -165,9 +174,9 @@ const calculateStreaks = (hikes) => {
       tempStreak = 1;
     }
   }
-  
+
   longestStreak = Math.max(longestStreak, tempStreak);
-  
+
   return { currentStreak, longestStreak };
 };
 
@@ -177,28 +186,30 @@ const generateMonthlyActivity = (hikes) => {
   }
 
   const monthlyData = {};
-  
-  hikes.forEach(hike => {
+
+  hikes.forEach((hike) => {
     if (!hike.date) return;
-    
+
     try {
       const date = new Date(hike.date);
       if (isNaN(date.getTime())) return;
-      
+
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      
+
       if (!monthlyData[monthKey]) {
         monthlyData[monthKey] = { month: monthKey, hikes: 0, distance: 0 };
       }
-      
+
       monthlyData[monthKey].hikes++;
       monthlyData[monthKey].distance += parseDistance(hike.distance);
     } catch (error) {
       console.warn('Invalid date in hike data:', hike.date);
     }
   });
-  
-  return Object.values(monthlyData).sort((a, b) => a.month.localeCompare(b.month));
+
+  return Object.values(monthlyData).sort((a, b) =>
+    a.month.localeCompare(b.month)
+  );
 };
 
 const formatSuccessResponse = (data, message = 'Success') => {
@@ -206,7 +217,7 @@ const formatSuccessResponse = (data, message = 'Success') => {
     success: true,
     data,
     message,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   };
 };
 
@@ -215,7 +226,7 @@ const formatErrorResponse = (error, statusCode = 500) => {
     success: false,
     error: error.message || error || 'An error occurred',
     statusCode,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   };
 };
 
@@ -229,7 +240,7 @@ const processHikeData = (rawData) => {
       difficulty: 'Easy',
       status: 'completed',
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
   }
 
@@ -246,7 +257,7 @@ const processHikeData = (rawData) => {
     shared: Boolean(rawData.shared),
     createdAt: rawData.createdAt || new Date(),
     updatedAt: new Date(),
-    userId: rawData.userId || null
+    userId: rawData.userId || null,
   };
 };
 
@@ -259,10 +270,10 @@ const processUserData = (rawData) => {
       location: null,
       preferences: {
         units: 'metric',
-        privacy: 'friends'
+        privacy: 'friends',
       },
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
   }
 
@@ -277,75 +288,74 @@ const processUserData = (rawData) => {
       terrain: rawData.preferences?.terrain || 'mixed',
       distance: rawData.preferences?.distance || 'short',
       units: rawData.preferences?.units || 'metric',
-      privacy: rawData.preferences?.privacy || 'friends'
+      privacy: rawData.preferences?.privacy || 'friends',
     },
     stats: {
       totalHikes: 0,
       totalDistance: 0,
       totalElevation: 0,
-      achievements: []
+      achievements: [],
     },
     createdAt: rawData.createdAt || new Date(),
-    updatedAt: new Date()
+    updatedAt: new Date(),
   };
 };
 
 const evaluateBadges = (userStats) => {
   const badges = [];
-  
+
   if (userStats.totalHikes >= 1) {
     badges.push({
       name: 'First Hike',
       description: 'Completed your first hike',
-      earnedAt: new Date()
+      earnedAt: new Date(),
     });
   }
-  
+
   if (userStats.totalDistance >= 10) {
     badges.push({
       name: '10K Walker',
       description: 'Walked 10 kilometers total',
-      earnedAt: new Date()
+      earnedAt: new Date(),
     });
   }
-  
+
   if (userStats.totalDistance >= 100) {
     badges.push({
       name: '100K Walker',
       description: 'Walked 100 kilometers total',
-      earnedAt: new Date()
+      earnedAt: new Date(),
     });
   }
-  
+
   if (userStats.totalElevation >= 1000) {
     badges.push({
       name: 'Peak Climber',
       description: 'Climbed 1000 meters total elevation',
-      earnedAt: new Date()
+      earnedAt: new Date(),
     });
   }
-  
+
   if (userStats.totalHikes >= 10) {
     badges.push({
       name: 'Regular Hiker',
       description: 'Completed 10 hikes',
-      earnedAt: new Date()
+      earnedAt: new Date(),
     });
   }
-  
+
   if (userStats.currentStreak >= 5) {
     badges.push({
       name: 'Consistent Hiker',
       description: 'Maintained a 5-hike streak',
-      earnedAt: new Date()
+      earnedAt: new Date(),
     });
   }
-  
+
   return badges;
 };
 
 describe('Testable Functions', () => {
-  
   describe('Data Parsing Functions', () => {
     test('parseDistance should handle various inputs', () => {
       expect(parseDistance(5.5)).toBe(5.5);
@@ -390,9 +400,9 @@ describe('Testable Functions', () => {
         location: 'Test Location',
         distance: 10.5,
         elevation: 500,
-        difficulty: 'Moderate'
+        difficulty: 'Moderate',
       };
-      
+
       const validation = validateHikeData(validHike);
       expect(validation.isValid).toBe(true);
       expect(validation.errors).toHaveLength(0);
@@ -404,9 +414,9 @@ describe('Testable Functions', () => {
         location: '',
         distance: -5,
         elevation: -1000,
-        difficulty: 'Invalid'
+        difficulty: 'Invalid',
       };
-      
+
       const validation = validateHikeData(invalidHike);
       expect(validation.isValid).toBe(false);
       expect(validation.errors.length).toBeGreaterThan(0);
@@ -426,9 +436,9 @@ describe('Testable Functions', () => {
       const validUser = {
         email: 'test@example.com',
         displayName: 'Test User',
-        password: 'password123'
+        password: 'password123',
       };
-      
+
       const validation = validateUserData(validUser);
       expect(validation.isValid).toBe(true);
       expect(validation.errors).toHaveLength(0);
@@ -438,14 +448,16 @@ describe('Testable Functions', () => {
       const invalidUser = {
         email: 'invalid-email',
         displayName: '',
-        password: '123'
+        password: '123',
       };
-      
+
       const validation = validateUserData(invalidUser);
       expect(validation.isValid).toBe(false);
       expect(validation.errors).toContain('Invalid email format');
       expect(validation.errors).toContain('Display name is required');
-      expect(validation.errors).toContain('Password must be at least 6 characters');
+      expect(validation.errors).toContain(
+        'Password must be at least 6 characters'
+      );
     });
   });
 
@@ -457,26 +469,26 @@ describe('Testable Functions', () => {
           elevation: 300,
           duration: 2.5,
           difficulty: 'Easy',
-          status: 'completed'
+          status: 'completed',
         },
         {
           distance: '10.2',
           elevation: '500',
           duration: '4.0',
           difficulty: 'Moderate',
-          status: 'completed'
+          status: 'completed',
         },
         {
           distance: 8.7,
           elevation: 200,
           duration: 3.5,
           difficulty: 'Hard',
-          status: 'active'
-        }
+          status: 'active',
+        },
       ];
 
       const stats = calculateHikeStats(hikes);
-      
+
       expect(stats.totalHikes).toBe(3);
       expect(stats.totalDistance).toBe(24.4);
       expect(stats.totalElevation).toBe(1000);
@@ -499,16 +511,16 @@ describe('Testable Functions', () => {
       const recentHikes = [
         {
           status: 'completed',
-          date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) // 2 days ago
+          date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
         },
         {
           status: 'completed',
-          date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000) // 10 days ago
+          date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // 10 days ago
         },
         {
           status: 'completed',
-          date: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000) // 20 days ago
-        }
+          date: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000), // 20 days ago
+        },
       ];
 
       const streaks = calculateStreaks(recentHikes);
@@ -516,7 +528,9 @@ describe('Testable Functions', () => {
       expect(streaks).toHaveProperty('longestStreak');
       expect(typeof streaks.currentStreak).toBe('number');
       expect(typeof streaks.longestStreak).toBe('number');
-      expect(streaks.longestStreak).toBeGreaterThanOrEqual(streaks.currentStreak);
+      expect(streaks.longestStreak).toBeGreaterThanOrEqual(
+        streaks.currentStreak
+      );
     });
 
     test('calculateStreaks should handle empty input', () => {
@@ -532,16 +546,16 @@ describe('Testable Functions', () => {
         { date: new Date('2024-01-15'), distance: 5.5 },
         { date: new Date('2024-01-20'), distance: 8.2 },
         { date: new Date('2024-02-10'), distance: 12.0 },
-        { date: new Date('2024-02-15'), distance: 6.5 }
+        { date: new Date('2024-02-15'), distance: 6.5 },
       ];
-      
+
       const monthlyActivity = generateMonthlyActivity(hikes);
-      
+
       expect(monthlyActivity).toHaveLength(2);
       expect(monthlyActivity[0].month).toBe('2024-01');
       expect(monthlyActivity[0].hikes).toBe(2);
       expect(monthlyActivity[0].distance).toBe(13.7);
-      
+
       expect(monthlyActivity[1].month).toBe('2024-02');
       expect(monthlyActivity[1].hikes).toBe(2);
       expect(monthlyActivity[1].distance).toBe(18.5);
@@ -552,9 +566,9 @@ describe('Testable Functions', () => {
         { date: null, distance: 5 },
         { date: undefined, distance: 10 },
         { date: 'invalid-date', distance: 15 },
-        { distance: 20 } // no date
+        { distance: 20 }, // no date
       ];
-      
+
       const monthlyActivity = generateMonthlyActivity(hikesWithInvalidDates);
       expect(monthlyActivity).toHaveLength(0);
     });
@@ -570,7 +584,7 @@ describe('Testable Functions', () => {
     test('formatSuccessResponse should create proper response', () => {
       const data = { id: '123', name: 'Test' };
       const response = formatSuccessResponse(data, 'Data retrieved');
-      
+
       expect(response.success).toBe(true);
       expect(response.data).toEqual(data);
       expect(response.message).toBe('Data retrieved');
@@ -586,7 +600,7 @@ describe('Testable Functions', () => {
     test('formatErrorResponse should create proper error response', () => {
       const error = new Error('Test error');
       const response = formatErrorResponse(error, 400);
-      
+
       expect(response.success).toBe(false);
       expect(response.error).toBe('Test error');
       expect(response.statusCode).toBe(400);
@@ -606,11 +620,11 @@ describe('Testable Functions', () => {
         title: 'Test Hike',
         location: 'Test Location',
         distance: '10.5 km',
-        elevation: '500m'
+        elevation: '500m',
       };
-      
+
       const processed = processHikeData(rawData);
-      
+
       expect(processed.title).toBe('Test Hike');
       expect(processed.location).toBe('Test Location');
       expect(processed.distance).toBe(10.5);
@@ -635,11 +649,11 @@ describe('Testable Functions', () => {
       const rawData = {
         email: 'test@example.com',
         displayName: 'Test User',
-        bio: 'Test bio'
+        bio: 'Test bio',
       };
-      
+
       const processed = processUserData(rawData);
-      
+
       expect(processed.email).toBe('test@example.com');
       expect(processed.displayName).toBe('Test User');
       expect(processed.bio).toBe('Test bio');
@@ -664,22 +678,22 @@ describe('Testable Functions', () => {
         totalDistance: 150,
         totalElevation: 2500,
         currentStreak: 7,
-        longestStreak: 10
+        longestStreak: 10,
       };
-      
+
       const badges = evaluateBadges(userStats);
-      
+
       expect(badges.length).toBeGreaterThan(0);
-      
-      const badgeNames = badges.map(b => b.name);
+
+      const badgeNames = badges.map((b) => b.name);
       expect(badgeNames).toContain('First Hike');
       expect(badgeNames).toContain('10K Walker');
       expect(badgeNames).toContain('100K Walker');
       expect(badgeNames).toContain('Peak Climber');
       expect(badgeNames).toContain('Regular Hiker');
       expect(badgeNames).toContain('Consistent Hiker');
-      
-      badges.forEach(badge => {
+
+      badges.forEach((badge) => {
         expect(badge).toHaveProperty('name');
         expect(badge).toHaveProperty('description');
         expect(badge).toHaveProperty('earnedAt');
@@ -693,9 +707,9 @@ describe('Testable Functions', () => {
         totalDistance: 0,
         totalElevation: 0,
         currentStreak: 0,
-        longestStreak: 0
+        longestStreak: 0,
       };
-      
+
       const badges = evaluateBadges(userStats);
       expect(badges).toHaveLength(0);
     });
@@ -706,13 +720,13 @@ describe('Testable Functions', () => {
         totalDistance: 25,
         totalElevation: 500,
         currentStreak: 2,
-        longestStreak: 3
+        longestStreak: 3,
       };
-      
+
       const badges = evaluateBadges(userStats);
       expect(badges.length).toBeGreaterThan(0);
-      
-      const badgeNames = badges.map(b => b.name);
+
+      const badgeNames = badges.map((b) => b.name);
       expect(badgeNames).toContain('First Hike');
       expect(badgeNames).toContain('10K Walker');
       expect(badgeNames).not.toContain('100K Walker');
@@ -728,7 +742,7 @@ describe('Testable Functions', () => {
         location: 'Test Mountain',
         distance: '12.5 km',
         elevation: '800m',
-        difficulty: 'Moderate'
+        difficulty: 'Moderate',
       };
 
       // Process data
@@ -763,7 +777,7 @@ describe('Testable Functions', () => {
         title: '',
         location: '',
         distance: 'invalid',
-        elevation: 'invalid'
+        elevation: 'invalid',
       };
 
       // Process (should handle gracefully)

@@ -1,5 +1,5 @@
-import { getAuth } from "firebase/auth";
-import { API_BASE } from "../api/api.js";
+import { getAuth } from 'firebase/auth';
+import { API_BASE } from '../api/api.js';
 
 const API_URL = `${API_BASE}/discover`;
 
@@ -17,7 +17,7 @@ export async function discoverFriends() {
   const res = await fetch(`${API_URL}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
-  if (!res.ok) throw new Error("Failed to fetch suggestions");
+  if (!res.ok) throw new Error('Failed to fetch suggestions');
   return res.json(); // returns array of { id, name, avatar, mutualFriends, commonTrails }
 }
 
@@ -25,9 +25,9 @@ export async function discoverFriends() {
 export async function sendFriendRequest(friendId) {
   const token = await getToken();
   const res = await fetch(`${API_URL}/add`, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ friendId }),
@@ -52,7 +52,10 @@ export async function respondToRequest(requestId, action) {
   const token = await getToken();
   const res = await fetch(`${API_URL}/requests/${requestId}/respond`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify({ action }),
   });
   if (!res.ok) {
@@ -67,6 +70,6 @@ export const getUserDetails = async (userId) => {
   const res = await fetch(`${API_URL}/${userId}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
-  if (!res.ok) throw new Error("Failed to fetch user details");
+  if (!res.ok) throw new Error('Failed to fetch user details');
   return res.json();
-}
+};

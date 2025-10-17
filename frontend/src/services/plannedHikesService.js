@@ -1,8 +1,9 @@
 // frontend/services/plannedHikesService.js
 import { auth } from '../config/firebase.js';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 
-  (window.location.hostname === 'hiking-logbook.web.app' 
+const API_BASE_URL =
+  process.env.REACT_APP_API_URL ||
+  (window.location.hostname === 'hiking-logbook.web.app'
     ? 'https://hiking-logbook-hezw.onrender.com/api'
     : 'http://localhost:3001/api');
 
@@ -20,23 +21,27 @@ const getAuthToken = async () => {
 const makeAuthenticatedRequest = async (endpoint, options = {}) => {
   try {
     const token = await getAuthToken();
-    
+
     const config = {
       ...options,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
         ...options.headers,
       },
     };
 
     const fullUrl = `${API_BASE_URL}${endpoint}`;
-    
+
     const response = await fetch(fullUrl, config);
-    
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || errorData.message || `HTTP error! status: ${response.status}`);
+      throw new Error(
+        errorData.error ||
+          errorData.message ||
+          `HTTP error! status: ${response.status}`
+      );
     }
 
     const responseData = await response.json();
@@ -52,23 +57,27 @@ export const plannedHikeApiService = {
   // Get all planned hikes for the current user
   async getPlannedHikes(filters = {}) {
     const queryParams = new URLSearchParams();
-    
+
     if (filters.status) queryParams.append('status', filters.status);
-    if (filters.difficulty) queryParams.append('difficulty', filters.difficulty);
+    if (filters.difficulty)
+      queryParams.append('difficulty', filters.difficulty);
     if (filters.dateFrom) queryParams.append('dateFrom', filters.dateFrom);
     if (filters.dateTo) queryParams.append('dateTo', filters.dateTo);
-    if (filters.includeCancelled) queryParams.append('includeCancelled', filters.includeCancelled);
-    
+    if (filters.includeCancelled)
+      queryParams.append('includeCancelled', filters.includeCancelled);
+
     const queryString = queryParams.toString();
     const endpoint = `/planned-hikes${queryString ? `?${queryString}` : ''}`;
-    
+
     const result = await makeAuthenticatedRequest(endpoint);
     return result.data || result;
   },
 
   // Get a specific planned hike by ID
   async getPlannedHike(plannedHikeId) {
-    const result = await makeAuthenticatedRequest(`/planned-hikes/${plannedHikeId}`);
+    const result = await makeAuthenticatedRequest(
+      `/planned-hikes/${plannedHikeId}`
+    );
     return result.data || result;
   },
 
@@ -83,83 +92,116 @@ export const plannedHikeApiService = {
 
   // Update an existing planned hike
   async updatePlannedHike(plannedHikeId, updateData) {
-    const result = await makeAuthenticatedRequest(`/planned-hikes/${plannedHikeId}`, {
-      method: 'PUT',
-      body: JSON.stringify(updateData),
-    });
+    const result = await makeAuthenticatedRequest(
+      `/planned-hikes/${plannedHikeId}`,
+      {
+        method: 'PUT',
+        body: JSON.stringify(updateData),
+      }
+    );
     return result.data || result;
   },
 
   // Cancel a planned hike (soft delete)
   async cancelPlannedHike(plannedHikeId) {
-    const result = await makeAuthenticatedRequest(`/planned-hikes/${plannedHikeId}/cancel`, {
-      method: 'PUT',
-    });
+    const result = await makeAuthenticatedRequest(
+      `/planned-hikes/${plannedHikeId}/cancel`,
+      {
+        method: 'PUT',
+      }
+    );
     return result.data || result;
   },
 
   // Delete a planned hike (hard delete)
   async deletePlannedHike(plannedHikeId) {
-    const result = await makeAuthenticatedRequest(`/planned-hikes/${plannedHikeId}`, {
-      method: 'DELETE',
-    });
+    const result = await makeAuthenticatedRequest(
+      `/planned-hikes/${plannedHikeId}`,
+      {
+        method: 'DELETE',
+      }
+    );
     return result.data || result;
   },
 
   // Join a planned hike
   async joinPlannedHike(plannedHikeId, participantId = null) {
     const body = participantId ? { participantId } : {};
-    const result = await makeAuthenticatedRequest(`/planned-hikes/${plannedHikeId}/participants`, {
-      method: 'POST',
-      body: JSON.stringify(body),
-    });
+    const result = await makeAuthenticatedRequest(
+      `/planned-hikes/${plannedHikeId}/participants`,
+      {
+        method: 'POST',
+        body: JSON.stringify(body),
+      }
+    );
     return result.data || result;
   },
 
   // Leave a planned hike
   async leavePlannedHike(plannedHikeId, participantId) {
-    const result = await makeAuthenticatedRequest(`/planned-hikes/${plannedHikeId}/participants/${participantId}`, {
-      method: 'DELETE',
-    });
+    const result = await makeAuthenticatedRequest(
+      `/planned-hikes/${plannedHikeId}/participants/${participantId}`,
+      {
+        method: 'DELETE',
+      }
+    );
     return result.data || result;
   },
 
   // Start a planned hike (convert to active hike)
   async startPlannedHike(plannedHikeId) {
-    const result = await makeAuthenticatedRequest(`/planned-hikes/${plannedHikeId}/start`, {
-      method: 'POST',
-    });
+    const result = await makeAuthenticatedRequest(
+      `/planned-hikes/${plannedHikeId}/start`,
+      {
+        method: 'POST',
+      }
+    );
     return result.data || result;
   },
 
   // Get planned hike statistics
   async getPlannedHikeStats() {
     const plannedHikes = await this.getPlannedHikes({ includeCancelled: true });
-    
+
     const stats = {
-      totalPlannedHikes: plannedHikes.filter(h => h.status !== 'cancelled').length,
-      upcomingHikes: plannedHikes.filter(h => new Date(h.date) >= new Date() && h.status !== 'cancelled').length,
-      pastHikes: plannedHikes.filter(h => new Date(h.date) < new Date()).length,
+      totalPlannedHikes: plannedHikes.filter((h) => h.status !== 'cancelled')
+        .length,
+      upcomingHikes: plannedHikes.filter(
+        (h) => new Date(h.date) >= new Date() && h.status !== 'cancelled'
+      ).length,
+      pastHikes: plannedHikes.filter((h) => new Date(h.date) < new Date())
+        .length,
       totalEstimatedDistance: plannedHikes
-        .filter(h => h.status !== 'cancelled')
+        .filter((h) => h.status !== 'cancelled')
         .reduce((sum, hike) => sum + (parseFloat(hike.distance) || 0), 0),
       byDifficulty: {
-        Easy: plannedHikes.filter(h => h.difficulty === 'Easy' && h.status !== 'cancelled').length,
-        Moderate: plannedHikes.filter(h => h.difficulty === 'Moderate' && h.status !== 'cancelled').length,
-        Hard: plannedHikes.filter(h => h.difficulty === 'Hard' && h.status !== 'cancelled').length,
-        Extreme: plannedHikes.filter(h => h.difficulty === 'Extreme' && h.status !== 'cancelled').length
+        Easy: plannedHikes.filter(
+          (h) => h.difficulty === 'Easy' && h.status !== 'cancelled'
+        ).length,
+        Moderate: plannedHikes.filter(
+          (h) => h.difficulty === 'Moderate' && h.status !== 'cancelled'
+        ).length,
+        Hard: plannedHikes.filter(
+          (h) => h.difficulty === 'Hard' && h.status !== 'cancelled'
+        ).length,
+        Extreme: plannedHikes.filter(
+          (h) => h.difficulty === 'Extreme' && h.status !== 'cancelled'
+        ).length,
       },
       byStatus: {
-        planning: plannedHikes.filter(h => h.status === 'planning').length,
-        started: plannedHikes.filter(h => h.status === 'started').length,
-        cancelled: plannedHikes.filter(h => h.status === 'cancelled').length
+        planning: plannedHikes.filter((h) => h.status === 'planning').length,
+        started: plannedHikes.filter((h) => h.status === 'started').length,
+        cancelled: plannedHikes.filter((h) => h.status === 'cancelled').length,
       },
-      averageParticipants: plannedHikes.filter(h => h.status !== 'cancelled').length > 0 
-        ? plannedHikes
-            .filter(h => h.status !== 'cancelled')
-            .reduce((sum, hike) => sum + (hike.participants?.length || 0), 0) / 
-          plannedHikes.filter(h => h.status !== 'cancelled').length
-        : 0
+      averageParticipants:
+        plannedHikes.filter((h) => h.status !== 'cancelled').length > 0
+          ? plannedHikes
+              .filter((h) => h.status !== 'cancelled')
+              .reduce(
+                (sum, hike) => sum + (hike.participants?.length || 0),
+                0
+              ) / plannedHikes.filter((h) => h.status !== 'cancelled').length
+          : 0,
     };
 
     return stats;
@@ -170,9 +212,9 @@ export const plannedHikeApiService = {
     const today = new Date().toISOString().split('T')[0];
     const filters = {
       dateFrom: today,
-      status: 'planning' // Only get planning status hikes
+      status: 'planning', // Only get planning status hikes
     };
-    
+
     return await this.getPlannedHikes(filters);
   },
 
@@ -181,9 +223,9 @@ export const plannedHikeApiService = {
     const today = new Date().toISOString().split('T')[0];
     const filters = {
       dateTo: today,
-      includeCancelled: true // Include all past hikes regardless of status
+      includeCancelled: true, // Include all past hikes regardless of status
     };
-    
+
     return await this.getPlannedHikes(filters);
   },
 
@@ -197,13 +239,14 @@ export const plannedHikeApiService = {
   async searchPlannedHikes(searchTerm) {
     const allHikes = await this.getPlannedHikes();
     const searchLower = searchTerm.toLowerCase();
-    
-    return allHikes.filter(hike => 
-      hike.title.toLowerCase().includes(searchLower) ||
-      hike.location.toLowerCase().includes(searchLower) ||
-      hike.description?.toLowerCase().includes(searchLower)
+
+    return allHikes.filter(
+      (hike) =>
+        hike.title.toLowerCase().includes(searchLower) ||
+        hike.location.toLowerCase().includes(searchLower) ||
+        hike.description?.toLowerCase().includes(searchLower)
     );
-  }
+  },
 };
 
 // Utility functions for planned hikes
@@ -247,7 +290,11 @@ export const plannedHikeUtils = {
     }
 
     // Optional field validations
-    if (data.distance && typeof data.distance === 'string' && data.distance.trim() === '') {
+    if (
+      data.distance &&
+      typeof data.distance === 'string' &&
+      data.distance.trim() === ''
+    ) {
       errors.push('Distance cannot be empty if provided');
     }
 
@@ -258,7 +305,7 @@ export const plannedHikeUtils = {
 
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
     };
   },
 
@@ -276,7 +323,7 @@ export const plannedHikeUtils = {
       distance: formData.distance?.trim() || '',
       difficulty: formData.difficulty || 'Easy',
       description: formData.description?.trim() || '',
-      notes: formData.notes?.trim() || ''
+      notes: formData.notes?.trim() || '',
     };
   },
 
@@ -294,7 +341,10 @@ export const plannedHikeUtils = {
 
     // Check if user is already a participant
     if (userId && plannedHike.participants?.includes(userId)) {
-      return { canJoin: false, reason: 'You are already participating in this hike' };
+      return {
+        canJoin: false,
+        reason: 'You are already participating in this hike',
+      };
     }
 
     // Check if hike is cancelled
@@ -317,17 +367,17 @@ export const plannedHikeUtils = {
    */
   formatDateTime(dateString) {
     const date = new Date(dateString);
-    
+
     return {
       date: date.toLocaleDateString(),
       time: date.toLocaleTimeString(),
       dateTime: date.toLocaleString(),
       dayOfWeek: date.toLocaleDateString('en-US', { weekday: 'long' }),
-      shortDate: date.toLocaleDateString('en-US', { 
-        month: 'short', 
+      shortDate: date.toLocaleDateString('en-US', {
+        month: 'short',
         day: 'numeric',
-        year: 'numeric'
-      })
+        year: 'numeric',
+      }),
     };
   },
 
@@ -378,7 +428,7 @@ export const plannedHikeUtils = {
     }
 
     return { text: 'Upcoming', color: 'green', icon: '📋' };
-  }
+  },
 };
 
 export default plannedHikeApiService;

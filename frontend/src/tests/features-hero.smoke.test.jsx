@@ -12,5 +12,3 @@ describe('Landing sections smoke', () => {
     render(<FeaturesSection />);
   });
 });
-
-

@@ -1,30 +1,33 @@
-
-import React from "react";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { ProfileView } from "../components/ui/view-friend-profile";
-import { sendFriendRequest } from "../services/discover";
+import React from 'react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { ProfileView } from '../components/ui/view-friend-profile';
+import { sendFriendRequest } from '../services/discover';
 
 // Mock the addFriend service
-jest.mock("../services/discover", () => ({
+jest.mock('../services/discover', () => ({
   sendFriendRequest: jest.fn(),
 }));
 
 // Mock useToast
-jest.mock("../hooks/use-toast", () => ({
+jest.mock('../hooks/use-toast', () => ({
   useToast: () => ({
     toast: jest.fn(),
   }),
 }));
 
-describe("ProfileView", () => {
+describe('ProfileView', () => {
   const mockPerson = {
-    uid: "123",
-    displayName: "Test User",
-    bio: "This is a test bio",
-    location: "Cape Town",
+    uid: '123',
+    displayName: 'Test User',
+    bio: 'This is a test bio',
+    location: 'Cape Town',
     createdAt: new Date(),
     achievements: [
-      { name: "Peak Collector", description: "Completed 10+ peaks", earned: "1 week ago" },
+      {
+        name: 'Peak Collector',
+        description: 'Completed 10+ peaks',
+        earned: '1 week ago',
+      },
     ],
   };
 
@@ -38,12 +41,12 @@ describe("ProfileView", () => {
       />
     );
 
-    expect(screen.getByText("Test User")).toBeInTheDocument();
-    expect(screen.getByText("This is a test bio")).toBeInTheDocument();
+    expect(screen.getByText('Test User')).toBeInTheDocument();
+    expect(screen.getByText('This is a test bio')).toBeInTheDocument();
     expect(screen.getByText(/Completed 10\+ peaks/)).toBeInTheDocument();
   });
 
-  it("shows Add Friend button when showAddFriend is true", () => {
+  it('shows Add Friend button when showAddFriend is true', () => {
     render(
       <ProfileView
         open={true}
@@ -53,10 +56,10 @@ describe("ProfileView", () => {
       />
     );
 
-    expect(screen.getByText("Add Friend")).toBeInTheDocument();
+    expect(screen.getByText('Add Friend')).toBeInTheDocument();
   });
 
-  it("calls addFriend and disables button after success", async () => {
+  it('calls addFriend and disables button after success', async () => {
     sendFriendRequest.mockResolvedValueOnce({ success: true });
 
     render(
@@ -68,20 +71,20 @@ describe("ProfileView", () => {
       />
     );
 
-    const button = screen.getByText("Add Friend");
+    const button = screen.getByText('Add Friend');
     fireEvent.click(button);
 
     await waitFor(() => {
-      expect(sendFriendRequest).toHaveBeenCalledWith("123");
+      expect(sendFriendRequest).toHaveBeenCalledWith('123');
     });
 
     // After success, button should now be disabled and show "Friend Added"
     await waitFor(() => {
-      expect(screen.getByText("Request Sent")).toBeInTheDocument();
+      expect(screen.getByText('Request Sent')).toBeInTheDocument();
     });
   });
 
-  it("shows Message button when showAddFriend is false", () => {
+  it('shows Message button when showAddFriend is false', () => {
     render(
       <ProfileView
         open={true}
@@ -91,6 +94,6 @@ describe("ProfileView", () => {
       />
     );
 
-    expect(screen.getByText("Message")).toBeInTheDocument();
+    expect(screen.getByText('Message')).toBeInTheDocument();
   });
 });

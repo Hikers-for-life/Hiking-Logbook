@@ -1,4 +1,4 @@
-import { getAuth } from "firebase/auth";
+import { getAuth } from 'firebase/auth';
 import { API_BASE } from '../api/api.js';
 
 const API_URL = API_BASE;
@@ -16,10 +16,10 @@ export async function createFeed(postData) {
   // postData should include at least: { action, hike, description?, stats?, photo? }
   const token = await getToken();
   const res = await fetch(`${API_URL}/feed`, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      "Content-Type": "application/json",
-      Authorization: token ? `Bearer ${token}` : "",
+      'Content-Type': 'application/json',
+      Authorization: token ? `Bearer ${token}` : '',
     },
     body: JSON.stringify(postData),
   });
@@ -43,7 +43,9 @@ export async function fetchFeed(page = 1, limit = 10) {
     const errText = await res.text();
     // Handle 429 errors specifically
     if (res.status === 429) {
-      throw new Error(`Failed to fetch feed: 429 Too many requests, please try again later.`);
+      throw new Error(
+        `Failed to fetch feed: 429 Too many requests, please try again later.`
+      );
     }
     throw new Error(`Failed to fetch feed: ${res.status} ${errText}`);
   }
@@ -56,9 +58,9 @@ export async function fetchFeed(page = 1, limit = 10) {
 export async function likeFeed(feedId, like = true) {
   const token = await getToken();
   const res = await fetch(`${API_URL}/feed/${feedId}/like`, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ like }),
@@ -74,13 +76,13 @@ export async function likeFeed(feedId, like = true) {
 
 // ---- Add Comment ----
 export async function commentFeed(feedId, content) {
-  if (!content?.trim()) throw new Error("Comment cannot be empty");
+  if (!content?.trim()) throw new Error('Comment cannot be empty');
 
   const token = await getToken();
   const res = await fetch(`${API_URL}/feed/${feedId}/comment`, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ content }),
@@ -98,7 +100,7 @@ export async function commentFeed(feedId, content) {
 export async function deleteCommentFeed(feedId, commentId) {
   const token = await getToken();
   const res = await fetch(`${API_URL}/feed/${feedId}/comments/${commentId}`, {
-    method: "DELETE",
+    method: 'DELETE',
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -118,9 +120,9 @@ export async function shareFeed(feedId, payload) {
   // payload example: { sharerId, sharerName, sharerAvatar, original }
   const token = await getToken();
   const res = await fetch(`${API_URL}/feed/${feedId}/share`, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(payload),
@@ -138,9 +140,9 @@ export async function shareFeed(feedId, payload) {
 export async function updateFeed(feedId, updateData) {
   const token = await getToken();
   const res = await fetch(`${API_URL}/feed/${feedId}`, {
-    method: "PUT",
+    method: 'PUT',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(updateData),
@@ -158,7 +160,7 @@ export async function updateFeed(feedId, updateData) {
 export async function deleteFeed(feedId) {
   const token = await getToken();
   const res = await fetch(`${API_URL}/feed/${feedId}`, {
-    method: "DELETE",
+    method: 'DELETE',
     headers: {
       Authorization: `Bearer ${token}`,
     },

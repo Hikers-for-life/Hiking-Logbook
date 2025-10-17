@@ -5,11 +5,11 @@ import { collection, getDocs } from 'firebase/firestore';
 // Mock Firebase
 jest.mock('firebase/firestore', () => ({
   collection: jest.fn(),
-  getDocs: jest.fn()
+  getDocs: jest.fn(),
 }));
 
 jest.mock('../config/firebase.js', () => ({
-  db: {}
+  db: {},
 }));
 
 describe('statistics service Tests', () => {
@@ -24,17 +24,17 @@ describe('statistics service Tests', () => {
       const mockHikes = [
         { distance: '10km', elevation: '500ft' },
         { distance: '15km', elevation: '800ft' },
-        { distance: '5km', elevation: '200ft' }
+        { distance: '5km', elevation: '200ft' },
       ];
 
       const mockSnapshot = {
         forEach: (callback) => {
           mockHikes.forEach((hike) => {
             callback({
-              data: () => hike
+              data: () => hike,
             });
           });
-        }
+        },
       };
 
       collection.mockReturnValue('mock-collection-ref');
@@ -50,17 +50,17 @@ describe('statistics service Tests', () => {
       const mockHikes = [
         { distance: '10km', elevation: '500ft' },
         { elevation: '300ft' }, // No distance
-        { distance: '5km', elevation: '100ft' }
+        { distance: '5km', elevation: '100ft' },
       ];
 
       const mockSnapshot = {
         forEach: (callback) => {
           mockHikes.forEach((hike) => {
             callback({
-              data: () => hike
+              data: () => hike,
             });
           });
-        }
+        },
       };
 
       collection.mockReturnValue('mock-collection-ref');
@@ -76,17 +76,17 @@ describe('statistics service Tests', () => {
       const mockHikes = [
         { distance: '10km', elevation: '500ft' },
         { distance: '8km' }, // No elevation
-        { distance: '5km', elevation: '100ft' }
+        { distance: '5km', elevation: '100ft' },
       ];
 
       const mockSnapshot = {
         forEach: (callback) => {
           mockHikes.forEach((hike) => {
             callback({
-              data: () => hike
+              data: () => hike,
             });
           });
-        }
+        },
       };
 
       collection.mockReturnValue('mock-collection-ref');
@@ -102,7 +102,7 @@ describe('statistics service Tests', () => {
       const mockSnapshot = {
         forEach: (callback) => {
           // No hikes
-        }
+        },
       };
 
       collection.mockReturnValue('mock-collection-ref');
@@ -124,10 +124,10 @@ describe('statistics service Tests', () => {
         forEach: (callback) => {
           mockHikes.forEach((hike) => {
             callback({
-              data: () => hike
+              data: () => hike,
             });
           });
-        }
+        },
       };
 
       collection.mockReturnValue('mock-collection-ref');
@@ -142,17 +142,17 @@ describe('statistics service Tests', () => {
     test('should parse distance correctly by removing last 2 characters', async () => {
       const mockHikes = [
         { distance: '12.5km', elevation: '0ft' },
-        { distance: '7.8km', elevation: '0ft' }
+        { distance: '7.8km', elevation: '0ft' },
       ];
 
       const mockSnapshot = {
         forEach: (callback) => {
           mockHikes.forEach((hike) => {
             callback({
-              data: () => hike
+              data: () => hike,
             });
           });
-        }
+        },
       };
 
       collection.mockReturnValue('mock-collection-ref');
@@ -166,17 +166,17 @@ describe('statistics service Tests', () => {
     test('should parse elevation correctly by removing last 2 characters', async () => {
       const mockHikes = [
         { distance: '0km', elevation: '125.5ft' },
-        { distance: '0km', elevation: '274.5ft' }
+        { distance: '0km', elevation: '274.5ft' },
       ];
 
       const mockSnapshot = {
         forEach: (callback) => {
           mockHikes.forEach((hike) => {
             callback({
-              data: () => hike
+              data: () => hike,
             });
           });
-        }
+        },
       };
 
       collection.mockReturnValue('mock-collection-ref');
@@ -189,34 +189,37 @@ describe('statistics service Tests', () => {
 
     test('should call Firebase with correct parameters', async () => {
       const mockSnapshot = {
-        forEach: () => {}
+        forEach: () => {},
       };
 
       const mockDb = {};
       const mockCollectionRef = 'mock-collection-ref';
-      
+
       collection.mockReturnValue(mockCollectionRef);
       getDocs.mockResolvedValue(mockSnapshot);
 
       await getUserStats(mockUserId);
 
-      expect(collection).toHaveBeenCalledWith(mockDb, 'users', mockUserId, 'hikes');
+      expect(collection).toHaveBeenCalledWith(
+        mockDb,
+        'users',
+        mockUserId,
+        'hikes'
+      );
       expect(getDocs).toHaveBeenCalledWith(mockCollectionRef);
     });
 
     test('should handle single hike', async () => {
-      const mockHikes = [
-        { distance: '10km', elevation: '500ft' }
-      ];
+      const mockHikes = [{ distance: '10km', elevation: '500ft' }];
 
       const mockSnapshot = {
         forEach: (callback) => {
           mockHikes.forEach((hike) => {
             callback({
-              data: () => hike
+              data: () => hike,
             });
           });
-        }
+        },
       };
 
       collection.mockReturnValue('mock-collection-ref');
@@ -231,17 +234,17 @@ describe('statistics service Tests', () => {
     test('should handle large numbers', async () => {
       const mockHikes = [
         { distance: '1000km', elevation: '10000ft' },
-        { distance: '2500km', elevation: '25000ft' }
+        { distance: '2500km', elevation: '25000ft' },
       ];
 
       const mockSnapshot = {
         forEach: (callback) => {
           mockHikes.forEach((hike) => {
             callback({
-              data: () => hike
+              data: () => hike,
             });
           });
-        }
+        },
       };
 
       collection.mockReturnValue('mock-collection-ref');
@@ -256,17 +259,17 @@ describe('statistics service Tests', () => {
     test('should handle decimal values', async () => {
       const mockHikes = [
         { distance: '10.25km', elevation: '500.75ft' },
-        { distance: '5.5km', elevation: '250.25ft' }
+        { distance: '5.5km', elevation: '250.25ft' },
       ];
 
       const mockSnapshot = {
         forEach: (callback) => {
           mockHikes.forEach((hike) => {
             callback({
-              data: () => hike
+              data: () => hike,
             });
           });
-        }
+        },
       };
 
       collection.mockReturnValue('mock-collection-ref');
