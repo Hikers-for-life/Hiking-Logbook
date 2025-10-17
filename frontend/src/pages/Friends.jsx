@@ -41,28 +41,6 @@ import {
   Camera,
 } from 'lucide-react';
 
-import { useAuth } from '../contexts/AuthContext.jsx';
-import { useToast } from '../hooks/use-toast';
-import { getUserStats } from '../services/statistics';
-import { getFriendProfile } from '../services/friendService.js';
-
-import {
-  Search,
-  UserPlus,
-  MapPin,
-  TrendingUp,
-  Mountain,
-  Clock,
-  Medal,
-  Users,
-  Share2,
-  Heart,
-  MessageSquare,
-  Edit3,
-  Trash2,
-  Camera,
-} from 'lucide-react';
-
 const API_BASE_URL =
   process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
