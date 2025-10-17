@@ -584,6 +584,11 @@ const Friends = () => {
       sharerAvatar: tempShare.avatar,
       original: originalData,
     });
+    } catch (err) {
+    console.error('Failed to edit post:', err);
+    setRecentActivity(prev); // rollback
+  }
+};
 
     // find activity to decide whether it's a share (edit caption) or original (edit description)
     const activity = recentActivity.find((a) => a.id === activityId) || {};
