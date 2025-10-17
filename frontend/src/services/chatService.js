@@ -2,9 +2,6 @@ import { getAuth } from 'firebase/auth';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
-/**
- * Get authorization headers with Firebase token
- */
 const getAuthHeaders = async () => {
   const auth = getAuth();
   const user = auth.currentUser;
@@ -20,9 +17,7 @@ const getAuthHeaders = async () => {
   };
 };
 
-/**
- * Get all conversations for the current user
- */
+
 export const getConversations = async () => {
   try {
     const headers = await getAuthHeaders();

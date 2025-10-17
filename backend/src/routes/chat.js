@@ -4,18 +4,7 @@ import { dbUtils } from '../config/database.js';
 
 const router = express.Router();
 
-/**
- * @swagger
- * /api/chat/conversations:
- *   get:
- *     summary: Get all conversations for current user
- *     tags: [Chat]
- *     security:
- *       - BearerAuth: []
- *     responses:
- *       200:
- *         description: List of conversations
- */
+
 router.get('/conversations', verifyAuth, async (req, res) => {
   try {
     const userId = req.user.uid;
@@ -63,24 +52,7 @@ router.get('/conversations', verifyAuth, async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /api/chat/conversation/{userId}:
- *   get:
- *     summary: Get or create conversation with a specific user
- *     tags: [Chat]
- *     security:
- *       - BearerAuth: []
- *     parameters:
- *       - in: path
- *         name: userId
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Conversation details
- */
+
 router.get('/conversation/:userId', verifyAuth, async (req, res) => {
   try {
     const currentUserId = req.user.uid;
@@ -142,29 +114,7 @@ router.get('/conversation/:userId', verifyAuth, async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /api/chat/messages/{conversationId}:
- *   get:
- *     summary: Get all messages in a conversation
- *     tags: [Chat]
- *     security:
- *       - BearerAuth: []
- *     parameters:
- *       - in: path
- *         name: conversationId
- *         required: true
- *         schema:
- *           type: string
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 50
- *     responses:
- *       200:
- *         description: List of messages
- */
+
 router.get('/messages/:conversationId', verifyAuth, async (req, res) => {
   try {
     const userId = req.user.uid;
@@ -217,35 +167,7 @@ router.get('/messages/:conversationId', verifyAuth, async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /api/chat/send:
- *   post:
- *     summary: Send a message
- *     tags: [Chat]
- *     security:
- *       - BearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - conversationId
- *               - recipientId
- *               - content
- *             properties:
- *               conversationId:
- *                 type: string
- *               recipientId:
- *                 type: string
- *               content:
- *                 type: string
- *     responses:
- *       201:
- *         description: Message sent
- */
+
 router.post('/send', verifyAuth, async (req, res) => {
   try {
     const senderId = req.user.uid;
@@ -315,24 +237,7 @@ router.post('/send', verifyAuth, async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /api/chat/mark-read/{conversationId}:
- *   put:
- *     summary: Mark all messages in a conversation as read
- *     tags: [Chat]
- *     security:
- *       - BearerAuth: []
- *     parameters:
- *       - in: path
- *         name: conversationId
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Messages marked as read
- */
+
 router.put('/mark-read/:conversationId', verifyAuth, async (req, res) => {
   try {
     const userId = req.user.uid;
@@ -368,18 +273,7 @@ router.put('/mark-read/:conversationId', verifyAuth, async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /api/chat/unread-count:
- *   get:
- *     summary: Get count of unread messages for current user
- *     tags: [Chat]
- *     security:
- *       - BearerAuth: []
- *     responses:
- *       200:
- *         description: Unread message count
- */
+
 router.get('/unread-count', verifyAuth, async (req, res) => {
   try {
     const userId = req.user.uid;

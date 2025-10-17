@@ -328,7 +328,7 @@ const handleShare = async (activity) => {
   setRecentActivity((prev) => [tempShare, ...prev]);
 
   try {
-    // ✅ use service function instead of fetch
+    //  use service function instead of fetch
     const data = await shareFeed(activity.id, {
       sharerId: user.uid,
       sharerName: user.displayName || user.email,
