@@ -22,6 +22,7 @@ jest.mock('../contexts/AuthContext', () => ({
   useAuth: () => mockAuthContext,
 }));
 
+
 describe("Signup component", () => {
   beforeEach(() => {
     render(
@@ -37,7 +38,9 @@ describe("Signup component", () => {
 
   test("renders email and password input fields", () => {
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+    //expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+    const passwordInput = screen.getByLabelText(/^password$/i);
+    const confirmInput = screen.getByLabelText(/^Confirm Password$/i);
   });
 
   test("renders signup button", () => {
@@ -47,12 +50,14 @@ describe("Signup component", () => {
   test("calls signup function when form is submitted", async () => {
     const nameInput = screen.getByLabelText(/full name/i);
     const emailInput = screen.getByLabelText(/email/i);
-    const passwordInput = screen.getByLabelText(/password/i);
+    const passwordInput = screen.getByLabelText(/^password$/i); // exact match
+    const confirmInput = screen.getByLabelText(/^confirm password$/i);
     const submitButton = screen.getByRole("button", { name: /create account/i });
 
     fireEvent.change(nameInput, { target: { value: "Test User" } });
     fireEvent.change(emailInput, { target: { value: "test@example.com" } });
     fireEvent.change(passwordInput, { target: { value: "password123" } });
+    fireEvent.change(confirmInput, { target: { value: "password123" } });
 
   await act(async () => {
     fireEvent.click(submitButton);

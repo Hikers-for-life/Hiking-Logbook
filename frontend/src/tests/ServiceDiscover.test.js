@@ -1,5 +1,5 @@
 import { getAuth } from "firebase/auth";
-import { discoverFriends, addFriend, getUserDetails } from '../services/discover.js';
+import { discoverFriends, sendFriendRequest, getUserDetails } from '../services/discover.js';
 
 // Mock Firebase auth and fetch
 jest.mock("firebase/auth");
@@ -87,7 +87,7 @@ describe('Discover Service', () => {
     });
   });
 
-  describe('addFriend', () => {
+  describe('sendFriendRequest', () => {
     it('should add friend successfully', async () => {
       const mockResponse = { success: true, friendId: 'user123' };
       fetch.mockResolvedValueOnce({
@@ -95,7 +95,7 @@ describe('Discover Service', () => {
         json: async () => mockResponse
       });
 
-      const result = await addFriend('user123');
+      const result = await sendFriendRequest('user123');
 
       expect(fetch).toHaveBeenCalledWith(
         'http://localhost:3001/api/discover/add',  // Fixed URL
@@ -114,10 +114,11 @@ describe('Discover Service', () => {
     it('should throw error when add friend fails', async () => {
       fetch.mockResolvedValueOnce({
         ok: false,
-        status: 400
+        status: 400,
+         text: async () => 'Bad request',
       });
 
-      await expect(addFriend('user123')).rejects.toThrow('Failed to add friend');
+      await expect(sendFriendRequest('user123')).rejects.toThrow('Failed to send request: 400 Bad request');
     });
   });
 
@@ -173,7 +174,7 @@ describe('Discover Service', () => {
 
       // Test addFriend endpoint
       fetch.mockResolvedValueOnce({ ok: true, json: async () => ({ success: true }) });
-      await addFriend('user123');
+      await sendFriendRequest('user123');
       expect(fetch).toHaveBeenCalledWith('http://localhost:3001/api/discover/add', expect.any(Object));
 
       // Test getUserDetails endpoint

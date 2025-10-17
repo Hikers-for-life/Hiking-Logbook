@@ -2,11 +2,11 @@
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { ProfileView } from "../components/ui/view-friend-profile";
-import { addFriend } from "../services/discover";
+import { sendFriendRequest } from "../services/discover";
 
 // Mock the addFriend service
 jest.mock("../services/discover", () => ({
-  addFriend: jest.fn(),
+  sendFriendRequest: jest.fn(),
 }));
 
 // Mock useToast
@@ -57,7 +57,7 @@ describe("ProfileView", () => {
   });
 
   it("calls addFriend and disables button after success", async () => {
-    addFriend.mockResolvedValueOnce({ success: true });
+    sendFriendRequest.mockResolvedValueOnce({ success: true });
 
     render(
       <ProfileView
@@ -72,12 +72,12 @@ describe("ProfileView", () => {
     fireEvent.click(button);
 
     await waitFor(() => {
-      expect(addFriend).toHaveBeenCalledWith("123");
+      expect(sendFriendRequest).toHaveBeenCalledWith("123");
     });
 
     // After success, button should now be disabled and show "Friend Added"
     await waitFor(() => {
-      expect(screen.getByText("Friend Added")).toBeInTheDocument();
+      expect(screen.getByText("Request Sent")).toBeInTheDocument();
     });
   });
 
