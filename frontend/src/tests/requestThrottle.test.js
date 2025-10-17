@@ -1,4 +1,8 @@
-import { requestThrottle, REQUEST_PRIORITY, throttledRequest } from '../utils/requestThrottle';
+import {
+  requestThrottle,
+  REQUEST_PRIORITY,
+  throttledRequest,
+} from '../utils/requestThrottle';
 
 describe('RequestThrottle', () => {
   beforeEach(() => {
@@ -28,9 +32,9 @@ describe('RequestThrottle', () => {
   describe('queueRequest', () => {
     test('should queue and execute a single request', async () => {
       const mockRequestFn = jest.fn().mockResolvedValue('success');
-      
+
       const result = await requestThrottle.queueRequest(mockRequestFn);
-      
+
       expect(result).toBe('success');
       expect(mockRequestFn).toHaveBeenCalledTimes(1);
     });
@@ -38,40 +42,51 @@ describe('RequestThrottle', () => {
     test('should execute multiple requests', async () => {
       const mockRequestFn1 = jest.fn().mockResolvedValue('result1');
       const mockRequestFn2 = jest.fn().mockResolvedValue('result2');
-      
+
       const [result1, result2] = await Promise.all([
         requestThrottle.queueRequest(mockRequestFn1),
-        requestThrottle.queueRequest(mockRequestFn2)
+        requestThrottle.queueRequest(mockRequestFn2),
       ]);
-      
+
       expect(result1).toBe('result1');
       expect(result2).toBe('result2');
     });
 
     test('should handle request failures gracefully', async () => {
       const errorMessage = 'Request failed';
-      const mockRequestFn = jest.fn().mockRejectedValue(new Error(errorMessage));
-      
-      await expect(requestThrottle.queueRequest(mockRequestFn)).rejects.toThrow(errorMessage);
+      const mockRequestFn = jest
+        .fn()
+        .mockRejectedValue(new Error(errorMessage));
+
+      await expect(requestThrottle.queueRequest(mockRequestFn)).rejects.toThrow(
+        errorMessage
+      );
       expect(mockRequestFn).toHaveBeenCalledTimes(1);
     });
 
     test('should prioritize requests correctly', async () => {
       const executionOrder = [];
 
-      const makeFn = (label, delayMs = 0) => jest.fn().mockImplementation(async () => {
-        if (delayMs) {
-          await new Promise(r => setTimeout(r, delayMs));
-        }
-        executionOrder.push(label);
-        return label;
-      });
+      const makeFn = (label, delayMs = 0) =>
+        jest.fn().mockImplementation(async () => {
+          if (delayMs) {
+            await new Promise((r) => setTimeout(r, delayMs));
+          }
+          executionOrder.push(label);
+          return label;
+        });
 
       const lowPriorityFn = makeFn('low', 10);
       const highPriorityFn = makeFn('high', 0);
 
-      const lowPromise = requestThrottle.queueRequest(lowPriorityFn, REQUEST_PRIORITY.LOW);
-      const highPromise = requestThrottle.queueRequest(highPriorityFn, REQUEST_PRIORITY.HIGH);
+      const lowPromise = requestThrottle.queueRequest(
+        lowPriorityFn,
+        REQUEST_PRIORITY.LOW
+      );
+      const highPromise = requestThrottle.queueRequest(
+        highPriorityFn,
+        REQUEST_PRIORITY.HIGH
+      );
 
       await Promise.all([lowPromise, highPromise]);
 
@@ -114,26 +129,33 @@ describe('RequestThrottle', () => {
   describe('throttledRequest helper', () => {
     test('should wrap request function with default priority', async () => {
       const mockRequestFn = jest.fn().mockResolvedValue('result');
-      
+
       const result = await throttledRequest(mockRequestFn);
-      
+
       expect(result).toBe('result');
       expect(mockRequestFn).toHaveBeenCalledTimes(1);
     });
 
     test('should accept custom priority', async () => {
       const mockRequestFn = jest.fn().mockResolvedValue('result');
-      
-      const result = await throttledRequest(mockRequestFn, REQUEST_PRIORITY.HIGH);
-      
+
+      const result = await throttledRequest(
+        mockRequestFn,
+        REQUEST_PRIORITY.HIGH
+      );
+
       expect(result).toBe('result');
       expect(mockRequestFn).toHaveBeenCalledTimes(1);
     });
 
     test('should handle errors', async () => {
-      const mockRequestFn = jest.fn().mockRejectedValue(new Error('Test error'));
-      
-      await expect(throttledRequest(mockRequestFn)).rejects.toThrow('Test error');
+      const mockRequestFn = jest
+        .fn()
+        .mockRejectedValue(new Error('Test error'));
+
+      await expect(throttledRequest(mockRequestFn)).rejects.toThrow(
+        'Test error'
+      );
     });
   });
 
@@ -141,9 +163,9 @@ describe('RequestThrottle', () => {
     test('should not process when queue is empty', async () => {
       requestThrottle.clearQueue();
       const initialActiveRequests = requestThrottle.activeRequests;
-      
+
       await requestThrottle.processQueue();
-      
+
       expect(requestThrottle.activeRequests).toBe(initialActiveRequests);
     });
   });

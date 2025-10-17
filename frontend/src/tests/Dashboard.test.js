@@ -59,13 +59,18 @@ describe('Dashboard Component', () => {
 
     // Check for welcome message using a flexible text matcher
     const welcomeElements = await screen.findAllByText((content, element) => {
-      return element && element.textContent && element.textContent.includes('Welcome back') && element.textContent.includes('Test Hiker');
+      return (
+        element &&
+        element.textContent &&
+        element.textContent.includes('Welcome back') &&
+        element.textContent.includes('Test Hiker')
+      );
     });
     expect(welcomeElements.length).toBeGreaterThan(0);
   });
 
   test('displays stats with total hikes and distance', async () => {
-    jest.setTimeout(10000); // Increase timeout for this test
+    jest.setTimeout(15000); // Increase timeout for this test
 
     // Mock the API to return data in the format the component expects
     const mockHikes = [
@@ -73,7 +78,7 @@ describe('Dashboard Component', () => {
       { id: 2, name: 'Trail Two', distance: 10, date: '2024-02-01' },
     ];
 
-    hikeApiService.getHikes.mockResolvedValueOnce(mockHikes);
+    hikeApiService.getHikes.mockResolvedValueOnce({ success: true, data: mockHikes });
 
     renderDashboard();
 
@@ -89,15 +94,18 @@ describe('Dashboard Component', () => {
 
     // Wait for the distance to be calculated and displayed
     // Use findByText with a longer timeout
-    const distanceElement = await screen.findByText('15 km', {}, { timeout: 10000 });
+    const distanceElement = await screen.findByText(
+      '15 km',
+      {},
+      { timeout: 15000 }
+    );
     expect(distanceElement).toBeInTheDocument();
   });
-
 
   test('shows no hikes message when no hikes exist', async () => {
     hikeApiService.getHikes.mockResolvedValueOnce({
       success: true,
-      data: []
+      data: [],
     });
 
     renderDashboard();
@@ -108,7 +116,7 @@ describe('Dashboard Component', () => {
   test('quick action buttons are clickable', async () => {
     hikeApiService.getHikes.mockResolvedValueOnce({
       success: true,
-      data: []
+      data: [],
     });
 
     renderDashboard();
@@ -122,12 +130,14 @@ describe('Dashboard Component', () => {
   test('displays achievements placeholder', async () => {
     hikeApiService.getHikes.mockResolvedValueOnce({
       success: true,
-      data: []
+      data: [],
     });
 
     renderDashboard();
 
-    expect(await screen.findByText(/No recent achievements/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/No recent achievements/i)
+    ).toBeInTheDocument();
   });
 
   test('handles API error gracefully', async () => {

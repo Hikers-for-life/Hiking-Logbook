@@ -8,6 +8,3 @@ describe('StatsOverview smoke', () => {
     render(<StatsOverview />);
   });
 });
-
-
-

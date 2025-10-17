@@ -2,15 +2,15 @@
 describe('CSS Functionality', () => {
   test('should handle CSS class operations', () => {
     const element = document.createElement('div');
-    
+
     // Test adding classes
     element.classList.add('test-class');
     expect(element.classList.contains('test-class')).toBe(true);
-    
+
     // Test removing classes
     element.classList.remove('test-class');
     expect(element.classList.contains('test-class')).toBe(false);
-    
+
     // Test toggling classes
     element.classList.toggle('toggle-class');
     expect(element.classList.contains('toggle-class')).toBe(true);
@@ -20,12 +20,12 @@ describe('CSS Functionality', () => {
 
   test('should handle CSS styles', () => {
     const element = document.createElement('div');
-    
+
     // Test setting styles
     element.style.backgroundColor = 'red';
     element.style.color = 'white';
     element.style.fontSize = '16px';
-    
+
     expect(element.style.backgroundColor).toBe('red');
     expect(element.style.color).toBe('white');
     expect(element.style.fontSize).toBe('16px');
@@ -38,7 +38,7 @@ describe('CSS Functionality', () => {
       <div class="item">Item 2</div>
       <div class="item">Item 3</div>
     `;
-    
+
     const items = container.querySelectorAll('.item');
     expect(items.length).toBe(3);
     expect(items[0].textContent).toBe('Item 1');
@@ -51,9 +51,9 @@ describe('CSS Functionality', () => {
       mobile: '320px',
       tablet: '768px',
       desktop: '1024px',
-      large: '1440px'
+      large: '1440px',
     };
-    
+
     expect(breakpoints.mobile).toBe('320px');
     expect(breakpoints.tablet).toBe('768px');
     expect(breakpoints.desktop).toBe('1024px');

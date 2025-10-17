@@ -6,7 +6,7 @@ jest.mock('../contexts/AuthContext.jsx', () => {
   const React = require('react');
   return {
     useAuth: () => ({ currentUser: { uid: 'u1', displayName: 'Test' } }),
-    AuthContext: React.createContext({ currentUser: { uid: 'u1' } })
+    AuthContext: React.createContext({ currentUser: { uid: 'u1' } }),
   };
 });
 
@@ -16,5 +16,3 @@ describe.skip('ProfileView smoke', () => {
     render(<ProfileView open={false} onOpenChange={() => {}} />);
   });
 });
-
-

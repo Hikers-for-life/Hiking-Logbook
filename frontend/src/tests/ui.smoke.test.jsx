@@ -24,12 +24,29 @@ describe('UI components smoke', () => {
   });
 
   test('card renders', () => {
-    const { Card, CardHeader, CardContent, CardTitle } = require('../components/ui/card');
-    render(<Card><CardHeader><CardTitle>Title</CardTitle></CardHeader><CardContent>Body</CardContent></Card>);
+    const {
+      Card,
+      CardHeader,
+      CardContent,
+      CardTitle,
+    } = require('../components/ui/card');
+    render(
+      <Card>
+        <CardHeader>
+          <CardTitle>Title</CardTitle>
+        </CardHeader>
+        <CardContent>Body</CardContent>
+      </Card>
+    );
   });
 
   test('tabs renders', () => {
-    const { Tabs, TabsList, TabsTrigger, TabsContent } = require('../components/ui/tabs');
+    const {
+      Tabs,
+      TabsList,
+      TabsTrigger,
+      TabsContent,
+    } = require('../components/ui/tabs');
     render(
       <Tabs defaultValue="one">
         <TabsList>
@@ -55,6 +72,3 @@ describe('UI components smoke', () => {
     render(<Label htmlFor="x">Lbl</Label>);
   });
 });
-
-
-

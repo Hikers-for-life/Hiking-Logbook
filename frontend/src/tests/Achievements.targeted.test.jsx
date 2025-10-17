@@ -7,7 +7,9 @@ describe('Achievements Component Tests', () => {
   });
 
   test('achievementApiService has required methods', () => {
-    const { achievementApiService } = require('../services/achievementApiService');
+    const {
+      achievementApiService,
+    } = require('../services/achievementApiService');
     expect(achievementApiService).toBeDefined();
     expect(typeof achievementApiService.getBadges).toBe('function');
     expect(typeof achievementApiService.getStats).toBe('function');

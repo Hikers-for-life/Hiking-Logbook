@@ -13,5 +13,3 @@ describe('Toaster smoke', () => {
     );
   });
 });
-
-

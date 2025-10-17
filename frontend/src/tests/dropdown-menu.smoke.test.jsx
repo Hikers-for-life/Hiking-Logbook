@@ -14,6 +14,3 @@ describe('DropdownMenu smoke', () => {
     );
   });
 });
-
-
-

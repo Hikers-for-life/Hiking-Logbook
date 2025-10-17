@@ -5,62 +5,63 @@ import express from 'express';
 import rateLimit from 'express-rate-limit';
 
 export function applySecurityMiddleware(app) {
-    const limiter = rateLimit({
-        windowMs: 15 * 60 * 1000, // 15 minutes
-        max: 10000, // limit each IP to 100 requests per window
-        message: 'Too many requests, please try again later.',
-    });
+  const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 10000, // limit each IP to 100 requests per window
+    message: 'Too many requests, please try again later.',
+  });
 
-    const allowedOrigins = [
-        process.env.FRONTEND_URL || 'http://localhost:3000',
-        'http://localhost:3000', // Development
-        'https://localhost:3000', // Development HTTPS
-        'https://hiking-logbook.web.app',
-        'https://hiking-logbook.firebaseapp.com',
-        
-    ];
-    
-    app.use(helmet());
-    app.use(
-        cors({
-            origin: (origin, callback) => {
-                // Allow requests with no origin (like mobile apps or curl requests)
-                if (!origin) return callback(null, true);
-                
-                // For development - allow localhost
-                if (origin.includes('localhost')) {
-                    return callback(null, true);
-                }
-                
-                // For production - check against allowed origins
-                if (allowedOrigins.includes(origin)) {
-                    return callback(null, true);
-                }
-                
-                // For deployed apps - allow common deployment platforms
-                if (origin.includes('.web.app') || 
-                    origin.includes('.firebaseapp.com') ||
-                    origin.includes('.netlify.app') ||
-                    origin.includes('.vercel.app') ||
-                    origin.includes('.github.io')) {
-                    return callback(null, true);
-                }
-                
-                console.log('CORS blocked origin:', origin);
-                callback(new Error('Not allowed by CORS'));
-            },
-            credentials: true,
-            methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-            allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
-            exposedHeaders: ['Content-Length', 'X-Request-Id'],
-            preflightContinue: false,
-            optionsSuccessStatus: 204
-        })
-    );
-    
-    // Handle OPTIONS requests explicitly
-    app.options('*', cors());
-    app.use(limiter);
+  const allowedOrigins = [
+    process.env.FRONTEND_URL || 'http://localhost:3000',
+    'http://localhost:3000', // Development
+    'https://localhost:3000', // Development HTTPS
+    'https://hiking-logbook.web.app',
+    'https://hiking-logbook.firebaseapp.com',
+  ];
+
+  app.use(helmet());
+  app.use(
+    cors({
+      origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+
+        // For development - allow localhost
+        if (origin.includes('localhost')) {
+          return callback(null, true);
+        }
+
+        // For production - check against allowed origins
+        if (allowedOrigins.includes(origin)) {
+          return callback(null, true);
+        }
+
+        // For deployed apps - allow common deployment platforms
+        if (
+          origin.includes('.web.app') ||
+          origin.includes('.firebaseapp.com') ||
+          origin.includes('.netlify.app') ||
+          origin.includes('.vercel.app') ||
+          origin.includes('.github.io')
+        ) {
+          return callback(null, true);
+        }
+
+        console.log('CORS blocked origin:', origin);
+        callback(new Error('Not allowed by CORS'));
+      },
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
+      exposedHeaders: ['Content-Length', 'X-Request-Id'],
+      preflightContinue: false,
+      optionsSuccessStatus: 204,
+    })
+  );
+
+  // Handle OPTIONS requests explicitly
+  app.options('*', cors());
+  app.use(limiter);
 }
 
 export function applyParsingMiddleware(app) {

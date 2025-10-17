@@ -4,28 +4,29 @@ import PinnedHikes from '../components/PinnedHikes';
 const mockPinnedHikes = [
   {
     id: 1,
-    title: "Mount Washington Summit",
-    location: "White Mountains, NH",
-    date: "2024-08-05",
-    distance: "12.4 mi",
-    elevation: "4,322 ft",
-    duration: "6h 30m",
-    difficulty: "Hard",
-    notes: "Incredible views from the summit! Weather was perfect, saw amazing sunrise.",
-    pinnedAt: "2024-08-06"
+    title: 'Mount Washington Summit',
+    location: 'White Mountains, NH',
+    date: '2024-08-05',
+    distance: '12.4 mi',
+    elevation: '4,322 ft',
+    duration: '6h 30m',
+    difficulty: 'Hard',
+    notes:
+      'Incredible views from the summit! Weather was perfect, saw amazing sunrise.',
+    pinnedAt: '2024-08-06',
   },
   {
     id: 2,
-    title: "Bear Mountain Trail",
-    location: "Harriman State Park, NY",
-    date: "2024-07-22",
-    distance: "5.8 mi",
-    elevation: "1,284 ft",
-    duration: "3h 45m",
-    difficulty: "Moderate",
-    notes: "Great family-friendly hike. Spotted some wildlife on the way down.",
-    pinnedAt: "2024-07-23"
-  }
+    title: 'Bear Mountain Trail',
+    location: 'Harriman State Park, NY',
+    date: '2024-07-22',
+    distance: '5.8 mi',
+    elevation: '1,284 ft',
+    duration: '3h 45m',
+    difficulty: 'Moderate',
+    notes: 'Great family-friendly hike. Spotted some wildlife on the way down.',
+    pinnedAt: '2024-07-23',
+  },
 ];
 
 describe('PinnedHikes', () => {
@@ -117,16 +118,22 @@ describe('PinnedHikes', () => {
     it('displays hike notes when present', () => {
       render(<PinnedHikes pinnedHikes={mockPinnedHikes} />);
       expect(
-        screen.getByText(/"Incredible views from the summit! Weather was perfect, saw amazing sunrise."/i)
+        screen.getByText(
+          /"Incredible views from the summit! Weather was perfect, saw amazing sunrise."/i
+        )
       ).toBeInTheDocument();
       expect(
-        screen.getByText(/"Great family-friendly hike. Spotted some wildlife on the way down."/i)
+        screen.getByText(
+          /"Great family-friendly hike. Spotted some wildlife on the way down."/i
+        )
       ).toBeInTheDocument();
     });
 
     it('does not render notes section when notes are absent', () => {
       const hikeWithoutNotes = [{ ...mockPinnedHikes[0], notes: null }];
-      const { container } = render(<PinnedHikes pinnedHikes={hikeWithoutNotes} />);
+      const { container } = render(
+        <PinnedHikes pinnedHikes={hikeWithoutNotes} />
+      );
       const notesSection = container.querySelector('.bg-muted\\/30');
       expect(notesSection).not.toBeInTheDocument();
     });
@@ -181,19 +188,27 @@ describe('PinnedHikes', () => {
 
   describe('Styling and Layout', () => {
     it('applies hover effects to hike cards', () => {
-      const { container } = render(<PinnedHikes pinnedHikes={mockPinnedHikes} />);
+      const { container } = render(
+        <PinnedHikes pinnedHikes={mockPinnedHikes} />
+      );
       const hikeCards = container.querySelectorAll('.hover\\:bg-muted\\/50');
       expect(hikeCards).toHaveLength(2);
     });
 
     it('uses grid layout for stats', () => {
-      const { container } = render(<PinnedHikes pinnedHikes={mockPinnedHikes} />);
-      const gridElements = container.querySelectorAll('.grid-cols-2.md\\:grid-cols-4');
+      const { container } = render(
+        <PinnedHikes pinnedHikes={mockPinnedHikes} />
+      );
+      const gridElements = container.querySelectorAll(
+        '.grid-cols-2.md\\:grid-cols-4'
+      );
       expect(gridElements).toHaveLength(2);
     });
 
     it('applies card styling', () => {
-      const { container } = render(<PinnedHikes pinnedHikes={mockPinnedHikes} />);
+      const { container } = render(
+        <PinnedHikes pinnedHikes={mockPinnedHikes} />
+      );
       const card = container.querySelector('.shadow-elevation');
       expect(card).toBeInTheDocument();
     });
@@ -215,7 +230,7 @@ describe('PinnedHikes', () => {
         />
       );
       const buttons = screen.getAllByRole('button');
-      buttons.forEach(button => {
+      buttons.forEach((button) => {
         expect(button).toBeEnabled();
       });
     });

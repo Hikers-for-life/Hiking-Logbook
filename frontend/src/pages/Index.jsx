@@ -44,7 +44,7 @@ const Index = () => {
     if (logbookSection) {
       logbookSection.scrollIntoView({
         behavior: 'smooth',
-        block: 'start'
+        block: 'start',
       });
     }
   };
@@ -68,7 +68,7 @@ const Index = () => {
       <Login
         open={isLoginOpen}
         onOpenChange={handleLoginClose}
-        onLogin={() => { }} // Placeholder
+        onLogin={() => {}} // Placeholder
         onSignup={handleSignupRedirect}
       />
     </div>

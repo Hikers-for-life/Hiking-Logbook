@@ -12,7 +12,9 @@ describe('FeaturesSection', () => {
   it('renders the main description', () => {
     render(<FeaturesSection />);
     expect(
-      screen.getByText(/From planning your next adventure to tracking your progress/i)
+      screen.getByText(
+        /From planning your next adventure to tracking your progress/i
+      )
     ).toBeInTheDocument();
   });
 
@@ -71,7 +73,9 @@ describe('FeaturesSection', () => {
 
     it('renders hikers group image with correct alt text', () => {
       render(<FeaturesSection />);
-      const image = screen.getByAltText('Diverse group of hikers enjoying nature');
+      const image = screen.getByAltText(
+        'Diverse group of hikers enjoying nature'
+      );
       expect(image).toBeInTheDocument();
       expect(image).toHaveAttribute('src');
     });
@@ -107,7 +111,9 @@ describe('FeaturesSection', () => {
 
     it('renders app preview image with correct alt text', () => {
       render(<FeaturesSection />);
-      const image = screen.getByAltText('Hiking Log app interface on smartphone');
+      const image = screen.getByAltText(
+        'Hiking Log app interface on smartphone'
+      );
       expect(image).toBeInTheDocument();
       expect(image).toHaveAttribute('src');
     });
@@ -132,7 +138,7 @@ describe('FeaturesSection', () => {
       render(<FeaturesSection />);
       const h2 = screen.getByRole('heading', { level: 2 });
       const h3Elements = screen.getAllByRole('heading', { level: 3 });
-      
+
       expect(h2).toBeInTheDocument();
       expect(h3Elements.length).toBeGreaterThan(0);
     });
@@ -140,8 +146,8 @@ describe('FeaturesSection', () => {
     it('images have descriptive alt text', () => {
       render(<FeaturesSection />);
       const images = screen.getAllByRole('img');
-      
-      images.forEach(img => {
+
+      images.forEach((img) => {
         expect(img).toHaveAttribute('alt');
         expect(img.getAttribute('alt')).not.toBe('');
       });

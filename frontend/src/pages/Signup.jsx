@@ -5,12 +5,14 @@ import { useNavigate } from 'react-router-dom';
 import mountain from '../components/assets/forest-waterfall.jpg';
 import { ArrowLeft } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
+import { validateEmail, validatePassword } from '../services/userServices.js';
 
 export default function Signup() {
   const [form, setForm] = useState({
     name: '',
     email: '',
     password: '',
+    confirmPassword: '',
   });
   const [hoverStates, setHoverStates] = useState({
     backButton: false,
@@ -22,6 +24,7 @@ export default function Signup() {
     name: false,
     email: false,
     password: false,
+    confirmPassword: false,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -34,6 +37,22 @@ export default function Signup() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // Client-side validation
+    const emailCheck = validateEmail(form.email);
+    if (!emailCheck.valid) {
+      setError(emailCheck.message);
+      return;
+    }
+    const passCheck = validatePassword(form.password);
+    if (!passCheck.valid) {
+      setError(passCheck.message);
+      return;
+    }
+    // Confirm password match
+    if (form.password !== form.confirmPassword) {
+      setError('Passwords do not match. Please retype your password.');
+      return;
+    }
     try {
       setError('');
       setLoading(true);
@@ -130,9 +149,7 @@ export default function Signup() {
               Full Name
             </label>
             <input
-
-              id = "name"
-
+              id="name"
               style={{
                 ...styles.input,
                 ...(focusStates.name && styles.inputFocus),
@@ -155,9 +172,7 @@ export default function Signup() {
               Email
             </label>
             <input
-
               id="email"
-
               style={{
                 ...styles.input,
                 ...(focusStates.email && styles.inputFocus),
@@ -180,9 +195,7 @@ export default function Signup() {
               Password
             </label>
             <input
-
               id="password"
-
               style={{
                 ...styles.input,
                 ...(focusStates.password && styles.inputFocus),
@@ -197,6 +210,29 @@ export default function Signup() {
               }
               onBlur={() =>
                 setFocusStates((prev) => ({ ...prev, password: false }))
+              }
+              required
+            />
+
+            <label style={styles.label} htmlFor="confirmPassword">
+              Confirm Password
+            </label>
+            <input
+              id="confirmPassword"
+              style={{
+                ...styles.input,
+                ...(focusStates.confirmPassword && styles.inputFocus),
+              }}
+              type="password"
+              name="confirmPassword"
+              placeholder="Retype your password"
+              value={form.confirmPassword}
+              onChange={handleChange}
+              onFocus={() =>
+                setFocusStates((prev) => ({ ...prev, confirmPassword: true }))
+              }
+              onBlur={() =>
+                setFocusStates((prev) => ({ ...prev, confirmPassword: false }))
               }
               required
             />
@@ -262,9 +298,6 @@ export default function Signup() {
                 <i className="fa-brands fa-facebook"></i> Facebook
 
               </button>*/}
-
-
-
             </div>
 
             <p style={styles.signP}>Already have an account?</p>

@@ -5,9 +5,9 @@ jest.mock('../config/firebase.js', () => ({
   auth: {
     currentUser: {
       getIdToken: jest.fn().mockResolvedValue('mock-token'),
-      uid: 'test-user-123'
-    }
-  }
+      uid: 'test-user-123',
+    },
+  },
 }));
 
 describe('userApiService', () => {
@@ -53,12 +53,12 @@ describe('userApiService', () => {
       const mockProfile = {
         uid: 'test-user-123',
         displayName: 'Test User',
-        email: 'test@example.com'
+        email: 'test@example.com',
       };
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true, data: mockProfile })
+        json: async () => ({ success: true, data: mockProfile }),
       });
 
       const result = await userApiService.getCurrentProfile();
@@ -75,12 +75,12 @@ describe('userApiService', () => {
       const mockProfile = {
         uid: userId,
         displayName: 'Other User',
-        bio: 'Hiking enthusiast'
+        bio: 'Hiking enthusiast',
       };
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true, data: mockProfile })
+        json: async () => ({ success: true, data: mockProfile }),
       });
 
       const result = await userApiService.getUserProfile(userId);
@@ -89,8 +89,8 @@ describe('userApiService', () => {
         expect.stringContaining(`/users/${userId}`),
         expect.objectContaining({
           headers: expect.objectContaining({
-            'Content-Type': 'application/json'
-          })
+            'Content-Type': 'application/json',
+          }),
         })
       );
 
@@ -103,12 +103,15 @@ describe('userApiService', () => {
       const profileData = {
         displayName: 'New User',
         bio: 'Love hiking!',
-        location: 'Cape Town'
+        location: 'Cape Town',
       };
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true, data: { uid: 'new-user', ...profileData } })
+        json: async () => ({
+          success: true,
+          data: { uid: 'new-user', ...profileData },
+        }),
       });
 
       const result = await userApiService.createProfile(profileData);
@@ -127,12 +130,15 @@ describe('userApiService', () => {
       const userId = 'user-123';
       const updateData = {
         displayName: 'Updated Name',
-        bio: 'Updated bio'
+        bio: 'Updated bio',
       };
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true, data: { uid: userId, ...updateData } })
+        json: async () => ({
+          success: true,
+          data: { uid: userId, ...updateData },
+        }),
       });
 
       const result = await userApiService.updateProfile(userId, updateData);
@@ -152,7 +158,7 @@ describe('userApiService', () => {
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true, message: 'Account deleted' })
+        json: async () => ({ success: true, message: 'Account deleted' }),
       });
 
       const result = await userApiService.deleteAccount(userId);
@@ -170,12 +176,12 @@ describe('userApiService', () => {
       const userId = 'user-123';
       const mockHikes = [
         { id: 'hike-1', title: 'Mountain Trail' },
-        { id: 'hike-2', title: 'Coastal Walk' }
+        { id: 'hike-2', title: 'Coastal Walk' },
       ];
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true, data: mockHikes })
+        json: async () => ({ success: true, data: mockHikes }),
       });
 
       const result = await userApiService.getUserHikes(userId);
@@ -194,12 +200,12 @@ describe('userApiService', () => {
         limit: 10,
         offset: 5,
         status: 'completed',
-        difficulty: 'moderate'
+        difficulty: 'moderate',
       };
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true, data: [] })
+        json: async () => ({ success: true, data: [] }),
       });
 
       await userApiService.getUserHikes(userId, options);
@@ -215,13 +221,11 @@ describe('userApiService', () => {
   describe('getUserPlannedHikes', () => {
     test('should make public GET request for planned hikes', async () => {
       const userId = 'user-123';
-      const mockPlannedHikes = [
-        { id: 'plan-1', title: 'Future Hike' }
-      ];
+      const mockPlannedHikes = [{ id: 'plan-1', title: 'Future Hike' }];
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true, data: mockPlannedHikes })
+        json: async () => ({ success: true, data: mockPlannedHikes }),
       });
 
       const result = await userApiService.getUserPlannedHikes(userId);
@@ -238,12 +242,12 @@ describe('userApiService', () => {
       const userId = 'user-123';
       const options = {
         limit: 5,
-        status: 'upcoming'
+        status: 'upcoming',
       };
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true, data: [] })
+        json: async () => ({ success: true, data: [] }),
       });
 
       await userApiService.getUserPlannedHikes(userId, options);
@@ -260,12 +264,12 @@ describe('userApiService', () => {
       const mockStats = {
         totalHikes: 25,
         totalDistance: 150,
-        totalElevation: 5000
+        totalElevation: 5000,
       };
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true, data: mockStats })
+        json: async () => ({ success: true, data: mockStats }),
       });
 
       const result = await userApiService.getUserStats(userId);
@@ -284,12 +288,12 @@ describe('userApiService', () => {
       const userId = 'user-123';
       const mockAchievements = [
         { id: 'badge-1', name: 'First Hike' },
-        { id: 'badge-2', name: '100km Club' }
+        { id: 'badge-2', name: '100km Club' },
       ];
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true, data: mockAchievements })
+        json: async () => ({ success: true, data: mockAchievements }),
       });
 
       const result = await userApiService.getUserAchievements(userId);
@@ -308,12 +312,12 @@ describe('userApiService', () => {
       const query = 'john';
       const mockResults = [
         { uid: 'user-1', displayName: 'John Doe' },
-        { uid: 'user-2', displayName: 'Johnny Smith' }
+        { uid: 'user-2', displayName: 'Johnny Smith' },
       ];
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true, data: mockResults })
+        json: async () => ({ success: true, data: mockResults }),
       });
 
       const result = await userApiService.searchUsers(query);
@@ -333,12 +337,12 @@ describe('userApiService', () => {
       const query = 'hiker';
       const filters = {
         location: 'Cape Town',
-        difficulty: 'advanced'
+        difficulty: 'advanced',
       };
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true, data: [] })
+        json: async () => ({ success: true, data: [] }),
       });
 
       await userApiService.searchUsers(query, filters);
@@ -353,7 +357,7 @@ describe('userApiService', () => {
     test('should work with empty query', async () => {
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true, data: [] })
+        json: async () => ({ success: true, data: [] }),
       });
 
       await userApiService.searchUsers('');
@@ -368,7 +372,7 @@ describe('userApiService', () => {
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true, message: 'User followed' })
+        json: async () => ({ success: true, message: 'User followed' }),
       });
 
       const result = await userApiService.followUser(userId);
@@ -378,8 +382,8 @@ describe('userApiService', () => {
         expect.objectContaining({
           method: 'POST',
           headers: expect.objectContaining({
-            'Authorization': 'Bearer mock-token'
-          })
+            Authorization: 'Bearer mock-token',
+          }),
         })
       );
 
@@ -393,7 +397,7 @@ describe('userApiService', () => {
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true, message: 'User unfollowed' })
+        json: async () => ({ success: true, message: 'User unfollowed' }),
       });
 
       const result = await userApiService.unfollowUser(userId);
@@ -403,8 +407,8 @@ describe('userApiService', () => {
         expect.objectContaining({
           method: 'DELETE',
           headers: expect.objectContaining({
-            'Authorization': 'Bearer mock-token'
-          })
+            Authorization: 'Bearer mock-token',
+          }),
         })
       );
 
@@ -416,26 +420,32 @@ describe('userApiService', () => {
     test('should handle network errors', async () => {
       global.fetch.mockRejectedValueOnce(new Error('Network error'));
 
-      await expect(userApiService.getUserProfile('user-123')).rejects.toThrow('Network error');
+      await expect(userApiService.getUserProfile('user-123')).rejects.toThrow(
+        'Network error'
+      );
     });
 
     test('should handle authentication errors', async () => {
       const { auth } = require('../config/firebase.js');
-      auth.currentUser.getIdToken.mockRejectedValueOnce(new Error('Auth failed'));
+      auth.currentUser.getIdToken.mockRejectedValueOnce(
+        new Error('Auth failed')
+      );
 
-      await expect(userApiService.getCurrentProfile()).rejects.toThrow('Auth failed');
+      await expect(userApiService.getCurrentProfile()).rejects.toThrow(
+        'Auth failed'
+      );
     });
 
     test('should handle HTTP errors', async () => {
       global.fetch.mockResolvedValueOnce({
         ok: false,
         status: 404,
-        json: async () => ({ message: 'User not found' })
+        json: async () => ({ message: 'User not found' }),
       });
 
-      await expect(userApiService.getUserProfile('invalid-id')).rejects.toThrow('User not found');
+      await expect(userApiService.getUserProfile('invalid-id')).rejects.toThrow(
+        'User not found'
+      );
     });
   });
 });
-
-

@@ -1,22 +1,22 @@
 // __tests__/HikePlanner.test.jsx
-import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
-import "@testing-library/jest-dom";
-import { MemoryRouter } from "react-router-dom";
-import HikePlanner from "../pages/HikePlanner";
+import React from 'react';
+import { render, screen, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom';
+import { MemoryRouter } from 'react-router-dom';
+import HikePlanner from '../pages/HikePlanner';
 
 // --- Mocks ---
-jest.mock("../contexts/AuthContext.jsx", () => ({
+jest.mock('../contexts/AuthContext.jsx', () => ({
   useAuth: () => ({
-    currentUser: { uid: "test-user", displayName: "Test Hiker" },
+    currentUser: { uid: 'test-user', displayName: 'Test Hiker' },
   }),
 }));
 
-jest.mock("../components/ui/navigation", () => ({
+jest.mock('../components/ui/navigation', () => ({
   Navigation: () => <nav data-testid="navigation">Navigation</nav>,
 }));
 
-jest.mock("../services/plannedHikesService.js", () => ({
+jest.mock('../services/plannedHikesService.js', () => ({
   plannedHikeApiService: {
     getPlannedHikes: jest.fn(),
     createPlannedHike: jest.fn(),
@@ -26,21 +26,23 @@ jest.mock("../services/plannedHikesService.js", () => ({
   },
 }));
 
-jest.mock("../services/gearService.js", () => ({
+jest.mock('../services/gearService.js', () => ({
   useGearChecklist: jest.fn(),
 }));
 
-jest.mock("../components/NewHikePlanForm", () => () => (
+jest.mock('../components/NewHikePlanForm', () => () => (
   <div data-testid="new-hike-form">Mock NewHikePlanForm</div>
 ));
 
-jest.mock("../components/RouteExplorer", () => () => (
+jest.mock('../components/RouteExplorer', () => () => (
   <div data-testid="route-explorer">Mock RouteExplorer</div>
 ));
 
-describe("HikePlanner Component", () => {
-  const { plannedHikeApiService } = require("../services/plannedHikesService.js");
-  const { useGearChecklist } = require("../services/gearService.js");
+describe('HikePlanner Component', () => {
+  const {
+    plannedHikeApiService,
+  } = require('../services/plannedHikesService.js');
+  const { useGearChecklist } = require('../services/gearService.js');
 
   const renderHikePlanner = () =>
     render(
@@ -53,7 +55,7 @@ describe("HikePlanner Component", () => {
     jest.clearAllMocks();
 
     useGearChecklist.mockReturnValue({
-      gearChecklist: [{ item: "Water Bottle", checked: false }],
+      gearChecklist: [{ item: 'Water Bottle', checked: false }],
       isLoading: false,
       error: null,
       loadGearChecklist: jest.fn(),
@@ -67,19 +69,21 @@ describe("HikePlanner Component", () => {
     });
   });
 
-  test("shows gear checklist items", async () => {
+  test('shows gear checklist items', async () => {
     plannedHikeApiService.getPlannedHikes.mockResolvedValueOnce([]);
     renderHikePlanner();
-    expect(await screen.findByText("Water Bottle")).toBeInTheDocument();
+    expect(await screen.findByText('Water Bottle')).toBeInTheDocument();
   });
 
-  test("opens new hike plan form when button is clicked", async () => {
+  test('opens new hike plan form when button is clicked', async () => {
     plannedHikeApiService.getPlannedHikes.mockResolvedValueOnce([]);
     renderHikePlanner();
 
-    const button = await screen.findByRole("button", { name: /Plan New Hike/i });
+    const button = await screen.findByRole('button', {
+      name: /Plan New Hike/i,
+    });
     fireEvent.click(button);
 
-    expect(await screen.findByTestId("new-hike-form")).toBeInTheDocument();
+    expect(await screen.findByTestId('new-hike-form')).toBeInTheDocument();
   });
 });

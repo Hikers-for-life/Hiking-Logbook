@@ -1,6 +1,7 @@
 import { auth } from '../config/firebase.js';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL =
+  process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
 // Helper function to get auth token
 const getAuthToken = async () => {
@@ -16,23 +17,25 @@ const getAuthToken = async () => {
 const makeAuthenticatedRequest = async (endpoint, options = {}) => {
   try {
     const token = await getAuthToken();
-    
+
     const config = {
       ...options,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
         ...options.headers,
       },
     };
 
     const fullUrl = `${API_BASE_URL}${endpoint}`;
-    
+
     const response = await fetch(fullUrl, config);
-    
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      throw new Error(
+        errorData.message || `HTTP error! status: ${response.status}`
+      );
     }
 
     const responseData = await response.json();
@@ -55,12 +58,14 @@ const makePublicRequest = async (endpoint, options = {}) => {
     };
 
     const fullUrl = `${API_BASE_URL}${endpoint}`;
-    
+
     const response = await fetch(fullUrl, config);
-    
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      throw new Error(
+        errorData.message || `HTTP error! status: ${response.status}`
+      );
     }
 
     const responseData = await response.json();
@@ -109,30 +114,32 @@ export const userApiService = {
   // Get user's hikes (public)
   async getUserHikes(userId, options = {}) {
     const queryParams = new URLSearchParams();
-    
+
     if (options.limit) queryParams.append('limit', options.limit);
     if (options.offset) queryParams.append('offset', options.offset);
     if (options.status) queryParams.append('status', options.status);
-    if (options.difficulty) queryParams.append('difficulty', options.difficulty);
+    if (options.difficulty)
+      queryParams.append('difficulty', options.difficulty);
 
     const queryString = queryParams.toString();
     const endpoint = `/users/${userId}/hikes${queryString ? `?${queryString}` : ''}`;
-    
+
     return makePublicRequest(endpoint);
   },
 
   // Get user's planned hikes (public)
   async getUserPlannedHikes(userId, options = {}) {
     const queryParams = new URLSearchParams();
-    
+
     if (options.limit) queryParams.append('limit', options.limit);
     if (options.offset) queryParams.append('offset', options.offset);
     if (options.status) queryParams.append('status', options.status);
-    if (options.difficulty) queryParams.append('difficulty', options.difficulty);
+    if (options.difficulty)
+      queryParams.append('difficulty', options.difficulty);
 
     const queryString = queryParams.toString();
     const endpoint = `/users/${userId}/planned-hikes${queryString ? `?${queryString}` : ''}`;
-    
+
     return makePublicRequest(endpoint);
   },
 
@@ -149,14 +156,15 @@ export const userApiService = {
   // Search users (public)
   async searchUsers(query = '', filters = {}) {
     const queryParams = new URLSearchParams();
-    
+
     if (query) queryParams.append('q', query);
     if (filters.location) queryParams.append('location', filters.location);
-    if (filters.difficulty) queryParams.append('difficulty', filters.difficulty);
+    if (filters.difficulty)
+      queryParams.append('difficulty', filters.difficulty);
 
     const queryString = queryParams.toString();
     const endpoint = `/users/search${queryString ? `?${queryString}` : ''}`;
-    
+
     return makePublicRequest(endpoint);
   },
 
@@ -180,11 +188,11 @@ export const locationService = {
   async getLocationCoordinates(location) {
     try {
       const apiKey = process.env.REACT_APP_OPENWEATHER_API_KEY;
-      
+
       // Debug logging
       console.log('API Key exists:', !!apiKey);
       console.log('Searching for location:', location);
-      
+
       if (!apiKey) {
         throw new Error('OpenWeather API key is not configured');
       }
@@ -193,45 +201,47 @@ export const locationService = {
       console.log('Geocoding URL:', url.replace(apiKey, 'API_KEY_HIDDEN'));
 
       const response = await fetch(url);
-      
+
       console.log('Response status:', response.status);
       console.log('Response ok:', response.ok);
 
       if (!response.ok) {
         const errorText = await response.text();
         console.error('API Error Response:', errorText);
-        throw new Error(`Geocoding API error: ${response.status} - ${errorText}`);
+        throw new Error(
+          `Geocoding API error: ${response.status} - ${errorText}`
+        );
       }
 
       const data = await response.json();
       console.log('Geocoding response data:', data);
-      
+
       if (!data || data.length === 0) {
         // Try alternative search terms for South African cities
         const alternativeSearches = [
           `${location}, ZA`,
           `${location}, South Africa`,
-          location.split(',')[0].trim() // Just the city name
+          location.split(',')[0].trim(), // Just the city name
         ];
-        
+
         for (const altLocation of alternativeSearches) {
           if (altLocation !== location) {
             console.log('Trying alternative search:', altLocation);
             try {
               const altUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(altLocation)}&limit=5&appid=${apiKey}`;
               const altResponse = await fetch(altUrl);
-              
+
               if (altResponse.ok) {
                 const altData = await altResponse.json();
                 console.log('Alternative search result:', altData);
-                
+
                 if (altData && altData.length > 0) {
                   return {
                     latitude: altData[0].lat,
                     longitude: altData[0].lon,
                     name: altData[0].name,
                     country: altData[0].country,
-                    state: altData[0].state
+                    state: altData[0].state,
                   };
                 }
               }
@@ -241,8 +251,10 @@ export const locationService = {
             }
           }
         }
-        
-        throw new Error(`Location "${location}" not found. Try formats like "Johannesburg, South Africa" or "Pretoria, ZA"`);
+
+        throw new Error(
+          `Location "${location}" not found. Try formats like "Johannesburg, South Africa" or "Pretoria, ZA"`
+        );
       }
 
       return {
@@ -250,13 +262,13 @@ export const locationService = {
         longitude: data[0].lon,
         name: data[0].name,
         country: data[0].country,
-        state: data[0].state
+        state: data[0].state,
       };
     } catch (error) {
       console.error('Error getting location coordinates:', error);
       throw new Error(`Unable to get coordinates: ${error.message}`);
     }
-  }
+  },
 };
 
 export default userApiService;

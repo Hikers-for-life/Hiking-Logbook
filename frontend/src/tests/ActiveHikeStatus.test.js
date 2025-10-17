@@ -14,7 +14,7 @@ describe('ActiveHikeStatus Component', () => {
     const { container } = render(
       <ActiveHikeStatus activeHike={null} onResume={mockOnResume} />
     );
-    
+
     expect(container.firstChild).toBeNull();
   });
 
@@ -25,11 +25,13 @@ describe('ActiveHikeStatus Component', () => {
       elapsedTime: 3600, // 1 hour
       distance: 2.5,
       isActive: true,
-      isPaused: false
+      isPaused: false,
     };
 
-    render(<ActiveHikeStatus activeHike={activeHike} onResume={mockOnResume} />);
-    
+    render(
+      <ActiveHikeStatus activeHike={activeHike} onResume={mockOnResume} />
+    );
+
     expect(screen.getByText('Hike in Progress')).toBeInTheDocument();
     expect(screen.getByText('Mountain Trail')).toBeInTheDocument();
     expect(screen.getByText('1h 0m')).toBeInTheDocument();
@@ -44,11 +46,13 @@ describe('ActiveHikeStatus Component', () => {
       elapsedTime: 1800, // 30 minutes
       distance: 1.2,
       isActive: false,
-      isPaused: true
+      isPaused: true,
     };
 
-    render(<ActiveHikeStatus activeHike={activeHike} onResume={mockOnResume} />);
-    
+    render(
+      <ActiveHikeStatus activeHike={activeHike} onResume={mockOnResume} />
+    );
+
     expect(screen.getByText('Hike in Progress')).toBeInTheDocument();
     expect(screen.getByText('Forest Walk')).toBeInTheDocument();
     expect(screen.getByText('30m')).toBeInTheDocument();
@@ -62,14 +66,16 @@ describe('ActiveHikeStatus Component', () => {
       elapsedTime: 600,
       distance: 0.5,
       isActive: true,
-      isPaused: false
+      isPaused: false,
     };
 
-    render(<ActiveHikeStatus activeHike={activeHike} onResume={mockOnResume} />);
-    
+    render(
+      <ActiveHikeStatus activeHike={activeHike} onResume={mockOnResume} />
+    );
+
     const resumeButton = screen.getByText('Continue');
     fireEvent.click(resumeButton);
-    
+
     expect(mockOnResume).toHaveBeenCalledTimes(1);
   });
 
@@ -81,13 +87,13 @@ describe('ActiveHikeStatus Component', () => {
       elapsedTime: 900, // 15 minutes
       distance: 0.3,
       isActive: true,
-      isPaused: false
+      isPaused: false,
     };
 
     const { rerender } = render(
       <ActiveHikeStatus activeHike={shortHike} onResume={mockOnResume} />
     );
-    
+
     expect(screen.getByText('15m')).toBeInTheDocument();
 
     // Test hours and minutes
@@ -97,11 +103,13 @@ describe('ActiveHikeStatus Component', () => {
       elapsedTime: 7320, // 2 hours 2 minutes
       distance: 5.5,
       isActive: true,
-      isPaused: false
+      isPaused: false,
     };
 
-    rerender(<ActiveHikeStatus activeHike={longHike} onResume={mockOnResume} />);
-    
+    rerender(
+      <ActiveHikeStatus activeHike={longHike} onResume={mockOnResume} />
+    );
+
     expect(screen.getByText('2h 2m')).toBeInTheDocument();
   });
 
@@ -112,11 +120,13 @@ describe('ActiveHikeStatus Component', () => {
       elapsedTime: 1200,
       distance: 1.0,
       isActive: true,
-      isPaused: false
+      isPaused: false,
     };
 
-    render(<ActiveHikeStatus activeHike={activeHike} onResume={mockOnResume} />);
-    
+    render(
+      <ActiveHikeStatus activeHike={activeHike} onResume={mockOnResume} />
+    );
+
     // Should show active indicator (green dot)
     const statusIndicator = screen.getByText('Hike in Progress').closest('div');
     expect(statusIndicator).toBeInTheDocument();
@@ -129,11 +139,11 @@ describe('ActiveHikeStatus Component', () => {
       elapsedTime: 0,
       distance: 0,
       isActive: true,
-      isPaused: false
+      isPaused: false,
     };
 
     render(<ActiveHikeStatus activeHike={newHike} onResume={mockOnResume} />);
-    
+
     expect(screen.getByText('0m')).toBeInTheDocument();
     expect(screen.getByText('0.0 km')).toBeInTheDocument();
   });
@@ -144,11 +154,13 @@ describe('ActiveHikeStatus Component', () => {
       elapsedTime: 600,
       distance: 0.5,
       isActive: true,
-      isPaused: false
+      isPaused: false,
     };
 
-    render(<ActiveHikeStatus activeHike={hikeWithoutTitle} onResume={mockOnResume} />);
-    
+    render(
+      <ActiveHikeStatus activeHike={hikeWithoutTitle} onResume={mockOnResume} />
+    );
+
     // Should still render without crashing - check for time display instead
     expect(screen.getByText('10m')).toBeInTheDocument();
   });

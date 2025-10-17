@@ -34,5 +34,5 @@ function errorHandler(err, req, res, next) {
 
 module.exports = {
   notFoundHandler,
-  errorHandler
+  errorHandler,
 };

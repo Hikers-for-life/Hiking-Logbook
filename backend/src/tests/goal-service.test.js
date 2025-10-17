@@ -4,20 +4,24 @@
 // Copy the validation functions for testing (since they're not exported)
 const ALLOWED_CATEGORIES = new Set([
   'distance',
-  'time', 
+  'time',
   'elevation',
   'hikes',
   'streak',
-  'custom'
+  'custom',
 ]);
 
 function validatePayload(payload, requireAll = true) {
   if (!payload || typeof payload !== 'object') {
     return requireAll ? 'payload is required' : null;
   }
-  
+
   if (requireAll) {
-    if (!payload.title || typeof payload.title !== 'string' || !payload.title.trim()) {
+    if (
+      !payload.title ||
+      typeof payload.title !== 'string' ||
+      !payload.title.trim()
+    ) {
       return 'title is required';
     }
     if (!payload.category || !ALLOWED_CATEGORIES.has(payload.category)) {
@@ -40,7 +44,12 @@ function validatePayload(payload, requireAll = true) {
     if (payload.category && !ALLOWED_CATEGORIES.has(payload.category)) {
       return `category must be one of: ${[...ALLOWED_CATEGORIES].join(', ')}`;
     }
-    if (payload.targetValue !== undefined && (typeof payload.targetValue !== 'number' || Number.isNaN(payload.targetValue) || payload.targetValue < 0)) {
+    if (
+      payload.targetValue !== undefined &&
+      (typeof payload.targetValue !== 'number' ||
+        Number.isNaN(payload.targetValue) ||
+        payload.targetValue < 0)
+    ) {
       return 'targetValue must be a non-negative number';
     }
   }
@@ -55,17 +64,20 @@ function normalizePayload(payload) {
       category: '',
       targetValue: 0,
       unit: '',
-      targetDate: null
+      targetDate: null,
     };
   }
-  
+
   return {
     title: payload.title?.trim(),
     description: payload.description || '',
     category: payload.category,
-    targetValue: typeof payload.targetValue === 'number' ? payload.targetValue : Number(payload.targetValue),
+    targetValue:
+      typeof payload.targetValue === 'number'
+        ? payload.targetValue
+        : Number(payload.targetValue),
     unit: payload.unit || '',
-    targetDate: payload.targetDate ? new Date(payload.targetDate) : null
+    targetDate: payload.targetDate ? new Date(payload.targetDate) : null,
   };
 }
 
@@ -78,7 +90,7 @@ describe('Goal Service Tests', () => {
       expect(ALLOWED_CATEGORIES.has('hikes')).toBe(true);
       expect(ALLOWED_CATEGORIES.has('streak')).toBe(true);
       expect(ALLOWED_CATEGORIES.has('custom')).toBe(true);
-      
+
       // Should not contain invalid categories
       expect(ALLOWED_CATEGORIES.has('invalid')).toBe(false);
       expect(ALLOWED_CATEGORIES.has('')).toBe(false);
@@ -96,9 +108,9 @@ describe('Goal Service Tests', () => {
         category: 'distance',
         targetValue: 100,
         unit: 'km',
-        description: 'Walk a total of 100 kilometers'
+        description: 'Walk a total of 100 kilometers',
       };
-      
+
       expect(validatePayload(validPayload, true)).toBeNull();
     });
 
@@ -106,9 +118,9 @@ describe('Goal Service Tests', () => {
       const payload = {
         category: 'distance',
         targetValue: 100,
-        unit: 'km'
+        unit: 'km',
       };
-      
+
       expect(validatePayload(payload, true)).toBe('title is required');
     });
 
@@ -117,9 +129,9 @@ describe('Goal Service Tests', () => {
         title: '',
         category: 'distance',
         targetValue: 100,
-        unit: 'km'
+        unit: 'km',
       };
-      
+
       expect(validatePayload(payload, true)).toBe('title is required');
     });
 
@@ -128,9 +140,9 @@ describe('Goal Service Tests', () => {
         title: '   ',
         category: 'distance',
         targetValue: 100,
-        unit: 'km'
+        unit: 'km',
       };
-      
+
       expect(validatePayload(payload, true)).toBe('title is required');
     });
 
@@ -139,9 +151,9 @@ describe('Goal Service Tests', () => {
         title: 123,
         category: 'distance',
         targetValue: 100,
-        unit: 'km'
+        unit: 'km',
       };
-      
+
       expect(validatePayload(payload, true)).toBe('title is required');
     });
 
@@ -149,10 +161,12 @@ describe('Goal Service Tests', () => {
       const payload = {
         title: 'Walk 100km',
         targetValue: 100,
-        unit: 'km'
+        unit: 'km',
       };
-      
-      expect(validatePayload(payload, true)).toContain('category must be one of:');
+
+      expect(validatePayload(payload, true)).toContain(
+        'category must be one of:'
+      );
     });
 
     test('should reject payload with invalid category', () => {
@@ -160,20 +174,24 @@ describe('Goal Service Tests', () => {
         title: 'Walk 100km',
         category: 'invalid',
         targetValue: 100,
-        unit: 'km'
+        unit: 'km',
       };
-      
-      expect(validatePayload(payload, true)).toContain('category must be one of:');
+
+      expect(validatePayload(payload, true)).toContain(
+        'category must be one of:'
+      );
     });
 
     test('should reject payload with missing targetValue', () => {
       const payload = {
         title: 'Walk 100km',
         category: 'distance',
-        unit: 'km'
+        unit: 'km',
       };
-      
-      expect(validatePayload(payload, true)).toBe('targetValue must be a non-negative number');
+
+      expect(validatePayload(payload, true)).toBe(
+        'targetValue must be a non-negative number'
+      );
     });
 
     test('should reject payload with null targetValue', () => {
@@ -181,10 +199,12 @@ describe('Goal Service Tests', () => {
         title: 'Walk 100km',
         category: 'distance',
         targetValue: null,
-        unit: 'km'
+        unit: 'km',
       };
-      
-      expect(validatePayload(payload, true)).toBe('targetValue must be a non-negative number');
+
+      expect(validatePayload(payload, true)).toBe(
+        'targetValue must be a non-negative number'
+      );
     });
 
     test('should reject payload with negative targetValue', () => {
@@ -192,10 +212,12 @@ describe('Goal Service Tests', () => {
         title: 'Walk 100km',
         category: 'distance',
         targetValue: -10,
-        unit: 'km'
+        unit: 'km',
       };
-      
-      expect(validatePayload(payload, true)).toBe('targetValue must be a non-negative number');
+
+      expect(validatePayload(payload, true)).toBe(
+        'targetValue must be a non-negative number'
+      );
     });
 
     test('should reject payload with NaN targetValue', () => {
@@ -203,10 +225,12 @@ describe('Goal Service Tests', () => {
         title: 'Walk 100km',
         category: 'distance',
         targetValue: NaN,
-        unit: 'km'
+        unit: 'km',
       };
-      
-      expect(validatePayload(payload, true)).toBe('targetValue must be a non-negative number');
+
+      expect(validatePayload(payload, true)).toBe(
+        'targetValue must be a non-negative number'
+      );
     });
 
     test('should reject payload with non-number targetValue', () => {
@@ -214,19 +238,21 @@ describe('Goal Service Tests', () => {
         title: 'Walk 100km',
         category: 'distance',
         targetValue: '100',
-        unit: 'km'
+        unit: 'km',
       };
-      
-      expect(validatePayload(payload, true)).toBe('targetValue must be a non-negative number');
+
+      expect(validatePayload(payload, true)).toBe(
+        'targetValue must be a non-negative number'
+      );
     });
 
     test('should reject payload with missing unit', () => {
       const payload = {
         title: 'Walk 100km',
         category: 'distance',
-        targetValue: 100
+        targetValue: 100,
       };
-      
+
       expect(validatePayload(payload, true)).toBe('unit is required');
     });
 
@@ -235,9 +261,9 @@ describe('Goal Service Tests', () => {
         title: 'Walk 100km',
         category: 'distance',
         targetValue: 100,
-        unit: 123
+        unit: 123,
       };
-      
+
       expect(validatePayload(payload, true)).toBe('unit is required');
     });
 
@@ -246,9 +272,9 @@ describe('Goal Service Tests', () => {
         title: 'Start hiking',
         category: 'distance',
         targetValue: 0,
-        unit: 'km'
+        unit: 'km',
       };
-      
+
       expect(validatePayload(payload, true)).toBeNull();
     });
   });
@@ -260,21 +286,27 @@ describe('Goal Service Tests', () => {
 
     test('should validate category when provided', () => {
       expect(validatePayload({ category: 'distance' }, false)).toBeNull();
-      expect(validatePayload({ category: 'invalid' }, false)).toContain('category must be one of:');
+      expect(validatePayload({ category: 'invalid' }, false)).toContain(
+        'category must be one of:'
+      );
     });
 
     test('should validate targetValue when provided', () => {
       expect(validatePayload({ targetValue: 100 }, false)).toBeNull();
       expect(validatePayload({ targetValue: 0 }, false)).toBeNull();
-      expect(validatePayload({ targetValue: -10 }, false)).toBe('targetValue must be a non-negative number');
-      expect(validatePayload({ targetValue: NaN }, false)).toBe('targetValue must be a non-negative number');
+      expect(validatePayload({ targetValue: -10 }, false)).toBe(
+        'targetValue must be a non-negative number'
+      );
+      expect(validatePayload({ targetValue: NaN }, false)).toBe(
+        'targetValue must be a non-negative number'
+      );
     });
 
     test('should allow missing fields in partial validation', () => {
       const partialPayload = {
-        description: 'Updated description'
+        description: 'Updated description',
       };
-      
+
       expect(validatePayload(partialPayload, false)).toBeNull();
     });
   });
@@ -287,11 +319,11 @@ describe('Goal Service Tests', () => {
         category: 'distance',
         targetValue: 100,
         unit: 'km',
-        targetDate: '2024-12-31'
+        targetDate: '2024-12-31',
       };
-      
+
       const normalized = normalizePayload(payload);
-      
+
       expect(normalized.title).toBe('Walk 100km'); // trimmed
       expect(normalized.description).toBe('Walk a total of 100 kilometers');
       expect(normalized.category).toBe('distance');
@@ -304,11 +336,11 @@ describe('Goal Service Tests', () => {
       const payload = {
         title: 'Walk 100km',
         category: 'distance',
-        targetValue: 100
+        targetValue: 100,
       };
-      
+
       const normalized = normalizePayload(payload);
-      
+
       expect(normalized.title).toBe('Walk 100km');
       expect(normalized.description).toBe('');
       expect(normalized.unit).toBe('');
@@ -319,9 +351,9 @@ describe('Goal Service Tests', () => {
       const payload = {
         title: 'Walk 100km',
         category: 'distance',
-        targetValue: '100'
+        targetValue: '100',
       };
-      
+
       const normalized = normalizePayload(payload);
       expect(normalized.targetValue).toBe(100);
       expect(typeof normalized.targetValue).toBe('number');
@@ -332,9 +364,9 @@ describe('Goal Service Tests', () => {
         title: 'Walk 100km',
         category: 'distance',
         targetValue: 100,
-        targetDate: null
+        targetDate: null,
       };
-      
+
       const normalized = normalizePayload(payload);
       expect(normalized.targetDate).toBeNull();
     });
@@ -343,9 +375,9 @@ describe('Goal Service Tests', () => {
       const payload = {
         title: 'Walk 100km',
         category: 'distance',
-        targetValue: 100
+        targetValue: 100,
       };
-      
+
       const normalized = normalizePayload(payload);
       expect(normalized.targetDate).toBeNull();
     });
@@ -355,9 +387,9 @@ describe('Goal Service Tests', () => {
         title: 'Walk 100km',
         category: 'distance',
         targetValue: 100,
-        targetDate: ''
+        targetDate: '',
       };
-      
+
       const normalized = normalizePayload(payload);
       expect(normalized.targetDate).toBeNull();
     });
@@ -377,16 +409,23 @@ describe('Goal Service Tests', () => {
     });
 
     test('should validate all category options', () => {
-      const categories = ['distance', 'time', 'elevation', 'hikes', 'streak', 'custom'];
-      
-      categories.forEach(category => {
+      const categories = [
+        'distance',
+        'time',
+        'elevation',
+        'hikes',
+        'streak',
+        'custom',
+      ];
+
+      categories.forEach((category) => {
         const payload = {
           title: `Test ${category}`,
           category,
           targetValue: 10,
-          unit: 'units'
+          unit: 'units',
         };
-        
+
         expect(validatePayload(payload, true)).toBeNull();
       });
     });

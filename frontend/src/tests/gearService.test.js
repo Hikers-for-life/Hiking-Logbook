@@ -1,15 +1,19 @@
 // services/__tests__/gearService.test.js
 import { renderHook, act, waitFor } from '@testing-library/react';
-import { gearApiService, useGearChecklist, gearUtils } from '../services/gearService';
+import {
+  gearApiService,
+  useGearChecklist,
+  gearUtils,
+} from '../services/gearService';
 import { auth } from '../config/firebase';
 
 // Mock Firebase auth
 jest.mock('../config/firebase', () => ({
   auth: {
     currentUser: {
-      getIdToken: jest.fn()
-    }
-  }
+      getIdToken: jest.fn(),
+    },
+  },
 }));
 
 // Mock fetch globally
@@ -18,7 +22,7 @@ global.fetch = jest.fn();
 describe('gearService', () => {
   const mockToken = 'mock-jwt-token';
   const mockUser = {
-    getIdToken: jest.fn().mockResolvedValue(mockToken)
+    getIdToken: jest.fn().mockResolvedValue(mockToken),
   };
 
   beforeEach(() => {
@@ -36,16 +40,16 @@ describe('gearService', () => {
       it('should fetch gear checklist successfully', async () => {
         const mockChecklist = [
           { item: 'Hiking Boots', checked: false },
-          { item: 'Water Bottle', checked: true }
+          { item: 'Water Bottle', checked: true },
         ];
 
         auth.currentUser = {
-          getIdToken: jest.fn().mockResolvedValue(mockToken)
+          getIdToken: jest.fn().mockResolvedValue(mockToken),
         };
 
         global.fetch.mockResolvedValueOnce({
           ok: true,
-          json: jest.fn().mockResolvedValue({ data: mockChecklist })
+          json: jest.fn().mockResolvedValue({ data: mockChecklist }),
         });
 
         const result = await gearApiService.getGearChecklist();
@@ -54,9 +58,9 @@ describe('gearService', () => {
           'http://localhost:3001/api/gear/checklist',
           expect.objectContaining({
             headers: expect.objectContaining({
-              'Authorization': `Bearer ${mockToken}`,
-              'Content-Type': 'application/json'
-            })
+              Authorization: `Bearer ${mockToken}`,
+              'Content-Type': 'application/json',
+            }),
           })
         );
         expect(result).toEqual(mockChecklist);
@@ -66,12 +70,12 @@ describe('gearService', () => {
         const mockChecklist = [{ item: 'Test', checked: false }];
 
         auth.currentUser = {
-          getIdToken: jest.fn().mockResolvedValue(mockToken)
+          getIdToken: jest.fn().mockResolvedValue(mockToken),
         };
 
         global.fetch.mockResolvedValueOnce({
           ok: true,
-          json: jest.fn().mockResolvedValue(mockChecklist)
+          json: jest.fn().mockResolvedValue(mockChecklist),
         });
 
         const result = await gearApiService.getGearChecklist();
@@ -81,21 +85,25 @@ describe('gearService', () => {
       it('should throw error when user is not authenticated', async () => {
         auth.currentUser = null;
 
-        await expect(gearApiService.getGearChecklist()).rejects.toThrow('No authenticated user');
+        await expect(gearApiService.getGearChecklist()).rejects.toThrow(
+          'No authenticated user'
+        );
       });
 
       it('should handle API errors', async () => {
         auth.currentUser = {
-          getIdToken: jest.fn().mockResolvedValue(mockToken)
+          getIdToken: jest.fn().mockResolvedValue(mockToken),
         };
 
         global.fetch.mockResolvedValueOnce({
           ok: false,
           status: 500,
-          json: jest.fn().mockResolvedValue({ error: 'Server error' })
+          json: jest.fn().mockResolvedValue({ error: 'Server error' }),
         });
 
-        await expect(gearApiService.getGearChecklist()).rejects.toThrow('Server error');
+        await expect(gearApiService.getGearChecklist()).rejects.toThrow(
+          'Server error'
+        );
       });
     });
 
@@ -105,18 +113,18 @@ describe('gearService', () => {
           data: {
             checklist: [
               { item: 'Existing Item', checked: false },
-              { item: 'New Item', checked: false }
-            ]
-          }
+              { item: 'New Item', checked: false },
+            ],
+          },
         };
 
         auth.currentUser = {
-          getIdToken: jest.fn().mockResolvedValue(mockToken)
+          getIdToken: jest.fn().mockResolvedValue(mockToken),
         };
 
         global.fetch.mockResolvedValueOnce({
           ok: true,
-          json: jest.fn().mockResolvedValue(mockResponse)
+          json: jest.fn().mockResolvedValue(mockResponse),
         });
 
         const result = await gearApiService.addGearItem('New Item');
@@ -127,8 +135,8 @@ describe('gearService', () => {
             method: 'POST',
             body: JSON.stringify({ itemName: 'New Item' }),
             headers: expect.objectContaining({
-              'Authorization': `Bearer ${mockToken}`
-            })
+              Authorization: `Bearer ${mockToken}`,
+            }),
           })
         );
         expect(result).toEqual(mockResponse.data);
@@ -139,17 +147,17 @@ describe('gearService', () => {
       it('should remove a gear item by index', async () => {
         const mockResponse = {
           data: {
-            checklist: [{ item: 'Remaining Item', checked: false }]
-          }
+            checklist: [{ item: 'Remaining Item', checked: false }],
+          },
         };
 
         auth.currentUser = {
-          getIdToken: jest.fn().mockResolvedValue(mockToken)
+          getIdToken: jest.fn().mockResolvedValue(mockToken),
         };
 
         global.fetch.mockResolvedValueOnce({
           ok: true,
-          json: jest.fn().mockResolvedValue(mockResponse)
+          json: jest.fn().mockResolvedValue(mockResponse),
         });
 
         const result = await gearApiService.removeGearItem(1);
@@ -157,7 +165,7 @@ describe('gearService', () => {
         expect(global.fetch).toHaveBeenCalledWith(
           'http://localhost:3001/api/gear/checklist/items/1',
           expect.objectContaining({
-            method: 'DELETE'
+            method: 'DELETE',
           })
         );
         expect(result).toEqual(mockResponse.data);
@@ -170,18 +178,18 @@ describe('gearService', () => {
           data: {
             checklist: [
               { item: 'Item 1', checked: false },
-              { item: 'Item 2', checked: true }
-            ]
-          }
+              { item: 'Item 2', checked: true },
+            ],
+          },
         };
 
         auth.currentUser = {
-          getIdToken: jest.fn().mockResolvedValue(mockToken)
+          getIdToken: jest.fn().mockResolvedValue(mockToken),
         };
 
         global.fetch.mockResolvedValueOnce({
           ok: true,
-          json: jest.fn().mockResolvedValue(mockResponse)
+          json: jest.fn().mockResolvedValue(mockResponse),
         });
 
         const result = await gearApiService.toggleGearItem(1);
@@ -189,7 +197,7 @@ describe('gearService', () => {
         expect(global.fetch).toHaveBeenCalledWith(
           'http://localhost:3001/api/gear/checklist/items/1/toggle',
           expect.objectContaining({
-            method: 'POST'
+            method: 'POST',
           })
         );
         expect(result).toEqual(mockResponse.data);
@@ -202,18 +210,18 @@ describe('gearService', () => {
           data: {
             checklist: [
               { item: 'Item 1', checked: false },
-              { item: 'Item 2', checked: false }
-            ]
-          }
+              { item: 'Item 2', checked: false },
+            ],
+          },
         };
 
         auth.currentUser = {
-          getIdToken: jest.fn().mockResolvedValue(mockToken)
+          getIdToken: jest.fn().mockResolvedValue(mockToken),
         };
 
         global.fetch.mockResolvedValueOnce({
           ok: true,
-          json: jest.fn().mockResolvedValue(mockResponse)
+          json: jest.fn().mockResolvedValue(mockResponse),
         });
 
         const result = await gearApiService.resetGearChecklist();
@@ -221,7 +229,7 @@ describe('gearService', () => {
         expect(global.fetch).toHaveBeenCalledWith(
           'http://localhost:3001/api/gear/checklist/reset',
           expect.objectContaining({
-            method: 'POST'
+            method: 'POST',
           })
         );
         expect(result).toEqual(mockResponse.data);
@@ -232,17 +240,17 @@ describe('gearService', () => {
       it('should update entire gear checklist', async () => {
         const newChecklist = [
           { item: 'Updated Item 1', checked: true },
-          { item: 'Updated Item 2', checked: false }
+          { item: 'Updated Item 2', checked: false },
         ];
         const mockResponse = { data: { checklist: newChecklist } };
 
         auth.currentUser = {
-          getIdToken: jest.fn().mockResolvedValue(mockToken)
+          getIdToken: jest.fn().mockResolvedValue(mockToken),
         };
 
         global.fetch.mockResolvedValueOnce({
           ok: true,
-          json: jest.fn().mockResolvedValue(mockResponse)
+          json: jest.fn().mockResolvedValue(mockResponse),
         });
 
         const result = await gearApiService.updateGearChecklist(newChecklist);
@@ -251,7 +259,7 @@ describe('gearService', () => {
           'http://localhost:3001/api/gear/checklist',
           expect.objectContaining({
             method: 'PUT',
-            body: JSON.stringify({ gearItems: newChecklist })
+            body: JSON.stringify({ gearItems: newChecklist }),
           })
         );
         expect(result).toEqual(mockResponse.data);
@@ -263,17 +271,17 @@ describe('gearService', () => {
         const mockStats = {
           totalItems: 10,
           checkedItems: 7,
-          completionRate: 70
+          completionRate: 70,
         };
 
         // Ensure auth.currentUser is properly set with getIdToken
         auth.currentUser = {
-          getIdToken: jest.fn().mockResolvedValue(mockToken)
+          getIdToken: jest.fn().mockResolvedValue(mockToken),
         };
 
         global.fetch.mockResolvedValueOnce({
           ok: true,
-          json: jest.fn().mockResolvedValue({ data: mockStats })
+          json: jest.fn().mockResolvedValue({ data: mockStats }),
         });
 
         const result = await gearApiService.getGearStats();
@@ -283,9 +291,9 @@ describe('gearService', () => {
           'http://localhost:3001/api/gear/checklist/stats',
           expect.objectContaining({
             headers: expect.objectContaining({
-              'Authorization': `Bearer ${mockToken}`,
-              'Content-Type': 'application/json'
-            })
+              Authorization: `Bearer ${mockToken}`,
+              'Content-Type': 'application/json',
+            }),
           })
         );
         expect(result).toEqual(mockStats);
@@ -305,12 +313,12 @@ describe('gearService', () => {
     it('should load gear checklist successfully', async () => {
       const mockChecklist = [
         { item: 'Hiking Boots', checked: false },
-        { item: 'Water Bottle', checked: true }
+        { item: 'Water Bottle', checked: true },
       ];
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: jest.fn().mockResolvedValue(mockChecklist)
+        json: jest.fn().mockResolvedValue(mockChecklist),
       });
 
       const { result } = renderHook(() => useGearChecklist());
@@ -341,17 +349,17 @@ describe('gearService', () => {
       const initialChecklist = [{ item: 'Existing Item', checked: false }];
       const updatedChecklist = [
         { item: 'Existing Item', checked: false },
-        { item: 'New Item', checked: false }
+        { item: 'New Item', checked: false },
       ];
 
       global.fetch
         .mockResolvedValueOnce({
           ok: true,
-          json: jest.fn().mockResolvedValue(initialChecklist)
+          json: jest.fn().mockResolvedValue(initialChecklist),
         })
         .mockResolvedValueOnce({
           ok: true,
-          json: jest.fn().mockResolvedValue({ checklist: updatedChecklist })
+          json: jest.fn().mockResolvedValue({ checklist: updatedChecklist }),
         });
 
       const { result } = renderHook(() => useGearChecklist());
@@ -372,7 +380,7 @@ describe('gearService', () => {
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: jest.fn().mockResolvedValue(mockChecklist)
+        json: jest.fn().mockResolvedValue(mockChecklist),
       });
 
       const { result } = renderHook(() => useGearChecklist());
@@ -394,7 +402,7 @@ describe('gearService', () => {
       global.fetch
         .mockResolvedValueOnce({
           ok: true,
-          json: jest.fn().mockResolvedValue(initialChecklist)
+          json: jest.fn().mockResolvedValue(initialChecklist),
         })
         .mockRejectedValueOnce(new Error('API Error'));
 
@@ -416,18 +424,18 @@ describe('gearService', () => {
     it('should remove gear item with optimistic update', async () => {
       const initialChecklist = [
         { item: 'Item 1', checked: false },
-        { item: 'Item 2', checked: true }
+        { item: 'Item 2', checked: true },
       ];
       const updatedChecklist = [{ item: 'Item 1', checked: false }];
 
       global.fetch
         .mockResolvedValueOnce({
           ok: true,
-          json: jest.fn().mockResolvedValue(initialChecklist)
+          json: jest.fn().mockResolvedValue(initialChecklist),
         })
         .mockResolvedValueOnce({
           ok: true,
-          json: jest.fn().mockResolvedValue({ checklist: updatedChecklist })
+          json: jest.fn().mockResolvedValue({ checklist: updatedChecklist }),
         });
 
       const { result } = renderHook(() => useGearChecklist());
@@ -446,21 +454,21 @@ describe('gearService', () => {
     it('should toggle gear item with optimistic update', async () => {
       const initialChecklist = [
         { item: 'Item 1', checked: false },
-        { item: 'Item 2', checked: false }
+        { item: 'Item 2', checked: false },
       ];
       const updatedChecklist = [
         { item: 'Item 1', checked: true },
-        { item: 'Item 2', checked: false }
+        { item: 'Item 2', checked: false },
       ];
 
       global.fetch
         .mockResolvedValueOnce({
           ok: true,
-          json: jest.fn().mockResolvedValue(initialChecklist)
+          json: jest.fn().mockResolvedValue(initialChecklist),
         })
         .mockResolvedValueOnce({
           ok: true,
-          json: jest.fn().mockResolvedValue({ checklist: updatedChecklist })
+          json: jest.fn().mockResolvedValue({ checklist: updatedChecklist }),
         });
 
       const { result } = renderHook(() => useGearChecklist());
@@ -479,21 +487,21 @@ describe('gearService', () => {
     it('should reset gear checklist', async () => {
       const initialChecklist = [
         { item: 'Item 1', checked: true },
-        { item: 'Item 2', checked: true }
+        { item: 'Item 2', checked: true },
       ];
       const resetChecklist = [
         { item: 'Item 1', checked: false },
-        { item: 'Item 2', checked: false }
+        { item: 'Item 2', checked: false },
       ];
 
       global.fetch
         .mockResolvedValueOnce({
           ok: true,
-          json: jest.fn().mockResolvedValue(initialChecklist)
+          json: jest.fn().mockResolvedValue(initialChecklist),
         })
         .mockResolvedValueOnce({
           ok: true,
-          json: jest.fn().mockResolvedValue({ checklist: resetChecklist })
+          json: jest.fn().mockResolvedValue({ checklist: resetChecklist }),
         });
 
       const { result } = renderHook(() => useGearChecklist());
@@ -506,7 +514,9 @@ describe('gearService', () => {
         await result.current.resetGearChecklist();
       });
 
-      expect(result.current.gearChecklist.every(item => !item.checked)).toBe(true);
+      expect(result.current.gearChecklist.every((item) => !item.checked)).toBe(
+        true
+      );
     });
 
     it('should calculate computed values correctly', async () => {
@@ -514,12 +524,12 @@ describe('gearService', () => {
         { item: 'Item 1', checked: true },
         { item: 'Item 2', checked: true },
         { item: 'Item 3', checked: false },
-        { item: 'Item 4', checked: false }
+        { item: 'Item 4', checked: false },
       ];
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: jest.fn().mockResolvedValue(mockChecklist)
+        json: jest.fn().mockResolvedValue(mockChecklist),
       });
 
       const { result } = renderHook(() => useGearChecklist());
@@ -537,7 +547,7 @@ describe('gearService', () => {
     it('should handle empty checklist for computed values', async () => {
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: jest.fn().mockResolvedValue([])
+        json: jest.fn().mockResolvedValue([]),
       });
 
       const { result } = renderHook(() => useGearChecklist());
@@ -564,13 +574,13 @@ describe('gearService', () => {
       global.fetch
         .mockResolvedValueOnce({
           ok: true,
-          json: jest.fn().mockResolvedValue([])
+          json: jest.fn().mockResolvedValue([]),
         })
         .mockResolvedValueOnce({
           ok: true,
           json: jest.fn().mockResolvedValue({
-            checklist: [{ item: 'Trimmed Item', checked: false }]
-          })
+            checklist: [{ item: 'Trimmed Item', checked: false }],
+          }),
         });
 
       const { result } = renderHook(() => useGearChecklist());
@@ -586,7 +596,7 @@ describe('gearService', () => {
       expect(global.fetch).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({
-          body: JSON.stringify({ itemName: 'Trimmed Item' })
+          body: JSON.stringify({ itemName: 'Trimmed Item' }),
         })
       );
     });
@@ -653,7 +663,10 @@ describe('gearService', () => {
       it('should return winter gear', () => {
         const items = gearUtils.getDefaultGearItems('winter');
         expect(items).toContainEqual({ item: 'Winter Boots', checked: false });
-        expect(items).toContainEqual({ item: 'Hand/Foot Warmers', checked: false });
+        expect(items).toContainEqual({
+          item: 'Hand/Foot Warmers',
+          checked: false,
+        });
       });
 
       it('should return day hike gear for unknown types', () => {
@@ -666,7 +679,7 @@ describe('gearService', () => {
       const unsortedItems = [
         { item: 'Zebra', checked: false },
         { item: 'Apple', checked: true },
-        { item: 'Banana', checked: false }
+        { item: 'Banana', checked: false },
       ];
 
       it('should sort alphabetically', () => {
@@ -683,7 +696,10 @@ describe('gearService', () => {
       });
 
       it('should sort with unchecked items first', () => {
-        const sorted = gearUtils.sortGearItems(unsortedItems, 'unchecked-first');
+        const sorted = gearUtils.sortGearItems(
+          unsortedItems,
+          'unchecked-first'
+        );
         expect(sorted[0].checked).toBe(false);
         expect(sorted[sorted.length - 1].checked).toBe(true);
       });
@@ -705,7 +721,7 @@ describe('gearService', () => {
         const items = [
           { item: 'Hiking Boots', checked: true },
           { item: 'Water Bottle', checked: false },
-          { item: 'First Aid Kit', checked: true }
+          { item: 'First Aid Kit', checked: true },
         ];
 
         const text = gearUtils.exportAsText(items);
@@ -721,7 +737,7 @@ describe('gearService', () => {
       it('should handle all items checked', () => {
         const items = [
           { item: 'Item 1', checked: true },
-          { item: 'Item 2', checked: true }
+          { item: 'Item 2', checked: true },
         ];
 
         const text = gearUtils.exportAsText(items);
@@ -733,7 +749,7 @@ describe('gearService', () => {
       it('should handle all items unchecked', () => {
         const items = [
           { item: 'Item 1', checked: false },
-          { item: 'Item 2', checked: false }
+          { item: 'Item 2', checked: false },
         ];
 
         const text = gearUtils.exportAsText(items);

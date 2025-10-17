@@ -17,7 +17,6 @@ import { ProfileDropdown } from './profile-dropdown.jsx';
 import { ProfileView } from './profile-view.jsx';
 import { chatService } from '../../services/chatService';
 
-
 export const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -26,6 +25,7 @@ export const Navigation = () => {
   const { currentUser, logout } = useAuth();
 
   const navigate = useNavigate();
+
 
   // Fetch unread message count
   useEffect(() => {
@@ -48,11 +48,8 @@ export const Navigation = () => {
     return () => clearInterval(interval);
   }, [currentUser]);
 
-
   // Define navigation items based on authentication state
-  const publicNavItems = [
-    { name: 'Home', icon: MapPin, href: '/' },
-  ];
+  const publicNavItems = [{ name: 'Home', icon: MapPin, href: '/' }];
 
   const authenticatedNavItems = [
     { name: 'Logbook', icon: Book, href: '/logbook' },
@@ -79,12 +76,11 @@ export const Navigation = () => {
   };
 
   const handleEditProfile = () => {
-    navigate("/edit-profile");
+    navigate('/edit-profile');
   };
 
   const handleSignup = () => {
     navigate('/?auth=login');
-
   };
 
   return (

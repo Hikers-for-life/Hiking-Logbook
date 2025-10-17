@@ -6,16 +6,16 @@ import { auth } from '../config/firebase';
 jest.mock('../config/firebase', () => ({
   auth: {
     currentUser: {
-      getIdToken: jest.fn()
-    }
-  }
+      getIdToken: jest.fn(),
+    },
+  },
 }));
 
 // Mock plannedHikesService for startHikeFromPlanned test
 jest.mock('../services/plannedHikesService', () => ({
   plannedHikeApiService: {
-    startPlannedHike: jest.fn()
-  }
+    startPlannedHike: jest.fn(),
+  },
 }));
 
 // Mock fetch globally
@@ -28,7 +28,7 @@ describe('hikeService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     auth.currentUser = {
-      getIdToken: jest.fn().mockResolvedValue(mockToken)
+      getIdToken: jest.fn().mockResolvedValue(mockToken),
     };
     process.env.REACT_APP_API_URL = 'http://localhost:3001/api';
   });
@@ -41,12 +41,12 @@ describe('hikeService', () => {
     it('should fetch all hikes without filters', async () => {
       const mockHikes = [
         { id: 'hike1', title: 'Mountain Trail', status: 'completed' },
-        { id: 'hike2', title: 'Forest Path', status: 'planned' }
+        { id: 'hike2', title: 'Forest Path', status: 'planned' },
       ];
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: jest.fn().mockResolvedValue(mockHikes)
+        json: jest.fn().mockResolvedValue(mockHikes),
       });
 
       const result = await hikeApiService.getHikes();
@@ -55,9 +55,9 @@ describe('hikeService', () => {
         'http://localhost:3001/api/hikes',
         expect.objectContaining({
           headers: expect.objectContaining({
-            'Authorization': `Bearer ${mockToken}`,
-            'Content-Type': 'application/json'
-          })
+            Authorization: `Bearer ${mockToken}`,
+            'Content-Type': 'application/json',
+          }),
         })
       );
       expect(result).toEqual(mockHikes);
@@ -65,12 +65,12 @@ describe('hikeService', () => {
 
     it('should fetch hikes with status filter', async () => {
       const mockHikes = [
-        { id: 'hike1', title: 'Mountain Trail', status: 'completed' }
+        { id: 'hike1', title: 'Mountain Trail', status: 'completed' },
       ];
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: jest.fn().mockResolvedValue(mockHikes)
+        json: jest.fn().mockResolvedValue(mockHikes),
       });
 
       await hikeApiService.getHikes({ status: 'completed' });
@@ -84,7 +84,7 @@ describe('hikeService', () => {
     it('should fetch hikes with difficulty filter', async () => {
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: jest.fn().mockResolvedValue([])
+        json: jest.fn().mockResolvedValue([]),
       });
 
       await hikeApiService.getHikes({ difficulty: 'hard' });
@@ -98,12 +98,12 @@ describe('hikeService', () => {
     it('should fetch hikes with date range filters', async () => {
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: jest.fn().mockResolvedValue([])
+        json: jest.fn().mockResolvedValue([]),
       });
 
       await hikeApiService.getHikes({
         dateFrom: '2024-01-01',
-        dateTo: '2024-12-31'
+        dateTo: '2024-12-31',
       });
 
       expect(global.fetch).toHaveBeenCalledWith(
@@ -115,7 +115,7 @@ describe('hikeService', () => {
     it('should fetch hikes with pinned filter', async () => {
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: jest.fn().mockResolvedValue([])
+        json: jest.fn().mockResolvedValue([]),
       });
 
       await hikeApiService.getHikes({ pinned: true });
@@ -129,7 +129,7 @@ describe('hikeService', () => {
     it('should fetch hikes with search query', async () => {
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: jest.fn().mockResolvedValue([])
+        json: jest.fn().mockResolvedValue([]),
       });
 
       await hikeApiService.getHikes({ search: 'mountain' });
@@ -143,14 +143,14 @@ describe('hikeService', () => {
     it('should fetch hikes with multiple filters', async () => {
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: jest.fn().mockResolvedValue([])
+        json: jest.fn().mockResolvedValue([]),
       });
 
       await hikeApiService.getHikes({
         status: 'completed',
         difficulty: 'moderate',
         pinned: false,
-        search: 'trail'
+        search: 'trail',
       });
 
       expect(global.fetch).toHaveBeenCalledWith(
@@ -162,14 +162,16 @@ describe('hikeService', () => {
     it('should handle authentication errors', async () => {
       auth.currentUser = null;
 
-      await expect(hikeApiService.getHikes()).rejects.toThrow('No authenticated user');
+      await expect(hikeApiService.getHikes()).rejects.toThrow(
+        'No authenticated user'
+      );
     });
 
     it('should handle API errors', async () => {
       global.fetch.mockResolvedValueOnce({
         ok: false,
         status: 500,
-        json: jest.fn().mockResolvedValue({ message: 'Server error' })
+        json: jest.fn().mockResolvedValue({ message: 'Server error' }),
       });
 
       await expect(hikeApiService.getHikes()).rejects.toThrow('Server error');
@@ -179,10 +181,12 @@ describe('hikeService', () => {
       global.fetch.mockResolvedValueOnce({
         ok: false,
         status: 404,
-        json: jest.fn().mockResolvedValue({})
+        json: jest.fn().mockResolvedValue({}),
       });
 
-      await expect(hikeApiService.getHikes()).rejects.toThrow('HTTP error! status: 404');
+      await expect(hikeApiService.getHikes()).rejects.toThrow(
+        'HTTP error! status: 404'
+      );
     });
   });
 
@@ -191,12 +195,12 @@ describe('hikeService', () => {
       const mockStats = {
         totalHikes: 25,
         totalDistance: 150.5,
-        totalElevation: 5000
+        totalElevation: 5000,
       };
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: jest.fn().mockResolvedValue(mockStats)
+        json: jest.fn().mockResolvedValue(mockStats),
       });
 
       const result = await hikeApiService.getStats();
@@ -205,8 +209,8 @@ describe('hikeService', () => {
         'http://localhost:3001/api/hikes/stats',
         expect.objectContaining({
           headers: expect.objectContaining({
-            'Authorization': `Bearer ${mockToken}`
-          })
+            Authorization: `Bearer ${mockToken}`,
+          }),
         })
       );
       expect(result).toEqual(mockStats);
@@ -219,12 +223,12 @@ describe('hikeService', () => {
         id: mockHikeId,
         title: 'Mountain Trail',
         distance: '5.2 miles',
-        status: 'completed'
+        status: 'completed',
       };
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: jest.fn().mockResolvedValue(mockHike)
+        json: jest.fn().mockResolvedValue(mockHike),
       });
 
       const result = await hikeApiService.getHike(mockHikeId);
@@ -233,8 +237,8 @@ describe('hikeService', () => {
         `http://localhost:3001/api/hikes/${mockHikeId}`,
         expect.objectContaining({
           headers: expect.objectContaining({
-            'Authorization': `Bearer ${mockToken}`
-          })
+            Authorization: `Bearer ${mockToken}`,
+          }),
         })
       );
       expect(result).toEqual(mockHike);
@@ -248,17 +252,17 @@ describe('hikeService', () => {
         location: 'Rocky Mountains',
         distance: '10 miles',
         difficulty: 'hard',
-        status: 'planned'
+        status: 'planned',
       };
 
       const mockResponse = {
         id: 'newHike123',
-        ...newHikeData
+        ...newHikeData,
       };
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: jest.fn().mockResolvedValue(mockResponse)
+        json: jest.fn().mockResolvedValue(mockResponse),
       });
 
       const result = await hikeApiService.createHike(newHikeData);
@@ -269,9 +273,9 @@ describe('hikeService', () => {
           method: 'POST',
           body: JSON.stringify(newHikeData),
           headers: expect.objectContaining({
-            'Authorization': `Bearer ${mockToken}`,
-            'Content-Type': 'application/json'
-          })
+            Authorization: `Bearer ${mockToken}`,
+            'Content-Type': 'application/json',
+          }),
         })
       );
       expect(result).toEqual(mockResponse);
@@ -282,19 +286,19 @@ describe('hikeService', () => {
     it('should update an existing hike', async () => {
       const updateData = {
         title: 'Updated Trail Name',
-        distance: '12 miles'
+        distance: '12 miles',
       };
 
       const mockResponse = {
         id: mockHikeId,
         title: 'Updated Trail Name',
         distance: '12 miles',
-        status: 'completed'
+        status: 'completed',
       };
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: jest.fn().mockResolvedValue(mockResponse)
+        json: jest.fn().mockResolvedValue(mockResponse),
       });
 
       const result = await hikeApiService.updateHike(mockHikeId, updateData);
@@ -305,8 +309,8 @@ describe('hikeService', () => {
           method: 'PUT',
           body: JSON.stringify(updateData),
           headers: expect.objectContaining({
-            'Authorization': `Bearer ${mockToken}`
-          })
+            Authorization: `Bearer ${mockToken}`,
+          }),
         })
       );
       expect(result).toEqual(mockResponse);
@@ -317,12 +321,12 @@ describe('hikeService', () => {
     it('should delete a hike', async () => {
       const mockResponse = {
         success: true,
-        message: 'Hike deleted successfully'
+        message: 'Hike deleted successfully',
       };
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: jest.fn().mockResolvedValue(mockResponse)
+        json: jest.fn().mockResolvedValue(mockResponse),
       });
 
       const result = await hikeApiService.deleteHike(mockHikeId);
@@ -332,8 +336,8 @@ describe('hikeService', () => {
         expect.objectContaining({
           method: 'DELETE',
           headers: expect.objectContaining({
-            'Authorization': `Bearer ${mockToken}`
-          })
+            Authorization: `Bearer ${mockToken}`,
+          }),
         })
       );
       expect(result).toEqual(mockResponse);
@@ -345,18 +349,18 @@ describe('hikeService', () => {
       const startData = {
         title: 'Active Trail',
         location: 'Local Park',
-        startTime: new Date().toISOString()
+        startTime: new Date().toISOString(),
       };
 
       const mockResponse = {
         id: 'activeHike123',
         ...startData,
-        status: 'in-progress'
+        status: 'in-progress',
       };
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: jest.fn().mockResolvedValue(mockResponse)
+        json: jest.fn().mockResolvedValue(mockResponse),
       });
 
       const result = await hikeApiService.startHike(startData);
@@ -367,8 +371,8 @@ describe('hikeService', () => {
           method: 'POST',
           body: JSON.stringify(startData),
           headers: expect.objectContaining({
-            'Authorization': `Bearer ${mockToken}`
-          })
+            Authorization: `Bearer ${mockToken}`,
+          }),
         })
       );
       expect(result).toEqual(mockResponse);
@@ -380,18 +384,18 @@ describe('hikeService', () => {
       const endData = {
         endTime: new Date().toISOString(),
         totalDistance: '8.5 miles',
-        totalElevation: 1200
+        totalElevation: 1200,
       };
 
       const mockResponse = {
         id: mockHikeId,
         status: 'completed',
-        ...endData
+        ...endData,
       };
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: jest.fn().mockResolvedValue(mockResponse)
+        json: jest.fn().mockResolvedValue(mockResponse),
       });
 
       const result = await hikeApiService.completeHike(mockHikeId, endData);
@@ -402,8 +406,8 @@ describe('hikeService', () => {
           method: 'POST',
           body: JSON.stringify(endData),
           headers: expect.objectContaining({
-            'Authorization': `Bearer ${mockToken}`
-          })
+            Authorization: `Bearer ${mockToken}`,
+          }),
         })
       );
       expect(result).toEqual(mockResponse);
@@ -414,19 +418,19 @@ describe('hikeService', () => {
     it('should add a GPS waypoint to a hike', async () => {
       const waypoint = {
         latitude: 40.7128,
-        longitude: -74.0060,
+        longitude: -74.006,
         timestamp: new Date().toISOString(),
-        altitude: 150
+        altitude: 150,
       };
 
       const mockResponse = {
         id: mockHikeId,
-        waypoints: [waypoint]
+        waypoints: [waypoint],
       };
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: jest.fn().mockResolvedValue(mockResponse)
+        json: jest.fn().mockResolvedValue(mockResponse),
       });
 
       const result = await hikeApiService.addWaypoint(mockHikeId, waypoint);
@@ -437,8 +441,8 @@ describe('hikeService', () => {
           method: 'POST',
           body: JSON.stringify(waypoint),
           headers: expect.objectContaining({
-            'Authorization': `Bearer ${mockToken}`
-          })
+            Authorization: `Bearer ${mockToken}`,
+          }),
         })
       );
       expect(result).toEqual(mockResponse);
@@ -452,12 +456,12 @@ describe('hikeService', () => {
         totalDistance: 300.5,
         totalElevation: 10000,
         averageDistance: 6.01,
-        longestHike: 25
+        longestHike: 25,
       };
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: jest.fn().mockResolvedValue(mockStats)
+        json: jest.fn().mockResolvedValue(mockStats),
       });
 
       const result = await hikeApiService.getHikeStats();
@@ -466,8 +470,8 @@ describe('hikeService', () => {
         'http://localhost:3001/api/hikes/stats/overview',
         expect.objectContaining({
           headers: expect.objectContaining({
-            'Authorization': `Bearer ${mockToken}`
-          })
+            Authorization: `Bearer ${mockToken}`,
+          }),
         })
       );
       expect(result).toEqual(mockStats);
@@ -479,14 +483,14 @@ describe('hikeService', () => {
       const mockProgress = {
         monthly: [
           { month: 'January', hikes: 5, distance: 25 },
-          { month: 'February', hikes: 7, distance: 35 }
+          { month: 'February', hikes: 7, distance: 35 },
         ],
-        yearly: { total: 12, distance: 60 }
+        yearly: { total: 12, distance: 60 },
       };
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: jest.fn().mockResolvedValue(mockProgress)
+        json: jest.fn().mockResolvedValue(mockProgress),
       });
 
       const result = await hikeApiService.getHikeProgress();
@@ -495,8 +499,8 @@ describe('hikeService', () => {
         'http://localhost:3001/api/hikes/progress',
         expect.objectContaining({
           headers: expect.objectContaining({
-            'Authorization': `Bearer ${mockToken}`
-          })
+            Authorization: `Bearer ${mockToken}`,
+          }),
         })
       );
       expect(result).toEqual(mockProgress);
@@ -507,12 +511,12 @@ describe('hikeService', () => {
     it('should pin a hike', async () => {
       const mockResponse = {
         id: mockHikeId,
-        pinned: true
+        pinned: true,
       };
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: jest.fn().mockResolvedValue(mockResponse)
+        json: jest.fn().mockResolvedValue(mockResponse),
       });
 
       const result = await hikeApiService.pinHike(mockHikeId);
@@ -522,8 +526,8 @@ describe('hikeService', () => {
         expect.objectContaining({
           method: 'PATCH',
           headers: expect.objectContaining({
-            'Authorization': `Bearer ${mockToken}`
-          })
+            Authorization: `Bearer ${mockToken}`,
+          }),
         })
       );
       expect(result).toEqual(mockResponse);
@@ -534,12 +538,12 @@ describe('hikeService', () => {
     it('should unpin a hike', async () => {
       const mockResponse = {
         id: mockHikeId,
-        pinned: false
+        pinned: false,
       };
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: jest.fn().mockResolvedValue(mockResponse)
+        json: jest.fn().mockResolvedValue(mockResponse),
       });
 
       const result = await hikeApiService.unpinHike(mockHikeId);
@@ -549,8 +553,8 @@ describe('hikeService', () => {
         expect.objectContaining({
           method: 'PATCH',
           headers: expect.objectContaining({
-            'Authorization': `Bearer ${mockToken}`
-          })
+            Authorization: `Bearer ${mockToken}`,
+          }),
         })
       );
       expect(result).toEqual(mockResponse);
@@ -561,12 +565,12 @@ describe('hikeService', () => {
     it('should share a hike with friends', async () => {
       const mockResponse = {
         id: mockHikeId,
-        shared: true
+        shared: true,
       };
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: jest.fn().mockResolvedValue(mockResponse)
+        json: jest.fn().mockResolvedValue(mockResponse),
       });
 
       const result = await hikeApiService.shareHike(mockHikeId);
@@ -576,8 +580,8 @@ describe('hikeService', () => {
         expect.objectContaining({
           method: 'PATCH',
           headers: expect.objectContaining({
-            'Authorization': `Bearer ${mockToken}`
-          })
+            Authorization: `Bearer ${mockToken}`,
+          }),
         })
       );
       expect(result).toEqual(mockResponse);
@@ -588,12 +592,12 @@ describe('hikeService', () => {
     it('should unshare a hike', async () => {
       const mockResponse = {
         id: mockHikeId,
-        shared: false
+        shared: false,
       };
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: jest.fn().mockResolvedValue(mockResponse)
+        json: jest.fn().mockResolvedValue(mockResponse),
       });
 
       const result = await hikeApiService.unshareHike(mockHikeId);
@@ -603,8 +607,8 @@ describe('hikeService', () => {
         expect.objectContaining({
           method: 'PATCH',
           headers: expect.objectContaining({
-            'Authorization': `Bearer ${mockToken}`
-          })
+            Authorization: `Bearer ${mockToken}`,
+          }),
         })
       );
       expect(result).toEqual(mockResponse);
@@ -615,20 +619,27 @@ describe('hikeService', () => {
     it('should start a hike from planned hike', async () => {
       const plannedHikeId = 'planned123';
       const additionalData = {
-        startTime: new Date().toISOString()
+        startTime: new Date().toISOString(),
       };
 
       const mockResponse = {
         id: 'newHike456',
         title: 'Started Hike',
-        status: 'in-progress'
+        status: 'in-progress',
       };
 
       // Mock the dynamic import
-      const { plannedHikeApiService } = require('../services/plannedHikesService');
-      plannedHikeApiService.startPlannedHike.mockResolvedValueOnce(mockResponse);
+      const {
+        plannedHikeApiService,
+      } = require('../services/plannedHikesService');
+      plannedHikeApiService.startPlannedHike.mockResolvedValueOnce(
+        mockResponse
+      );
 
-      const result = await hikeApiService.startHikeFromPlanned(plannedHikeId, additionalData);
+      const result = await hikeApiService.startHikeFromPlanned(
+        plannedHikeId,
+        additionalData
+      );
 
       expect(plannedHikeApiService.startPlannedHike).toHaveBeenCalledWith(
         plannedHikeId,
@@ -641,7 +652,9 @@ describe('hikeService', () => {
       const plannedHikeId = 'planned123';
       const error = new Error('Failed to start planned hike');
 
-      const { plannedHikeApiService } = require('../services/plannedHikesService');
+      const {
+        plannedHikeApiService,
+      } = require('../services/plannedHikesService');
       plannedHikeApiService.startPlannedHike.mockRejectedValueOnce(error);
 
       await expect(
@@ -661,10 +674,12 @@ describe('hikeService', () => {
       global.fetch.mockResolvedValueOnce({
         ok: false,
         status: 500,
-        json: jest.fn().mockRejectedValue(new Error('Invalid JSON'))
+        json: jest.fn().mockRejectedValue(new Error('Invalid JSON')),
       });
 
-      await expect(hikeApiService.getHikes()).rejects.toThrow('HTTP error! status: 500');
+      await expect(hikeApiService.getHikes()).rejects.toThrow(
+        'HTTP error! status: 500'
+      );
     });
 
     it('should log errors to console', async () => {
@@ -691,7 +706,7 @@ describe('hikeService', () => {
       const originalHostname = window.location.hostname;
       delete window.location;
       window.location = { hostname: 'hiking-logbook.web.app' };
-      
+
       // URL determination happens at import time
       window.location.hostname = originalHostname;
     });

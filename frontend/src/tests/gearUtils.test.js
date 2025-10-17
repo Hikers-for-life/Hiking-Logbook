@@ -61,42 +61,44 @@ describe('gearUtils Tests', () => {
   describe('getDefaultGearItems', () => {
     test('should return day hike gear items by default', () => {
       const items = gearUtils.getDefaultGearItems();
-      
+
       expect(items).toHaveLength(6);
       expect(items[0].item).toBe('Hiking Boots');
       expect(items[1].item).toBe('Water (3L)');
-      expect(items.every(item => item.checked === false)).toBe(true);
+      expect(items.every((item) => item.checked === false)).toBe(true);
     });
 
     test('should return day hike gear items when specified', () => {
       const items = gearUtils.getDefaultGearItems('day');
-      
+
       expect(items).toHaveLength(6);
-      expect(items.some(item => item.item === 'Hiking Boots')).toBe(true);
-      expect(items.some(item => item.item === 'Water (3L)')).toBe(true);
+      expect(items.some((item) => item.item === 'Hiking Boots')).toBe(true);
+      expect(items.some((item) => item.item === 'Water (3L)')).toBe(true);
     });
 
     test('should return overnight gear items', () => {
       const items = gearUtils.getDefaultGearItems('overnight');
-      
+
       expect(items).toHaveLength(8);
-      expect(items.some(item => item.item === 'Tent')).toBe(true);
-      expect(items.some(item => item.item === 'Sleeping Bag')).toBe(true);
-      expect(items.some(item => item.item === 'Cooking Gear')).toBe(true);
+      expect(items.some((item) => item.item === 'Tent')).toBe(true);
+      expect(items.some((item) => item.item === 'Sleeping Bag')).toBe(true);
+      expect(items.some((item) => item.item === 'Cooking Gear')).toBe(true);
     });
 
     test('should return winter gear items', () => {
       const items = gearUtils.getDefaultGearItems('winter');
-      
+
       expect(items).toHaveLength(7);
-      expect(items.some(item => item.item === 'Winter Boots')).toBe(true);
-      expect(items.some(item => item.item === 'Winter Layers')).toBe(true);
-      expect(items.some(item => item.item === 'Hand/Foot Warmers')).toBe(true);
+      expect(items.some((item) => item.item === 'Winter Boots')).toBe(true);
+      expect(items.some((item) => item.item === 'Winter Layers')).toBe(true);
+      expect(items.some((item) => item.item === 'Hand/Foot Warmers')).toBe(
+        true
+      );
     });
 
     test('should return day hike gear for unknown type', () => {
       const items = gearUtils.getDefaultGearItems('unknown-type');
-      
+
       expect(items).toHaveLength(6);
       expect(items[0].item).toBe('Hiking Boots');
     });
@@ -105,10 +107,10 @@ describe('gearUtils Tests', () => {
       const dayItems = gearUtils.getDefaultGearItems('day');
       const overnightItems = gearUtils.getDefaultGearItems('overnight');
       const winterItems = gearUtils.getDefaultGearItems('winter');
-      
-      expect(dayItems.every(item => item.checked === false)).toBe(true);
-      expect(overnightItems.every(item => item.checked === false)).toBe(true);
-      expect(winterItems.every(item => item.checked === false)).toBe(true);
+
+      expect(dayItems.every((item) => item.checked === false)).toBe(true);
+      expect(overnightItems.every((item) => item.checked === false)).toBe(true);
+      expect(winterItems.every((item) => item.checked === false)).toBe(true);
     });
   });
 
@@ -117,12 +119,12 @@ describe('gearUtils Tests', () => {
       { item: 'Zebra', checked: false },
       { item: 'Alpha', checked: true },
       { item: 'Beta', checked: false },
-      { item: 'Gamma', checked: true }
+      { item: 'Gamma', checked: true },
     ];
 
     test('should sort items alphabetically', () => {
       const sorted = gearUtils.sortGearItems(unsortedItems, 'alphabetical');
-      
+
       expect(sorted[0].item).toBe('Alpha');
       expect(sorted[1].item).toBe('Beta');
       expect(sorted[2].item).toBe('Gamma');
@@ -131,7 +133,7 @@ describe('gearUtils Tests', () => {
 
     test('should sort checked items first, then alphabetically', () => {
       const sorted = gearUtils.sortGearItems(unsortedItems, 'checked-first');
-      
+
       expect(sorted[0].checked).toBe(true);
       expect(sorted[1].checked).toBe(true);
       expect(sorted[0].item).toBe('Alpha');
@@ -142,7 +144,7 @@ describe('gearUtils Tests', () => {
 
     test('should sort unchecked items first, then alphabetically', () => {
       const sorted = gearUtils.sortGearItems(unsortedItems, 'unchecked-first');
-      
+
       expect(sorted[0].checked).toBe(false);
       expect(sorted[1].checked).toBe(false);
       expect(sorted[0].item).toBe('Beta');
@@ -153,14 +155,14 @@ describe('gearUtils Tests', () => {
 
     test('should return original array for unknown sort type', () => {
       const sorted = gearUtils.sortGearItems(unsortedItems, 'unknown');
-      
+
       expect(sorted).toEqual(unsortedItems);
     });
 
     test('should not mutate original array', () => {
       const original = [...unsortedItems];
       gearUtils.sortGearItems(unsortedItems, 'alphabetical');
-      
+
       expect(unsortedItems).toEqual(original);
     });
 
@@ -182,11 +184,11 @@ describe('gearUtils Tests', () => {
         { item: 'Water Bottle', checked: true },
         { item: 'First Aid Kit', checked: false },
         { item: 'Hiking Boots', checked: true },
-        { item: 'Sunscreen', checked: false }
+        { item: 'Sunscreen', checked: false },
       ];
 
       const text = gearUtils.exportAsText(items);
-      
+
       expect(text).toContain('GEAR CHECKLIST');
       expect(text).toContain('✅ CHECKED ITEMS:');
       expect(text).toContain('• Water Bottle');
@@ -199,11 +201,11 @@ describe('gearUtils Tests', () => {
     test('should export checklist with only checked items', () => {
       const items = [
         { item: 'Water Bottle', checked: true },
-        { item: 'Hiking Boots', checked: true }
+        { item: 'Hiking Boots', checked: true },
       ];
 
       const text = gearUtils.exportAsText(items);
-      
+
       expect(text).toContain('✅ CHECKED ITEMS:');
       expect(text).toContain('• Water Bottle');
       expect(text).toContain('• Hiking Boots');
@@ -213,11 +215,11 @@ describe('gearUtils Tests', () => {
     test('should export checklist with only unchecked items', () => {
       const items = [
         { item: 'First Aid Kit', checked: false },
-        { item: 'Sunscreen', checked: false }
+        { item: 'Sunscreen', checked: false },
       ];
 
       const text = gearUtils.exportAsText(items);
-      
+
       expect(text).toContain('GEAR CHECKLIST');
       expect(text).not.toContain('✅ CHECKED ITEMS:');
       expect(text).toContain('⬜ UNCHECKED ITEMS:');
@@ -227,7 +229,7 @@ describe('gearUtils Tests', () => {
 
     test('should handle empty checklist', () => {
       const text = gearUtils.exportAsText([]);
-      
+
       expect(text).toContain('GEAR CHECKLIST');
       expect(text).not.toContain('✅ CHECKED ITEMS:');
       expect(text).not.toContain('⬜ UNCHECKED ITEMS:');
@@ -236,11 +238,11 @@ describe('gearUtils Tests', () => {
     test('should format text with proper sections', () => {
       const items = [
         { item: 'Item 1', checked: true },
-        { item: 'Item 2', checked: false }
+        { item: 'Item 2', checked: false },
       ];
 
       const text = gearUtils.exportAsText(items);
-      
+
       expect(text.startsWith('GEAR CHECKLIST\n')).toBe(true);
       expect(text).toContain('==============');
     });
@@ -248,13 +250,13 @@ describe('gearUtils Tests', () => {
     test('should list all checked items before unchecked items', () => {
       const items = [
         { item: 'Unchecked', checked: false },
-        { item: 'Checked', checked: true }
+        { item: 'Checked', checked: true },
       ];
 
       const text = gearUtils.exportAsText(items);
       const checkedIndex = text.indexOf('Checked');
       const uncheckedIndex = text.indexOf('Unchecked');
-      
+
       expect(checkedIndex).toBeLessThan(uncheckedIndex);
     });
   });
@@ -269,18 +271,16 @@ describe('gearUtils Tests', () => {
     test('sortGearItems should handle items with same name', () => {
       const items = [
         { item: 'Duplicate', checked: true },
-        { item: 'Duplicate', checked: false }
+        { item: 'Duplicate', checked: false },
       ];
-      
+
       const sorted = gearUtils.sortGearItems(items, 'alphabetical');
       expect(sorted).toHaveLength(2);
     });
 
     test('exportAsText should handle items with special characters', () => {
-      const items = [
-        { item: 'First-Aid & Safety Kit', checked: true }
-      ];
-      
+      const items = [{ item: 'First-Aid & Safety Kit', checked: true }];
+
       const text = gearUtils.exportAsText(items);
       expect(text).toContain('First-Aid & Safety Kit');
     });
@@ -288,7 +288,7 @@ describe('gearUtils Tests', () => {
     test('getDefaultGearItems should return new array each time', () => {
       const items1 = gearUtils.getDefaultGearItems('day');
       const items2 = gearUtils.getDefaultGearItems('day');
-      
+
       items1[0].checked = true;
       expect(items2[0].checked).toBe(false);
     });

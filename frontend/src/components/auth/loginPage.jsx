@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import mountain from '../assets/forest-waterfall.jpg';
 import { useAuth } from '../../contexts/AuthContext.jsx';
+import {
+  validateEmail,
+  validatePassword,
+} from '../../services/userServices.js';
 import { ArrowLeft } from 'lucide-react';
-import "@fortawesome/fontawesome-free/css/all.min.css";
-
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
 export default function LoginPage({ open, onOpenChange, onLogin, onSignup }) {
-
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -21,7 +23,6 @@ export default function LoginPage({ open, onOpenChange, onLogin, onSignup }) {
     signupButton: false,
     socialButtons: [false, false],
   });
-
 
   // Reset form when modal opens or closes
   useEffect(() => {
@@ -42,6 +43,17 @@ export default function LoginPage({ open, onOpenChange, onLogin, onSignup }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // Client-side validation
+    const emailCheck = validateEmail(email);
+    if (!emailCheck.valid) {
+      setError(emailCheck.message);
+      return;
+    }
+    const passCheck = validatePassword(password);
+    if (!passCheck.valid) {
+      setError(passCheck.message);
+      return;
+    }
     try {
       setError('');
       setLoading(true);
@@ -69,7 +81,6 @@ export default function LoginPage({ open, onOpenChange, onLogin, onSignup }) {
     } finally {
       setLoading(false);
     }
-
   };
 
   const handleMouseEnter = (buttonType, index = null) => {
@@ -96,7 +107,6 @@ export default function LoginPage({ open, onOpenChange, onLogin, onSignup }) {
     } else {
       setHoverStates((prev) => ({ ...prev, [buttonType]: false }));
     }
-
   };
 
   if (!open) return null; // Only render when open
@@ -270,21 +280,21 @@ const styles = {
   },
   //Go back Home Nav
   backButton: {
-    display: "flex",
-    alignItems: "center",
-    gap: "6px",
-    background: "transparent",
-    border: "none",
-    color: "#fff",
-    fontSize: "14px",
-    cursor: "pointer",
-    position: "absolute",
-    top: "20px",
-    left: "20px",
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    background: 'transparent',
+    border: 'none',
+    color: '#fff',
+    fontSize: '14px',
+    cursor: 'pointer',
+    position: 'absolute',
+    top: '20px',
+    left: '20px',
   },
 
   backButtonHover: {
-    color: "#16a34a",
+    color: '#16a34a',
   },
 
   input: {
@@ -367,7 +377,8 @@ const styles = {
   gradientOverlay: {
     position: 'absolute',
     inset: 0,
-    background: 'linear-gradient(135deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.6) 100%)',
+    background:
+      'linear-gradient(135deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.6) 100%)',
   },
   headerText: {
     position: 'absolute',

@@ -34,7 +34,9 @@ describe('HeroSection', () => {
 
     it('applies gradient text styling to "Elevation Adventures"', () => {
       const { container } = renderComponent();
-      const gradientText = container.querySelector('.bg-gradient-trail.bg-clip-text');
+      const gradientText = container.querySelector(
+        '.bg-gradient-trail.bg-clip-text'
+      );
       expect(gradientText).toBeInTheDocument();
       expect(gradientText).toHaveTextContent('Elevation Adventures');
     });
@@ -119,7 +121,9 @@ describe('HeroSection', () => {
       const { container } = renderComponent();
       const bgElement = container.querySelector('.bg-cover');
       expect(bgElement).toBeInTheDocument();
-      expect(bgElement).toHaveStyle({ backgroundImage: expect.stringContaining('url(') });
+      expect(bgElement).toHaveStyle({
+        backgroundImage: expect.stringContaining('url('),
+      });
     });
 
     it('includes gradient overlay', () => {
@@ -148,7 +152,7 @@ describe('HeroSection', () => {
       renderComponent();
       const h1 = screen.getByRole('heading', { level: 1 });
       const h3Elements = screen.getAllByRole('heading', { level: 3 });
-      
+
       expect(h1).toBeInTheDocument();
       expect(h3Elements).toHaveLength(3);
     });
@@ -156,9 +160,9 @@ describe('HeroSection', () => {
     it('buttons are keyboard accessible', () => {
       renderComponent();
       const buttons = screen.getAllByRole('button');
-      
+
       expect(buttons).toHaveLength(2);
-      buttons.forEach(button => {
+      buttons.forEach((button) => {
         expect(button).toBeEnabled();
       });
     });
@@ -179,7 +183,9 @@ describe('HeroSection', () => {
 
     it('includes responsive button layout classes', () => {
       const { container } = renderComponent();
-      const buttonContainer = container.querySelector('.flex-col.sm\\:flex-row');
+      const buttonContainer = container.querySelector(
+        '.flex-col.sm\\:flex-row'
+      );
       expect(buttonContainer).toBeInTheDocument();
     });
 

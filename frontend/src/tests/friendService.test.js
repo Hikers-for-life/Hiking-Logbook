@@ -29,7 +29,7 @@ describe('friendService', () => {
             distance: '5.2 miles',
             duration: '120 min',
             difficulty: 'Moderate',
-            createdAt: { _seconds: 1704067200 } // Jan 1, 2024
+            createdAt: { _seconds: 1704067200 }, // Jan 1, 2024
           },
           {
             id: 'hike2',
@@ -38,32 +38,32 @@ describe('friendService', () => {
             distance: '3.1 miles',
             duration: '90 min',
             difficulty: 'Easy',
-            createdAt: { _seconds: 1703980800 } // Dec 31, 2023
-          }
-        ]
+            createdAt: { _seconds: 1703980800 }, // Dec 31, 2023
+          },
+        ],
       };
 
       const mockCountResponse = {
         success: true,
-        count: 15
+        count: 15,
       };
 
       const mockStatsResponse = {
         success: true,
         totalDistance: 50.5,
-        totalElevation: 2500
+        totalElevation: 2500,
       };
 
       // Setup fetch mock to return different responses
       global.fetch
         .mockResolvedValueOnce({
-          json: jest.fn().mockResolvedValue(mockHikesResponse)
+          json: jest.fn().mockResolvedValue(mockHikesResponse),
         })
         .mockResolvedValueOnce({
-          json: jest.fn().mockResolvedValue(mockCountResponse)
+          json: jest.fn().mockResolvedValue(mockCountResponse),
         })
         .mockResolvedValueOnce({
-          json: jest.fn().mockResolvedValue(mockStatsResponse)
+          json: jest.fn().mockResolvedValue(mockStatsResponse),
         });
 
       const result = await getFriendProfile(mockUid, 2);
@@ -103,21 +103,27 @@ describe('friendService', () => {
             duration: '100 min',
             difficulty: 'Easy',
             createdAt: {
-              toDate: jest.fn().mockReturnValue(mockDate)
-            }
-          }
-        ]
+              toDate: jest.fn().mockReturnValue(mockDate),
+            },
+          },
+        ],
       };
 
       global.fetch
         .mockResolvedValueOnce({
-          json: jest.fn().mockResolvedValue(mockHikesResponse)
+          json: jest.fn().mockResolvedValue(mockHikesResponse),
         })
         .mockResolvedValueOnce({
-          json: jest.fn().mockResolvedValue({ success: true, count: 1 })
+          json: jest.fn().mockResolvedValue({ success: true, count: 1 }),
         })
         .mockResolvedValueOnce({
-          json: jest.fn().mockResolvedValue({ success: true, totalDistance: 4, totalElevation: 100 })
+          json: jest
+            .fn()
+            .mockResolvedValue({
+              success: true,
+              totalDistance: 4,
+              totalElevation: 100,
+            }),
         });
 
       const result = await getFriendProfile(mockUid);
@@ -133,20 +139,26 @@ describe('friendService', () => {
           {
             id: 'hike1',
             // Missing all optional fields
-            createdAt: { _seconds: 1704067200 }
-          }
-        ]
+            createdAt: { _seconds: 1704067200 },
+          },
+        ],
       };
 
       global.fetch
         .mockResolvedValueOnce({
-          json: jest.fn().mockResolvedValue(mockHikesResponse)
+          json: jest.fn().mockResolvedValue(mockHikesResponse),
         })
         .mockResolvedValueOnce({
-          json: jest.fn().mockResolvedValue({ success: true, count: 1 })
+          json: jest.fn().mockResolvedValue({ success: true, count: 1 }),
         })
         .mockResolvedValueOnce({
-          json: jest.fn().mockResolvedValue({ success: true, totalDistance: 0, totalElevation: 0 })
+          json: jest
+            .fn()
+            .mockResolvedValue({
+              success: true,
+              totalDistance: 0,
+              totalElevation: 0,
+            }),
         });
 
       const result = await getFriendProfile(mockUid);
@@ -164,19 +176,25 @@ describe('friendService', () => {
         data: [
           { id: 'hike1', title: 'Hike 1', createdAt: { _seconds: 1704067200 } },
           { id: 'hike2', title: 'Hike 2', createdAt: { _seconds: 1703980800 } },
-          { id: 'hike3', title: 'Hike 3', createdAt: { _seconds: 1703894400 } }
-        ]
+          { id: 'hike3', title: 'Hike 3', createdAt: { _seconds: 1703894400 } },
+        ],
       };
 
       global.fetch
         .mockResolvedValueOnce({
-          json: jest.fn().mockResolvedValue(mockHikesResponse)
+          json: jest.fn().mockResolvedValue(mockHikesResponse),
         })
         .mockResolvedValueOnce({
-          json: jest.fn().mockResolvedValue({ success: true, count: 3 })
+          json: jest.fn().mockResolvedValue({ success: true, count: 3 }),
         })
         .mockResolvedValueOnce({
-          json: jest.fn().mockResolvedValue({ success: true, totalDistance: 10, totalElevation: 500 })
+          json: jest
+            .fn()
+            .mockResolvedValue({
+              success: true,
+              totalDistance: 10,
+              totalElevation: 500,
+            }),
         });
 
       const result = await getFriendProfile(mockUid, 1);
@@ -194,13 +212,13 @@ describe('friendService', () => {
 
       global.fetch
         .mockResolvedValueOnce({
-          json: jest.fn().mockResolvedValue(mockHikesResponse)
+          json: jest.fn().mockResolvedValue(mockHikesResponse),
         })
         .mockResolvedValueOnce({
-          json: jest.fn().mockResolvedValue(mockCountResponse)
+          json: jest.fn().mockResolvedValue(mockCountResponse),
         })
         .mockResolvedValueOnce({
-          json: jest.fn().mockResolvedValue(mockStatsResponse)
+          json: jest.fn().mockResolvedValue(mockStatsResponse),
         });
 
       const result = await getFriendProfile(mockUid);
@@ -227,21 +245,27 @@ describe('friendService', () => {
         data: [
           {
             id: 'hike1',
-            title: 'No Date Hike'
+            title: 'No Date Hike',
             // No createdAt field
-          }
-        ]
+          },
+        ],
       };
 
       global.fetch
         .mockResolvedValueOnce({
-          json: jest.fn().mockResolvedValue(mockHikesResponse)
+          json: jest.fn().mockResolvedValue(mockHikesResponse),
         })
         .mockResolvedValueOnce({
-          json: jest.fn().mockResolvedValue({ success: true, count: 1 })
+          json: jest.fn().mockResolvedValue({ success: true, count: 1 }),
         })
         .mockResolvedValueOnce({
-          json: jest.fn().mockResolvedValue({ success: true, totalDistance: 5, totalElevation: 200 })
+          json: jest
+            .fn()
+            .mockResolvedValue({
+              success: true,
+              totalDistance: 5,
+              totalElevation: 200,
+            }),
         });
 
       const result = await getFriendProfile(mockUid);
@@ -252,14 +276,38 @@ describe('friendService', () => {
 
     it('should handle date ordinal suffixes correctly', async () => {
       const testCases = [
-        { _seconds: new Date('2024-01-01').getTime() / 1000, expected: 'January 1st, 2024' },
-        { _seconds: new Date('2024-01-02').getTime() / 1000, expected: 'January 2nd, 2024' },
-        { _seconds: new Date('2024-01-03').getTime() / 1000, expected: 'January 3rd, 2024' },
-        { _seconds: new Date('2024-01-04').getTime() / 1000, expected: 'January 4th, 2024' },
-        { _seconds: new Date('2024-01-11').getTime() / 1000, expected: 'January 11th, 2024' },
-        { _seconds: new Date('2024-01-21').getTime() / 1000, expected: 'January 21st, 2024' },
-        { _seconds: new Date('2024-01-22').getTime() / 1000, expected: 'January 22nd, 2024' },
-        { _seconds: new Date('2024-01-23').getTime() / 1000, expected: 'January 23rd, 2024' }
+        {
+          _seconds: new Date('2024-01-01').getTime() / 1000,
+          expected: 'January 1st, 2024',
+        },
+        {
+          _seconds: new Date('2024-01-02').getTime() / 1000,
+          expected: 'January 2nd, 2024',
+        },
+        {
+          _seconds: new Date('2024-01-03').getTime() / 1000,
+          expected: 'January 3rd, 2024',
+        },
+        {
+          _seconds: new Date('2024-01-04').getTime() / 1000,
+          expected: 'January 4th, 2024',
+        },
+        {
+          _seconds: new Date('2024-01-11').getTime() / 1000,
+          expected: 'January 11th, 2024',
+        },
+        {
+          _seconds: new Date('2024-01-21').getTime() / 1000,
+          expected: 'January 21st, 2024',
+        },
+        {
+          _seconds: new Date('2024-01-22').getTime() / 1000,
+          expected: 'January 22nd, 2024',
+        },
+        {
+          _seconds: new Date('2024-01-23').getTime() / 1000,
+          expected: 'January 23rd, 2024',
+        },
       ];
 
       for (const testCase of testCases) {
@@ -267,14 +315,26 @@ describe('friendService', () => {
           .mockResolvedValueOnce({
             json: jest.fn().mockResolvedValue({
               success: true,
-              data: [{ id: 'hike1', title: 'Test', createdAt: { _seconds: testCase._seconds } }]
-            })
+              data: [
+                {
+                  id: 'hike1',
+                  title: 'Test',
+                  createdAt: { _seconds: testCase._seconds },
+                },
+              ],
+            }),
           })
           .mockResolvedValueOnce({
-            json: jest.fn().mockResolvedValue({ success: true, count: 1 })
+            json: jest.fn().mockResolvedValue({ success: true, count: 1 }),
           })
           .mockResolvedValueOnce({
-            json: jest.fn().mockResolvedValue({ success: true, totalDistance: 1, totalElevation: 1 })
+            json: jest
+              .fn()
+              .mockResolvedValue({
+                success: true,
+                totalDistance: 1,
+                totalElevation: 1,
+              }),
           });
 
         const result = await getFriendProfile(mockUid);
@@ -286,13 +346,19 @@ describe('friendService', () => {
     it('should use default limit of 2 when not specified', async () => {
       global.fetch
         .mockResolvedValueOnce({
-          json: jest.fn().mockResolvedValue({ success: true, data: [] })
+          json: jest.fn().mockResolvedValue({ success: true, data: [] }),
         })
         .mockResolvedValueOnce({
-          json: jest.fn().mockResolvedValue({ success: true, count: 0 })
+          json: jest.fn().mockResolvedValue({ success: true, count: 0 }),
         })
         .mockResolvedValueOnce({
-          json: jest.fn().mockResolvedValue({ success: true, totalDistance: 0, totalElevation: 0 })
+          json: jest
+            .fn()
+            .mockResolvedValue({
+              success: true,
+              totalDistance: 0,
+              totalElevation: 0,
+            }),
         });
 
       await getFriendProfile(mockUid);

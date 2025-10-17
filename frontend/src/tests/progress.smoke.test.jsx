@@ -8,6 +8,3 @@ describe('Progress smoke', () => {
     render(<Progress value={25} />);
   });
 });
-
-
-

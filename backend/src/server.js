@@ -13,8 +13,10 @@ import goalsRoutes from './routes/goals.js';
 import publicRoutes from './routes/public.js';
 import feedRoutes from './routes/feed.js';
 import discoverRoutes from './routes/discover.js';
+
 import friendRoutes from "./routes/friends.js";
 import chatRoutes from './routes/chat.js';
+
 
 dotenv.config();
 
@@ -25,14 +27,16 @@ middleware.applySecurityMiddleware(app);
 middleware.applyParsingMiddleware(app);
 middleware.applyLoggingMiddleware(app);
 
-
-
 // Swagger API documentation
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
-  explorer: true,
-  customCss: '.swagger-ui .topbar { display: none }',
-  customSiteTitle: 'Hiking Logbook API Documentation'
-}));
+app.use(
+  '/api-docs',
+  swaggerUi.serve,
+  swaggerUi.setup(specs, {
+    explorer: true,
+    customCss: '.swagger-ui .topbar { display: none }',
+    customSiteTitle: 'Hiking Logbook API Documentation',
+  })
+);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -48,10 +52,10 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/hikes', hikeRoutes);
-app.use('/api/planned-hikes', plannedHikeRoutes); 
+app.use('/api/planned-hikes', plannedHikeRoutes);
 app.use('/api/gear', gearRoutes);
 app.use('/api/goals', goalsRoutes);
-app.use("/api/friends", friendRoutes);
+app.use('/api/friends', friendRoutes);
 app.use('/api/feed', feedRoutes);
 app.use('/api/discover', discoverRoutes);
 app.use('/api/chat', chatRoutes);
@@ -69,7 +73,7 @@ app.use(errorHandler);
 async function startServer() {
   try {
     await initializeFirebase();
-    
+
     const server = app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
       console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
@@ -79,13 +83,14 @@ async function startServer() {
       console.log(`Auth API: http://localhost:${PORT}/api/auth`);
       console.log(`Users API: http://localhost:${PORT}/api/users`);
       console.log(`Hikes API: http://localhost:${PORT}/api/hikes`);
-      console.log(`Planned Hikes API: http://localhost:${PORT}/api/planned-hikes`); 
+      console.log(
+        `Planned Hikes API: http://localhost:${PORT}/api/planned-hikes`
+      );
       console.log(`Gear API: http://localhost:${PORT}/api/gear`);
       console.log(`Feed API: http://localhost:${PORT}/api/feed`);
       console.log(`Discover API: http://localhost:${PORT}/api/discover`);
       console.log(`Goals API: http://localhost:${PORT}/api/goals`);
       console.log(`Friends API: http://localhost:${PORT}/api/friends`);
-
     });
 
     return server;
@@ -95,15 +100,16 @@ async function startServer() {
   }
 }
 
-
 let serverInstance = null;
 
-startServer().then((server) => {
-  serverInstance = server;
-}).catch((error) => {
-  console.error('Failed to start server:', error);
-  process.exit(1);
-});
+startServer()
+  .then((server) => {
+    serverInstance = server;
+  })
+  .catch((error) => {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  });
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
@@ -131,5 +137,3 @@ process.on('SIGINT', () => {
 });
 
 export default app;
-
-
