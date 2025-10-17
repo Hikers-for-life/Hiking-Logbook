@@ -2,7 +2,7 @@
   "name": "hiking-logbook-root",
   "private": true,
   "scripts": {
-    "_prepare": "husky install",
+    "prepare": "husky install",
     "start": "react-scripts start"
   },
   "lint-staged": {
@@ -15,8 +15,6 @@
       "npm test --prefix backend -- --findRelatedTests --passWithNoTests"
     ]
   },
-
-
   "devDependencies": {
     "@eslint/js": "^9.33.0",
     "autoprefixer": "^10.4.21",
