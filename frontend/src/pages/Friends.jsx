@@ -225,19 +225,7 @@ const Friends = () => {
         description: 'Could not load user profile.',
       });
     }
-
-  } catch (err) {
-    console.error("Error blocking friend:", err);
-  }
 };
-  const handleViewProfile = (person, showAddFriend = false) => {
-    // Check if viewing own profile
-    const isOwn = person.uid === currentUser.uid || person.id === currentUser.uid;
-    setIsOwnProfile(isOwn);
-    setSelectedProfile({ ...person, showAddFriend });
-    setIsProfileOpen(true);
-
-  };
 
   //ANNAH HERE
   const auth = getAuth();
