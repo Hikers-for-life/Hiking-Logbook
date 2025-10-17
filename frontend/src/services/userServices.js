@@ -1,13 +1,5 @@
-import { db } from '../config/firebase.js';
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-  getCountFromServer,
-  doc,
-  getDoc,
-} from 'firebase/firestore';
+import { db } from "../config/firebase.js";
+import { collection, query, where, getDocs, getCountFromServer, doc, getDoc, orderBy, startAt, endAt } from "firebase/firestore";
 
 function formatDate(date) {
   if (!(date instanceof Date) || isNaN(date)) return 'Unknown';
@@ -30,14 +22,40 @@ function formatDate(date) {
 }
 
 export const searchUsers = async (name) => {
-  const q = query(collection(db, 'users'), where('displayName', '==', name));
+
+  if (!name.trim()) return [];
+
+  const usersRef = collection(db, "users");
+  const q = query(
+    usersRef,
+    orderBy("displayName"),
+    startAt(name),
+    endAt(name + "\uf8ff") // prefix match
+  );
+
 
   const snapshot = await getDocs(q);
-  if (snapshot.empty) return [];
+  let users = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
+  // If few results or you want broader matches, also check contains
+  if (users.length < 5) {  // tweak threshold
+    const allSnap = await getDocs(usersRef);
+    const lowerName = name.toLowerCase();
+    const extraMatches = allSnap.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .filter(user =>
+        user.displayName?.toLowerCase().includes(lowerName)
+      );
+
+
+    // Merge results (avoid duplicates)
+    const seen = new Set(users.map(u => u.id));
+    users = [...users, ...extraMatches.filter(u => !seen.has(u.id))];
+  }
+
+  return users;
 };
-
 export const getUserHikeCount = async (userId) => {
   try {
     const coll = collection(db, 'users', userId, 'hikes');

@@ -1,28 +1,30 @@
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Badge } from '../ui/badge';
-import { Button } from '../ui/button';
-import { Avatar, AvatarFallback } from '../ui/avatar';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
-import { getUserHikeCount } from '../../services/userServices';
-import { hikeApiService } from '../../services/hikeApiService.js';
-import { useEffect, useState, useCallback } from 'react';
-import { getUserStats } from '../../services/statistics';
-import { sendFriendRequest } from '../../services/discover';
-import { useToast } from '../../hooks/use-toast';
-import {
-  Calendar,
-  MapPin,
-  Mountain,
-  Clock,
-  UserPlus,
-  MessageCircle,
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import { Avatar, AvatarFallback } from "../ui/avatar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
+import { getUserHikeCount } from "../../services/userServices";
+import { hikeApiService } from "../../services/hikeApiService.js";
+import { useEffect, useState, useCallback } from "react";
+import { getUserStats } from "../../services/statistics";
+import { discoverFriends, addFriend } from "../../services/discover";
+import { useToast } from "../../hooks/use-toast";
+import { ChatBox } from "./chat-box";
+import { 
+ Calendar, 
+  MapPin, 
+  Mountain, 
+  Clock, 
+  UserPlus, 
+  MessageCircle, 
   Check,
-  Loader2,
-  Target,
-  Award,
-  Medal,
-  TrendingUp,
-} from 'lucide-react';
+  Loader2 ,
+  Target, 
+  Award, 
+  Medal, 
+  TrendingUp 
+} from "lucide-react";
+
 
 const API_BASE_URL =
   process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
@@ -65,6 +67,7 @@ export const ProfileView = ({
     totalDistance: 0,
     totalElevation: 0,
   });
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   // replace inside view-friend-profile.jsx
   const loadHikes = useCallback(async () => {
@@ -372,7 +375,10 @@ export const ProfileView = ({
                     )}
                   </Button>
                 ) : (
-                  <Button variant="outline">
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsChatOpen(true)}
+                  >
                     <MessageCircle className="h-4 w-4 mr-2" />
                     Message
                   </Button>
@@ -538,6 +544,13 @@ export const ProfileView = ({
           </Card>
         </div>
       </DialogContent>
+
+      {/* Chat Dialog */}
+      <ChatBox
+        open={isChatOpen}
+        onOpenChange={setIsChatOpen}
+        otherUser={person}
+      />
     </Dialog>
   );
 };

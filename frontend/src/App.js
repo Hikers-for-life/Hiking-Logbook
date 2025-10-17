@@ -15,6 +15,7 @@ import Friends from './pages/Friends.jsx';
 import Post from './pages/Post.jsx';
 import { Toaster } from './components/ui/toaster.jsx';
 import Achievements from './pages/Achievements.jsx';
+import Messages from './pages/Messages.jsx';
 
 import { API_BASE } from './api/api.js'; //ANNAH
 
@@ -35,6 +36,7 @@ const App = () => {
           <Route path="/signup" element={<Signup />} />
           <Route path="/edit-profile" element={<EditProfile />} />
           <Route path="/profile" element={<ProfileView />} />
+
           {/* Protected Routes */}
           <Route
             path="/logbook"
@@ -76,6 +78,15 @@ const App = () => {
               </ProtectedRoute>
             }
           />
+             <Route
+          path="/messages"
+          element={
+            <ProtectedRoute>
+              <Messages />
+            </ProtectedRoute>
+          }
+        />
+
           <Route
             path="/dashboard"
             element={

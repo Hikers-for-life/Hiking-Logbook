@@ -1,50 +1,46 @@
 import { useState, useEffect } from 'react';
-import { getUserProfile } from '../services/userServices';
 import { useLocation } from 'react-router-dom';
+
 import { Navigation } from '../components/ui/navigation';
 import { Button } from '../components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '../components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Badge } from '../components/ui/badge';
 import { Avatar, AvatarFallback } from '../components/ui/avatar';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '../components/ui/tabs';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '../components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
 import { Textarea } from '../components/ui/textarea';
-import { searchUsers } from '../services/userServices';
 import { ProfileView } from '../components/ui/view-friend-profile';
+import { ProfileView as OwnProfileView } from '../components/ui/profile-view';
+
+import { searchUsers, getUserProfile } from '../services/userServices';
+import { fetchFeed, likeFeed, commentFeed, shareFeed, deleteCommentFeed, deleteFeed, updateFeed, getFeedById } from '../services/feed';
+import { discoverFriends, sendFriendRequest, getIncomingRequests, respondToRequest, addFriend } from '../services/discover';
+import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
+
+import { useAuth } from '../contexts/AuthContext.jsx';
+import { useToast } from '../hooks/use-toast';
+import { getUserStats } from '../services/statistics';
+import { getFriendProfile } from '../services/friendService.js';
+
 import {
-  fetchFeed,
-  likeFeed,
-  commentFeed,
-  shareFeed,
-  deleteCommentFeed,
-  deleteFeed,
-  updateFeed,
-  getFeedById,
-} from '../services/feed'; //ANNAH HERE
-import {
-  discoverFriends,
-  sendFriendRequest,
-  getIncomingRequests,
-  respondToRequest,
-} from '../services/discover'; //ANNAH HERE
-import { getAuth } from 'firebase/auth'; //NOT SURE ABOUT THIS IMPORT//ANNA HERE
+  Search,
+  UserPlus,
+  MapPin,
+  TrendingUp,
+  Mountain,
+  Clock,
+  Medal,
+  Users,
+  Share2,
+  Heart,
+  MessageSquare,
+  Edit3,
+  Trash2,
+  Camera,
+} from 'lucide-react';
+
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useToast } from '../hooks/use-toast';
 import { getUserStats } from '../services/statistics';
@@ -73,6 +69,7 @@ const API_BASE_URL =
 const Friends = () => {
   const [selectedProfile, setSelectedProfile] = useState(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isOwnProfile, setIsOwnProfile] = useState(false);
 
   //ANNAH HERE
 
@@ -92,14 +89,19 @@ const Friends = () => {
   const [shareCaption, setShareCaption] = useState('');
   const [postToShare, setPostToShare] = useState(null);
   //ANNAH HERE
+  const [friendsLoading, setFriendsLoading] = useState(true);
+  const [activityLoading, setActivityLoading] = useState(true);
+//ANNAH HERE
 
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState([]);
-  const [searchError, setSearchError] = useState('');
-  const { currentUser } = useAuth();
-  const [friends, setFriends] = useState([]);
-  const [, setUserStats] = useState([]);
-  const { toast } = useToast();
+
+  const [searchError, setSearchError] = useState("");
+   const { currentUser } = useAuth();
+   const [friends, setFriends] = useState([]);
+   const [userStats,setUserStats] = useState([]);
+    const { toast } = useToast();
+
 
   const handleSearch = async () => {
     if (!searchTerm.trim()) return;
@@ -170,12 +172,15 @@ const Friends = () => {
   console.log('Fetching friends:', friends);
   const handleBlockFriend = async (fid) => {
     try {
+
+      setFriendsLoading(true);
       const res = await fetch(
         `${API_BASE_URL}/friends/${currentUser.uid}/block/${fid}`,
         {
           method: 'DELETE',
         }
       );
+
       const data = await res.json();
       if (data.success) {
         setFriends((prev) => prev.filter((f) => f.id !== fid)); // update UI
@@ -188,6 +193,9 @@ const Friends = () => {
       }
     } catch (err) {
       console.error('Error blocking friend:', err);
+      console.error("Error fetching friends:", err);
+    } finally {
+      setFriendsLoading(false);
     }
   };
   const handleViewProfile = async (personOrId, showAddFriend = false) => {
@@ -239,6 +247,18 @@ const Friends = () => {
         description: 'Could not load user profile.',
       });
     }
+
+  } catch (err) {
+    console.error("Error blocking friend:", err);
+  }
+};
+  const handleViewProfile = (person, showAddFriend = false) => {
+    // Check if viewing own profile
+    const isOwn = person.uid === currentUser.uid || person.id === currentUser.uid;
+    setIsOwnProfile(isOwn);
+    setSelectedProfile({ ...person, showAddFriend });
+    setIsProfileOpen(true);
+
   };
 
   //ANNAH HERE
@@ -264,17 +284,21 @@ const Friends = () => {
 
     const loadFeed = async (p = 1) => {
       try {
+
         if (p === 1) setLoading(true);
         else setLoadingMore(true);
 
         const data = await fetchFeed(p, limit); // fetches activities page
+
         if (!isMounted) return;
 
         const activities = (
           Array.isArray(data) ? data : data.activities || []
         ).map((a) => ({
           ...a,
+
           comments: a.comments || [],
+
         }));
 
         if (p === 1) {
@@ -292,6 +316,7 @@ const Friends = () => {
           setLoading(false);
           setLoadingMore(false);
         }
+        if (isMounted) setActivityLoading(false);
       }
     };
 
@@ -585,6 +610,14 @@ const Friends = () => {
     // keep previous list for rollback
     const prev = [...recentActivity];
     setEditingPost(null);
+  try {
+    //  use service function instead of fetch
+    const data = await shareFeed(activity.id, {
+      sharerId: user.uid,
+      sharerName: user.displayName || user.email,
+      sharerAvatar: tempShare.avatar,
+      original: originalData,
+    });
 
     // find activity to decide whether it's a share (edit caption) or original (edit description)
     const activity = recentActivity.find((a) => a.id === activityId) || {};
@@ -902,46 +935,51 @@ const Friends = () => {
           />
         </div>
 
-        {searchError && <p className="text-red-500 mt-2">{searchError}</p>}
-        {searchResults.map((user) => (
-          <Card
-            key={user.id}
-            className="relative flex flex-col sm:flex-row gap-3 items-start mt-4 mb-4"
-          >
-            {/* Close button */}
-            <button
-              onClick={() =>
-                setSearchResults(searchResults.filter((u) => u.id !== user.id))
-              }
-              className="absolute top-2 right-2 text-gray-400 hover:text-red-500 transition-colors"
-            >
-              ✕
-            </button>
 
-            <div className="flex items-center gap-2 mb-2">
-              <CardHeader className="pb-4">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-12 w-12">
-                    <AvatarFallback className="text-xl">
-                      {user.displayName
-                        .split(' ')
-                        .map((n) => n[0])
-                        .join('')}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="font-semibold text-foreground cursor-pointer hover:underline"
-                        onClick={() => {
-                          const isFriend = friends.some(
-                            (f) => f.id === user.id
-                          );
-                          handleViewProfile(user, !isFriend); // showAddFriend = false if already friend
-                        }}
-                      >
-                        {user.displayName}
-                      </span>
+          {searchError && <p className="text-red-500 mt-2">{searchError}</p>}
+            {searchResults.map((user) => (
+              <Card 
+                key={user.id} 
+                className="relative flex flex-col sm:flex-row gap-3 items-start mt-4 mb-4"
+              >
+                {/* Close button */}
+                <button
+                  onClick={() => setSearchResults(searchResults.filter(u => u.id !== user.id))}
+                  className="absolute top-2 right-2 text-gray-400 hover:text-red-500 transition-colors"
+                >
+                  ✕ 
+                </button>
+
+                <div className="flex items-center gap-2 mb-2">
+                  <CardHeader className="pb-4">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-12 w-12">
+                        <AvatarFallback className="text-xl">
+                          {user.displayName
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="font-semibold text-foreground cursor-pointer hover:underline"
+                            onClick={() => {
+                              const isFriend = friends.some((f) => f.id === user.id);
+                              // Pass user object with uid property for profile view
+                              handleViewProfile({ ...user, uid: user.id }, !isFriend); // showAddFriend = false if already friend
+                            }}
+                          >
+                            {user.displayName}
+                          </span>
+                        </div>
+                        <p className="text-sm text-muted-foreground flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          {user.location || "Not yet set"}
+                        </p>
+                      </div>
+
                     </div>
                     <p className="text-sm text-muted-foreground flex items-center gap-1">
                       <MapPin className="h-3 w-3" />
@@ -966,6 +1004,13 @@ const Friends = () => {
           </TabsList>
           {/*MY FRIENDS */}
           <TabsContent value="friends" className="space-y-6">
+            {friendsLoading ? (
+              <p className="text-muted-foreground text-center py-8">Friends loading...</p>
+            ) : friends.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">
+                No friends yet. Search or discover new potential friends!
+              </p>
+            ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {friends.map((friend) => (
                 <Card
@@ -1054,6 +1099,7 @@ const Friends = () => {
                 </Card>
               ))}
             </div>
+            )}
           </TabsContent>
 
           {/*ACTIVITY FEED*/}
@@ -1066,6 +1112,7 @@ const Friends = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
+
                 <div className="space-y-4">
                   {/* Incoming friend requests */}
                   {incomingRequests && incomingRequests.length > 0 && (
@@ -1146,6 +1193,7 @@ const Friends = () => {
                       ))}
                     </div>
                   )}
+
                   {recentActivity.map((activity) => {
                     const isOwnPost = activity.userId === auth.currentUser.uid;
 
@@ -1546,6 +1594,7 @@ const Friends = () => {
                     </div>
                   )}
                 </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -1663,6 +1712,7 @@ const Friends = () => {
         </Tabs>
       </main>
 
+
       {/* Share Modal */}
       <Dialog open={shareModalOpen} onOpenChange={setShareModalOpen}>
         <DialogContent className="sm:max-w-[500px]">
@@ -1715,12 +1765,20 @@ const Friends = () => {
         </DialogContent>
       </Dialog>
 
-      <ProfileView
-        open={isProfileOpen}
-        onOpenChange={setIsProfileOpen}
-        person={selectedProfile}
-        showAddFriend={selectedProfile?.showAddFriend || false}
-      />
+      {isOwnProfile ? (
+        <OwnProfileView
+          open={isProfileOpen}
+          onOpenChange={setIsProfileOpen}
+        />
+      ) : (
+        <ProfileView
+          open={isProfileOpen}
+          onOpenChange={setIsProfileOpen}
+          person={selectedProfile}
+          showAddFriend={selectedProfile?.showAddFriend || false}
+        />
+      )}
+
     </div>
   );
 };

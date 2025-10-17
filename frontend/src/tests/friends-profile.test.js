@@ -1,9 +1,14 @@
+
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { ProfileView } from '../components/ui/view-friend-profile';
 import { sendFriendRequest } from '../services/discover';
 
+
+// Simple smoke tests for ProfileView component integration
+
 // Mock the addFriend service
+
 jest.mock('../services/discover', () => ({
   sendFriendRequest: jest.fn(),
 }));
@@ -95,5 +100,6 @@ describe('ProfileView', () => {
     );
 
     expect(screen.getByText('Message')).toBeInTheDocument();
+
   });
 });
