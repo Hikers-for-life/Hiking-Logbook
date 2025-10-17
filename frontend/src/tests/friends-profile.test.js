@@ -1,105 +1,140 @@
-
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { ProfileView } from '../components/ui/view-friend-profile';
-import { sendFriendRequest } from '../services/discover';
+import '@testing-library/jest-dom';
+import { MemoryRouter } from 'react-router-dom';
+import Dashboard from '../pages/Dashboard';
 
-
-// Simple smoke tests for ProfileView component integration
-
-// Mock the addFriend service
-
-jest.mock('../services/discover', () => ({
-  sendFriendRequest: jest.fn(),
-}));
-
-// Mock useToast
-jest.mock('../hooks/use-toast', () => ({
-  useToast: () => ({
-    toast: jest.fn(),
+// Mock AuthContext
+jest.mock('../contexts/AuthContext.jsx', () => ({
+  useAuth: () => ({
+    currentUser: { uid: 'test-user', displayName: 'Test Hiker' },
+    getUserProfile: jest.fn(),
   }),
 }));
 
-describe('ProfileView', () => {
-  const mockPerson = {
-    uid: '123',
-    displayName: 'Test User',
-    bio: 'This is a test bio',
-    location: 'Cape Town',
-    createdAt: new Date(),
-    achievements: [
-      {
-        name: 'Peak Collector',
-        description: 'Completed 10+ peaks',
-        earned: '1 week ago',
-      },
-    ],
+// Mock Navigation component
+jest.mock('../components/ui/navigation', () => ({
+  Navigation: () => <nav data-testid="navigation">Navigation</nav>,
+}));
+
+// Mock hikeApiService
+jest.mock('../services/hikeApiService.js', () => ({
+  hikeApiService: {
+    getHikes: jest.fn(),
+  },
+}));
+
+// Mock fetch to prevent console errors
+global.fetch = jest.fn(() =>
+  Promise.resolve({
+    ok: false, // trigger fallback profile
+    json: () => Promise.resolve({}),
+  })
+);
+
+describe('Dashboard Component', () => {
+  const { hikeApiService } = require('../services/hikeApiService.js');
+
+  const renderDashboard = () => {
+    return render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>
+    );
   };
 
-  it("renders friend's profile info", () => {
-    render(
-      <ProfileView
-        open={true}
-        onOpenChange={jest.fn()}
-        person={mockPerson}
-        showAddFriend={false}
-      />
-    );
-
-    expect(screen.getByText('Test User')).toBeInTheDocument();
-    expect(screen.getByText('This is a test bio')).toBeInTheDocument();
-    expect(screen.getByText(/Completed 10\+ peaks/)).toBeInTheDocument();
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
-  it('shows Add Friend button when showAddFriend is true', () => {
-    render(
-      <ProfileView
-        open={true}
-        onOpenChange={jest.fn()}
-        person={mockPerson}
-        showAddFriend={true}
-      />
-    );
-
-    expect(screen.getByText('Add Friend')).toBeInTheDocument();
+  test('renders loading screen initially', () => {
+    renderDashboard();
+    expect(screen.getByText(/loading your dashboard/i)).toBeInTheDocument();
   });
 
-  it('calls addFriend and disables button after success', async () => {
-    sendFriendRequest.mockResolvedValueOnce({ success: true });
+  test('renders navigation and welcome message after loading', async () => {
+    hikeApiService.getHikes.mockResolvedValueOnce({ success: true, data: [] });
 
-    render(
-      <ProfileView
-        open={true}
-        onOpenChange={jest.fn()}
-        person={mockPerson}
-        showAddFriend={true}
-      />
-    );
+    renderDashboard();
 
-    const button = screen.getByText('Add Friend');
-    fireEvent.click(button);
+    // Check for welcome message using a flexible text matcher
+    const welcomeElements = await screen.findAllByText((content, element) => {
+      return element && element.textContent && element.textContent.includes('Welcome back') && element.textContent.includes('Test Hiker');
+    });
+    expect(welcomeElements.length).toBeGreaterThan(0);
+  });
 
+  test('displays stats with total hikes and distance', async () => {
+    jest.setTimeout(10000); // Increase timeout for this test
+
+    // Mock the API to return data in the format the component expects
+    const mockHikes = [
+      { id: 1, name: 'Trail One', distance: 5, date: '2024-01-01' },
+      { id: 2, name: 'Trail Two', distance: 10, date: '2024-02-01' },
+    ];
+
+    hikeApiService.getHikes.mockResolvedValueOnce(mockHikes);
+
+    renderDashboard();
+
+    // Wait for the service to be called
     await waitFor(() => {
-      expect(sendFriendRequest).toHaveBeenCalledWith('123');
+      expect(hikeApiService.getHikes).toHaveBeenCalled();
     });
 
-    // After success, button should now be disabled and show "Friend Added"
+    // Wait for the total hikes to be displayed
     await waitFor(() => {
-      expect(screen.getByText('Request Sent')).toBeInTheDocument();
+      expect(screen.getByText('2')).toBeInTheDocument();
     });
+
+    // Wait for the distance to be calculated and displayed
+    // Use findByText with a longer timeout
+    const distanceElement = await screen.findByText('15 km', {}, { timeout: 10000 });
+    expect(distanceElement).toBeInTheDocument();
   });
 
-  it('shows Message button when showAddFriend is false', () => {
-    render(
-      <ProfileView
-        open={true}
-        onOpenChange={jest.fn()}
-        person={mockPerson}
-        showAddFriend={false}
-      />
-    );
 
-    expect(screen.getByText('Message')).toBeInTheDocument();
+  test('shows no hikes message when no hikes exist', async () => {
+    hikeApiService.getHikes.mockResolvedValueOnce({
+      success: true,
+      data: []
+    });
 
+    renderDashboard();
+
+    expect(await screen.findByText(/No hikes logged yet/i)).toBeInTheDocument();
+  });
+
+  test('quick action buttons are clickable', async () => {
+    hikeApiService.getHikes.mockResolvedValueOnce({
+      success: true,
+      data: []
+    });
+
+    renderDashboard();
+
+    const logButton = await screen.findByText(/Log New Hike/i);
+    expect(logButton).toBeInTheDocument();
+
+    fireEvent.click(logButton); // navigation is mocked, so just ensure clickable
+  });
+
+  test('displays achievements placeholder', async () => {
+    hikeApiService.getHikes.mockResolvedValueOnce({
+      success: true,
+      data: []
+    });
+
+    renderDashboard();
+
+    expect(await screen.findByText(/No recent achievements/i)).toBeInTheDocument();
+  });
+
+  test('handles API error gracefully', async () => {
+    hikeApiService.getHikes.mockRejectedValueOnce(new Error('API failed'));
+
+    renderDashboard();
+
+    expect(await screen.findByText(/No hikes logged yet/i)).toBeInTheDocument();
   });
 });

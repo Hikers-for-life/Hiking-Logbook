@@ -7,7 +7,7 @@ import { getUserHikeCount } from "../../services/userServices";
 import { hikeApiService } from "../../services/hikeApiService.js";
 import { useEffect, useState, useCallback } from "react";
 import { getUserStats } from "../../services/statistics";
-import { discoverFriends, addFriend } from "../../services/discover";
+import { discoverFriends, sendFriendRequest } from "../../services/discover";
 import { useToast } from "../../hooks/use-toast";
 import { ChatBox } from "./chat-box";
 import { 

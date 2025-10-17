@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-
 import { Navigation } from '../components/ui/navigation';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -15,7 +14,7 @@ import { ProfileView as OwnProfileView } from '../components/ui/profile-view';
 
 import { searchUsers, getUserProfile } from '../services/userServices';
 import { fetchFeed, likeFeed, commentFeed, shareFeed, deleteCommentFeed, deleteFeed, updateFeed, getFeedById } from '../services/feed';
-import { discoverFriends, sendFriendRequest, getIncomingRequests, respondToRequest, addFriend } from '../services/discover';
+import { discoverFriends, sendFriendRequest, getIncomingRequests, respondToRequest } from '../services/discover';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
@@ -132,6 +131,7 @@ const Friends = () => {
   useEffect(() => {
     const fetchFriends = async () => {
       try {
+        setFriendsLoading(true);
         const res = await fetch(`${API_BASE_URL}/friends/${currentUser.uid}`);
         const data = await res.json();
         if (data.success) {
@@ -141,6 +141,8 @@ const Friends = () => {
         }
       } catch (err) {
         console.error('Error fetching friends:', err);
+      }finally{
+        setFriendsLoading(false); // stop loading
       }
     };
 
@@ -512,7 +514,7 @@ const Friends = () => {
     setShareCaption('');
 
     try {
-      // ✅ use service function instead of fetch
+      // use service function instead of fetch
       const data = await shareFeed(postToShare.id, {
         sharerId: user.uid,
         sharerName: user.displayName || user.email,
@@ -576,20 +578,7 @@ const Friends = () => {
     // keep previous list for rollback
     const prev = [...recentActivity];
     setEditingPost(null);
-  try {
-    //  use service function instead of fetch
-    const data = await shareFeed(activity.id, {
-      sharerId: user.uid,
-      sharerName: user.displayName || user.email,
-      sharerAvatar: tempShare.avatar,
-      original: originalData,
-    });
-    } catch (err) {
-    console.error('Failed to edit post:', err);
-    setRecentActivity(prev); // rollback
-  }
-};
-
+  
     // find activity to decide whether it's a share (edit caption) or original (edit description)
     const activity = recentActivity.find((a) => a.id === activityId) || {};
     const isShare = activity.type === 'share';
@@ -950,13 +939,6 @@ const Friends = () => {
                           {user.location || "Not yet set"}
                         </p>
                       </div>
-
-                    </div>
-                    <p className="text-sm text-muted-foreground flex items-center gap-1">
-                      <MapPin className="h-3 w-3" />
-                      {user.location || 'Not yet set'}
-                    </p>
-                  </div>
                 </div>
               </CardHeader>
             </div>
@@ -1565,7 +1547,6 @@ const Friends = () => {
                     </div>
                   )}
                 </div>
-                )}
               </CardContent>
             </Card>
           </TabsContent>

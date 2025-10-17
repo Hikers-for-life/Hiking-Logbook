@@ -28,6 +28,8 @@
     "typescript-eslint": "^8.39.1"
   },
   "dependencies": {
+    "format": "^0.2.2",
+    "lint": "^0.8.19",
     "react-scripts": "^5.0.1"
   }
 }
