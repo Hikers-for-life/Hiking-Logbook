@@ -14,6 +14,7 @@ import Dashboard from './pages/Dashboard.jsx';
 import Friends from './pages/Friends.jsx';
 import  {Toaster}  from "./components/ui/toaster.jsx"
 import Achievements from './pages/Achievements.jsx';
+import Messages from './pages/Messages.jsx';
 
 import { API_BASE } from './api/api.js';//ANNAH
 
@@ -68,6 +69,14 @@ const App = () => {
           element={
             <ProtectedRoute>
               <Achievements />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/messages"
+          element={
+            <ProtectedRoute>
+              <Messages />
             </ProtectedRoute>
           }
         />

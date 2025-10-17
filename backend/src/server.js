@@ -14,6 +14,7 @@ import publicRoutes from './routes/public.js';
 import feedRoutes from './routes/feed.js';
 import discoverRoutes from './routes/discover.js';
 import friendRoutes from "./routes/friends.js";
+import chatRoutes from './routes/chat.js';
 
 dotenv.config();
 
@@ -53,6 +54,7 @@ app.use('/api/goals', goalsRoutes);
 app.use("/api/friends", friendRoutes);
 app.use('/api/feed', feedRoutes);
 app.use('/api/discover', discoverRoutes);
+app.use('/api/chat', chatRoutes);
 
 // Public API routes (no authentication required)
 app.use('/api/public', publicRoutes);

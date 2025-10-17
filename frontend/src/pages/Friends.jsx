@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { searchUsers } from "../services/userServices";
 import { ProfileView } from "../components/ui/view-friend-profile";
+import { ProfileView as OwnProfileView } from "../components/ui/profile-view";
 import { fetchFeed, likeFeed, commentFeed, shareFeed, fetchComments, deleteCommentFeed,deleteFeed } from "../services/feed";//ANNAH HERE
 import { discoverFriends, addFriend } from "../services/discover";//ANNAH HERE
 import { getFirestore} from "firebase/firestore";
@@ -38,6 +39,7 @@ const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api
 const Friends = () => {
   const [selectedProfile, setSelectedProfile] = useState(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isOwnProfile, setIsOwnProfile] = useState(false);
 
 //ANNAH HERE
 
@@ -46,13 +48,15 @@ const Friends = () => {
   const [expandedComments, setExpandedComments] = useState({});
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [friendsLoading, setFriendsLoading] = useState(true);
+  const [activityLoading, setActivityLoading] = useState(true);
 //ANNAH HERE
 
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [searchError, setSearchError] = useState("");
-   const { currentUser } = useAuth(); 
-   const [friends, setFriends] = useState([]); 
+   const { currentUser } = useAuth();
+   const [friends, setFriends] = useState([]);
    const [userStats,setUserStats] = useState([]);
     const { toast } = useToast();
 
@@ -108,6 +112,7 @@ const Friends = () => {
   useEffect(() => {
   const fetchFriends = async () => {
     try {
+      setFriendsLoading(true);
       const res = await fetch(`${API_BASE_URL}/friends/${currentUser.uid}`);
       const data = await res.json();
       if (data.success) {
@@ -117,6 +122,8 @@ const Friends = () => {
       }
     } catch (err) {
       console.error("Error fetching friends:", err);
+    } finally {
+      setFriendsLoading(false);
     }
   };
 
@@ -145,6 +152,9 @@ const handleBlockFriend = async (fid) => {
   }
 };
   const handleViewProfile = (person, showAddFriend = false) => {
+    // Check if viewing own profile
+    const isOwn = person.uid === currentUser.uid || person.id === currentUser.uid;
+    setIsOwnProfile(isOwn);
     setSelectedProfile({ ...person, showAddFriend });
     setIsProfileOpen(true);
   };
@@ -158,21 +168,21 @@ const auth = getAuth();
 
     const loadFeed = async () => {
       try {
-        setLoading(true);
+        setActivityLoading(true);
         const data = await fetchFeed(); // fetches activities WITH comments included
         if (!isMounted) return;
 
         // Each activity object can now include a comments array
         const activitiesWithComments = (Array.isArray(data) ? data : data.activities || []).map(a =>  ({
           ...a,
-          comments: a.comments || [], // default empty array if backend doesn’t include
+          comments: a.comments || [], // default empty array if backend doesn't include
         }));
 
         setRecentActivity(activitiesWithComments);
       } catch (err) {
         console.error("Failed to fetch feed:", err);
       } finally {
-        if (isMounted) setLoading(false);
+        if (isMounted) setActivityLoading(false);
       }
     };
 
@@ -318,7 +328,7 @@ const handleShare = async (activity) => {
   setRecentActivity((prev) => [tempShare, ...prev]);
 
   try {
-    // ✅ use service function instead of fetch
+    //  use service function instead of fetch
     const data = await shareFeed(activity.id, {
       sharerId: user.uid,
       sharerName: user.displayName || user.email,
@@ -449,8 +459,9 @@ const handleDeletePost = async (activityId) => {
                           <span
                             className="font-semibold text-foreground cursor-pointer hover:underline"
                             onClick={() => {
-                              const isFriend = friends.some((f) => f.id === user.id); 
-                              handleViewProfile(user, !isFriend); // showAddFriend = false if already friend
+                              const isFriend = friends.some((f) => f.id === user.id);
+                              // Pass user object with uid property for profile view
+                              handleViewProfile({ ...user, uid: user.id }, !isFriend); // showAddFriend = false if already friend
                             }}
                           >
                             {user.displayName}
@@ -477,6 +488,13 @@ const handleDeletePost = async (activityId) => {
           </TabsList>
           {/*MY FRIENDS */}
           <TabsContent value="friends" className="space-y-6">
+            {friendsLoading ? (
+              <p className="text-muted-foreground text-center py-8">Friends loading...</p>
+            ) : friends.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">
+                No friends yet. Search or discover new potential friends!
+              </p>
+            ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {friends.map((friend) => (
                 <Card key={friend.id} className="bg-card border-border shadow-elevation">
@@ -550,6 +568,7 @@ const handleDeletePost = async (activityId) => {
                 </Card>
               ))}
             </div>
+            )}
           </TabsContent>
 
           {/*ACTIVITY FEED*/ }
@@ -562,6 +581,11 @@ const handleDeletePost = async (activityId) => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
+                {activityLoading ? (
+                  <p className="text-muted-foreground text-center py-8">Activity feed is loading...</p>
+                ) : recentActivity.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-8">No activity yet.</p>
+                ) : (
                 <div className="space-y-6">
                   {recentActivity.map((activity) => {
                     const isOwnPost = activity.userId === auth.currentUser.uid; // works for normal & shared
@@ -734,6 +758,7 @@ const handleDeletePost = async (activityId) => {
                     );
                   })}
                 </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -808,12 +833,19 @@ const handleDeletePost = async (activityId) => {
         </Tabs>
       </main>
 
-      <ProfileView 
-        open={isProfileOpen}
-        onOpenChange={setIsProfileOpen}
-        person={selectedProfile}
-        showAddFriend={selectedProfile?.showAddFriend || false}
-      />
+      {isOwnProfile ? (
+        <OwnProfileView
+          open={isProfileOpen}
+          onOpenChange={setIsProfileOpen}
+        />
+      ) : (
+        <ProfileView
+          open={isProfileOpen}
+          onOpenChange={setIsProfileOpen}
+          person={selectedProfile}
+          showAddFriend={selectedProfile?.showAddFriend || false}
+        />
+      )}
     </div>
   );
 };

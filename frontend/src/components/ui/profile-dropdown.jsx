@@ -13,6 +13,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { User, Settings, LogOut, Trash2 } from 'lucide-react';
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+
 export const ProfileDropdown = ({ onLogout, onViewProfile, onEditProfile}) => {
 const [profile, setProfile] = useState(null);
 const [isDeleting, setIsDeleting] = useState(false);
@@ -23,7 +25,7 @@ const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchProfile = async () => {
     try {
-      const res = await fetch(`http://localhost:3001/api/users/${currentUser.uid}`);
+      const res = await fetch(`${API_BASE_URL}/users/${currentUser.uid}`);
       if (!res.ok) throw new Error("Failed to fetch profile");
       const data = await res.json();
       setProfile(data);  // now profile has bio, location, createdAt
