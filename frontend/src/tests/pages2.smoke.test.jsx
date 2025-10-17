@@ -1,11 +1,26 @@
 import '@testing-library/jest-dom';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { sendFriendRequest } from '../services/discover';
+import { AuthProvider, useAuth } from '../contexts/AuthContext';
 
 // Common mocks
 jest.mock('../components/ui/navigation', () => ({
   Navigation: () => <nav>Navigation</nav>,
 }));
+
+jest.mock('../services/discover', () => ({
+  sendFriendRequest: jest.fn(),
+}));
+
+
+jest.mock('../hooks/use-toast', () => ({
+  useToast: () => ({
+    toast: jest.fn(),
+  }),
+}));
+
+
 jest.mock('../hooks/usePageTitle', () => ({ usePageTitle: () => {} }));
 
 jest.mock('../contexts/AuthContext.jsx', () => {
