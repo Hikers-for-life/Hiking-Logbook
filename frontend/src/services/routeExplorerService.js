@@ -1,6 +1,7 @@
 // src/services/routeExplorerService.js
 
-const ORS_API_KEY = process.env.REACT_APP_OPENROUTESERVICE_API_KEY;
+// Get API key dynamically to support testing
+const getORSAPIKey = () => process.env.REACT_APP_OPENROUTESERVICE_API_KEY;
 
 // Helper function to calculate distance (Haversine formula) - no changes needed
 const calculateDistance = (coord1, coord2) => {
@@ -62,7 +63,7 @@ export const routeExplorerService = {
    */
   async discoverNearbyTrails(lat, lng, radiusKm) {
     // Check if API key is available
-    if (!ORS_API_KEY) {
+    if (!getORSAPIKey()) {
       console.warn('OpenRouteService API key not found. Using curated South African trails.');
       return this.getNearbyCuratedTrails(lat, lng, radiusKm);
     }
@@ -71,7 +72,7 @@ export const routeExplorerService = {
 
     try {
       console.log('Attempting to fetch nearby trails from OpenRouteService...');
-      console.log('API Key present:', !!ORS_API_KEY);
+      console.log('API Key present:', !!getORSAPIKey());
       console.log('Location:', { lat, lng, radiusKm });
 
       // Try different API endpoints and formats
@@ -89,10 +90,10 @@ export const routeExplorerService = {
           
           response = await fetch(endpoint, {
             method: 'POST',
-            headers: {
-              'Authorization': ORS_API_KEY,
-              'Content-Type': 'application/json',
-            },
+                headers: {
+                  'Authorization': getORSAPIKey(),
+                  'Content-Type': 'application/json',
+                },
             body: JSON.stringify({
               request: 'pois',
               geometry: {
