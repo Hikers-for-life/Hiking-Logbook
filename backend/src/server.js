@@ -13,6 +13,7 @@ import goalsRoutes from './routes/goals.js';
 import publicRoutes from './routes/public.js';
 import feedRoutes from './routes/feed.js';
 import discoverRoutes from './routes/discover.js';
+import hikeInvitesRoutes from './routes/hikeInvites.js';
 
 import friendRoutes from "./routes/friends.js";
 import chatRoutes from './routes/chat.js';
@@ -59,6 +60,7 @@ app.use('/api/friends', friendRoutes);
 app.use('/api/feed', feedRoutes);
 app.use('/api/discover', discoverRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/hike-invites', hikeInvitesRoutes);
 
 // Public API routes (no authentication required)
 app.use('/api/public', publicRoutes);

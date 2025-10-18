@@ -4,6 +4,8 @@ import { Navigation } from '../components/ui/navigation';
 import { useNavigate } from 'react-router-dom';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { hikeApiService } from '../services/hikeApiService.js';
+import { achievementApiService } from '../services/achievementApiService.js';
+import RecentAchievements from '../components/RecentAchievements';
 
 import {
   Card,
@@ -36,22 +38,11 @@ const Dashboard = () => {
   });
   const [loading, setLoading] = useState(true);
   const [hikesLoading, setHikesLoading] = useState(true);
+  const [recentAchievements, setRecentAchievements] = useState([]);
+  const [achievementsLoading, setAchievementsLoading] = useState(true);
 
   // Set page title
   usePageTitle('Dashboard');
-
-  // Navigation handlers
-  const handleStartLogging = () => {
-    navigate('/logbook');
-  };
-
-  const handlePlanTrip = () => {
-    navigate('/hike-planner');
-  };
-
-  const handleExploreTrails = () => {
-    navigate('/trail-explorer');
-  };
 
   // Load user profile
   useEffect(() => {
@@ -147,7 +138,7 @@ const Dashboard = () => {
             };
           })
           .sort((a, b) => b.jsDate - a.jsDate)
-          .slice(0, 6); // Show more hikes now that we have more space
+          .slice(0, 6);
 
         setRecentHikes(processedHikes);
       } catch (error) {
@@ -163,6 +154,62 @@ const Dashboard = () => {
     }
   }, [currentUser, userProfile]);
 
+  // Load recent achievements
+  // Load recent achievements
+useEffect(() => {
+  const loadRecentAchievements = async () => {
+    if (!currentUser) return;
+
+    try {
+      setAchievementsLoading(true);
+      
+      const response = await achievementApiService.getBadges();
+      const badges = response.data || [];
+      
+      // Filter badges that have earnedDate (earned badges)
+      const earnedBadges = badges.filter(badge => {
+        // A badge is earned if it has an earnedDate or progress is 100
+        return badge.earnedDate || badge.progress === 100;
+      });
+      
+      console.log('🏆 Earned badges found:', earnedBadges);
+      
+      // Sort by most recent earnedDate
+      const sortedBadges = earnedBadges
+        .sort((a, b) => {
+          const dateA = new Date(a.earnedDate);
+          const dateB = new Date(b.earnedDate);
+          return dateB - dateA; // Most recent first
+        })
+        .slice(0, 3); // Get top 3 most recent
+      
+      console.log('🎯 Recent achievements to display:', sortedBadges);
+      setRecentAchievements(sortedBadges);
+    } catch (error) {
+      console.error('❌ Error loading recent achievements:', error);
+      setRecentAchievements([]);
+    } finally {
+      setAchievementsLoading(false);
+    }
+  };
+
+  loadRecentAchievements();
+}, [currentUser]);
+
+  // Navigation handlers
+  const handleStartLogging = () => {
+    navigate('/logbook');
+  };
+
+  const handlePlanTrip = () => {
+    navigate('/hike-planner');
+  };
+
+  const handleExploreTrails = () => {
+    navigate('/trail-explorer');
+  };
+
+  // Conditional returns AFTER all hooks
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -205,7 +252,7 @@ const Dashboard = () => {
           </p>
         </div>
 
-        {/* Stats Overview - Only 2 cards now */}
+        {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -295,7 +342,7 @@ const Dashboard = () => {
           </Card>
         </div>
 
-        {/* Recent Hikes - Now in row format */}
+        {/* Recent Hikes */}
         <div className="mb-8">
           <Card>
             <CardHeader>
@@ -316,7 +363,6 @@ const Dashboard = () => {
               ) : recentHikes.length > 0 ? (
                 <div className="space-y-4">
                   {recentHikes.map((hike) => {
-                    // Handle date formatting
                     let formattedDate = 'Unknown date';
                     if (hike.date?._seconds !== undefined) {
                       const jsDate = new Date(hike.date._seconds * 1000);
@@ -329,7 +375,6 @@ const Dashboard = () => {
                       formattedDate = hike.formattedDate;
                     }
 
-                    // Handle difficulty badge variant
                     const getDifficultyVariant = (difficulty) => {
                       const diff = difficulty?.toLowerCase();
                       if (diff === 'hard' || diff === 'difficult')
@@ -416,11 +461,10 @@ const Dashboard = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                <Trophy className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No recent achievements</p>
-                <p className="text-sm">Complete hikes to earn badges!</p>
-              </div>
+              <RecentAchievements 
+                achievements={recentAchievements} 
+                loading={achievementsLoading}
+              />
             </CardContent>
           </Card>
         </div>
