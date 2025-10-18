@@ -1,5 +1,4 @@
-import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
-
+import { useState, useMemo, useEffect, useCallback, useRef  } from 'react';
 import {
   Card,
   CardContent,
@@ -11,7 +10,7 @@ import { Badge } from '../components/ui/badge';
 import { Navigation } from '../components/ui/navigation';
 import { Input } from '../components/ui/input';
 import NewHikePlanForm from '../components/NewHikePlanForm';
-
+import FriendInviteDialog from '../components/FriendInviteDialog';
 import RouteExplorer from '../components/RouteExplorer';
 import {
   Calendar,
@@ -23,6 +22,7 @@ import {
   X,
   RotateCcw,
   Search,
+  UserPlus,
   Trash2,
   Edit,
 } from 'lucide-react';
@@ -64,7 +64,8 @@ const HikePlanner = () => {
   const { toast } = useToast();
 
   const { currentUser } = useAuth();
-
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  const [selectedHikeForInvite, setSelectedHikeForInvite] = useState(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isNewPlanOpen, setIsNewPlanOpen] = useState(false);
   const [isRouteExplorerOpen, setIsRouteExplorerOpen] = useState(false);
@@ -89,6 +90,7 @@ const HikePlanner = () => {
       hike.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       hike.location.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
 
   useEffect(() => {
     if (!currentUser) return;
@@ -409,6 +411,11 @@ const HikePlanner = () => {
     }
   };
 
+  const handleOpenInviteDialog = (hike) => {
+    setSelectedHikeForInvite(hike);
+    setInviteDialogOpen(true);
+  };
+
   // Handle form submission (create or update)
   const handleFormSubmit = async (planData) => {
     if (isEditMode) {
@@ -717,113 +724,177 @@ const HikePlanner = () => {
                   {!isLoading &&
                     !error &&
                     displayedAdventures.length > 0 &&
-                    displayedAdventures.map((trip) => (
-                      <Card
-                        key={trip.id}
-                        className="shadow-mountain hover:shadow-elevation transition-all duration-300 bg-card border-border"
-                      >
-                        <CardContent className="p-4">
-                          <div className="flex items-start justify-between mb-3">
-                            <div>
-                              <h3 className="text-lg font-semibold text-foreground mb-1">
-                                {trip.title}
-                              </h3>
-                              <div className="flex items-center text-muted-foreground text-sm space-x-4">
-                                <span>
-                                  {trip.jsDate.toLocaleDateString('en-US', {
-                                    month: 'long',
-                                    day: 'numeric',
-                                    year: 'numeric',
-                                  })}
-                                </span>
-                                {trip.startTime && (
-                                  <span>{trip.startTime}</span>
-                                )}
-                                <Badge
-                                  variant={
-                                    trip.status === 'confirmed'
-                                      ? 'default'
-                                      : 'secondary'
-                                  }
-                                  className={
-                                    trip.status === 'confirmed'
-                                      ? 'bg-forest text-primary-foreground'
-                                      : 'bg-trail/20 text-foreground border-trail'
-                                  }
-                                >
-                                  {trip.status}
-                                </Badge>
+                    displayedAdventures.map((trip) => {
+                      // ✅ Debug logging
+                      console.log('🔍 Hike:', trip.title);
+                      console.log('   - trip.createdBy:', trip.createdBy);
+                      console.log('   - trip.userId:', trip.userId);
+                      console.log('   - currentUser.uid:', currentUser?.uid);
+                      console.log('   - trip.invitedBy:', trip.invitedBy);
+                      
+                      // ✅ Check if current user is the creator
+                      const isCreator = trip.createdBy === currentUser?.uid || trip.userId === currentUser?.uid;
+                      
+                      console.log('   - isCreator:', isCreator);
+                      console.log('---');
+                      
+                      return (
+                        <Card
+                          key={trip.id}
+                          className="shadow-mountain hover:shadow-elevation transition-all duration-300 bg-card border-border"
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between mb-3">
+                              <div>
+                                <h3 className="text-lg font-semibold text-foreground mb-1">
+                                  {trip.title}
+                                </h3>
+                                <div className="flex items-center text-muted-foreground text-sm space-x-4 flex-wrap gap-2">
+                                  <span>
+                                    {trip.jsDate.toLocaleDateString('en-US', {
+                                      month: 'long',
+                                      day: 'numeric',
+                                      year: 'numeric',
+                                    })}
+                                  </span>
+                                  {trip.startTime && (
+                                    <span>{trip.startTime}</span>
+                                  )}
+                                  <Badge
+                                    variant={
+                                      trip.status === 'confirmed'
+                                        ? 'default'
+                                        : 'secondary'
+                                    }
+                                    className={
+                                      trip.status === 'confirmed'
+                                        ? 'bg-forest text-primary-foreground'
+                                        : 'bg-trail/20 text-foreground border-trail'
+                                    }
+                                  >
+                                    {trip.status}
+                                  </Badge>
+                                  {/* ✅ Show "Invited" badge if not creator */}
+                                  {!isCreator && trip.invitedBy && (
+                                    <Badge variant="outline" className="border-blue-500 text-blue-500">
+                                      Invited by Friend
+                                    </Badge>
+                                  )}
+                                  {/* ✅ Debug badge - Remove this after testing */}
+                                  {isCreator && (
+                                    <Badge variant="outline" className="border-green-500 text-green-500">
+                                      You Created This
+                                    </Badge>
+                                  )}
+                                </div>
                               </div>
+                              <Badge
+                                variant="outline"
+                                className="border-forest text-forest"
+                              >
+                                {trip.difficulty}
+                              </Badge>
                             </div>
-                            <Badge
-                              variant="outline"
-                              className="border-forest text-forest"
-                            >
-                              {trip.difficulty}
-                            </Badge>
-                          </div>
-                          <div className="space-y-2 text-sm">
-                            <div className="flex items-center text-muted-foreground">
-                              <MapPin className="h-4 w-4 mr-2 text-forest" />
-                              {trip.location}
-                            </div>
-                            <div className="flex items-center text-muted-foreground">
-                              <Mountain className="h-4 w-4 mr-2 text-trail" />
-                              {trip.distance}
-                            </div>
-                            {trip.description && (
-                              <div className="text-muted-foreground mt-2">
-                                <p className="text-xs">{trip.description}</p>
+                            <div className="space-y-2 text-sm">
+                              <div className="flex items-center text-muted-foreground">
+                                <MapPin className="h-4 w-4 mr-2 text-forest" />
+                                {trip.location}
                               </div>
-                            )}
-                            {trip.notes && (
-                              <div className="text-muted-foreground">
-                                <p className="text-xs">
-                                  <strong>Notes:</strong> {trip.notes}
-                                </p>
+                              <div className="flex items-center text-muted-foreground">
+                                <Mountain className="h-4 w-4 mr-2 text-trail" />
+                                {trip.distance}
                               </div>
-                            )}
-                          </div>
-                          <div className="flex justify-end space-x-2 mt-4">
-                            {trip.status !== 'cancelled' &&
-                              trip.status !== 'started' && (
-                                <Button
-                                  size="sm"
-                                  className="bg-green-600 hover:bg-green-700 text-white"
-                                  onClick={() => handleStartPlannedHike(trip)}
-                                >
-                                  <Mountain className="h-4 w-4 mr-1" />
-                                  Start Hike
-                                </Button>
+                              {trip.description && (
+                                <div className="text-muted-foreground mt-2">
+                                  <p className="text-xs">{trip.description}</p>
+                                </div>
                               )}
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="text-forest hover:text-forest hover:bg-muted"
-                              onClick={() => handleEditPlannedHike(trip)}
-                            >
-                              <Edit className="h-4 w-4 mr-1" />
-                              Edit
-                            </Button>
-                            {trip.status !== 'cancelled' &&
-                              trip.status !== 'started' && (
+                              {trip.notes && (
+                                <div className="text-muted-foreground">
+                                  <p className="text-xs">
+                                    <strong>Notes:</strong> {trip.notes}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                            
+                            {/* ✅ Action Buttons with Conditional Rendering */}
+                            <div className="flex justify-end space-x-2 mt-4 flex-wrap gap-2">
+                              {trip.status !== 'cancelled' &&
+                                trip.status !== 'started' && (
+                                  <>
+                                    <Button
+                                      size="sm"
+                                      className="bg-green-600 hover:bg-green-700 text-white"
+                                      onClick={() => handleStartPlannedHike(trip)}
+                                    >
+                                      <Mountain className="h-4 w-4 mr-1" />
+                                      Start Hike
+                                    </Button>
+                                    
+                                    {/* ✅ Only show Invite button if user is the creator */}
+                                    {isCreator ? (
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="text-forest hover:text-white hover:bg-forest border-forest"
+                                        onClick={() => handleOpenInviteDialog(trip)}
+                                      >
+                                        <UserPlus className="h-4 w-4 mr-1" />
+                                        Invite
+                                      </Button>
+                                    ) : (
+                                      <div className="text-xs text-muted-foreground italic">
+                                        (Invited hike - cannot invite others)
+                                      </div>
+                                    )}
+                                  </>
+                                )}
+                              
+                              {/* ✅ Only show Edit button if user is the creator */}
+                              {isCreator && (
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                                  onClick={() =>
-                                    handleCancelPlannedHike(trip.id)
-                                  }
+                                  className="text-forest hover:text-forest hover:bg-muted"
+                                  onClick={() => handleEditPlannedHike(trip)}
                                 >
-                                  <X className="h-4 w-4 mr-1" />
-                                  Cancel
+                                  <Edit className="h-4 w-4 mr-1" />
+                                  Edit
                                 </Button>
                               )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-
+                              
+                              {/* ✅ Show "Cancel" for creator, "Leave" for invited users */}
+                              {trip.status !== 'cancelled' &&
+                                trip.status !== 'started' && (
+                                  isCreator ? (
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                      onClick={() => handleCancelPlannedHike(trip.id)}
+                                    >
+                                      <X className="h-4 w-4 mr-1" />
+                                      Cancel
+                                    </Button>
+                                  ) : (
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                      onClick={() => handleCancelPlannedHike(trip.id)}
+                                    >
+                                      <X className="h-4 w-4 mr-1" />
+                                      Leave
+                                    </Button>
+                                  )
+                                )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                            
                   {!isLoading && !error && displayedAdventures.length === 0 && (
                     <Card
                       className="border-2 border-dashed border-border hover:border-forest transition-all duration-300 cursor-pointer"
@@ -1095,6 +1166,12 @@ const HikePlanner = () => {
         <RouteExplorer
           isOpen={isRouteExplorerOpen}
           onOpenChange={setIsRouteExplorerOpen}
+        />
+
+        <FriendInviteDialog
+          open={inviteDialogOpen}
+          onOpenChange={setInviteDialogOpen}
+          hike={selectedHikeForInvite}
         />
       </div>
     </div>
