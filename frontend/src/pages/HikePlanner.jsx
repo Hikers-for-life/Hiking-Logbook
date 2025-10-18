@@ -733,7 +733,7 @@ const HikePlanner = () => {
                       console.log('   - trip.invitedBy:', trip.invitedBy);
                       
                       // ✅ Check if current user is the creator
-                      const isCreator = trip.createdBy === currentUser?.uid || trip.userId === currentUser?.uid;
+                      const isCreator = trip.createdBy === currentUser?.uid;
                       
                       console.log('   - isCreator:', isCreator);
                       console.log('---');
