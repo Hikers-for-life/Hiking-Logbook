@@ -1,9 +1,7 @@
-// src/components/FriendInviteDialog.jsx
 import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from './ui/dialog';
@@ -115,18 +113,18 @@ const FriendInviteDialog = ({ open, onOpenChange, hike }) => {
             <UserPlus className="h-5 w-5 text-forest" />
             Invite Friends to Hike
           </DialogTitle>
-          <DialogDescription>
-            {hike && (
-              <div className="mt-2 p-3 bg-muted rounded-lg">
-                <p className="font-medium text-foreground">{hike.title}</p>
-                <p className="text-sm text-muted-foreground">{hike.location}</p>
-              </div>
-            )}
-          </DialogDescription>
         </DialogHeader>
 
+        {/* ✅ FIX: Replace DialogDescription with a plain div */}
+        {hike && (
+          <div className="mt-2 p-3 bg-muted rounded-lg">
+            <p className="font-medium text-foreground">{hike.title}</p>
+            <p className="text-sm text-muted-foreground">{hike.location}</p>
+          </div>
+        )}
+
         {/* Search Bar */}
-        <div className="relative">
+        <div className="relative mt-4">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
             placeholder="Search friends..."
@@ -137,7 +135,7 @@ const FriendInviteDialog = ({ open, onOpenChange, hike }) => {
         </div>
 
         {/* Friends List */}
-        <div className="max-h-[400px] overflow-y-auto space-y-2">
+        <div className="max-h-[400px] overflow-y-auto space-y-2 mt-4">
           {loading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />

@@ -135,13 +135,17 @@ export const dbUtils = {
         difficulty: plannedHikeData.difficulty || 'Easy',
         description: plannedHikeData.description || '',
         notes: plannedHikeData.notes || '',
-        status: 'planning',
+        status: plannedHikeData.status || 'planning',
         participants: plannedHikeData.participants || [userId],
-        createdBy: userId,
+        // ✅ CRITICAL: Preserve createdBy if it's passed, otherwise set to userId
+        createdBy: plannedHikeData.createdBy || userId,
+        userId: userId, // Still keep this for backward compatibility
+        maxParticipants: plannedHikeData.maxParticipants || 10,
+        // ✅ Preserve invitation metadata
+        invitedBy: plannedHikeData.invitedBy || null,
+        originalHikeId: plannedHikeData.originalHikeId || null,
         createdAt: new Date(),
         updatedAt: new Date(),
-        userId,
-        maxParticipants: plannedHikeData.maxParticipants || 10,
       };
 
       const db = this.getDb();
@@ -151,6 +155,8 @@ export const dbUtils = {
         .collection('plannedHikes')
         .add(mapped);
 
+      console.log('✅ Added planned hike:', docRef.id, 'createdBy:', mapped.createdBy);
+
       // Re-evaluate badges/stats
       const stats = await this.getUserHikeStats(userId);
       await evaluateAndAwardBadges(userId, stats).catch((e) =>
@@ -159,6 +165,7 @@ export const dbUtils = {
 
       return { success: true, id: docRef.id };
     } catch (err) {
+      console.error('❌ addPlannedHike error:', err);
       throw new Error(`addPlannedHike failed: ${err.message}`);
     }
   },
@@ -1408,16 +1415,22 @@ export const dbUtils = {
     try {
       const db = this.getDb();
       
+      console.log('🔍 Querying invitations for:', userId);
+      
+      // ✅ SIMPLIFIED: Query without orderBy to avoid index requirement
       const snapshot = await db
         .collection('hikeInvitations')
         .where('toUserId', '==', userId)
         .where('status', '==', 'pending')
-        .orderBy('createdAt', 'desc')
-        .get();
+        .get(); // Removed .orderBy('createdAt', 'desc')
 
+      console.log('📊 Query returned:', snapshot.size, 'documents');
+      
       const invitations = [];
       snapshot.forEach(doc => {
         const data = doc.data();
+        console.log('📄 Document:', doc.id, data);
+        
         invitations.push({
           id: doc.id,
           ...data,
@@ -1425,8 +1438,16 @@ export const dbUtils = {
         });
       });
 
+      // ✅ Sort in JavaScript instead of Firestore (no index needed)
+      invitations.sort((a, b) => {
+        const dateA = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt);
+        const dateB = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt);
+        return dateB - dateA; // Newest first
+      });
+
       return invitations;
     } catch (err) {
+      console.error('❌ getPendingHikeInvitations error:', err);
       throw new Error(`getPendingHikeInvitations failed: ${err.message}`);
     }
   },
@@ -1453,7 +1474,7 @@ export const dbUtils = {
   /**
    * Accept a hike invitation
    */
-  async acceptHikeInvitation(invitationId, userId) {
+    async acceptHikeInvitation(invitationId, userId) {
     try {
       const db = this.getDb();
       
@@ -1476,7 +1497,7 @@ export const dbUtils = {
         throw new Error(`Invitation has already been ${invitation.status}`);
       }
 
-      // Create the planned hike for the accepting user
+      // ✅ Create the planned hike for the accepting user
       const plannedHikeData = {
         title: invitation.hikeDetails.title,
         location: invitation.hikeDetails.location,
@@ -1487,9 +1508,14 @@ export const dbUtils = {
         notes: invitation.hikeDetails.notes,
         startTime: invitation.hikeDetails.startTime,
         status: 'confirmed',
-        invitedBy: invitation.fromUserId,
+        invitedBy: invitation.fromUserId, // ✅ Track who invited them
         originalHikeId: invitation.hikeId,
-        participants: [userId]
+        participants: [userId],
+        // ✅ CRITICAL: Set createdBy to the person who ACCEPTED (not the sender)
+        createdBy: userId, // This makes the acceptor NOT see invite button
+        userId: userId,    // Redundant but keeping for compatibility
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       const result = await this.addPlannedHike(userId, plannedHikeData);
@@ -1502,8 +1528,12 @@ export const dbUtils = {
         updatedAt: new Date()
       });
 
+      console.log('✅ Invitation accepted, created planned hike:', result.id);
+      console.log('✅ createdBy set to:', userId);
+
       return { success: true, id: result.id };
     } catch (err) {
+      console.error('❌ acceptHikeInvitation error:', err);
       throw new Error(`acceptHikeInvitation failed: ${err.message}`);
     }
   },
