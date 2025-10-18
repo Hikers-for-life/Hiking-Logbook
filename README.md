@@ -4,9 +4,16 @@
 
 ![Test Coverage](https://img.shields.io/badge/Test%20Coverage-81.31%25-brightgreen)
 
-A comprehensive hiking application that allows users to track their hiking adventures, plan trips, and connect with fellow hikers. Built with modern web technologies and a robust authentication system.
+Hiking Logbook is a modern web app that lets users track their hikes, set goals, earn achievements, and share their journeys with friends through a social activity feed. It combines adventure tracking with community interaction, offering a fun and motivating way to explore the outdoors and connect with fellow hikers.
 
+##  Acknowledgments
 
+- **Annah Mlimi 2558137**
+-  **Risuna Ntimana 2684367**
+-  **Ntokozo Skosana 2440810**
+-  **Stelly Jane Ngono Onana 2744075**
+
+  
 ##  Features
 
 
@@ -51,7 +58,7 @@ Hiking-Logbook/
 └── README.md               # This file
 ```
 
-##  Quick Start
+##  Running the Web App locally
 
 ### Prerequisites
 
@@ -115,27 +122,6 @@ npm start
 The frontend will run on `http://localhost:3000`
 
 
-##  Configuration
-
-
-### Firebase Setup
-
-1. **Create Firebase Project**
-   - Go to [Firebase Console](https://console.firebase.google.com/)
-   - Create a new project
-   - Enable Authentication (Email/Password)
-   - Enable Firestore Database
-
-2. **Get Configuration**
-   - Go to Project Settings > General
-   - Copy the Firebase config object
-   - Go to Project Settings > Service Accounts
-   - Generate a new private key for backend
-
-3. **Environment Variables**
-   - Backend: Copy values from service account key to `backend/.env`
-   - Frontend: Copy values from Firebase config to `frontend/.env`
-
 ### Environment Files
 
 #### Backend (`.env`)
@@ -159,65 +145,8 @@ REACT_APP_FIREBASE_PROJECT_ID=your-project-id
 ```
 
 
-##  API Documentation
-
-
-### Authentication Endpoints
-
-- `POST /api/auth/signup` - User registration
-- `GET /api/auth/profile` - Get user profile (protected)
-- `PUT /api/auth/profile` - Update user profile (protected)
-- `DELETE /api/auth/profile` - Delete user account (protected)
-
-### User Management Endpoints
-
-- `GET /api/users/:uid` - Get public user profile
-- `GET /api/users/search` - Search users
-- `GET /api/users/:uid/achievements` - Get user achievements
-- `GET /api/users/:uid/hikes` - Get user hiking history
-
 For detailed API documentation, see [backend/README.md](backend/README.md)
 
-
-##  Authentication Flow
-
-
-1. **Frontend** handles user login/signup with Firebase Client SDK
-2. **Frontend** sends Firebase ID token in Authorization header
-3. **Backend** verifies token with Firebase Admin SDK
-4. **Protected routes** use `verifyAuth` middleware
-
-### Example Protected Request
-
-```javascript
-const response = await fetch('/api/auth/profile', {
-  headers: {
-    'Authorization': `Bearer ${firebaseIdToken}`,
-    'Content-Type': 'application/json'
-  }
-});
-```
-
-
-##  Testing
-
-
-### Backend Tests
-
-```bash
-cd backend
-npm test              # Run all tests
-npm run test:watch    # Run tests in watch mode
-npm run test:coverage # Run tests with coverage
-```
-
-### Frontend Tests
-
-```bash
-cd frontend
-npm test              # Run all tests
-npm run test:watch    # Run tests in watch mode
-```
 
 
 ##  Development
@@ -237,53 +166,6 @@ npm run test:watch    # Run tests in watch mode
 - `npm run lint` - Check code quality
 - `npm run format` - Format code with Prettier
 
-### Code Quality
-
-- **ESLint** - Code linting and style enforcement
-- **Prettier** - Code formatting
-- **Jest** - Testing framework
-- **TypeScript** - Type safety (can be added)
-
-
-##  Security Features
-
-
-- **Firebase Authentication** - Secure user authentication
-- **JWT Token Verification** - Protected API endpoints
-- **CORS Configuration** - Cross-origin request handling
-- **Input Validation** - Request data validation
-- **Error Handling** - Centralized error management
-- **Helmet.js** - Security headers
-
-
-##  Deployment
-
-
-### Backend Deployment
-
-1. Set `NODE_ENV=production`
-2. Configure production Firebase project
-3. Set up proper CORS origins
-4. Configure environment variables
-5. Deploy to your preferred hosting service
-
-### Frontend Deployment
-
-1. Build the application: `npm run build`
-2. Deploy the `build` folder to your hosting service
-3. Configure environment variables for production
-
-##  Contributing
-
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature-name`
-3. Make your changes
-4. Add tests for new functionality
-5. Run tests: `npm test`
-6. Commit your changes: `git commit -m 'Add feature'`
-7. Push to the branch: `git push origin feature-name`
-8. Submit a pull request
 
 ### Development Guidelines
 
@@ -297,28 +179,19 @@ npm run test:watch    # Run tests in watch mode
 
 For issues and questions:
 
-1. Check the documentation [here](https://hikers-for-life.github.io/Hiking-Logbook/)
+1. Check the official documentation site [here](https://hikers-for-life.github.io/Hiking-Logbook/)
 2. Review the backend and frontend README files
 3. Check existing issues
 4. Create a new issue with detailed description
 
 
-##  Acknowledgments
-
-
-- **Firebase** - Authentication and database services
-- **React** - Frontend framework
-- **Express.js** - Backend framework
-- **Tailwind CSS** - Styling framework
-- **Lucide React** - Icon library
-
----
 
 
 **Happy Hiking! **
 
 
 *Built with ❤️ for the hiking community*
+
 
 
 
