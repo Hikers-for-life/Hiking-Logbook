@@ -115,7 +115,6 @@ const FriendInviteDialog = ({ open, onOpenChange, hike }) => {
           </DialogTitle>
         </DialogHeader>
 
-        {/* ✅ FIX: Replace DialogDescription with a plain div */}
         {hike && (
           <div className="mt-2 p-3 bg-muted rounded-lg">
             <p className="font-medium text-foreground">{hike.title}</p>
