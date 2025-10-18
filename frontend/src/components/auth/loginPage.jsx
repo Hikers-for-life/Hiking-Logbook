@@ -9,7 +9,7 @@ import {
 import { ArrowLeft } from 'lucide-react';
 //import '@fortawesome/fontawesome-free/css/all.min.css';
 import { Eye, EyeOff } from 'lucide-react';
-
+ 
 export default function LoginPage({ open, onOpenChange, onLogin, onSignup }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -18,6 +18,7 @@ export default function LoginPage({ open, onOpenChange, onLogin, onSignup }) {
   const { login, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
 //for eye icon
 
   const [hoverStates, setHoverStates] = useState({
@@ -176,26 +177,30 @@ export default function LoginPage({ open, onOpenChange, onLogin, onSignup }) {
               placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
               autoComplete="new-password"
               required
             />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              style={{
-                position: 'absolute',
-                right: '10px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: 0,
-              }}
-            >
+            {isFocused && (
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: "absolute",
+                  right: "10px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: 0,
+                }}
+              >
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-            </button>
-          </div>
+                  </button>
+                )}
+              </div>
 
               {error && <div style={styles.error}>{error}</div>}
 

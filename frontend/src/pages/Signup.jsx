@@ -33,6 +33,7 @@ export default function Signup() {
    const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
 
 
   const { signup, signInWithGoogle } = useAuth();
@@ -217,23 +218,25 @@ export default function Signup() {
           onBlur={() => setFocusStates((prev) => ({ ...prev, password: false }))}
           required
         />
-        <button
-          type="button"
-          onClick={() => setShowPassword((prev) => !prev)}
-          style={{
-            position: 'absolute',
-            right: '85px',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            padding: 0,
-          }}
-        >
-          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-        </button>
-      </div>
+            {focusStates.password && (
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              style={{
+                position: 'absolute',
+                right: '85px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 0,
+              }}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          )}
+        </div>
 
           {/* Confirm Password Field */}
       <label style={styles.label} htmlFor="confirmPassword">
@@ -259,23 +262,25 @@ export default function Signup() {
           }
           required
         />
-        <button
-          type="button"
-          onClick={() => setShowConfirmPassword((prev) => !prev)}
-          style={{
-            position: 'absolute',
-            right: '85px',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            padding: 0,
-          }}
-        >
-          {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-        </button>
-      </div>
+        {focusStates.confirmPassword && (
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword((prev) => !prev)}
+                  style={{
+                    position: 'absolute',
+                    right: '85px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: 0,
+                  }}
+                >
+                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              )}
+            </div>
 
             {error && <div style={styles.error}>{error}</div>}
 
