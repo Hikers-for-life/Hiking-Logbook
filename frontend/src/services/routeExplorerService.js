@@ -347,7 +347,7 @@ export const routeExplorerService = {
    * Enriches a trail with elevation data from OpenRouteService.
    */
   async enrichTrailWithElevation(trail) {
-    if (!ORS_API_KEY) {
+    if (!getORSAPIKey()) {
       console.warn(
         'OpenRouteService API key is missing. Skipping elevation data.'
       );
@@ -363,7 +363,7 @@ export const routeExplorerService = {
       {
         method: 'POST',
         headers: {
-          Authorization: ORS_API_KEY,
+          Authorization: getORSAPIKey(),
           'Content-Type': 'application/json',
         },
         // The API expects coordinates in [longitude, latitude] format
