@@ -47,18 +47,36 @@ router.get('/', verifyAuth, async (req, res) => {
         };
       });
 
-    // Sort so users with mutual friends come first, then others
+     // Only return suggestions that have at least one mutual friend
       suggestions.sort((a, b) => {
-        if (b.mutualFriends === a.mutualFriends) return 0;
-        return b.mutualFriends - a.mutualFriends;
+        if (b.mutualFriends !== a.mutualFriends) {
+          return b.mutualFriends - a.mutualFriends;
+        }
+        return a.name.localeCompare(b.name);
       });
-
-
-    // Limit total suggestions to 15
-    suggestions = suggestions.slice(0, 15);
-
-    // Sort by mutual friends descending to show best matches first
-    //suggestions.sort((a, b) => b.mutualFriends - a.mutualFriends);
+      // Limit to 15 users
+      suggestions = suggestions.slice(0, 15);
+      // If no mutual friends exist (e.g., new user), still return others
+    if (suggestions.length === 0) {
+      suggestions = snapshot.docs
+        .filter(
+          (doc) =>
+            doc.id !== req.user.uid &&
+            !(currentUserData.friends || []).includes(doc.id) &&
+            !involved.has(doc.id)
+        )
+        .slice(0, 15)
+        .map((doc) => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            name: data.displayName || data.name || 'Unknown',
+            avatar: data.avatar || (data.displayName?.[0] ?? '?'),
+            mutualFriends: 0,
+            commonTrails: data.trails || [],
+          };
+        });
+    }
 
     res.json(suggestions);
   } catch (err) {
