@@ -94,10 +94,8 @@ This documentation hub serves as your guide to understanding both the **product*
 
 - [Main Project Repository](../README.md)
 - [Live Application](https://hikers-for-life.github.io/Hiking-Logbook/)
-- [Test Coverage](https://codecov.io/gh/hikers-for-life/Hiking-Logbook)
-- [Issue Tracker](https://github.com/hikers-for-life/Hiking-Logbook/issues)
+- [Project Work Tracker](https://github.com/orgs/Hikers-for-life/projects/1/views/1). 
 
 ---
 
 
-*This documentation is maintained by the Hiking Logbook development team and updated with each sprint.*
