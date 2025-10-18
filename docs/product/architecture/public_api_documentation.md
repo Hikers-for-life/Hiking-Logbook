@@ -28,7 +28,7 @@ Our **internal app** (frontend) is for hikers to log and track their own persona
 
 - **Base URL**: `https://hiking-logbook-hezw.onrender.com` (Production) | `http://localhost:3001` (Development)
 - **API Version**: 1.0.0
-- **Documentation**: [Interactive Swagger UI](/api-docs)
+- **Documentation**: [Interactive Swagger UI](https://hiking-logbook-hezw.onrender.com/api-docs)
 - **Authentication**: API Key (for write operations)
 
 ## Available Endpoints
