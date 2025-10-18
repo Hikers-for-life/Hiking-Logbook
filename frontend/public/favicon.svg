@@ -1,0 +1,6 @@
+<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Lucide Mountain icon style -->
+  <path d="M8 3l4 8 5-8 3 16H2L8 3z" fill="#4A7C59" stroke="#4A7C59" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Additional mountain peak for more detail -->
+  <path d="M12 11l3-6 2 6" fill="#2D4A3A" stroke="#2D4A3A" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

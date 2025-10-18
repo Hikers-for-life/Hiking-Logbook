@@ -194,73 +194,15 @@ export const ProfileView = ({
       joinDate = formatDate(new Date(createdAt));
     }
   }
-  // Enhanced profile data with achievements and recent hikes
+  // Profile data with real data only
   const profileData = {
     ...person,
     name: person.displayName || 'No name',
     bio: person.bio || 'No bio yet',
-    achievements: person.achievements || [
-      {
-        name: 'Peak Collector',
-        description: 'Completed 10+ mountain peaks',
-        earned: '2 weeks ago',
-      },
-      {
-        name: 'Early Bird',
-        description: 'Started 20+ hikes before sunrise',
-        earned: '1 month ago',
-      },
-      {
-        name: 'Trail Master',
-        description: 'Completed 50+ different trails',
-        earned: '2 months ago',
-      },
-      {
-        name: 'Endurance Champion',
-        description: 'Hiked 100+ km in a month',
-        earned: '3 months ago',
-      },
-    ],
-    recentHikes: person.recentHikes || [
-      {
-        name: 'Mount Rainier Trail',
-        date: '2 days ago',
-        distance: '8.5 km',
-        duration: '4h 23m',
-        difficulty: 'Hard',
-      },
-      {
-        name: 'Forest Discovery Loop',
-        date: '1 week ago',
-        distance: '5.2 km',
-        duration: '2h 15m',
-        difficulty: 'Medium',
-      },
-      {
-        name: 'Sunset Ridge Trail',
-        date: '2 weeks ago',
-        distance: '6.8 km',
-        duration: '3h 45m',
-        difficulty: 'Medium',
-      },
-      {
-        name: 'Alpine Lake Circuit',
-        date: '3 weeks ago',
-        distance: '12.1 km',
-        duration: '5h 30m',
-        difficulty: 'Hard',
-      },
-    ],
-    goals: person.goals || [
-      {
-        name: 'Complete Pacific Crest Trail section',
-        progress: 65,
-        target: 'End of year',
-      },
-      { name: 'Hike 500km this year', progress: 78, target: 'December 2024' },
-    ],
-    joinedDate: joinDate || 'March 2023',
-    totalElevation: person.totalElevation || '15,420m',
+    achievements: person.achievements || [],
+    goals: person.goals || [],
+    joinedDate: joinDate || 'Unknown',
+    totalElevation: person.totalElevation || '0m',
   };
 
   return (
@@ -424,68 +366,72 @@ export const ProfileView = ({
           </div>
 
           {/* Current Goals */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Target className="h-5 w-5 text-summit" />
-                Current Goals
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {profileData.goals.map((goal, index) => (
-                <div key={index} className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium">{goal.name}</span>
-                    <span className="text-sm text-muted-foreground">
-                      {goal.progress}%
-                    </span>
+          {profileData.goals && profileData.goals.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="h-5 w-5 text-summit" />
+                  Current Goals
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {profileData.goals.map((goal, index) => (
+                  <div key={index} className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium">{goal.name}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {goal.progress}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-muted rounded-full h-2">
+                      <div
+                        className="bg-gradient-trail h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${goal.progress}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Target: {goal.target}
+                    </p>
                   </div>
-                  <div className="w-full bg-muted rounded-full h-2">
-                    <div
-                      className="bg-gradient-trail h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${goal.progress}%` }}
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Target: {goal.target}
-                  </p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+                ))}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Recent Achievements */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Award className="h-5 w-5 text-summit" />
-                Recent Achievements
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid md:grid-cols-2 gap-4">
-                {profileData.achievements
-                  .slice(0, 4)
-                  .map((achievement, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center gap-3 p-3 rounded-lg bg-muted"
-                    >
-                      <Medal className="h-8 w-8 text-summit" />
-                      <div>
-                        <h4 className="font-medium">{achievement.name}</h4>
-                        <p className="text-sm text-muted-foreground">
-                          {achievement.description}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Earned {achievement.earned}
-                        </p>
+          {profileData.achievements && profileData.achievements.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Award className="h-5 w-5 text-summit" />
+                  Recent Achievements
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-2 gap-4">
+                  {profileData.achievements
+                    .slice(0, 4)
+                    .map((achievement, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center gap-3 p-3 rounded-lg bg-muted"
+                      >
+                        <Medal className="h-8 w-8 text-summit" />
+                        <div>
+                          <h4 className="font-medium">{achievement.name}</h4>
+                          <p className="text-sm text-muted-foreground">
+                            {achievement.description}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Earned {achievement.earned}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-              </div>
-            </CardContent>
-          </Card>
+                    ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Recent Hikes */}
           <Card>
@@ -497,7 +443,18 @@ export const ProfileView = ({
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {hikeEntries.length > 0 ? (
+                {isLoading ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-4"></div>
+                    <p className="text-muted-foreground text-sm">
+                      Loading recent hikes...
+                    </p>
+                  </div>
+                ) : error ? (
+                  <p className="text-muted-foreground text-sm text-center py-4">
+                    {error}
+                  </p>
+                ) : hikeEntries.length > 0 ? (
                   hikeEntries.map((hike, index) => (
                     <div
                       key={index}
@@ -535,7 +492,7 @@ export const ProfileView = ({
                     </div>
                   ))
                 ) : (
-                  <p className="text-muted-foreground text-sm">
+                  <p className="text-muted-foreground text-sm text-center py-4">
                     No recent hikes to display yet
                   </p>
                 )}
