@@ -47,11 +47,18 @@ router.get('/', verifyAuth, async (req, res) => {
         };
       });
 
-    // Only return suggestions that have at least one mutual friend
-    suggestions = suggestions.filter((s) => s.mutualFriends > 0);
+    // Sort so users with mutual friends come first, then others
+      suggestions.sort((a, b) => {
+        if (b.mutualFriends === a.mutualFriends) return 0;
+        return b.mutualFriends - a.mutualFriends;
+      });
+
+
+    // Limit total suggestions to 15
+    suggestions = suggestions.slice(0, 15);
 
     // Sort by mutual friends descending to show best matches first
-    suggestions.sort((a, b) => b.mutualFriends - a.mutualFriends);
+    //suggestions.sort((a, b) => b.mutualFriends - a.mutualFriends);
 
     res.json(suggestions);
   } catch (err) {
