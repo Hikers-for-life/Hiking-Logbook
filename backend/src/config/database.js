@@ -1416,8 +1416,7 @@ export const dbUtils = {
       const db = this.getDb();
       
       console.log('🔍 Querying invitations for:', userId);
-      
-      // ✅ SIMPLIFIED: Query without orderBy to avoid index requirement
+    
       const snapshot = await db
         .collection('hikeInvitations')
         .where('toUserId', '==', userId)
@@ -1437,8 +1436,6 @@ export const dbUtils = {
           createdAt: data.createdAt?.toDate?.() || data.createdAt
         });
       });
-
-      // ✅ Sort in JavaScript instead of Firestore (no index needed)
       invitations.sort((a, b) => {
         const dateA = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt);
         const dateB = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt);
@@ -1474,7 +1471,7 @@ export const dbUtils = {
   /**
    * Accept a hike invitation
    */
-    async acceptHikeInvitation(invitationId, userId) {
+   async acceptHikeInvitation(invitationId, userId) {
     try {
       const db = this.getDb();
       
@@ -1484,20 +1481,20 @@ export const dbUtils = {
       if (!invitationDoc.exists) {
         throw new Error('Invitation not found');
       }
-
+  
       const invitation = invitationDoc.data();
-
+  
       // Verify user is the recipient
       if (invitation.toUserId !== userId) {
         throw new Error('Unauthorized: You are not the recipient of this invitation');
       }
-
+  
       // Verify invitation is still pending
       if (invitation.status !== 'pending') {
         throw new Error(`Invitation has already been ${invitation.status}`);
       }
-
-      // ✅ Create the planned hike for the accepting user
+  
+      
       const plannedHikeData = {
         title: invitation.hikeDetails.title,
         location: invitation.hikeDetails.location,
@@ -1508,18 +1505,17 @@ export const dbUtils = {
         notes: invitation.hikeDetails.notes,
         startTime: invitation.hikeDetails.startTime,
         status: 'confirmed',
-        invitedBy: invitation.fromUserId, // ✅ Track who invited them
+        invitedBy: invitation.fromUserId, 
         originalHikeId: invitation.hikeId,
         participants: [userId],
-        // ✅ CRITICAL: Set createdBy to the person who ACCEPTED (not the sender)
-        createdBy: userId, // This makes the acceptor NOT see invite button
-        userId: userId,    // Redundant but keeping for compatibility
+        createdBy: invitation.fromUserId, // The person who sent the invitation
+        userId: userId, // The current user (acceptor) for their own subcollection
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-
+  
       const result = await this.addPlannedHike(userId, plannedHikeData);
-
+  
       // Update invitation status
       await db.collection('hikeInvitations').doc(invitationId).update({
         status: 'accepted',
@@ -1527,13 +1523,14 @@ export const dbUtils = {
         plannedHikeId: result.id,
         updatedAt: new Date()
       });
-
-      console.log('✅ Invitation accepted, created planned hike:', result.id);
-      console.log('✅ createdBy set to:', userId);
-
+  
+      console.log('Invitation accepted, created planned hike:', result.id);
+      console.log('createdBy set to:', invitation.fromUserId, '(original creator)');
+      console.log('userId set to:', userId, '(acceptor)');
+  
       return { success: true, id: result.id };
     } catch (err) {
-      console.error('❌ acceptHikeInvitation error:', err);
+      console.error(' acceptHikeInvitation error:', err);
       throw new Error(`acceptHikeInvitation failed: ${err.message}`);
     }
   },
