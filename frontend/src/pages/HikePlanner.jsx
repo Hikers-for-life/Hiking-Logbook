@@ -1,5 +1,4 @@
-import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
-
+import { useState, useMemo, useEffect, useCallback, useRef  } from 'react';
 import {
   Card,
   CardContent,
@@ -11,7 +10,7 @@ import { Badge } from '../components/ui/badge';
 import { Navigation } from '../components/ui/navigation';
 import { Input } from '../components/ui/input';
 import NewHikePlanForm from '../components/NewHikePlanForm';
-
+import FriendInviteDialog from '../components/FriendInviteDialog';
 import RouteExplorer from '../components/RouteExplorer';
 import {
   Calendar,
@@ -23,6 +22,7 @@ import {
   X,
   RotateCcw,
   Search,
+  UserPlus,
   Trash2,
   Edit,
 } from 'lucide-react';
@@ -64,7 +64,8 @@ const HikePlanner = () => {
   const { toast } = useToast();
 
   const { currentUser } = useAuth();
-
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  const [selectedHikeForInvite, setSelectedHikeForInvite] = useState(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isNewPlanOpen, setIsNewPlanOpen] = useState(false);
   const [isRouteExplorerOpen, setIsRouteExplorerOpen] = useState(false);
@@ -89,6 +90,7 @@ const HikePlanner = () => {
       hike.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       hike.location.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
 
   useEffect(() => {
     if (!currentUser) return;
@@ -407,6 +409,11 @@ const HikePlanner = () => {
       console.error('Failed to start planned hike:', err);
       setError('Failed to start the hike. Please try again.');
     }
+  };
+
+  const handleOpenInviteDialog = (hike) => {
+    setSelectedHikeForInvite(hike);
+    setInviteDialogOpen(true);
   };
 
   // Handle form submission (create or update)
@@ -787,14 +794,25 @@ const HikePlanner = () => {
                           <div className="flex justify-end space-x-2 mt-4">
                             {trip.status !== 'cancelled' &&
                               trip.status !== 'started' && (
-                                <Button
-                                  size="sm"
-                                  className="bg-green-600 hover:bg-green-700 text-white"
-                                  onClick={() => handleStartPlannedHike(trip)}
-                                >
-                                  <Mountain className="h-4 w-4 mr-1" />
-                                  Start Hike
-                                </Button>
+                                <>
+                                  <Button
+                                    size="sm"
+                                    className="bg-green-600 hover:bg-green-700 text-white"
+                                    onClick={() => handleStartPlannedHike(trip)}
+                                  >
+                                    <Mountain className="h-4 w-4 mr-1" />
+                                    Start Hike
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="text-forest hover:text-white hover:bg-forest border-forest"
+                                    onClick={() => handleOpenInviteDialog(trip)}
+                                  >
+                                    <UserPlus className="h-4 w-4 mr-1" />
+                                    Invite
+                                  </Button>
+                                </>
                               )}
                             <Button
                               size="sm"
@@ -1095,6 +1113,12 @@ const HikePlanner = () => {
         <RouteExplorer
           isOpen={isRouteExplorerOpen}
           onOpenChange={setIsRouteExplorerOpen}
+        />
+
+        <FriendInviteDialog
+          open={inviteDialogOpen}
+          onOpenChange={setInviteDialogOpen}
+          hike={selectedHikeForInvite}
         />
       </div>
     </div>
