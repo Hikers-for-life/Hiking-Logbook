@@ -672,7 +672,7 @@ const Achievements = () => {
           <Card className="bg-gradient-subtle border-border">
             <CardContent className="p-4 text-center">
               <div className="text-2xl font-bold text-forest">
-                {stats?.totalDistance || 0}km
+                {parseFloat((stats?.totalDistance || 0).toFixed(1))}km
               </div>
               <div className="text-sm text-muted-foreground">Distance</div>
             </CardContent>

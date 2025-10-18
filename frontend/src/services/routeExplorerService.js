@@ -53,77 +53,293 @@ const transformORSData = (orsFeatures) => {
   return [...new Map(trails.map((item) => [item.id, item])).values()];
 };
 
+// Note: API key testing removed due to CORS restrictions
+
 export const routeExplorerService = {
   /**
    * MODIFIED: Discovers nearby hiking trails using the OpenRouteService POI API.
+   * Falls back to curated South African trails if API key is missing.
    */
   async discoverNearbyTrails(lat, lng, radiusKm) {
-    const radiusMeters = radiusKm * 1000;
-
-    const response = await fetch('https://api.openrouteservice.org/pois', {
-      method: 'POST',
-      headers: {
-        Authorization: ORS_API_KEY,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        // Search for OSM features with "route=hiking"
-        request: 'pois',
-        geometry: {
-          circle: {
-            radius: radiusMeters,
-            coordinates: [lng, lat],
-          },
-        },
-        filters: {
-          category_group_ids: [38], // Category Group ID for "Touristic"
-          category_ids: [7308], // Category ID for "Hiking"
-        },
-        limit: 50, // Get up to 50 results
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch data from OpenRouteService.');
+    // Check if API key is available
+    if (!ORS_API_KEY) {
+      console.warn('OpenRouteService API key not found. Using curated South African trails.');
+      return this.getNearbyCuratedTrails(lat, lng, radiusKm);
     }
 
-    const data = await response.json();
-    return transformORSData(data.features);
+    const radiusMeters = radiusKm * 1000;
+
+    try {
+      console.log('Attempting to fetch nearby trails from OpenRouteService...');
+      console.log('API Key present:', !!ORS_API_KEY);
+      console.log('Location:', { lat, lng, radiusKm });
+
+      // Try different API endpoints and formats
+      const apiEndpoints = [
+        'https://api.openrouteservice.org/pois',
+        'https://api.openrouteservice.org/v2/pois'
+      ];
+      
+      let response = null;
+      let lastError = null;
+      
+      for (const endpoint of apiEndpoints) {
+        try {
+          console.log(`Trying endpoint: ${endpoint}`);
+          
+          response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'Authorization': ORS_API_KEY,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              request: 'pois',
+              geometry: {
+                type: 'Point',
+                coordinates: [lng, lat]
+              },
+              buffer: radiusMeters,
+              filters: {
+                category_group_ids: [38], // Category Group ID for "Touristic"
+                category_ids: [7308, 7309, 7310], // Hiking, Walking, and Nature trails
+              },
+              limit: 50, // Get up to 50 results
+            }),
+          });
+          
+          if (response.ok) {
+            console.log(`Success with endpoint: ${endpoint}`);
+            break;
+          } else {
+            lastError = `Endpoint ${endpoint} returned ${response.status}`;
+            console.log(lastError);
+          }
+        } catch (error) {
+          lastError = `Endpoint ${endpoint} failed: ${error.message}`;
+          console.log(lastError);
+        }
+      }
+      
+      if (!response || !response.ok) {
+        throw new Error(`All API endpoints failed. Last error: ${lastError}`);
+      }
+
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
+      const data = await response.json();
+      console.log('OpenRouteService response:', data);
+      
+      const orsTrails = transformORSData(data.features || []);
+      console.log('Transformed trails:', orsTrails);
+      
+      // If no trails found from API, fall back to curated trails
+      if (orsTrails.length === 0) {
+        console.log('No trails found from API, using curated trails');
+        return this.getNearbyCuratedTrails(lat, lng, radiusKm);
+      }
+      
+      return orsTrails;
+    } catch (error) {
+      console.warn('OpenRouteService API failed, using curated trails:', error.message);
+      return this.getNearbyCuratedTrails(lat, lng, radiusKm);
+    }
   },
 
   /**
-   * NOTE: A nationwide search for POIs is less practical with ORS than with Overpass.
-   * For now, we will return a curated list as a reliable fallback.
-   * If a dynamic nationwide search is critical, we would need a different strategy.
+   * Helper function to get curated trails near a location
    */
-  async discoverNationwideHikes() {
-    // Fallback to a curated list for a better user experience
+  getNearbyCuratedTrails(lat, lng, radiusKm) {
+    const allTrails = this.getAllCuratedTrails();
+    const nearbyTrails = [];
+
+    allTrails.forEach(trail => {
+      if (trail.coordinates && trail.coordinates[0]) {
+        const [trailLng, trailLat] = trail.coordinates[0];
+        const distance = calculateDistance(
+          { lat, lon: lng },
+          { lat: trailLat, lon: trailLng }
+        );
+        
+        if (distance <= radiusKm) {
+          nearbyTrails.push({
+            ...trail,
+            distance: distance.toFixed(1) + ' km away'
+          });
+        }
+      }
+    });
+
+    // If no trails found within radius, expand search to 200km and show closest ones
+    if (nearbyTrails.length === 0) {
+      console.log('No trails found within radius, expanding search to 200km...');
+      allTrails.forEach(trail => {
+        if (trail.coordinates && trail.coordinates[0]) {
+          const [trailLng, trailLat] = trail.coordinates[0];
+          const distance = calculateDistance(
+            { lat, lon: lng },
+            { lat: trailLat, lon: trailLng }
+          );
+          
+          if (distance <= 200) { // 200km radius
+            nearbyTrails.push({
+              ...trail,
+              distance: distance.toFixed(1) + ' km away'
+            });
+          }
+        }
+      });
+    }
+
+    // Sort by distance and return up to 10 results
+    return nearbyTrails
+      .sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance))
+      .slice(0, 10);
+  },
+
+  /**
+   * Get all curated South African trails
+   */
+  getAllCuratedTrails() {
     return [
+      // Western Cape
       {
-        id: 'nationwide-1',
+        id: 'sa-1',
         name: "Lion's Head Summit",
-        description: 'Iconic Cape Town hike with 360-degree views.',
+        description: 'Iconic Cape Town hike with 360-degree views of the city and ocean.',
         distance: '5.5',
         difficulty: 'Moderate',
+        surface: 'rocky',
         coordinates: [[18.388, -33.935]],
+        region: 'Western Cape',
+        elevation: '669m',
+        duration: '2-3 hours'
       },
       {
-        id: 'nationwide-2',
+        id: 'sa-2',
         name: 'Platteklip Gorge',
         description: 'The most direct route to the top of Table Mountain.',
         distance: '2.9',
         difficulty: 'Hard',
+        surface: 'rocky',
         coordinates: [[18.404, -33.963]],
+        region: 'Western Cape',
+        elevation: '1085m',
+        duration: '2-4 hours'
       },
       {
-        id: 'nationwide-3',
+        id: 'sa-3',
+        name: 'Cape Point Trail',
+        description: 'Scenic coastal walk to the southernmost tip of the Cape Peninsula.',
+        distance: '8.0',
+        difficulty: 'Easy',
+        surface: 'paved',
+        coordinates: [[18.496, -34.357]],
+        region: 'Western Cape',
+        elevation: '200m',
+        duration: '3-4 hours'
+      },
+      {
+        id: 'sa-4',
+        name: 'Kirstenbosch Botanical Gardens',
+        description: 'Easy family-friendly trails through beautiful indigenous gardens.',
+        distance: '3.0',
+        difficulty: 'Easy',
+        surface: 'paved',
+        coordinates: [[18.430, -33.988]],
+        region: 'Western Cape',
+        elevation: '100m',
+        duration: '1-2 hours'
+      },
+      
+      // KwaZulu-Natal
+      {
+        id: 'sa-5',
         name: 'Tugela Falls Hiking Trail',
         description: "Hike to the top of the world's second-tallest waterfall.",
-        distance: '13',
-        difficulty: 'Moderate',
+        distance: '13.0',
+        difficulty: 'Hard',
+        surface: 'rocky',
         coordinates: [[28.896, -28.752]],
+        region: 'KwaZulu-Natal',
+        elevation: '948m',
+        duration: '6-8 hours'
       },
+      {
+        id: 'sa-6',
+        name: 'Cathedral Peak',
+        description: 'Challenging Drakensberg hike with spectacular mountain views.',
+        distance: '12.0',
+        difficulty: 'Hard',
+        surface: 'rocky',
+        coordinates: [[29.234, -28.956]],
+        region: 'KwaZulu-Natal',
+        elevation: '3004m',
+        duration: '8-10 hours'
+      },
+      
+      // Gauteng
+      {
+        id: 'sa-7',
+        name: 'Magaliesberg Hiking Trail',
+        description: 'Popular day hike with panoramic views of the Highveld.',
+        distance: '6.0',
+        difficulty: 'Moderate',
+        surface: 'rocky',
+        coordinates: [[27.850, -25.900]],
+        region: 'Gauteng',
+        elevation: '600m',
+        duration: '3-4 hours'
+      },
+      {
+        id: 'sa-8',
+        name: 'Walter Sisulu Botanical Gardens',
+        description: 'Easy trails with waterfall views and bird watching opportunities.',
+        distance: '2.5',
+        difficulty: 'Easy',
+        surface: 'paved',
+        coordinates: [[27.917, -26.083]],
+        region: 'Gauteng',
+        elevation: '50m',
+        duration: '1-2 hours'
+      },
+      
+      // Mpumalanga
+      {
+        id: 'sa-9',
+        name: 'Blyde River Canyon Trail',
+        description: 'Scenic canyon walk with breathtaking views and rock formations.',
+        distance: '10.0',
+        difficulty: 'Moderate',
+        surface: 'rocky',
+        coordinates: [[30.817, -24.583]],
+        region: 'Mpumalanga',
+        elevation: '400m',
+        duration: '4-6 hours'
+      },
+      
+      // Eastern Cape
+      {
+        id: 'sa-10',
+        name: 'Amatola Hiking Trail',
+        description: 'Multi-day trail through indigenous forests and mountain streams.',
+        distance: '100.0',
+        difficulty: 'Hard',
+        surface: 'mixed',
+        coordinates: [[27.150, -32.750]],
+        region: 'Eastern Cape',
+        elevation: '1200m',
+        duration: '6 days'
+      }
     ];
+  },
+
+  /**
+   * Enhanced nationwide search with more South African trails
+   */
+  async discoverNationwideHikes() {
+    return this.getAllCuratedTrails();
   },
 
   /**

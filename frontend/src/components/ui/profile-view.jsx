@@ -235,7 +235,7 @@ export const ProfileView = ({ open, onOpenChange, showAddFriend = false }) => {
             <Card>
               <CardContent className="p-4 text-center">
                 <p className="text-2xl font-bold text-forest">
-                  {userStats.totalDistance} km
+                  {parseFloat(userStats.totalDistance.toFixed(1))} km
                 </p>
 
                 <p className="text-sm text-muted-foreground">Distance</p>

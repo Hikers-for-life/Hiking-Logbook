@@ -75,7 +75,20 @@ const NewHikePlanForm = ({
   useEffect(() => {
     if (isEditMode && editingHike) {
       form.reset({
-        title: editingHike.title || '',
+        title: editingHike.title || editingHike.trailName || '',
+        date: editingHike.date || '',
+        startTime: editingHike.startTime || '',
+        location: editingHike.location || '',
+        distance: editingHike.distance || '',
+        difficulty: editingHike.difficulty || '',
+        description: editingHike.description || '',
+        notes: editingHike.notes || '',
+      });
+      setSelectedDifficulty(editingHike.difficulty || '');
+    } else if (editingHike) {
+      // Handle trail data from TrailExplorer
+      form.reset({
+        title: editingHike.trailName || editingHike.title || '',
         date: editingHike.date || '',
         startTime: editingHike.startTime || '',
         location: editingHike.location || '',

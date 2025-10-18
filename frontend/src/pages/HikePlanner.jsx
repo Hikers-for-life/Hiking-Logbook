@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import {
   Card,
@@ -12,7 +13,6 @@ import { Navigation } from '../components/ui/navigation';
 import { Input } from '../components/ui/input';
 import NewHikePlanForm from '../components/NewHikePlanForm';
 
-import RouteExplorer from '../components/RouteExplorer';
 import {
   Calendar,
   MapPin,
@@ -62,12 +62,12 @@ const sampleWeather = [
 const HikePlanner = () => {
   const inputRef = useRef();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const { currentUser } = useAuth();
 
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isNewPlanOpen, setIsNewPlanOpen] = useState(false);
-  const [isRouteExplorerOpen, setIsRouteExplorerOpen] = useState(false);
   const [newGearItem, setNewGearItem] = useState('');
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -324,6 +324,40 @@ const HikePlanner = () => {
     setIsNewPlanOpen(true);
   };
 
+  // Handler to plan a hike from trail explorer
+  const handlePlanHikeFromTrail = (trail) => {
+    // Pre-fill the form with trail data
+    const trailData = {
+      trailName: trail.name,
+      description: trail.description || '',
+      distance: trail.distance || '',
+      difficulty: trail.difficulty || 'Moderate',
+      location: trail.region || '',
+      // Add any other relevant trail data
+    };
+    
+    setEditingHike(trailData);
+    setIsEditMode(false); // This is a new hike, not editing
+    setIsNewPlanOpen(true);
+  };
+
+  // Check for pre-filled trail data from TrailExplorer
+  useEffect(() => {
+    const selectedTrail = sessionStorage.getItem('selectedTrail');
+    if (selectedTrail) {
+      try {
+        const trailData = JSON.parse(selectedTrail);
+        setEditingHike(trailData);
+        setIsEditMode(false);
+        setIsNewPlanOpen(true);
+        // Clear the session storage after using it
+        sessionStorage.removeItem('selectedTrail');
+      } catch (error) {
+        console.error('Error parsing selected trail data:', error);
+      }
+    }
+  }, []);
+
   // Handler to Update a Planned Hike
   const handleUpdatePlannedHike = async (updatedPlanData) => {
     try {
@@ -574,9 +608,9 @@ const HikePlanner = () => {
                   size="lg"
                   variant="outline"
                   className="border-forest text-forest hover:bg-forest hover:text-primary-foreground transition-all duration-300 h-16"
-                  onClick={() => setIsRouteExplorerOpen(true)}
+                  onClick={() => navigate('/trail-explorer')}
                 >
-                  <MapPin className="h-5 w-5 mr-2" /> Explore Routes
+                  <MapPin className="h-5 w-5 mr-2" /> Explore Trails
                 </Button>
               </div>
 
@@ -1091,11 +1125,6 @@ const HikePlanner = () => {
           isEditMode={isEditMode}
         />
 
-        {/* Route Explorer Modal */}
-        <RouteExplorer
-          isOpen={isRouteExplorerOpen}
-          onOpenChange={setIsRouteExplorerOpen}
-        />
       </div>
     </div>
   );

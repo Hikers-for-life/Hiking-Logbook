@@ -116,7 +116,7 @@ const Dashboard = () => {
         });
 
         // Round the totals to reasonable decimal places
-        stats.totalDistance = Math.round(stats.totalDistance * 10) / 10;
+        stats.totalDistance = parseFloat(stats.totalDistance.toFixed(1));
 
         setHikeStats(stats);
 
@@ -229,7 +229,7 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {hikesLoading ? '...' : `${hikeStats.totalDistance} km`}
+                {hikesLoading ? '...' : `${parseFloat(hikeStats.totalDistance.toFixed(1))} km`}
               </div>
               <p className="text-xs text-muted-foreground">Distance covered</p>
             </CardContent>

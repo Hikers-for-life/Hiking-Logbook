@@ -1006,7 +1006,7 @@ const Friends = () => {
                       </div>
                       <div>
                         <p className="text-2xl font-bold text-forest">
-                          {friend.totalDistance} km
+                          {parseFloat(friend.totalDistance.toFixed(1))} km
                         </p>
                         <p className="text-xs text-muted-foreground">
                           Distance

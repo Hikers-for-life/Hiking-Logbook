@@ -16,6 +16,7 @@ import Post from './pages/Post.jsx';
 import { Toaster } from './components/ui/toaster.jsx';
 import Achievements from './pages/Achievements.jsx';
 import Messages from './pages/Messages.jsx';
+import TrailExplorer from './pages/TrailExplorer.jsx';
 
 import { API_BASE } from './api/api.js'; //ANNAH
 
@@ -51,6 +52,14 @@ const App = () => {
             element={
               <ProtectedRoute>
                 <HikePlanner />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/trail-explorer"
+            element={
+              <ProtectedRoute>
+                <TrailExplorer />
               </ProtectedRoute>
             }
           />

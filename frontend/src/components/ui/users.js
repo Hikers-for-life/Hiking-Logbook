@@ -110,8 +110,8 @@ router.get('/:uid/stats', async (req, res) => {
 
     res.json({
       success: true,
-      totalDistance,
-      totalElevation,
+      totalDistance: parseFloat(totalDistance.toFixed(1)),
+      totalElevation: parseFloat(totalElevation.toFixed(1)),
     });
   } catch (err) {
     console.error('Error fetching user stats:', err);
