@@ -19,7 +19,7 @@ import Messages from './pages/Messages.jsx';
 import TrailExplorer from './pages/TrailExplorer.jsx';
 
 import { API_BASE } from './api/api.js'; //ANNAH
-
+//import '@fortawesome/fontawesome-free/css/all.min.css';//Annah here
 const App = () => {
   useEffect(() => {
     // Set default title

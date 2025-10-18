@@ -7,7 +7,8 @@ import {
   validatePassword,
 } from '../../services/userServices.js';
 import { ArrowLeft } from 'lucide-react';
-import '@fortawesome/fontawesome-free/css/all.min.css';
+//import '@fortawesome/fontawesome-free/css/all.min.css';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage({ open, onOpenChange, onLogin, onSignup }) {
   const [email, setEmail] = useState('');
@@ -16,6 +17,8 @@ export default function LoginPage({ open, onOpenChange, onLogin, onSignup }) {
   const [error, setError] = useState('');
   const { login, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
+//for eye icon
 
   const [hoverStates, setHoverStates] = useState({
     backButton: false,
@@ -164,17 +167,35 @@ export default function LoginPage({ open, onOpenChange, onLogin, onSignup }) {
 
               <label style={styles.label} htmlFor="password">
                 Password
-              </label>
-              <input
-                style={styles.input}
-                type="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete="new-password"
-                autoFocus={false}
-                required
-              />
+                </label>
+              <div style={{ position: 'relative' }}>
+            <input
+              id="password"
+              style={styles.input}
+              type={showPassword ? 'text' : 'password'}
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="new-password"
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              style={{
+                position: 'absolute',
+                right: '10px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 0,
+              }}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
 
               {error && <div style={styles.error}>{error}</div>}
 
