@@ -92,10 +92,9 @@ This documentation hub serves as your guide to understanding both the **product*
 
 ##  Quick Links
 
-- [Main Project Repository](../README.md)
-- [Live Application](https://hikers-for-life.github.io/Hiking-Logbook/)
 - [Project Work Tracker](https://github.com/orgs/Hikers-for-life/projects/1/views/1). 
 
 ---
+
 
 
