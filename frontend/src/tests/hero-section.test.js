@@ -48,23 +48,11 @@ describe('HeroSection', () => {
       expect(screen.getByText('Start Your Journey')).toBeInTheDocument();
     });
 
-    it('renders "View Sample Log" button', () => {
-      renderComponent();
-      expect(screen.getByText('View Sample Log')).toBeInTheDocument();
-    });
-
     it('calls onGetStarted when "Start Your Journey" is clicked', () => {
       renderComponent();
       const startButton = screen.getByText('Start Your Journey');
       fireEvent.click(startButton);
       expect(mockOnGetStarted).toHaveBeenCalledTimes(1);
-    });
-
-    it('calls onViewSampleLog when "View Sample Log" is clicked', () => {
-      renderComponent();
-      const sampleButton = screen.getByText('View Sample Log');
-      fireEvent.click(sampleButton);
-      expect(mockOnViewSampleLog).toHaveBeenCalledTimes(1);
     });
 
     it('does not call handlers on initial render', () => {
@@ -161,7 +149,7 @@ describe('HeroSection', () => {
       renderComponent();
       const buttons = screen.getAllByRole('button');
 
-      expect(buttons).toHaveLength(2);
+      expect(buttons).toHaveLength(1);
       buttons.forEach((button) => {
         expect(button).toBeEnabled();
       });
@@ -184,7 +172,7 @@ describe('HeroSection', () => {
     it('includes responsive button layout classes', () => {
       const { container } = renderComponent();
       const buttonContainer = container.querySelector(
-        '.flex-col.sm\\:flex-row'
+        '.flex.justify-center'
       );
       expect(buttonContainer).toBeInTheDocument();
     });
