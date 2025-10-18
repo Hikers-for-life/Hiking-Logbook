@@ -29,21 +29,17 @@ export const HeroSection = ({ onGetStarted, onViewSampleLog }) => {
             remembering.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+          <div className="flex justify-center mb-12">
             <Button
               size="lg"
-              className="bg-gradient-trail text-primary-foreground shadow-mountain"
+              className="bg-gradient-trail text-primary-foreground shadow-mountain font-semibold px-10 py-6 text-lg transition-all duration-300 hover:scale-105"
+              style={{
+                boxShadow: '0 0 40px rgba(185, 100, 20, 0.8), 0 0 80px rgba(22, 163, 74, 0.6), 0 0 120px rgba(185, 100, 20, 0.4)',
+                animation: 'trail-glow 1.5s ease-in-out infinite, float 3s ease-in-out infinite'
+              }}
               onClick={onGetStarted}
             >
               Start Your Journey
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="border-border bg-background/50 backdrop-blur-sm hover:bg-background/80 transition-all duration-300"
-              onClick={onViewSampleLog}
-            >
-              View Sample Log
             </Button>
           </div>
         </div>
@@ -90,6 +86,27 @@ export const HeroSection = ({ onGetStarted, onViewSampleLog }) => {
           </Card>
         </div>
       </div>
+
+      <style>{`
+        @keyframes trail-glow {
+          0%, 100% {
+            box-shadow: 0 0 40px rgba(185, 100, 20, 0.8), 0 0 80px rgba(22, 163, 74, 0.6), 0 0 120px rgba(185, 100, 20, 0.4);
+            filter: brightness(1);
+          }
+          50% {
+            box-shadow: 0 0 60px rgba(185, 100, 20, 1), 0 0 100px rgba(22, 163, 74, 0.8), 0 0 140px rgba(185, 100, 20, 0.6);
+            filter: brightness(1.2);
+          }
+        }
+        @keyframes float {
+          0%, 100% {
+            transform: translateY(0px);
+          }
+          50% {
+            transform: translateY(-10px);
+          }
+        }
+      `}</style>
     </section>
   );
-};
+}
