@@ -4,6 +4,8 @@ import reportWebVitals from './reportWebVitals.js';
 import { createRoot } from 'react-dom/client';
 import './index.css';
 
+import '@fortawesome/fontawesome-free/css/all.min.css';
+
 createRoot(document.getElementById('root')).render(<App />);
 
 // If you want to start measuring performance in your app, pass a function
