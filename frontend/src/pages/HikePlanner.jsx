@@ -550,7 +550,7 @@ const HikePlanner = () => {
       setNewGearItem('');
     } catch (error) {
       console.error('Failed to add gear item:', error);
-      // You could show a toast notification here
+
     }
   };
 
@@ -759,15 +759,8 @@ const HikePlanner = () => {
                     !error &&
                     displayedAdventures.length > 0 &&
                     displayedAdventures.map((trip) => {
-                      // ✅ Debug logging
-                      console.log('🔍 Hike:', trip.title);
-                      console.log('   - trip.createdBy:', trip.createdBy);
-                      console.log('   - trip.userId:', trip.userId);
-                      console.log('   - currentUser.uid:', currentUser?.uid);
-                      console.log('   - trip.invitedBy:', trip.invitedBy);
-                      
-                      // ✅ Check if current user is the creator
-                      const isCreator = trip.createdBy === currentUser?.uid || trip.userId === currentUser?.uid;
+
+                      const isCreator = trip.createdBy === currentUser?.uid;
                       
                       console.log('   - isCreator:', isCreator);
                       console.log('---');
@@ -808,13 +801,13 @@ const HikePlanner = () => {
                                   >
                                     {trip.status}
                                   </Badge>
-                                  {/* ✅ Show "Invited" badge if not creator */}
+                                
                                   {!isCreator && trip.invitedBy && (
                                     <Badge variant="outline" className="border-blue-500 text-blue-500">
                                       Invited by Friend
                                     </Badge>
                                   )}
-                                  {/* ✅ Debug badge - Remove this after testing */}
+                                  
                                   {isCreator && (
                                     <Badge variant="outline" className="border-green-500 text-green-500">
                                       You Created This
@@ -852,7 +845,6 @@ const HikePlanner = () => {
                               )}
                             </div>
                             
-                            {/* ✅ Action Buttons with Conditional Rendering */}
                             <div className="flex justify-end space-x-2 mt-4 flex-wrap gap-2">
                               {trip.status !== 'cancelled' &&
                                 trip.status !== 'started' && (
@@ -866,7 +858,6 @@ const HikePlanner = () => {
                                       Start Hike
                                     </Button>
                                     
-                                    {/* ✅ Only show Invite button if user is the creator */}
                                     {isCreator ? (
                                       <Button
                                         size="sm"
@@ -884,8 +875,7 @@ const HikePlanner = () => {
                                     )}
                                   </>
                                 )}
-                              
-                              {/* ✅ Only show Edit button if user is the creator */}
+
                               {isCreator && (
                                 <Button
                                   size="sm"
@@ -897,8 +887,7 @@ const HikePlanner = () => {
                                   Edit
                                 </Button>
                               )}
-                              
-                              {/* ✅ Show "Cancel" for creator, "Leave" for invited users */}
+
                               {trip.status !== 'cancelled' &&
                                 trip.status !== 'started' && (
                                   isCreator ? (
