@@ -7,7 +7,7 @@ import {
   validatePassword,
 } from '../../services/userServices.js';
 import { ArrowLeft } from 'lucide-react';
-import '@fortawesome/fontawesome-free/css/all.min.css';
+//import '@fortawesome/fontawesome-free/css/all.min.css';
 
 export default function LoginPage({ open, onOpenChange, onLogin, onSignup }) {
   const [email, setEmail] = useState('');
@@ -16,6 +16,8 @@ export default function LoginPage({ open, onOpenChange, onLogin, onSignup }) {
   const [error, setError] = useState('');
   const { login, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
+//for eye icon
 
   const [hoverStates, setHoverStates] = useState({
     backButton: false,
@@ -174,7 +176,18 @@ export default function LoginPage({ open, onOpenChange, onLogin, onSignup }) {
                 autoComplete="new-password"
                 autoFocus={false}
                 required
-              />
+              /><i
+                className={showPassword ? "fa-solid fa-eye-slash" : "fa-solid fa-eye"}
+                style={{
+                  position: 'absolute',
+                  right: '10px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  cursor: 'pointer',
+                  color: '#666',
+                }}
+                onClick={() => setShowPassword(!showPassword)}
+              ></i>
 
               {error && <div style={styles.error}>{error}</div>}
 

@@ -30,6 +30,8 @@ export default function Signup() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
+
   const { signup, signInWithGoogle } = useAuth();
 
   const handleChange = (e) => {
@@ -213,7 +215,18 @@ export default function Signup() {
                 setFocusStates((prev) => ({ ...prev, password: false }))
               }
               required
-            />
+            /><i
+              className={showPassword ? "fa-solid fa-eye-slash" : "fa-solid fa-eye"}
+              style={{
+                position: 'absolute',
+                right: '10px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                cursor: 'pointer',
+                color: '#666',
+              }}
+              onClick={() => setShowPassword(!showPassword)}
+            ></i>
 
             <label style={styles.label} htmlFor="confirmPassword">
               Confirm Password
@@ -236,7 +249,18 @@ export default function Signup() {
                 setFocusStates((prev) => ({ ...prev, confirmPassword: false }))
               }
               required
-            />
+            /><i
+              className={showPassword ? "fa-solid fa-eye-slash" : "fa-solid fa-eye"}
+              style={{
+                position: 'absolute',
+                right: '10px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                cursor: 'pointer',
+                color: '#666',
+              }}
+              onClick={() => setShowPassword(!showPassword)}
+            ></i>
 
             {error && <div style={styles.error}>{error}</div>}
 
