@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 
 import { useNavigate } from 'react-router-dom';
-
+import { Eye, EyeOff } from 'lucide-react'; 
 import mountain from '../components/assets/forest-waterfall.jpg';
 import { ArrowLeft } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
@@ -30,7 +30,10 @@ export default function Signup() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
 
   const { signup, signInWithGoogle } = useAuth();
 
@@ -194,73 +197,85 @@ export default function Signup() {
               required
             />
 
-            <label style={styles.label} htmlFor="password">
-              Password
-            </label>
-            <input
-              id="password"
-              style={{
-                ...styles.input,
-                ...(focusStates.password && styles.inputFocus),
-              }}
-              type="password"
-              name="password"
-              placeholder="Enter your password"
-              value={form.password}
-              onChange={handleChange}
-              onFocus={() =>
-                setFocusStates((prev) => ({ ...prev, password: true }))
-              }
-              onBlur={() =>
-                setFocusStates((prev) => ({ ...prev, password: false }))
-              }
-              required
-            /><i
-              className={showPassword ? "fa-solid fa-eye-slash" : "fa-solid fa-eye"}
-              style={{
-                position: 'absolute',
-                right: '10px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                cursor: 'pointer',
-                color: '#666',
-              }}
-              onClick={() => setShowPassword(!showPassword)}
-            ></i>
+             {/* Password Field */}
+      <label style={styles.label} htmlFor="password">
+        Password
+      </label>
+      <div style={{ position: 'relative' }}>
+        <input
+          id="password"
+          style={{
+            ...styles.input,
+            ...(focusStates.password && styles.inputFocus),
+          }}
+          type={showPassword ? 'text' : 'password'}
+          name="password"
+          placeholder="Enter your password"
+          value={form.password}
+          onChange={handleChange}
+          onFocus={() => setFocusStates((prev) => ({ ...prev, password: true }))}
+          onBlur={() => setFocusStates((prev) => ({ ...prev, password: false }))}
+          required
+        />
+        <button
+          type="button"
+          onClick={() => setShowPassword((prev) => !prev)}
+          style={{
+            position: 'absolute',
+            right: '85px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            padding: 0,
+          }}
+        >
+          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+        </button>
+      </div>
 
-            <label style={styles.label} htmlFor="confirmPassword">
-              Confirm Password
-            </label>
-            <input
-              id="confirmPassword"
-              style={{
-                ...styles.input,
-                ...(focusStates.confirmPassword && styles.inputFocus),
-              }}
-              type="password"
-              name="confirmPassword"
-              placeholder="Retype your password"
-              value={form.confirmPassword}
-              onChange={handleChange}
-              onFocus={() =>
-                setFocusStates((prev) => ({ ...prev, confirmPassword: true }))
-              }
-              onBlur={() =>
-                setFocusStates((prev) => ({ ...prev, confirmPassword: false }))
-              }
-              required
-            /><i
-              className={showPassword ? "fa-solid fa-eye-slash" : "fa-solid fa-eye"}
-              style={{
-                position: 'absolute',
-                right: '10px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                cursor: 'pointer',
-                color: '#666',
-              }}
-              onClick={() => setShowPassword(!showPassword)}
-            ></i>
+          {/* Confirm Password Field */}
+      <label style={styles.label} htmlFor="confirmPassword">
+        Confirm Password
+      </label>
+      <div style={{ position: 'relative' }}>
+        <input
+          id="confirmPassword"
+          style={{
+            ...styles.input,
+            ...(focusStates.confirmPassword && styles.inputFocus),
+          }}
+          type={showConfirmPassword ? 'text' : 'password'}
+          name="confirmPassword"
+          placeholder="Retype your password"
+          value={form.confirmPassword}
+          onChange={handleChange}
+          onFocus={() =>
+            setFocusStates((prev) => ({ ...prev, confirmPassword: true }))
+          }
+          onBlur={() =>
+            setFocusStates((prev) => ({ ...prev, confirmPassword: false }))
+          }
+          required
+        />
+        <button
+          type="button"
+          onClick={() => setShowConfirmPassword((prev) => !prev)}
+          style={{
+            position: 'absolute',
+            right: '85px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            padding: 0,
+          }}
+        >
+          {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+        </button>
+      </div>
 
             {error && <div style={styles.error}>{error}</div>}
 
