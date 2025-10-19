@@ -143,10 +143,6 @@ export const LogbookSection = () => {
                     <Badge className={difficultyColors[hike.difficulty]}>
                       {hike.difficulty}
                     </Badge>
-                    <Badge variant="outline" className="border-border">
-                      <Calendar className="h-3 w-3 mr-1" />
-                      {new Date(hike.date).toLocaleDateString()}
-                    </Badge>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2 mb-4 text-sm">
