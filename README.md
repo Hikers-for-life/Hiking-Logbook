@@ -12,6 +12,7 @@ Hiking Logbook is a modern web app that lets users track their hikes, set goals,
 -  **Risuna Ntimana 2684367**
 -  **Ntokozo Skosana 2440810**
 -  **Stelly Jane Ngono Onana 2744075**
+-  **Naledi Mogomotsi 2684883**
 
   
 ##  Features
@@ -191,6 +192,7 @@ For issues and questions:
 
 
 *Built with ❤️ for the hiking community*
+
 
 
 
