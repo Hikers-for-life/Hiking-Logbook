@@ -9,7 +9,7 @@ import {
 import { ArrowLeft } from 'lucide-react';
 //import '@fortawesome/fontawesome-free/css/all.min.css';
 import { Eye, EyeOff } from 'lucide-react';
- 
+
 export default function LoginPage({ open, onOpenChange, onLogin, onSignup }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -19,7 +19,7 @@ export default function LoginPage({ open, onOpenChange, onLogin, onSignup }) {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
-//for eye icon
+  //for eye icon
 
   const [hoverStates, setHoverStates] = useState({
     backButton: false,
@@ -168,38 +168,46 @@ export default function LoginPage({ open, onOpenChange, onLogin, onSignup }) {
 
               <label style={styles.label} htmlFor="password">
                 Password
-                </label>
-              <div style={{ position: 'relative' }}>
-            <input
-              id="password"
-              style={styles.input}
-              type={showPassword ? 'text' : 'password'}
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              onFocus={() => setIsFocused(true)}
-              onBlur={() => setIsFocused(false)}
-              autoComplete="new-password"
-              required
-            />
-            {isFocused && (
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                style={{
-                  position: "absolute",
-                  right: "10px",
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  padding: 0,
-                }}
-              >
-              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                )}
+              </label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <input
+                  id="password"
+                  style={styles.input}
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="new-password"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    padding: "8px",
+                    borderRadius: "6px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#666",
+                    transition: "color 0.2s, background-color 0.2s",
+                    minWidth: "40px",
+                    height: "40px",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.color = "#333";
+                    e.target.style.backgroundColor = "#f5f5f5";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.color = "#666";
+                    e.target.style.backgroundColor = "transparent";
+                  }}
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
               </div>
 
               {error && <div style={styles.error}>{error}</div>}

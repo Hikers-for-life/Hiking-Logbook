@@ -7,22 +7,22 @@ import { getUserHikeCount } from "../../services/userServices";
 import { hikeApiService } from "../../services/hikeApiService.js";
 import { useEffect, useState, useCallback } from "react";
 import { getUserStats } from "../../services/statistics";
-import { discoverFriends, sendFriendRequest } from "../../services/discover";
+import { discoverFriends, sendFriendRequest, checkFriendStatus } from "../../services/discover";
 import { useToast } from "../../hooks/use-toast";
 import { ChatBox } from "./chat-box";
-import { 
- Calendar, 
-  MapPin, 
-  Mountain, 
-  Clock, 
-  UserPlus, 
-  MessageCircle, 
+import {
+  Calendar,
+  MapPin,
+  Mountain,
+  Clock,
+  UserPlus,
+  MessageCircle,
   Check,
-  Loader2 ,
-  Target, 
-  Award, 
-  Medal, 
-  TrendingUp 
+  Loader2,
+  Target,
+  Award,
+  Medal,
+  TrendingUp
 } from "lucide-react";
 
 
@@ -231,6 +231,72 @@ export const ProfileView = ({
     fetchStats();
   }, [person]);
 
+  // Check friend status when profile opens
+  useEffect(() => {
+    if (!person || !showAddFriend) return;
+
+    // Clear any stale localStorage entry for this user on profile open
+    try {
+      const staleEntry = localStorage.getItem(`pending_request_${person.uid}`);
+      if (staleEntry && staleEntry.trim() !== '') {
+        console.log('Found stale localStorage entry for', person.uid, '- will verify with backend');
+      }
+    } catch (e) {
+      console.warn('Error checking localStorage:', e);
+    }
+
+    const checkStatus = async () => {
+      try {
+        const status = await checkFriendStatus(person.uid);
+
+        if (status.status === 'friends') {
+          setIsFriend(true);
+          setRequestSent(false);
+        } else if (status.status === 'request_sent') {
+          setIsFriend(false);
+          setRequestSent(true);
+        } else if (status.status === 'request_received') {
+          setIsFriend(false);
+          setRequestSent(false);
+        } else {
+          // For 'none' status, check localStorage as fallback
+          try {
+            const localPending = localStorage.getItem(`pending_request_${person.uid}`);
+            if (localPending && localPending.trim() !== '') {
+              setRequestSent(true);
+            } else {
+              setRequestSent(false);
+            }
+          } catch (e) {
+            setRequestSent(false);
+          }
+          setIsFriend(false);
+        }
+      } catch (err) {
+        console.error('Failed to check friend status:', err);
+        // On error, check localStorage as fallback
+        try {
+          const localPending = localStorage.getItem(`pending_request_${person.uid}`);
+          setRequestSent(!!(localPending && localPending.trim() !== ''));
+        } catch (e) {
+          setRequestSent(false);
+        }
+        setIsFriend(false);
+      }
+    };
+
+    checkStatus();
+  }, [person, showAddFriend]);
+
+  // Reset states when profile closes
+  useEffect(() => {
+    if (!open) {
+      setRequestSent(false);
+      setIsFriend(false);
+      setIsAdding(false);
+    }
+  }, [open]);
+
   if (!person) return null;
 
   let joinDate = 'Unknown';
@@ -314,15 +380,23 @@ export const ProfileView = ({
                           title: 'Request sent',
                           description: 'Friend request sent.',
                         });
-                        setRequestSent(true);
-                        // persist small local marker so Discover UI can reflect immediately
+                        // Refresh friend status from backend instead of relying on localStorage
                         try {
-                          if (resp?.requestId)
-                            localStorage.setItem(
-                              `pending_request_${person.uid}`,
-                              resp.requestId
-                            );
-                        } catch (e) {}
+                          const updatedStatus = await checkFriendStatus(person.uid);
+                          if (updatedStatus.status === 'request_sent') {
+                            setRequestSent(true);
+                            setIsFriend(false);
+                          } else if (updatedStatus.status === 'friends') {
+                            setRequestSent(false);
+                            setIsFriend(true);
+                          } else {
+                            setRequestSent(false);
+                            setIsFriend(false);
+                          }
+                        } catch (statusErr) {
+                          console.warn('Failed to refresh friend status, marking as sent:', statusErr);
+                          setRequestSent(true);
+                        }
                         // Notify other parts of the UI (Discover) that a request was sent
                         try {
                           window.dispatchEvent(
@@ -333,7 +407,7 @@ export const ProfileView = ({
                               },
                             })
                           );
-                        } catch (e) {}
+                        } catch (e) { }
                       } catch (err) {
                         console.error('Failed to send friend request:', err);
                         toast({
