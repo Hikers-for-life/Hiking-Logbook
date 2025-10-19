@@ -277,7 +277,7 @@ describe('statistics service Tests', () => {
 
       const result = await getUserStats(mockUserId);
 
-      expect(result.totalDistance).toBeCloseTo(15.75, 2);
+      expect(result.totalDistance).toBeCloseTo(15.8, 1);
       expect(result.totalElevation).toBe(751);
     });
   });

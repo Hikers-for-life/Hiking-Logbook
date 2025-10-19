@@ -24,5 +24,8 @@ export const getUserStats = async (userId) => {
     totalElevation += elevation;
   });
 
-  return { totalDistance, totalElevation };
+  return { 
+    totalDistance: parseFloat(totalDistance.toFixed(1)), 
+    totalElevation: parseFloat(totalElevation.toFixed(1)) 
+  };
 };

@@ -135,13 +135,17 @@ export const dbUtils = {
         difficulty: plannedHikeData.difficulty || 'Easy',
         description: plannedHikeData.description || '',
         notes: plannedHikeData.notes || '',
-        status: 'planning',
+        status: plannedHikeData.status || 'planning',
         participants: plannedHikeData.participants || [userId],
-        createdBy: userId,
+        // ✅ CRITICAL: Preserve createdBy if it's passed, otherwise set to userId
+        createdBy: plannedHikeData.createdBy || userId,
+        userId: userId, // Still keep this for backward compatibility
+        maxParticipants: plannedHikeData.maxParticipants || 10,
+        // ✅ Preserve invitation metadata
+        invitedBy: plannedHikeData.invitedBy || null,
+        originalHikeId: plannedHikeData.originalHikeId || null,
         createdAt: new Date(),
         updatedAt: new Date(),
-        userId,
-        maxParticipants: plannedHikeData.maxParticipants || 10,
       };
 
       const db = this.getDb();
@@ -151,6 +155,8 @@ export const dbUtils = {
         .collection('plannedHikes')
         .add(mapped);
 
+      console.log('✅ Added planned hike:', docRef.id, 'createdBy:', mapped.createdBy);
+
       // Re-evaluate badges/stats
       const stats = await this.getUserHikeStats(userId);
       await evaluateAndAwardBadges(userId, stats).catch((e) =>
@@ -159,6 +165,7 @@ export const dbUtils = {
 
       return { success: true, id: docRef.id };
     } catch (err) {
+      console.error('❌ addPlannedHike error:', err);
       throw new Error(`addPlannedHike failed: ${err.message}`);
     }
   },
@@ -1354,6 +1361,302 @@ export const dbUtils = {
       return { success: true };
     } catch (err) {
       throw new Error(`deleteUser failed: ${err.message}`);
+    }
+  },
+
+  // Add these methods to your existing dbUtils object in database.js
+
+// -----------------------
+// Hike Invitations
+// -----------------------
+  async sendHikeInvitation(fromUserId, toUserId, hikeId, hikeDetails) {
+    try {
+      const db = this.getDb();
+      
+      // Get sender's information
+      const senderProfile = await this._getUserProfileIfExists(fromUserId);
+      
+      const invitationData = {
+        hikeId,
+        fromUserId,
+        toUserId,
+        fromUser: {
+          uid: fromUserId,
+          displayName: senderProfile?.displayName || 'Unknown User',
+          email: senderProfile?.email || ''
+        },
+        hikeDetails: {
+          title: hikeDetails.title || '',
+          location: hikeDetails.location || '',
+          date: hikeDetails.date || new Date(),
+          distance: hikeDetails.distance || '',
+          difficulty: hikeDetails.difficulty || 'Easy',
+          description: hikeDetails.description || '',
+          notes: hikeDetails.notes || '',
+          startTime: hikeDetails.startTime || ''
+        },
+        status: 'pending',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      const docRef = await db.collection('hikeInvitations').add(invitationData);
+      
+      return { success: true, id: docRef.id };
+    } catch (err) {
+      throw new Error(`sendHikeInvitation failed: ${err.message}`);
+    }
+  },
+
+  /**
+   * Get pending hike invitations for a user
+   */
+  async getPendingHikeInvitations(userId) {
+    try {
+      const db = this.getDb();
+      
+      console.log('🔍 Querying invitations for:', userId);
+    
+      const snapshot = await db
+        .collection('hikeInvitations')
+        .where('toUserId', '==', userId)
+        .where('status', '==', 'pending')
+        .get(); // Removed .orderBy('createdAt', 'desc')
+
+      console.log('📊 Query returned:', snapshot.size, 'documents');
+      
+      const invitations = [];
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        console.log('📄 Document:', doc.id, data);
+        
+        invitations.push({
+          id: doc.id,
+          ...data,
+          createdAt: data.createdAt?.toDate?.() || data.createdAt
+        });
+      });
+      invitations.sort((a, b) => {
+        const dateA = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt);
+        const dateB = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt);
+        return dateB - dateA; // Newest first
+      });
+
+      return invitations;
+    } catch (err) {
+      console.error('❌ getPendingHikeInvitations error:', err);
+      throw new Error(`getPendingHikeInvitations failed: ${err.message}`);
+    }
+  },
+
+  /**
+   * Get count of pending invitations
+   */
+  async getPendingInvitationsCount(userId) {
+    try {
+      const db = this.getDb();
+      
+      const snapshot = await db
+        .collection('hikeInvitations')
+        .where('toUserId', '==', userId)
+        .where('status', '==', 'pending')
+        .get();
+
+      return snapshot.size;
+    } catch (err) {
+      throw new Error(`getPendingInvitationsCount failed: ${err.message}`);
+    }
+  },
+
+  /**
+   * Accept a hike invitation
+   */
+   async acceptHikeInvitation(invitationId, userId) {
+    try {
+      const db = this.getDb();
+      
+      // Get the invitation
+      const invitationDoc = await db.collection('hikeInvitations').doc(invitationId).get();
+      
+      if (!invitationDoc.exists) {
+        throw new Error('Invitation not found');
+      }
+  
+      const invitation = invitationDoc.data();
+  
+      // Verify user is the recipient
+      if (invitation.toUserId !== userId) {
+        throw new Error('Unauthorized: You are not the recipient of this invitation');
+      }
+  
+      // Verify invitation is still pending
+      if (invitation.status !== 'pending') {
+        throw new Error(`Invitation has already been ${invitation.status}`);
+      }
+  
+      
+      const plannedHikeData = {
+        title: invitation.hikeDetails.title,
+        location: invitation.hikeDetails.location,
+        date: invitation.hikeDetails.date,
+        distance: invitation.hikeDetails.distance,
+        difficulty: invitation.hikeDetails.difficulty,
+        description: invitation.hikeDetails.description,
+        notes: invitation.hikeDetails.notes,
+        startTime: invitation.hikeDetails.startTime,
+        status: 'confirmed',
+        invitedBy: invitation.fromUserId, 
+        originalHikeId: invitation.hikeId,
+        participants: [userId],
+        createdBy: invitation.fromUserId, // The person who sent the invitation
+        userId: userId, // The current user (acceptor) for their own subcollection
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+  
+      const result = await this.addPlannedHike(userId, plannedHikeData);
+  
+      // Update invitation status
+      await db.collection('hikeInvitations').doc(invitationId).update({
+        status: 'accepted',
+        acceptedAt: new Date(),
+        plannedHikeId: result.id,
+        updatedAt: new Date()
+      });
+  
+      console.log('Invitation accepted, created planned hike:', result.id);
+      console.log('createdBy set to:', invitation.fromUserId, '(original creator)');
+      console.log('userId set to:', userId, '(acceptor)');
+  
+      return { success: true, id: result.id };
+    } catch (err) {
+      console.error(' acceptHikeInvitation error:', err);
+      throw new Error(`acceptHikeInvitation failed: ${err.message}`);
+    }
+  },
+
+  /**
+   * Reject a hike invitation
+   */
+  async rejectHikeInvitation(invitationId, userId) {
+    try {
+      const db = this.getDb();
+      
+      // Get the invitation
+      const invitationDoc = await db.collection('hikeInvitations').doc(invitationId).get();
+      
+      if (!invitationDoc.exists) {
+        throw new Error('Invitation not found');
+      }
+
+      const invitation = invitationDoc.data();
+
+      // Verify user is the recipient
+      if (invitation.toUserId !== userId) {
+        throw new Error('Unauthorized: You are not the recipient of this invitation');
+      }
+
+      // Verify invitation is still pending
+      if (invitation.status !== 'pending') {
+        throw new Error(`Invitation has already been ${invitation.status}`);
+      }
+
+      // Update invitation status
+      await db.collection('hikeInvitations').doc(invitationId).update({
+        status: 'rejected',
+        rejectedAt: new Date(),
+        updatedAt: new Date()
+      });
+
+      return { success: true };
+    } catch (err) {
+      throw new Error(`rejectHikeInvitation failed: ${err.message}`);
+    }
+  },
+
+  /**
+   * Get invitation by ID
+   */
+  async getHikeInvitation(invitationId) {
+    try {
+      const db = this.getDb();
+      const doc = await db.collection('hikeInvitations').doc(invitationId).get();
+      
+      if (!doc.exists) {
+        return null;
+      }
+      
+      return { id: doc.id, ...doc.data() };
+    } catch (err) {
+      throw new Error(`getHikeInvitation failed: ${err.message}`);
+    }
+  },
+
+  /**
+   * Get all invitations sent by a user
+   */
+  async getSentHikeInvitations(userId) {
+    try {
+      const db = this.getDb();
+      
+      const snapshot = await db
+        .collection('hikeInvitations')
+        .where('fromUserId', '==', userId)
+        .orderBy('createdAt', 'desc')
+        .get();
+
+      const invitations = [];
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        invitations.push({
+          id: doc.id,
+          ...data,
+          createdAt: data.createdAt?.toDate?.() || data.createdAt
+        });
+      });
+
+      return invitations;
+    } catch (err) {
+      throw new Error(`getSentHikeInvitations failed: ${err.message}`);
+    }
+  },
+
+  /**
+   * Delete/cancel an invitation (for sender only)
+   */
+  async cancelHikeInvitation(invitationId, userId) {
+    try {
+      const db = this.getDb();
+      
+      // Get the invitation
+      const invitationDoc = await db.collection('hikeInvitations').doc(invitationId).get();
+      
+      if (!invitationDoc.exists) {
+        throw new Error('Invitation not found');
+      }
+
+      const invitation = invitationDoc.data();
+
+      // Verify user is the sender
+      if (invitation.fromUserId !== userId) {
+        throw new Error('Unauthorized: Only the sender can cancel this invitation');
+      }
+
+      // Only allow canceling pending invitations
+      if (invitation.status !== 'pending') {
+        throw new Error('Can only cancel pending invitations');
+      }
+
+      // Update status to cancelled
+      await db.collection('hikeInvitations').doc(invitationId).update({
+        status: 'cancelled',
+        cancelledAt: new Date(),
+        updatedAt: new Date()
+      });
+
+      return { success: true };
+    } catch (err) {
+      throw new Error(`cancelHikeInvitation failed: ${err.message}`);
     }
   },
 };

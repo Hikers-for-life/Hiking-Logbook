@@ -50,7 +50,7 @@ export default function StatsOverview() {
           <CardTitle>Total Distance</CardTitle>
         </CardHeader>
         <CardContent className="text-2xl font-bold">
-          {stats.totalDistance} km
+          {parseFloat(stats.totalDistance.toFixed(1))} km
         </CardContent>
       </Card>
 

@@ -21,14 +21,48 @@ import {
   Globe,
 } from 'lucide-react';
 import { routeExplorerService } from '../services/routeExplorerService';
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Popup,
+} from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
-const RouteExplorer = ({ isOpen, onOpenChange }) => {
+// Fix for default markers in react-leaflet
+if (typeof window !== 'undefined' && L?.Icon?.Default?.prototype) {
+  delete L.Icon.Default.prototype._getIconUrl;
+  L.Icon.Default.mergeOptions({
+    iconRetinaUrl:
+      'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+    iconUrl:
+      'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+    shadowUrl:
+      'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  });
+}
+
+// Custom trail icon
+const trailIcon = typeof window !== 'undefined' && L?.Icon
+  ? new L.Icon({
+      iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+      shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      shadowSize: [41, 41],
+    })
+  : {};
+
+const RouteExplorer = ({ isOpen, onOpenChange, onPlanHike }) => {
   const [trails, setTrails] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isEnriching, setIsEnriching] = useState(false);
   const [error, setError] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
   const [selectedTrail, setSelectedTrail] = useState(null);
+  const [showMap, setShowMap] = useState(false);
 
   // NEW: State for difficulty filter. Default is 'All'.
   const [difficultyFilter, setDifficultyFilter] = useState('All');
@@ -153,17 +187,17 @@ const RouteExplorer = ({ isOpen, onOpenChange }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-6xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[98vw] max-w-7xl h-[95vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle className="text-2xl flex items-center gap-2">
             <Compass className="h-6 w-6 text-forest" />
-            Explore Routes
+            Explore Trails
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
-          {/* MODIFIED: Search and Filters section */}
-          <Card>
+        <div className="flex flex-col h-full">
+          {/* Search and Filters section */}
+          <Card className="mb-4">
             <CardContent className="p-4 space-y-4">
               <div className="flex flex-col sm:flex-row items-center gap-2">
                 <Button
@@ -191,7 +225,7 @@ const RouteExplorer = ({ isOpen, onOpenChange }) => {
                   Find Nationwide
                 </Button>
               </div>
-              {/* NEW: Difficulty filter buttons */}
+              {/* Difficulty filter buttons */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-4">
                 <Button
                   variant={difficultyFilter === 'All' ? 'default' : 'outline'}
@@ -223,11 +257,12 @@ const RouteExplorer = ({ isOpen, onOpenChange }) => {
             </CardContent>
           </Card>
 
-          {/* Results */}
-          <div className="grid lg:grid-cols-2 gap-6">
+          {/* Results - Now with better layout */}
+          <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-0">
             {/* Trail List */}
-            <div className="space-y-4">
-              <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+            <div className="flex flex-col h-full">
+              <h3 className="text-lg font-semibold mb-4">Available Trails</h3>
+              <div className="flex-1 space-y-3 overflow-y-auto pr-2">
                 {/* Error and Loading states */}
                 {isLoading && trails.length === 0 && (
                   <p className="text-muted-foreground">
@@ -275,97 +310,162 @@ const RouteExplorer = ({ isOpen, onOpenChange }) => {
               </div>
             </div>
 
-            {/* Trail Details */}
-            <div className="space-y-4">
+            {/* Trail Details and Map */}
+            <div className="flex flex-col h-full">
               {selectedTrail ? (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-start justify-between">
-                      <h3 className="text-xl">{selectedTrail.name}</h3>
-                      <Badge
-                        className={getDifficultyColor(selectedTrail.difficulty)}
-                      >
-                        {selectedTrail.difficulty}
-                      </Badge>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <p className="text-sm">{selectedTrail.description}</p>
+                <div className="flex flex-col h-full space-y-4">
+                  {/* Trail Details Card */}
+                  <Card className="flex-shrink-0">
+                    <CardHeader>
+                      <CardTitle className="flex items-start justify-between">
+                        <h3 className="text-xl">{selectedTrail.name}</h3>
+                        <Badge
+                          className={getDifficultyColor(selectedTrail.difficulty)}
+                        >
+                          {selectedTrail.difficulty}
+                        </Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <p className="text-sm">{selectedTrail.description}</p>
 
-                    {isEnriching ? (
-                      <div className="flex justify-center items-center h-24">
-                        <RefreshCw className="h-6 w-6 animate-spin text-forest" />
-                        <p className="ml-2 text-muted-foreground">
-                          Calculating elevation...
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div className="flex items-center gap-2">
-                          <Mountain className="h-4 w-4 text-forest" />
-                          <span>Distance: {selectedTrail.distance} km</span>
+                      {isEnriching ? (
+                        <div className="flex justify-center items-center h-24">
+                          <RefreshCw className="h-6 w-6 animate-spin text-forest" />
+                          <p className="ml-2 text-muted-foreground">
+                            Calculating elevation...
+                          </p>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Clock className="h-4 w-4 text-blue-500" />
-                          <span>
-                            Duration: {selectedTrail.duration || 'N/A'}
-                          </span>
+                      ) : (
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div className="flex items-center gap-2">
+                            <Mountain className="h-4 w-4 text-forest" />
+                            <span>Distance: {selectedTrail.distance} km</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-4 w-4 text-blue-500" />
+                            <span>
+                              Duration: {selectedTrail.duration || 'N/A'}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <TrendingUp className="h-4 w-4 text-green-500" />
+                            <span>
+                              Ascent:{' '}
+                              {selectedTrail.ascent === null
+                                ? 'N/A'
+                                : `${selectedTrail.ascent} m`}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <TrendingDown className="h-4 w-4 text-red-500" />
+                            <span>
+                              Descent:{' '}
+                              {selectedTrail.descent === null
+                                ? 'N/A'
+                                : `${selectedTrail.descent} m`}
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <TrendingUp className="h-4 w-4 text-green-500" />
-                          <span>
-                            Ascent:{' '}
-                            {selectedTrail.ascent === null
-                              ? 'N/A'
-                              : `${selectedTrail.ascent} m`}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <TrendingDown className="h-4 w-4 text-red-500" />
-                          <span>
-                            Descent:{' '}
-                            {selectedTrail.descent === null
-                              ? 'N/A'
-                              : `${selectedTrail.descent} m`}
-                          </span>
-                        </div>
-                      </div>
-                    )}
+                      )}
 
-                    <div className="flex gap-2 pt-4">
-                      <Button className="flex-1" disabled={isEnriching}>
-                        <Calendar className="h-4 w-4 mr-2" /> Plan This Hike
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          if (
-                            selectedTrail.coordinates &&
-                            selectedTrail.coordinates.length > 0
-                          ) {
-                            const [lng, lat] = selectedTrail.coordinates[0];
-                            const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
-                            window.open(url, '_blank');
+                      <div className="flex gap-2 pt-4">
+                        <Button 
+                          className="flex-1" 
+                          disabled={isEnriching}
+                          onClick={() => {
+                            if (onPlanHike && selectedTrail) {
+                              onPlanHike(selectedTrail);
+                              onOpenChange(false); // Close the trail explorer
+                            }
+                          }}
+                        >
+                          <Calendar className="h-4 w-4 mr-2" /> Plan This Hike
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            if (
+                              selectedTrail.coordinates &&
+                              selectedTrail.coordinates.length > 0
+                            ) {
+                              setShowMap(!showMap);
+                            }
+                          }}
+                          disabled={
+                            !selectedTrail.coordinates ||
+                            selectedTrail.coordinates.length === 0
                           }
-                        }}
-                        disabled={
-                          !selectedTrail.coordinates ||
-                          selectedTrail.coordinates.length === 0
-                        }
-                      >
-                        <MapPin className="h-4 w-4 mr-2" /> View on Map
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                        >
+                          <MapPin className="h-4 w-4 mr-2" /> {showMap ? 'Hide Map' : 'View Trail'}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Integrated Map View */}
+                  {showMap && selectedTrail.coordinates && selectedTrail.coordinates.length > 0 && (
+                    <Card className="flex-1 min-h-0">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <MapPin className="h-5 w-5 text-forest" />
+                          Trail Location
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-0 h-full">
+                        <div className="h-80 w-full rounded-lg overflow-hidden">
+                          <MapContainer
+                            center={[selectedTrail.coordinates[0][1], selectedTrail.coordinates[0][0]]}
+                            zoom={13}
+                            style={{ height: '100%', width: '100%' }}
+                            scrollWheelZoom={true}
+                          >
+                            <TileLayer
+                              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                            />
+                            <Marker
+                              position={[selectedTrail.coordinates[0][1], selectedTrail.coordinates[0][0]]}
+                              icon={trailIcon}
+                            >
+                              <Popup>
+                                <div className="p-2">
+                                  <h4 className="font-semibold text-sm mb-2">{selectedTrail.name}</h4>
+                                  <div className="space-y-1 text-xs">
+                                    <div>
+                                      <strong>Difficulty:</strong> {selectedTrail.difficulty}
+                                    </div>
+                                    <div>
+                                      <strong>Distance:</strong> {selectedTrail.distance} km
+                                    </div>
+                                    <div>
+                                      <strong>Lat:</strong> {selectedTrail.coordinates[0][1].toFixed(6)}
+                                    </div>
+                                    <div>
+                                      <strong>Lng:</strong> {selectedTrail.coordinates[0][0].toFixed(6)}
+                                    </div>
+                                    {selectedTrail.ascent && (
+                                      <div>
+                                        <strong>Ascent:</strong> {selectedTrail.ascent} m
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </Popup>
+                            </Marker>
+                          </MapContainer>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
               ) : (
                 <Card className="border-dashed flex items-center justify-center h-full">
                   <CardContent className="p-8 text-center">
                     <Info className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <h3 className="font-semibold mb-2">Select a Trail</h3>
                     <p className="text-muted-foreground">
-                      Click a trail to see its full details and elevation
-                      profile.
+                      Click a trail to see its full details and location on the map.
                     </p>
                   </CardContent>
                 </Card>

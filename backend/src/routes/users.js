@@ -11,6 +11,27 @@ import { BADGE_RULES } from '../services/badgeService.js';
 
 const router = express.Router();
 
+// Helper function to format dates
+function formatDate(date) {
+  if (!(date instanceof Date) || isNaN(date)) return 'Unknown';
+
+  const day = date.getDate();
+  const month = date.toLocaleString('en-US', { month: 'long' });
+  const year = date.getFullYear();
+
+  // Add ordinal suffix (st, nd, rd, th)
+  const suffix =
+    day % 10 === 1 && day !== 11
+      ? 'st'
+      : day % 10 === 2 && day !== 12
+        ? 'nd'
+        : day % 10 === 3 && day !== 13
+          ? 'rd'
+          : 'th';
+
+  return `${month} ${day}${suffix}, ${year}`;
+}
+
 // Test route to verify router is working
 router.get('/test', (req, res) => {
   res.json({ message: 'Users router is working!' });
@@ -455,24 +476,110 @@ router.get('/search', async (req, res) => {
 router.get('/:uid/achievements', async (req, res) => {
   try {
     const { uid } = req.params;
-    const profile = await AuthService.getUserProfile(uid);
+    const { limit = 10 } = req.query;
+    
+    const db = getDatabase();
+    const userRef = db.collection('users').doc(uid);
+    const userSnap = await userRef.get();
 
-    if (!profile) {
-      return res.status(404).json({ error: 'User not found' });
+    if (!userSnap.exists) {
+      return res.status(404).json({ 
+        success: false,
+        error: 'User not found' 
+      });
     }
 
+    const userData = userSnap.data();
+    const badges = userData.badges || [];
+    
+    // Sort by earned date (most recent first) and limit
+    const sortedBadges = badges
+      .sort((a, b) => {
+        const dateA = a.earnedDate?.toDate ? a.earnedDate.toDate() : new Date(0);
+        const dateB = b.earnedDate?.toDate ? b.earnedDate.toDate() : new Date(0);
+        return dateB - dateA;
+      })
+      .slice(0, parseInt(limit))
+      .map(badge => ({
+        name: badge.name,
+        description: badge.description,
+        earned: badge.earnedDate?.toDate ? 
+          formatDate(badge.earnedDate.toDate()) : 'Unknown',
+        earnedDate: badge.earnedDate?.toDate ? 
+          badge.earnedDate.toDate().toISOString() : null
+      }));
+
     res.json({
-      uid: profile.uid,
-      displayName: profile.displayName,
-      achievements: profile.stats.achievements || [],
-      totalHikes: profile.stats.totalHikes || 0,
-      totalDistance: profile.stats.totalDistance || 0,
-      totalElevation: profile.stats.totalElevation || 0,
+      success: true,
+      data: sortedBadges,
+      total: badges.length,
+      limit: parseInt(limit)
     });
   } catch (error) {
     console.error('Get achievements error:', error);
-    res.status(404).json({
-      error: 'User not found',
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get achievements',
+      message: error.message
+    });
+  }
+});
+
+// Get user goals (public route)
+router.get('/:uid/goals', async (req, res) => {
+  try {
+    const { uid } = req.params;
+    const { limit = 10, status = 'active' } = req.query;
+    
+    const db = getDatabase();
+    let query = db
+      .collection('users')
+      .doc(uid)
+      .collection('goals')
+      .orderBy('createdAt', 'desc')
+      .limit(parseInt(limit));
+
+    // Filter by status if provided
+    if (status) {
+      query = query.where('status', '==', status);
+    }
+
+    const snapshot = await query.get();
+    const goals = [];
+
+    snapshot.forEach((doc) => {
+      const goalData = doc.data();
+      
+      // Convert Firestore timestamps to ISO strings
+      if (goalData.createdAt && goalData.createdAt.toDate) {
+        goalData.createdAt = goalData.createdAt.toDate().toISOString();
+      }
+      if (goalData.updatedAt && goalData.updatedAt.toDate) {
+        goalData.updatedAt = goalData.updatedAt.toDate().toISOString();
+      }
+      if (goalData.targetDate && goalData.targetDate.toDate) {
+        goalData.targetDate = goalData.targetDate.toDate().toISOString();
+      }
+
+      goals.push({ 
+        id: doc.id, 
+        ...goalData,
+        progress: Math.round((goalData.currentProgress / goalData.targetValue) * 100) || 0
+      });
+    });
+
+    res.json({
+      success: true,
+      data: goals,
+      total: goals.length,
+      limit: parseInt(limit)
+    });
+  } catch (error) {
+    console.error('Get goals error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get goals',
+      message: error.message
     });
   }
 });

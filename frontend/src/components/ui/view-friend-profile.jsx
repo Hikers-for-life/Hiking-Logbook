@@ -68,6 +68,10 @@ export const ProfileView = ({
     totalElevation: 0,
   });
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [goals, setGoals] = useState([]);
+  const [achievements, setAchievements] = useState([]);
+  const [goalsLoading, setGoalsLoading] = useState(false);
+  const [achievementsLoading, setAchievementsLoading] = useState(false);
 
   // replace inside view-friend-profile.jsx
   const loadHikes = useCallback(async () => {
@@ -127,6 +131,52 @@ export const ProfileView = ({
     }
   }, [person]);
 
+  // Load goals
+  const loadGoals = useCallback(async () => {
+    if (!person) return;
+
+    try {
+      setGoalsLoading(true);
+      const res = await fetch(`${API_BASE_URL}/users/${person.uid}/goals?limit=5&status=active`);
+      const response = await res.json();
+
+      if (response.success) {
+        setGoals(response.data);
+      } else {
+        console.warn('Failed to load goals:', response.error);
+        setGoals([]);
+      }
+    } catch (err) {
+      console.error('Failed to load goals:', err);
+      setGoals([]);
+    } finally {
+      setGoalsLoading(false);
+    }
+  }, [person]);
+
+  // Load achievements
+  const loadAchievements = useCallback(async () => {
+    if (!person) return;
+
+    try {
+      setAchievementsLoading(true);
+      const res = await fetch(`${API_BASE_URL}/users/${person.uid}/achievements?limit=4`);
+      const response = await res.json();
+
+      if (response.success) {
+        setAchievements(response.data);
+      } else {
+        console.warn('Failed to load achievements:', response.error);
+        setAchievements([]);
+      }
+    } catch (err) {
+      console.error('Failed to load achievements:', err);
+      setAchievements([]);
+    } finally {
+      setAchievementsLoading(false);
+    }
+  }, [person]);
+
   useEffect(() => {
     if (!person) return;
     const fetchHikeCount = async () => {
@@ -152,10 +202,12 @@ export const ProfileView = ({
   useEffect(() => {
     if (person) {
       loadHikes();
+      loadGoals();
+      loadAchievements();
     } else {
       setIsLoading(false);
     }
-  }, [person, loadHikes]);
+  }, [person, loadHikes, loadGoals, loadAchievements]);
 
   useEffect(() => {
     if (!person) return;
@@ -265,8 +317,8 @@ export const ProfileView = ({
     ...person,
     name: person.displayName || 'No name',
     bio: person.bio || 'No bio yet',
-    achievements: person.achievements || [],
-    goals: person.goals || [],
+    achievements: achievements,
+    goals: goals,
     joinedDate: joinDate || 'Unknown',
     totalElevation: person.totalElevation || '0m',
   };
@@ -416,7 +468,7 @@ export const ProfileView = ({
             <Card>
               <CardContent className="p-4 text-center">
                 <p className="text-2xl font-bold text-forest">
-                  {userStats.totalDistance} km
+                  {parseFloat(userStats.totalDistance.toFixed(1))} km
                 </p>
                 <p className="text-sm text-muted-foreground">Distance</p>
               </CardContent>
@@ -440,19 +492,26 @@ export const ProfileView = ({
           </div>
 
           {/* Current Goals */}
-          {profileData.goals && profileData.goals.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Target className="h-5 w-5 text-summit" />
-                  Current Goals
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {profileData.goals.map((goal, index) => (
-                  <div key={index} className="space-y-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Target className="h-5 w-5 text-summit" />
+                Current Goals
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {goalsLoading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-4"></div>
+                  <p className="text-muted-foreground text-sm">
+                    Loading goals...
+                  </p>
+                </div>
+              ) : goals.length > 0 ? (
+                goals.map((goal, index) => (
+                  <div key={goal.id || index} className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <span className="font-medium">{goal.name}</span>
+                      <span className="font-medium">{goal.title || goal.name}</span>
                       <span className="text-sm text-muted-foreground">
                         {goal.progress}%
                       </span>
@@ -464,48 +523,61 @@ export const ProfileView = ({
                       />
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Target: {goal.target}
+                      Target: {goal.targetDate ? new Date(goal.targetDate).toLocaleDateString() : 'No target date'}
                     </p>
                   </div>
-                ))}
-              </CardContent>
-            </Card>
-          )}
+                ))
+              ) : (
+                <p className="text-muted-foreground text-sm text-center py-4">
+                  No active goals to display yet
+                </p>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Recent Achievements */}
-          {profileData.achievements && profileData.achievements.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Award className="h-5 w-5 text-summit" />
-                  Recent Achievements
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid md:grid-cols-2 gap-4">
-                  {profileData.achievements
-                    .slice(0, 4)
-                    .map((achievement, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center gap-3 p-3 rounded-lg bg-muted"
-                      >
-                        <Medal className="h-8 w-8 text-summit" />
-                        <div>
-                          <h4 className="font-medium">{achievement.name}</h4>
-                          <p className="text-sm text-muted-foreground">
-                            {achievement.description}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            Earned {achievement.earned}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Award className="h-5 w-5 text-summit" />
+                Recent Achievements
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {achievementsLoading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-4"></div>
+                  <p className="text-muted-foreground text-sm">
+                    Loading achievements...
+                  </p>
                 </div>
-              </CardContent>
-            </Card>
-          )}
+              ) : achievements.length > 0 ? (
+                <div className="grid md:grid-cols-2 gap-4">
+                  {achievements.map((achievement, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-3 p-3 rounded-lg bg-muted"
+                    >
+                      <Medal className="h-8 w-8 text-summit" />
+                      <div>
+                        <h4 className="font-medium">{achievement.name}</h4>
+                        <p className="text-sm text-muted-foreground">
+                          {achievement.description}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Earned {achievement.earned}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-sm text-center py-4">
+                  No achievements to display yet
+                </p>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Recent Hikes */}
           <Card>
