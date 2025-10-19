@@ -1,9 +1,9 @@
-# 📘 Hiking Logbook – Git Methodology Documentation
+#  Hiking Logbook – Git Methodology Documentation
 
 This document defines the **Git workflow, commit conventions, and version control standards** for the Hiking Logbook project.  
 It serves as the **"Git How We Work" manual** for all contributors.
 
-> ⚠️ **Note:**  
+> **Note:**  
 > These Git standards are **living rules** and may evolve as the project grows.  
 > Updates will be tracked through Git commits.
 
