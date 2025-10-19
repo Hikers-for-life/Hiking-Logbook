@@ -950,7 +950,7 @@ Cancel a pending invitation (sender only).
 ## Related Documentation
 
 - **Public API**: See [Public API Documentation](public_api_documentation.md) for external developer endpoints
-- **Setup Guide**: See [API Setup Guide](developer_guides/api_setup.md) for development setup
+- **Setup Guide**: See [API Setup Guide](product/developer_guides/api_setup.md) for development setup
 
 ---
 
