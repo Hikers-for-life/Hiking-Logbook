@@ -314,42 +314,6 @@ Stores hike invitation records sent between users.
 
 ---
 
-## Additional Security Rules (Messaging and Invitations)
-
-```javascript
-// Conversations: participants can read/write their conversation
-match /conversations/{conversationId} {
-  allow read, write: if request.auth != null &&
-    request.auth.uid in resource.data.participants;
-}
-
-// Messages: nested under messages/{conversationId}/messages/{messageId}
-match /messages/{conversationId}/messages/{messageId} {
-  // Only participants of the parent conversation can read or write messages
-  allow read, write: if request.auth != null &&
-    exists(/databases/$(database)/documents/conversations/$(conversationId)) &&
-    request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
-}
-
-// Hike Invitations: sender or recipient can read; sender creates; recipient updates status
-match /hikeInvitations/{invitationId} {
-  allow read: if request.auth != null &&
-    (request.auth.uid == resource.data.fromUserId || request.auth.uid == resource.data.toUserId);
-  allow create: if request.auth != null && request.auth.uid == request.resource.data.fromUserId;
-  allow update, delete: if request.auth != null &&
-    (request.auth.uid == resource.data.fromUserId || request.auth.uid == resource.data.toUserId);
-}
-```
-
----
-
-## Additional Indexes (Messaging and Invitations)
-
-6. **conversations** - `(participants ARRAY_CONTAINS, lastMessageTime DESC)`
-7. **messages** - For subcollection queries: index on `createdAt DESC` per `conversationId`
-8. **hikeInvitations** - `(toUserId ASC, status ASC, createdAt DESC)`
-9. **hikeInvitations** - `(fromUserId ASC, status ASC, createdAt DESC)`
-
 ## Security Rules
 
 Firebase Firestore security rules ensure data protection:
@@ -384,6 +348,33 @@ service cloud.firestore {
 ```
 
 ---
+## Additional Security Rules (Messaging and Invitations)
+
+```javascript
+// Conversations: participants can read/write their conversation
+match /conversations/{conversationId} {
+  allow read, write: if request.auth != null &&
+    request.auth.uid in resource.data.participants;
+}
+
+// Messages: nested under messages/{conversationId}/messages/{messageId}
+match /messages/{conversationId}/messages/{messageId} {
+  // Only participants of the parent conversation can read or write messages
+  allow read, write: if request.auth != null &&
+    exists(/databases/$(database)/documents/conversations/$(conversationId)) &&
+    request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
+}
+
+// Hike Invitations: sender or recipient can read; sender creates; recipient updates status
+match /hikeInvitations/{invitationId} {
+  allow read: if request.auth != null &&
+    (request.auth.uid == resource.data.fromUserId || request.auth.uid == resource.data.toUserId);
+  allow create: if request.auth != null && request.auth.uid == request.resource.data.fromUserId;
+  allow update, delete: if request.auth != null &&
+    (request.auth.uid == resource.data.fromUserId || request.auth.uid == resource.data.toUserId);
+}
+```
+---
 
 ## Indexes
 
@@ -394,7 +385,10 @@ Required composite indexes for efficient queries:
 3. **goals** - `(userId ASC, status ASC)`
 4. **friends** - `(requesterId ASC, status ASC)`
 5. **activities** - `(userId ASC, createdAt DESC)`
-
+6. **conversations** - `(participants ARRAY_CONTAINS, lastMessageTime DESC)`
+7. **messages** - For subcollection queries: index on `createdAt DESC` per `conversationId`
+8. **hikeInvitations** - `(toUserId ASC, status ASC, createdAt DESC)`
+9. **hikeInvitations** - `(fromUserId ASC, status ASC, createdAt DESC)`
 ---
 
 ## Why Firebase Firestore?
