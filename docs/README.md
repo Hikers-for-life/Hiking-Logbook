@@ -43,7 +43,10 @@ This documentation hub serves as your guide to understanding both the **product*
 #### Development Methodology
 - [Project Methodology](methodology/methodology.md) 
 - [Sprint 1](methodology/sprint1/)
+     - [Sprint Planning Meeting](methodology/first_meeting.md)
+     - [Backlog Refinement](methodology/backlog_refinement.md)
 - [Sprint 2](methodology/sprint2/)
+    - 
 - [Sprint 3](methodology/sprint3/)
 - [Sprint 4](methodology/sprint4/) 
 
@@ -98,6 +101,7 @@ This documentation hub serves as your guide to understanding both the **product*
 - [Project Work Tracker](https://github.com/orgs/Hikers-for-life/projects/1/views/1). 
 
 ---
+
 
 
 
