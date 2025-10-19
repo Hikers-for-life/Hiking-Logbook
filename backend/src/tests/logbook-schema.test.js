@@ -1,49 +1,56 @@
 // Tests for logbookSchema.js - Schema validation and type checking
-const { hikeSchema, waypointSchema, locationSchema, validateHikeData, validateWaypoint, validateLocation } = require('../models/logbookSchema.js');
+const {
+  hikeSchema,
+  waypointSchema,
+  locationSchema,
+  validateHikeData,
+  validateWaypoint,
+  validateLocation,
+} = require('../models/logbookSchema.js');
 
 describe('Logbook Schema Tests', () => {
   describe('hikeSchema structure', () => {
     test('should have all required fields defined', () => {
       expect(hikeSchema).toBeDefined();
       expect(typeof hikeSchema).toBe('object');
-      
+
       // Basic information
       expect(hikeSchema.title).toBe('string');
       expect(hikeSchema.location).toBe('string');
       expect(hikeSchema.route).toBe('string');
-      
+
       // Timing and dates
       expect(hikeSchema.date).toBe('timestamp');
       expect(hikeSchema.startTime).toBe('timestamp');
       expect(hikeSchema.endTime).toBe('timestamp');
       expect(hikeSchema.duration).toBe('number');
-      
+
       // Physical metrics
       expect(hikeSchema.distance).toBe('number');
       expect(hikeSchema.elevation).toBe('number');
       expect(hikeSchema.difficulty).toBe('string');
-      
+
       // Environmental conditions
       expect(hikeSchema.weather).toBe('string');
-      
+
       // Additional details
       expect(hikeSchema.notes).toBe('string');
-      
+
       // GPS and tracking data
       expect(hikeSchema.waypoints).toBe('array');
       expect(hikeSchema.startLocation).toBe('object');
       expect(hikeSchema.endLocation).toBe('object');
-      
+
       // Route tracking
       expect(hikeSchema.routeMap).toBe('string');
       expect(hikeSchema.gpsTrack).toBe('array');
-      
+
       // Metadata
       expect(hikeSchema.createdAt).toBe('timestamp');
       expect(hikeSchema.updatedAt).toBe('timestamp');
       expect(hikeSchema.userId).toBe('string');
       expect(hikeSchema.status).toBe('string');
-      
+
       // New fields
       expect(hikeSchema.pinned).toBe('boolean');
       expect(hikeSchema.shared).toBe('boolean');
@@ -51,14 +58,21 @@ describe('Logbook Schema Tests', () => {
 
     test('should have correct field count', () => {
       const fieldCount = Object.keys(hikeSchema).length;
-      expect(fieldCount).toBe(23); // Total number of fields in schema (updated count)
+      expect(fieldCount).toBe(24); // Total number of fields in schema (updated count)
     });
 
     test('should contain only valid data types', () => {
-      const validTypes = ['string', 'number', 'boolean', 'array', 'object', 'timestamp'];
+      const validTypes = [
+        'string',
+        'number',
+        'boolean',
+        'array',
+        'object',
+        'timestamp',
+      ];
       const schemaTypes = Object.values(hikeSchema);
-      
-      schemaTypes.forEach(type => {
+
+      schemaTypes.forEach((type) => {
         expect(validTypes).toContain(type);
       });
     });
@@ -68,7 +82,7 @@ describe('Logbook Schema Tests', () => {
     test('should have all required waypoint fields', () => {
       expect(waypointSchema).toBeDefined();
       expect(typeof waypointSchema).toBe('object');
-      
+
       expect(waypointSchema.latitude).toBe('number');
       expect(waypointSchema.longitude).toBe('number');
       expect(waypointSchema.elevation).toBe('number'); // It's 'elevation' not 'altitude'
@@ -87,7 +101,7 @@ describe('Logbook Schema Tests', () => {
     test('should have all required location fields', () => {
       expect(locationSchema).toBeDefined();
       expect(typeof locationSchema).toBe('object');
-      
+
       expect(locationSchema.latitude).toBe('number');
       expect(locationSchema.longitude).toBe('number');
       expect(locationSchema.elevation).toBe('number'); // It's 'elevation' not 'altitude'
@@ -126,7 +140,7 @@ describe('Logbook Schema Tests', () => {
         userId: 'user123',
         status: 'completed',
         pinned: false,
-        shared: true
+        shared: true,
       };
 
       const result = validateHikeData(validHike);
@@ -137,7 +151,7 @@ describe('Logbook Schema Tests', () => {
     test('should validate minimal hike data', () => {
       const minimalHike = {
         title: 'Quick Hike',
-        location: 'Local Park'
+        location: 'Local Park',
       };
 
       const result = validateHikeData(minimalHike);
@@ -148,7 +162,7 @@ describe('Logbook Schema Tests', () => {
       const invalidHike = {
         title: 123, // should be string
         distance: 'not-a-number', // should be number
-        pinned: 'yes' // should be boolean
+        pinned: 'yes', // should be boolean
       };
 
       const result = validateHikeData(invalidHike);
@@ -164,8 +178,8 @@ describe('Logbook Schema Tests', () => {
 
     test('should validate difficulty values', () => {
       const validDifficulties = ['Easy', 'Moderate', 'Hard'];
-      
-      validDifficulties.forEach(difficulty => {
+
+      validDifficulties.forEach((difficulty) => {
         const hike = { title: 'Test', difficulty };
         const result = validateHikeData(hike);
         expect(result.valid).toBe(true);
@@ -179,8 +193,8 @@ describe('Logbook Schema Tests', () => {
 
     test('should validate status values', () => {
       const validStatuses = ['active', 'completed', 'paused'];
-      
-      validStatuses.forEach(status => {
+
+      validStatuses.forEach((status) => {
         const hike = { title: 'Test', status };
         const result = validateHikeData(hike);
         expect(result.valid).toBe(true);
@@ -201,7 +215,7 @@ describe('Logbook Schema Tests', () => {
         elevation: 2500,
         timestamp: new Date(),
         description: 'Peak of the mountain',
-        type: 'milestone'
+        type: 'milestone',
       };
 
       const result = validateWaypoint(validWaypoint);
@@ -212,7 +226,7 @@ describe('Logbook Schema Tests', () => {
     test('should validate minimal waypoint', () => {
       const minimalWaypoint = {
         latitude: 40.3428,
-        longitude: -105.6836
+        longitude: -105.6836,
       };
 
       const result = validateWaypoint(minimalWaypoint);
@@ -222,7 +236,7 @@ describe('Logbook Schema Tests', () => {
     test('should reject waypoint with invalid coordinates', () => {
       const invalidWaypoint = {
         latitude: 'not-a-number',
-        longitude: 200 // longitude should be -180 to 180
+        longitude: 200, // longitude should be -180 to 180
       };
 
       const result = validateWaypoint(invalidWaypoint);
@@ -233,14 +247,26 @@ describe('Logbook Schema Tests', () => {
     test('should validate coordinate ranges', () => {
       // Valid coordinates
       expect(validateWaypoint({ latitude: 0, longitude: 0 }).valid).toBe(true);
-      expect(validateWaypoint({ latitude: 90, longitude: 180 }).valid).toBe(true);
-      expect(validateWaypoint({ latitude: -90, longitude: -180 }).valid).toBe(true);
+      expect(validateWaypoint({ latitude: 90, longitude: 180 }).valid).toBe(
+        true
+      );
+      expect(validateWaypoint({ latitude: -90, longitude: -180 }).valid).toBe(
+        true
+      );
 
       // Invalid coordinates
-      expect(validateWaypoint({ latitude: 91, longitude: 0 }).valid).toBe(false);
-      expect(validateWaypoint({ latitude: 0, longitude: 181 }).valid).toBe(false);
-      expect(validateWaypoint({ latitude: -91, longitude: 0 }).valid).toBe(false);
-      expect(validateWaypoint({ latitude: 0, longitude: -181 }).valid).toBe(false);
+      expect(validateWaypoint({ latitude: 91, longitude: 0 }).valid).toBe(
+        false
+      );
+      expect(validateWaypoint({ latitude: 0, longitude: 181 }).valid).toBe(
+        false
+      );
+      expect(validateWaypoint({ latitude: -91, longitude: 0 }).valid).toBe(
+        false
+      );
+      expect(validateWaypoint({ latitude: 0, longitude: -181 }).valid).toBe(
+        false
+      );
     });
 
     test('should handle null and undefined waypoint data', () => {
@@ -257,7 +283,7 @@ describe('Logbook Schema Tests', () => {
         longitude: -105.6836,
         elevation: 2500,
         accuracy: 5.0,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
 
       const result = validateLocation(validLocation);
@@ -268,7 +294,7 @@ describe('Logbook Schema Tests', () => {
     test('should validate minimal location', () => {
       const minimalLocation = {
         latitude: 40.3428,
-        longitude: -105.6836
+        longitude: -105.6836,
       };
 
       const result = validateLocation(minimalLocation);
@@ -279,7 +305,7 @@ describe('Logbook Schema Tests', () => {
       const invalidLocation = {
         latitude: 'invalid',
         longitude: 200,
-        accuracy: -1 // accuracy should be positive
+        accuracy: -1, // accuracy should be positive
       };
 
       const result = validateLocation(invalidLocation);
@@ -289,11 +315,17 @@ describe('Logbook Schema Tests', () => {
 
     test('should validate accuracy values', () => {
       // Valid accuracy
-      expect(validateLocation({ latitude: 0, longitude: 0, accuracy: 0 }).valid).toBe(true);
-      expect(validateLocation({ latitude: 0, longitude: 0, accuracy: 100 }).valid).toBe(true);
+      expect(
+        validateLocation({ latitude: 0, longitude: 0, accuracy: 0 }).valid
+      ).toBe(true);
+      expect(
+        validateLocation({ latitude: 0, longitude: 0, accuracy: 100 }).valid
+      ).toBe(true);
 
       // Invalid accuracy
-      expect(validateLocation({ latitude: 0, longitude: 0, accuracy: -1 }).valid).toBe(false);
+      expect(
+        validateLocation({ latitude: 0, longitude: 0, accuracy: -1 }).valid
+      ).toBe(false);
     });
   });
 
@@ -326,7 +358,7 @@ describe('Logbook Schema Tests', () => {
       expect(hikeSchema.waypoints).toBe('array');
       expect(hikeSchema.startLocation).toBe('object');
       expect(hikeSchema.endLocation).toBe('object');
-      
+
       // GPS track should be an array
       expect(hikeSchema.gpsTrack).toBe('array');
     });
@@ -337,7 +369,7 @@ describe('Logbook Schema Tests', () => {
       const hikeWithEmptyArrays = {
         title: 'Test Hike',
         waypoints: [],
-        gpsTrack: []
+        gpsTrack: [],
       };
 
       const result = validateHikeData(hikeWithEmptyArrays);
@@ -348,7 +380,7 @@ describe('Logbook Schema Tests', () => {
       const longString = 'a'.repeat(10000);
       const hikeWithLongStrings = {
         title: longString,
-        notes: longString
+        notes: longString,
       };
 
       const result = validateHikeData(hikeWithLongStrings);
@@ -360,7 +392,7 @@ describe('Logbook Schema Tests', () => {
       const extremeWaypoint = {
         latitude: 89.9999,
         longitude: 179.9999,
-        elevation: 8848 // Mount Everest height
+        elevation: 8848, // Mount Everest height
       };
 
       const result = validateWaypoint(extremeWaypoint);
@@ -373,7 +405,7 @@ describe('Logbook Schema Tests', () => {
         title: 'Zero Test',
         distance: 0,
         elevation: 0,
-        duration: 0
+        duration: 0,
       };
 
       const result = validateHikeData(zeroValueHike);

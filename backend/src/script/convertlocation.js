@@ -4,7 +4,9 @@ import fetch from 'node-fetch'; // If using Node >=18, fetch is built-in
 
 // Initialize Firebase Admin SDK
 admin.initializeApp({
-  credential: admin.credential.applicationDefault('C:/Users/Stelly Jane/Downloads/Hiking-Logbook/backend/serviceAccountKey.json')
+  credential: admin.credential.applicationDefault(
+    'C:/Users/Stelly Jane/Downloads/Hiking-Logbook/backend/serviceAccountKey.json'
+  ),
 });
 
 const db = admin.firestore();

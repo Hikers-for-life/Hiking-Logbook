@@ -1,6 +1,5 @@
-
-import { dbUtils } from "../config/database.js";
-import { hikeSchema } from "../models/hikeSchema.js";
+import { dbUtils } from '../config/database.js';
+import { hikeSchema } from '../models/hikeSchema.js';
 
 // Simple validation against schema
 function validateHikeData(hikeData) {

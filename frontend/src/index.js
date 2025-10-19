@@ -3,6 +3,9 @@ import App from './App.js';
 import reportWebVitals from './reportWebVitals.js';
 import { createRoot } from 'react-dom/client';
 import './index.css';
+import '@fortawesome/fontawesome-free/css/all.min.css';//ANNAH HERE, FOR EYE ICON TO SHOW
+
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
 createRoot(document.getElementById('root')).render(<App />);
 

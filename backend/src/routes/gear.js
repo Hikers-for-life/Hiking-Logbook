@@ -18,14 +18,14 @@ router.get('/checklist', async (req, res, next) => {
   try {
     const userId = req.user.uid;
 
-    const gearChecklist = await gearChecklistService.getUserGearChecklist(userId);
-    
+    const gearChecklist =
+      await gearChecklistService.getUserGearChecklist(userId);
+
     res.json({
       success: true,
       data: gearChecklist,
-      count: gearChecklist.length
+      count: gearChecklist.length,
     });
-
   } catch (error) {
     console.error('Error getting gear checklist:', error);
     next(error);
@@ -45,18 +45,20 @@ router.put('/checklist', async (req, res, next) => {
     if (!Array.isArray(gearItems)) {
       return res.status(400).json({
         success: false,
-        error: 'gearItems must be an array'
+        error: 'gearItems must be an array',
       });
     }
 
-    const result = await gearChecklistService.updateGearChecklist(userId, gearItems);
-    
+    const result = await gearChecklistService.updateGearChecklist(
+      userId,
+      gearItems
+    );
+
     res.json({
       success: true,
       data: result,
-      message: 'Gear checklist updated successfully'
+      message: 'Gear checklist updated successfully',
     });
-
   } catch (error) {
     console.error('Error updating gear checklist:', error);
     next(error);
@@ -76,24 +78,26 @@ router.post('/checklist/items', async (req, res, next) => {
     if (!itemName || typeof itemName !== 'string' || itemName.trim() === '') {
       return res.status(400).json({
         success: false,
-        error: 'Item name is required'
+        error: 'Item name is required',
       });
     }
 
-    const result = await gearChecklistService.addGearItem(userId, itemName.trim());
-    
+    const result = await gearChecklistService.addGearItem(
+      userId,
+      itemName.trim()
+    );
+
     res.status(201).json({
       success: true,
       data: result,
-      message: 'Gear item added successfully'
+      message: 'Gear item added successfully',
     });
-
   } catch (error) {
     console.error('Error adding gear item:', error);
     if (error.message === 'Item already exists in checklist') {
       return res.status(409).json({
         success: false,
-        error: error.message
+        error: error.message,
       });
     }
     next(error);
@@ -113,18 +117,17 @@ router.delete('/checklist/items/:index', async (req, res, next) => {
     if (isNaN(itemIndex) || itemIndex < 0) {
       return res.status(400).json({
         success: false,
-        error: 'Invalid item index'
+        error: 'Invalid item index',
       });
     }
 
     const result = await gearChecklistService.removeGearItem(userId, itemIndex);
-    
+
     res.json({
       success: true,
       data: result,
-      message: 'Gear item removed successfully'
+      message: 'Gear item removed successfully',
     });
-
   } catch (error) {
     console.error('Error removing gear item:', error);
     next(error);
@@ -144,18 +147,17 @@ router.post('/checklist/items/:index/toggle', async (req, res, next) => {
     if (isNaN(itemIndex) || itemIndex < 0) {
       return res.status(400).json({
         success: false,
-        error: 'Invalid item index'
+        error: 'Invalid item index',
       });
     }
 
     const result = await gearChecklistService.toggleGearItem(userId, itemIndex);
-    
+
     res.json({
       success: true,
       data: result,
-      message: 'Gear item toggled successfully'
+      message: 'Gear item toggled successfully',
     });
-
   } catch (error) {
     console.error('Error toggling gear item:', error);
     next(error);
@@ -172,13 +174,12 @@ router.post('/checklist/reset', async (req, res, next) => {
     const userId = req.user.uid;
 
     const result = await gearChecklistService.resetGearChecklist(userId);
-    
+
     res.json({
       success: true,
       data: result,
-      message: 'Gear checklist reset successfully'
+      message: 'Gear checklist reset successfully',
     });
-
   } catch (error) {
     console.error('Error resetting gear checklist:', error);
     next(error);
@@ -195,12 +196,11 @@ router.get('/checklist/stats', async (req, res, next) => {
     const userId = req.user.uid;
 
     const stats = await gearChecklistService.getGearStats(userId);
-    
+
     res.json({
       success: true,
-      data: stats
+      data: stats,
     });
-
   } catch (error) {
     console.error('Error getting gear stats:', error);
     next(error);

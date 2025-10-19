@@ -1,16 +1,19 @@
 import { useState } from 'react';
 
-import { useNavigate } from 'react-router-dom';
 
+import { useNavigate } from 'react-router-dom';
+import { Eye, EyeOff } from 'lucide-react';
 import mountain from '../components/assets/forest-waterfall.jpg';
 import { ArrowLeft } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
+import { validateEmail, validatePassword } from '../services/userServices.js';
 
 export default function Signup() {
   const [form, setForm] = useState({
     name: '',
     email: '',
     password: '',
+    confirmPassword: '',
   });
   const [hoverStates, setHoverStates] = useState({
     backButton: false,
@@ -22,10 +25,17 @@ export default function Signup() {
     name: false,
     email: false,
     password: false,
+    confirmPassword: false,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+
+
   const { signup, signInWithGoogle } = useAuth();
 
   const handleChange = (e) => {
@@ -34,6 +44,22 @@ export default function Signup() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // Client-side validation
+    const emailCheck = validateEmail(form.email);
+    if (!emailCheck.valid) {
+      setError(emailCheck.message);
+      return;
+    }
+    const passCheck = validatePassword(form.password);
+    if (!passCheck.valid) {
+      setError(passCheck.message);
+      return;
+    }
+    // Confirm password match
+    if (form.password !== form.confirmPassword) {
+      setError('Passwords do not match. Please retype your password.');
+      return;
+    }
     try {
       setError('');
       setLoading(true);
@@ -130,9 +156,7 @@ export default function Signup() {
               Full Name
             </label>
             <input
-
-              id = "name"
-
+              id="name"
               style={{
                 ...styles.input,
                 ...(focusStates.name && styles.inputFocus),
@@ -155,9 +179,7 @@ export default function Signup() {
               Email
             </label>
             <input
-
               id="email"
-
               style={{
                 ...styles.input,
                 ...(focusStates.email && styles.inputFocus),
@@ -176,30 +198,111 @@ export default function Signup() {
               required
             />
 
+            {/* Password Field */}
             <label style={styles.label} htmlFor="password">
               Password
             </label>
-            <input
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginLeft: '20px', marginRight: '20px' }}>
+              <input
+                id="password"
+                style={{
+                  ...styles.input,
+                  ...(focusStates.password && styles.inputFocus),
+                  margin: 0, // Remove margin since we're using flex container
+                }}
+                type={showPassword ? 'text' : 'password'}
+                name="password"
+                placeholder="Enter your password"
+                value={form.password}
+                onChange={handleChange}
+                onFocus={() => setFocusStates((prev) => ({ ...prev, password: true }))}
+                onBlur={() => setFocusStates((prev) => ({ ...prev, password: false }))}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: "8px",
+                  borderRadius: "6px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#666",
+                  transition: "color 0.2s, background-color 0.2s",
+                  minWidth: "40px",
+                  height: "40px",
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.color = "#333";
+                  e.target.style.backgroundColor = "#f5f5f5";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.color = "#666";
+                  e.target.style.backgroundColor = "transparent";
+                }}
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
 
-              id="password"
-
-              style={{
-                ...styles.input,
-                ...(focusStates.password && styles.inputFocus),
-              }}
-              type="password"
-              name="password"
-              placeholder="Enter your password"
-              value={form.password}
-              onChange={handleChange}
-              onFocus={() =>
-                setFocusStates((prev) => ({ ...prev, password: true }))
-              }
-              onBlur={() =>
-                setFocusStates((prev) => ({ ...prev, password: false }))
-              }
-              required
-            />
+            {/* Confirm Password Field */}
+            <label style={styles.label} htmlFor="confirmPassword">
+              Confirm Password
+            </label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginLeft: '20px', marginRight: '20px' }}>
+              <input
+                id="confirmPassword"
+                style={{
+                  ...styles.input,
+                  ...(focusStates.confirmPassword && styles.inputFocus),
+                  margin: 0, // Remove margin since we're using flex container
+                }}
+                type={showConfirmPassword ? 'text' : 'password'}
+                name="confirmPassword"
+                placeholder="Retype your password"
+                value={form.confirmPassword}
+                onChange={handleChange}
+                onFocus={() =>
+                  setFocusStates((prev) => ({ ...prev, confirmPassword: true }))
+                }
+                onBlur={() =>
+                  setFocusStates((prev) => ({ ...prev, confirmPassword: false }))
+                }
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword((prev) => !prev)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: "8px",
+                  borderRadius: "6px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#666",
+                  transition: "color 0.2s, background-color 0.2s",
+                  minWidth: "40px",
+                  height: "40px",
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.color = "#333";
+                  e.target.style.backgroundColor = "#f5f5f5";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.color = "#666";
+                  e.target.style.backgroundColor = "transparent";
+                }}
+              >
+                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
 
             {error && <div style={styles.error}>{error}</div>}
 
@@ -262,9 +365,6 @@ export default function Signup() {
                 <i className="fa-brands fa-facebook"></i> Facebook
 
               </button>*/}
-
-
-
             </div>
 
             <p style={styles.signP}>Already have an account?</p>

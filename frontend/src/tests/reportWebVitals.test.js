@@ -5,9 +5,9 @@ describe('reportWebVitals', () => {
     const mockMetric = {
       name: 'FCP',
       value: 123.45,
-      id: 'metric-1'
+      id: 'metric-1',
     };
-    
+
     expect(mockMetric.name).toBe('FCP');
     expect(mockMetric.value).toBe(123.45);
     expect(mockMetric.id).toBe('metric-1');
@@ -20,7 +20,7 @@ describe('reportWebVitals', () => {
     const mockGetFCP = jest.fn();
     const mockGetLCP = jest.fn();
     const mockGetTTFB = jest.fn();
-    
+
     expect(typeof mockGetCLS).toBe('function');
     expect(typeof mockGetFID).toBe('function');
     expect(typeof mockGetFCP).toBe('function');
@@ -32,9 +32,9 @@ describe('reportWebVitals', () => {
     // Mock performance observer
     const mockObserver = {
       observe: jest.fn(),
-      disconnect: jest.fn()
+      disconnect: jest.fn(),
     };
-    
+
     expect(typeof mockObserver.observe).toBe('function');
     expect(typeof mockObserver.disconnect).toBe('function');
   });

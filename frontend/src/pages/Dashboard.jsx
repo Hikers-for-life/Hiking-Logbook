@@ -4,6 +4,8 @@ import { Navigation } from '../components/ui/navigation';
 import { useNavigate } from 'react-router-dom';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { hikeApiService } from '../services/hikeApiService.js';
+import { achievementApiService } from '../services/achievementApiService.js';
+import RecentAchievements from '../components/RecentAchievements';
 
 import {
   Card,
@@ -36,30 +38,20 @@ const Dashboard = () => {
   });
   const [loading, setLoading] = useState(true);
   const [hikesLoading, setHikesLoading] = useState(true);
+  const [recentAchievements, setRecentAchievements] = useState([]);
+  const [achievementsLoading, setAchievementsLoading] = useState(true);
 
   // Set page title
   usePageTitle('Dashboard');
-
-  // Navigation handlers
-  const handleStartLogging = () => {
-    navigate('/logbook');
-  };
-
-  const handlePlanTrip = () => {
-    navigate('/hike-planner');
-  };
-
-  const handleExploreTrails = () => {
-    navigate('/trail-explorer');
-  };
 
   // Load user profile
   useEffect(() => {
     const loadProfile = async () => {
       try {
-        const res = await fetch(`http://localhost:3001/api/users/${currentUser.uid}`);
+        const res = await fetch(
+          `http://localhost:3001/api/users/${currentUser.uid}`
+        );
         if (!res.ok) {
-
           const fallbackProfile = {
             displayName: currentUser.displayName || 'Hiker',
             bio: 'Passionate hiker exploring new trails',
@@ -94,13 +86,13 @@ const Dashboard = () => {
   useEffect(() => {
     const loadHikesAndStats = async () => {
       if (!currentUser) return;
-      
+
       try {
         setHikesLoading(true);
-        
+
         const result = await hikeApiService.getHikes();
         const hikes = result.data || result;
-        
+
         // Calculate statistics from all hikes
         const stats = {
           totalHikes: hikes.length,
@@ -108,25 +100,26 @@ const Dashboard = () => {
         };
 
         // Calculate totals from all hikes
-        hikes.forEach(hike => {
-          const distance = parseFloat(hike.distance) || parseFloat(hike.totalDistance) || 0;
+        hikes.forEach((hike) => {
+          const distance =
+            parseFloat(hike.distance) || parseFloat(hike.totalDistance) || 0;
           stats.totalDistance += distance;
         });
 
         // Round the totals to reasonable decimal places
-        stats.totalDistance = Math.round(stats.totalDistance * 10) / 10;
+        stats.totalDistance = parseFloat(stats.totalDistance.toFixed(1));
 
         setHikeStats(stats);
-        
+
         // Process the hikes for recent hikes display
         const processedHikes = hikes
-          .map(hike => {
+          .map((hike) => {
             let jsDate;
-            
+
             // Handle different date formats
             if (hike.date?._seconds !== undefined) {
               jsDate = new Date(hike.date._seconds * 1000);
-            } else if (typeof hike.date === "string") {
+            } else if (typeof hike.date === 'string') {
               jsDate = new Date(hike.date);
             } else if (hike.date instanceof Date) {
               jsDate = hike.date;
@@ -137,15 +130,15 @@ const Dashboard = () => {
             return {
               ...hike,
               jsDate,
-              formattedDate: jsDate.toLocaleDateString('en-US', { 
-                month: 'short', 
-                day: 'numeric', 
-                year: 'numeric' 
-              })
+              formattedDate: jsDate.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+              }),
             };
           })
           .sort((a, b) => b.jsDate - a.jsDate)
-          .slice(0, 6); // Show more hikes now that we have more space
+          .slice(0, 6);
 
         setRecentHikes(processedHikes);
       } catch (error) {
@@ -161,6 +154,62 @@ const Dashboard = () => {
     }
   }, [currentUser, userProfile]);
 
+  // Load recent achievements
+  // Load recent achievements
+useEffect(() => {
+  const loadRecentAchievements = async () => {
+    if (!currentUser) return;
+
+    try {
+      setAchievementsLoading(true);
+      
+      const response = await achievementApiService.getBadges();
+      const badges = response.data || [];
+      
+      // Filter badges that have earnedDate (earned badges)
+      const earnedBadges = badges.filter(badge => {
+        // A badge is earned if it has an earnedDate or progress is 100
+        return badge.earnedDate || badge.progress === 100;
+      });
+      
+      console.log('🏆 Earned badges found:', earnedBadges);
+      
+      // Sort by most recent earnedDate
+      const sortedBadges = earnedBadges
+        .sort((a, b) => {
+          const dateA = new Date(a.earnedDate);
+          const dateB = new Date(b.earnedDate);
+          return dateB - dateA; // Most recent first
+        })
+        .slice(0, 3); // Get top 3 most recent
+      
+      console.log('🎯 Recent achievements to display:', sortedBadges);
+      setRecentAchievements(sortedBadges);
+    } catch (error) {
+      console.error('❌ Error loading recent achievements:', error);
+      setRecentAchievements([]);
+    } finally {
+      setAchievementsLoading(false);
+    }
+  };
+
+  loadRecentAchievements();
+}, [currentUser]);
+
+  // Navigation handlers
+  const handleStartLogging = () => {
+    navigate('/logbook');
+  };
+
+  const handlePlanTrip = () => {
+    navigate('/hike-planner');
+  };
+
+  const handleExploreTrails = () => {
+    navigate('/trail-explorer');
+  };
+
+  // Conditional returns AFTER all hooks
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -193,15 +242,17 @@ const Dashboard = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground">
             Welcome back,{' '}
-            {userProfile?.displayName || currentUser?.displayName || 'Hiker'}!
-            🏔️
+            <span className="text-forest">
+              {userProfile?.displayName || currentUser?.displayName || 'Hiker'}
+            </span>
+            !
           </h1>
-          <p className="text-muted-foreground mt-2">
+          <p className="text-muted-foreground text-lg mt-2">
             Ready for your next adventure? Let's see what you've accomplished.
           </p>
         </div>
 
-        {/* Stats Overview - Only 2 cards now */}
+        {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -225,7 +276,7 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {hikesLoading ? '...' : `${hikeStats.totalDistance} km`}
+                {hikesLoading ? '...' : `${parseFloat(hikeStats.totalDistance.toFixed(1))} km`}
               </div>
               <p className="text-xs text-muted-foreground">Distance covered</p>
             </CardContent>
@@ -234,7 +285,10 @@ const Dashboard = () => {
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={handleStartLogging}>
+          <Card
+            className="hover:shadow-lg transition-shadow cursor-pointer"
+            onClick={handleStartLogging}
+          >
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Plus className="h-5 w-5 text-green-600" />
@@ -251,7 +305,10 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={handlePlanTrip}>
+          <Card
+            className="hover:shadow-lg transition-shadow cursor-pointer"
+            onClick={handlePlanTrip}
+          >
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="h-5 w-5 text-blue-600" />
@@ -266,7 +323,10 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={handleExploreTrails}>
+          <Card
+            className="hover:shadow-lg transition-shadow cursor-pointer"
+            onClick={handleExploreTrails}
+          >
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Map className="h-5 w-5 text-purple-600" />
@@ -282,7 +342,7 @@ const Dashboard = () => {
           </Card>
         </div>
 
-        {/* Recent Hikes - Now in row format */}
+        {/* Recent Hikes */}
         <div className="mb-8">
           <Card>
             <CardHeader>
@@ -296,60 +356,80 @@ const Dashboard = () => {
               {hikesLoading ? (
                 <div className="text-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-4"></div>
-                  <p className="text-muted-foreground">Loading recent hikes...</p>
+                  <p className="text-muted-foreground">
+                    Loading recent hikes...
+                  </p>
                 </div>
               ) : recentHikes.length > 0 ? (
                 <div className="space-y-4">
                   {recentHikes.map((hike) => {
-                    // Handle date formatting
                     let formattedDate = 'Unknown date';
                     if (hike.date?._seconds !== undefined) {
                       const jsDate = new Date(hike.date._seconds * 1000);
-                      formattedDate = jsDate.toLocaleDateString('en-US', { 
-                        month: 'short', 
-                        day: 'numeric', 
-                        year: 'numeric' 
+                      formattedDate = jsDate.toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
                       });
                     } else if (hike.formattedDate) {
                       formattedDate = hike.formattedDate;
                     }
 
-                    // Handle difficulty badge variant
                     const getDifficultyVariant = (difficulty) => {
                       const diff = difficulty?.toLowerCase();
-                      if (diff === 'hard' || diff === 'difficult') return 'destructive';
-                      if (diff === 'medium' || diff === 'moderate') return 'default';
+                      if (diff === 'hard' || diff === 'difficult')
+                        return 'destructive';
+                      if (diff === 'medium' || diff === 'moderate')
+                        return 'default';
                       return 'secondary';
                     };
 
                     return (
-                      <div key={hike.id} className="flex items-center justify-between p-3 rounded-lg bg-muted">
+                      <div
+                        key={hike.id}
+                        className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 rounded-lg bg-muted gap-3"
+                      >
                         <div className="flex-1">
-                          <h4 className="font-medium">{hike.name || hike.title || 'Unnamed Hike'}</h4>
-                          <div className="flex items-center gap-4 mt-1">
-                            <span className="text-sm text-muted-foreground flex items-center gap-1">
-                              <Calendar className="h-3 w-3" />
-                              {formattedDate}
+                          <h4 className="font-medium text-sm sm:text-base">
+                            {hike.name || hike.title || 'Unnamed Hike'}
+                          </h4>
+                          <div className="grid grid-cols-2 sm:flex sm:items-center sm:gap-4 mt-2 gap-2">
+                            <span className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1">
+                              <Calendar className="h-3 w-3 flex-shrink-0" />
+                              <span className="truncate">{formattedDate}</span>
                             </span>
-                            <span className="text-sm text-muted-foreground flex items-center gap-1">
-                              <Compass className="h-3 w-3" />
-                              {(parseFloat(hike.distance || hike.totalDistance) || 0).toFixed(1)} km
+                            <span className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1">
+                              <Compass className="h-3 w-3 flex-shrink-0" />
+                              <span className="truncate">
+                                {(
+                                  parseFloat(
+                                    hike.distance || hike.totalDistance
+                                  ) || 0
+                                ).toFixed(1)}{' '}
+                                km
+                              </span>
                             </span>
-                            <span className="text-sm text-muted-foreground flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              {hike.duration || hike.estimatedDuration || 'N/A'}
+                            <span className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1">
+                              <Clock className="h-3 w-3 flex-shrink-0" />
+                              <span className="truncate">
+                                {hike.duration ||
+                                  hike.estimatedDuration ||
+                                  'N/A'}
+                              </span>
                             </span>
                             {hike.location && (
-                              <span className="text-sm text-muted-foreground flex items-center gap-1">
-                                <MapPin className="h-3 w-3" />
-                                {hike.location}
+                              <span className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1 col-span-2 sm:col-span-1">
+                                <MapPin className="h-3 w-3 flex-shrink-0" />
+                                <span className="truncate">
+                                  {hike.location}
+                                </span>
                               </span>
                             )}
                           </div>
                         </div>
-                        <Badge 
+                        <Badge
                           variant={getDifficultyVariant(hike.difficulty)}
-                          className="text-xs ml-4"
+                          className="text-xs self-start sm:self-center"
                         >
                           {hike.difficulty || 'Unknown'}
                         </Badge>
@@ -381,11 +461,10 @@ const Dashboard = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                <Trophy className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No recent achievements</p>
-                <p className="text-sm">Complete hikes to earn badges!</p>
-              </div>
+              <RecentAchievements 
+                achievements={recentAchievements} 
+                loading={achievementsLoading}
+              />
             </CardContent>
           </Card>
         </div>

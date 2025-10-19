@@ -4,7 +4,7 @@
 
 This wireframe represents the unified user interface of the Hiking Logbook application, including login, dashboard, and key user interactions. It serves as a blueprint for the visual layout and functional elements.
 
-![Hiking Logbook Wireframe](wireframe.png)
+![Hiking Logbook Wireframe](wireframe.jpeg)
 
 ---
 

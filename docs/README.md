@@ -1,85 +1,136 @@
-# Hiking Logbook – Documentation
+# Hiking Logbook – Documentation Hub
 
-Welcome to the documentation hub for the **Hiking Logbook** project.  
-This file serves as a **table of contents** and guide to navigate both **product documentation** (what we are building) and **process documentation** (how we are building it).  
+Welcome to the comprehensive documentation for the **Hiking Logbook** project.  
+This documentation hub serves as your guide to understanding both the **product** (what we built) and the **process** (how we built it).
 
-> ⚠️ **Note:**  
-> This documentation is a **living document**.  
-> It may evolve as the project progresses and new requirements, features, or feedback are introduced.  
-> All updates will be traceable through Git history.
-
+> **Live Documentation**: This documentation is automatically deployed to [GitHub Pages](https://hikers-for-life.github.io/Hiking-Logbook/) for easy access.
 
 ---
 
-##  Table of Contents
+## Table of Contents
 
 ### Product Documentation
-1. [Functional & Non-Functional Requirements](https://hikers-for-life.github.io/Hiking-Logbook/product/requirements.html)
-2. [UX Documentation](https://hikers-for-life.github.io/Hiking-Logbook/product/ux.html)
-3. **Architecture & Design**
-     - [API specifications](https://hikers-for-life.github.io/Hiking-Logbook/product/architecture/api_specifications.html)
-     - [Database schema](https://hikers-for-life.github.io/Hiking-Logbook/product/architecture/database_schema.html)
-     - [Module interactions](https://hikers-for-life.github.io/Hiking-Logbook/product/architecture/module_interactions.html)
-4. [Testing Documentation](https://hikers-for-life.github.io/Hiking-Logbook/product/testing.html)
+
+
+#### Core Requirements & Design
+- [Requirements](product/requirements.md) 
+- [UX Documentation](product/ux.md)
+- [Testing Strategy](product/testing_strategy.md)
+- [Feature Login](product/feature_login.md)
+- [Project Features](product/hiking_logbook_features.md)
+
+#### Architecture & Technical Documentation
+- [API Documentation](product/architecture/api_documentation.md) 
+- [Public API Documentation](product/architecture/public_api_documentation.md) 
+- [Database Documentation](product/architecture/database_documentation.md) 
+- [Technology Stack](product/architecture/technology.md) 
+- [Third-Party Integrations](product/architecture/third_party_documentation.md) 
+
+#### Developer Setup Guides
+- [Database Setup](product/developer_guides/database_setup.md) 
+- [API Setup](product/developer_guides/api_setup.md) 
+- [Frontend Setup](product/developer_guides/site_setup.md) 
+- [Deployment Guide](product/developer_guides/deployment.md) 
 
 ### Process Documentation
-5. [Strategy Roadmap](https://hikers-for-life.github.io/Hiking-Logbook/process/strategy.html) : Project structure, project management           methodology, goals, project alignment, and development roadmap. 
-6. [Technology Roadmap](https://hikers-for-life.github.io/Hiking-Logbook/process/technology.html) : Tech Stack
-7. [Release Roadmap](https://hikers-for-life.github.io/Hiking-Logbook/process/release.html)
-8. [Metrics](https://hikers-for-life.github.io/Hiking-Logbook/process/metrics.html)
-9. [Standards](https://hikers-for-life.github.io/Hiking-Logbook/process/standards.html) : Coding standards, commit conventions, Git           methodology, testing standards, documentation standards, branch rules and CI pipeline, Developer setup.
-10. **Development guides**
-
-      - [Contributing](https://hikers-for-life.github.io/Hiking-Logbook/process/development/contributing.html)
-
-      - [API setup](https://hikers-for-life.github.io/Hiking-Logbook/process/development/api_setup.html)
-      - [Database setup](https://hikers-for-life.github.io/Hiking-Logbook/process/development/database_setup.html)
-      - [Site setup](https://hikers-for-life.github.io/Hiking-Logbook/process/development/site_setup.html)
-      - [Running locally](https://hikers-for-life.github.io/Hiking-Logbook/process/development/running_locally.html)
 
 
+#### Project Management
+- [Strategy Roadmap](process/strategy.md) - Project vision, structure, and alignment
+- [Release Process](process/release.md) - Release planning and deployment
+- [Git Methodology](process/git_methodology.md) - Git workflow and commit conventions
 
----
+#### Development Methodology
+- [Project Methodology](methodology/methodology.md) 
+- [Sprint 1](methodology/sprint1/)
+     - [Sprint Planning Meeting](methodology/sprint1/first_meeting.md)
+     - [Backlog Refinement](methodology/sprint1/backlog_refinement.md)
+     - [Sprint Retrospective](methodology/sprint1/sprint_retrospective.md)
+     - [Daily Meeting](methodology/sprint1/daily_meetings.md)
+       
+- [Sprint 2](methodology/sprint2/)
+  - [Sprint Review](methodology/sprint2/sprint_review.md)
+  - [Backlog Refinement](methodology/sprint2/backlog_refinement.md)
+  - [Sprint Retrospective 1](methodology/sprint2/sprint_retrospective.md)
+  - [Sprint Retrospective 2](methodology/sprint2/sprint_retrospective2.md)
+  - [Daily Meetings](methodology/sprint2/daily_meetings.md)
+        
+- [Sprint 3](methodology/sprint3/)
+     - [Sprint Review](methodology/sprint3/sprint_review.md)
+     - [Sprint Planning Meeting](methodology/sprint3/first_meeting.md)
+     - [Backlog Refinement](methodology/sprint3/backlog_refinement.md)
+     - [Sprint Retrospective 1](methodology/sprint3/sprint_retrospective.md)
+     - [Daily Meetings](methodology/sprint3/daily_meetings.md)
+   
+- [Sprint 4](methodology/sprint4/)
+   - [Sprint Planning Meeting](methodology/sprint4/sprint_planning.md)
+   - [Final Submission Meeting](methodology/sprint4/final_submission_meeting.md)
+       
 
-##  Documentation Structure
-
-![text](doc_structure.png)  
-
-
-
----
-
-##  Documentation Standards
-
-- **File Format**: Markdown (`.md`) for readability on GitHub and easy conversion to PDF if required.  
-- **Naming Conventions**: Lowercase filenames with underscores if needed (e.g., `architecture_design.md`).  
-- **Cross-Referencing**: Each requirement is traceable to UX artifacts, architecture components, and test cases.  
-- **Versioning**: Documentation evolves with each sprint and release. Previous versions are tracked in Git history.  
-
----
-
-##  Metrics Approach
-
-To measure project quality and progress, we track:
-- Story points completed per sprint.  
-- Number of test cases written vs. passed.  
-- Bugs logged and resolved.  
-- Deployment success rate.  
+#### Security & Quality
+- [Security Audits](security-audits/) 
+  - [NPM Supply Chain Attack Report](security-audits/security_audit_report_npm_supply_chain.md)
+  - [TinyColor Package Security Report](security-audits/security_audit_report_tinycolor.md)
 
 ---
 
-##  Glossary
+## Key Features Covered
 
-- **Logbook**: A digital record of hikes including notes, weather, and GPS routes.  
-- **Planned Hike**: A scheduled hike with route, checklist, and invited friends.  
-- **Achievements**: User-defined goals (e.g., total distance, number of hikes) with tracked progress.  
-- **Activity Feed**: Timeline showing hikes and milestones from friends.  
+### Core Functionality
+- **User Authentication** - Firebase Auth integration
+- **Hike Logging** - GPS tracking and data storage
+- **Social Features** - Friend connections and activity feeds
+- **Achievement System** - Badges and progress tracking
+- **Profile Management** - User preferences and settings
+
+### Technical Implementation
+- **Frontend**: React.js with modern hooks and context
+- **Backend**: Node.js with Express and Firebase Functions
+- **Database**: Firestore with optimized queries
+- **Authentication**: Firebase Auth with security rules
+- **Deployment**: Firebase Hosting with CI/CD pipeline
 
 ---
 
-##  Purpose of this Documentation
+## Project Metrics
 
-This documentation is designed not just to explain the final product but to demonstrate the **process, quality standards, and intentionality** behind its development. It reflects both the *engineering mindset* and *collaborative teamwork* that went into the Hiking Logbook project.
+- **Test Coverage**: 81.31%
+- **Architecture**: Full-stack with separation of concerns
+- **Methodology**: Scrum/Agile with 4 sprints
+- **Documentation**: Comprehensive coverage of all aspects
+
+---
+
+
+## Documentation Standards
+
+- **Format**: Markdown (`.md`) for GitHub compatibility
+- **Naming**: Lowercase with underscores for files
+- **Structure**: Clear headings and table of contents
+- **Cross-references**: Links between related documents
+- **Versioning**: Updated with each sprint and release
+
+---
+
+
+##  Quick Links
+
+- [Project Work Tracker](https://github.com/orgs/Hikers-for-life/projects/1/views/1). 
+
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

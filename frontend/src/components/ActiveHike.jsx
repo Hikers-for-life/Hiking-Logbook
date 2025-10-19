@@ -1,21 +1,21 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Button } from "./ui/button";
-import { Badge } from "./ui/badge";
-import { Input } from "./ui/input";
-import { Textarea } from "./ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
-import { 
-  Play, 
-  Pause, 
-  Square, 
-  MapPin, 
-  Clock, 
-  Mountain, 
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Button } from './ui/button';
+import { Badge } from './ui/badge';
+import { Input } from './ui/input';
+import { Textarea } from './ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import {
+  Play,
+  Pause,
+  Square,
+  MapPin,
+  Clock,
+  Mountain,
   Navigation,
   Save,
-  Plus
-} from "lucide-react";
+  Plus,
+} from 'lucide-react';
 
 const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
   // Hike state
@@ -25,26 +25,45 @@ const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
   const [elapsedTime, setElapsedTime] = useState(0);
   const [currentDistance, setCurrentDistance] = useState(0);
   const [currentElevation, setCurrentElevation] = useState(0);
-  
+
   // Real-time editable data
   const [hikeData, setHikeData] = useState({
-    title: initialData?.title || "",
-    location: initialData?.location || "",
-    weather: initialData?.weather || "",
-    difficulty: initialData?.difficulty || "Easy",
-    notes: initialData?.notes || "",
+    title: initialData?.title || '',
+    location: initialData?.location || '',
+    weather: initialData?.weather || '',
+    difficulty: initialData?.difficulty || 'Easy',
+    notes: initialData?.notes || '',
     waypoints: [],
-    accomplishments: []
+    accomplishments: [],
+    gpsTrack: [],
   });
 
   // GPS and location state
   const [currentLocation, setCurrentLocation] = useState(null);
   const [watchId, setWatchId] = useState(null);
   const intervalRef = useRef(null);
+  const [previousLocation, setPreviousLocation] = useState(null);
+  const lastWaypointTime = useRef(null);
 
   // Accomplishment dialog state
-  const [isAccomplishmentDialogOpen, setIsAccomplishmentDialogOpen] = useState(false);
-  const [accomplishmentText, setAccomplishmentText] = useState("");
+  const [isAccomplishmentDialogOpen, setIsAccomplishmentDialogOpen] =
+    useState(false);
+  const [accomplishmentText, setAccomplishmentText] = useState('');
+
+  // Calculate distance between two GPS points (Haversine formula)
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371; // Earth's radius in km
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * (Math.PI / 180)) *
+        Math.cos(lat2 * (Math.PI / 180)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c; // Distance in km
+  };
 
   // Auto-save timer
   const autoSaveRef = useRef(null);
@@ -56,21 +75,126 @@ const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
       if (navigator.geolocation) {
         const id = navigator.geolocation.watchPosition(
           (position) => {
-            const { latitude, longitude, altitude } = position.coords;
-            setCurrentLocation({ latitude, longitude, altitude });
-            
+            const { latitude, longitude, altitude, accuracy } = position.coords;
+            const newLocation = {
+              latitude,
+              longitude,
+              altitude,
+              accuracy,
+              timestamp: new Date(),
+            };
+
+            console.log('GPS Update:', {
+              latitude,
+              longitude,
+              altitude,
+              accuracy,
+            });
+
+            // Calculate distance from previous location
+            if (previousLocation && isActive) {
+              const distanceKm = calculateDistance(
+                previousLocation.latitude,
+                previousLocation.longitude,
+                latitude,
+                longitude
+              );
+
+              console.log('Distance calculated:', distanceKm, 'km');
+
+              // Only add distance if it's significant (avoid GPS noise) and accuracy is good
+              if (distanceKm > 0.02 && accuracy < 30) {
+                // 20 meters threshold, 30m accuracy
+                setCurrentDistance((prev) => {
+                  const newDistance = prev + distanceKm;
+                  console.log('Total distance updated:', newDistance, 'km');
+                  return newDistance;
+                });
+
+                // Auto-save waypoint every significant movement, but limit frequency
+                const now = Date.now();
+                const timeSinceLastWaypoint = lastWaypointTime.current
+                  ? now - lastWaypointTime.current
+                  : Infinity;
+
+                if (timeSinceLastWaypoint > 10000) {
+                  // Only create waypoint every 10 seconds minimum
+                  lastWaypointTime.current = now;
+
+                  setHikeData((prev) => {
+                    const newWaypoint = {
+                      id: now,
+                      ...newLocation,
+                      distance: currentDistance + distanceKm,
+                      autoGenerated: true,
+                    };
+
+                    return {
+                      ...prev,
+                      waypoints: [...prev.waypoints, newWaypoint],
+                      gpsTrack: [
+                        ...prev.gpsTrack,
+                        {
+                          latitude: newLocation.latitude,
+                          longitude: newLocation.longitude,
+                          altitude: newLocation.altitude,
+                          timestamp: newLocation.timestamp,
+                          distance: currentDistance + distanceKm,
+                        },
+                      ],
+                    };
+                  });
+                } else {
+                  // Still update GPS track for route visualization, just don't create waypoints
+                  setHikeData((prev) => ({
+                    ...prev,
+                    gpsTrack: [
+                      ...prev.gpsTrack,
+                      {
+                        latitude: newLocation.latitude,
+                        longitude: newLocation.longitude,
+                        altitude: newLocation.altitude,
+                        timestamp: newLocation.timestamp,
+                        distance: currentDistance + distanceKm,
+                      },
+                    ],
+                  }));
+                }
+              }
+            }
+
+            setCurrentLocation(newLocation);
+            setPreviousLocation(newLocation);
+
             // Update elevation if available
-            if (altitude) {
-              setCurrentElevation(prev => Math.max(prev, Math.round(altitude * 3.28084))); // Convert to feet
+            if (altitude && altitude !== null) {
+              setCurrentElevation((prev) =>
+                Math.max(prev, Math.round(altitude * 3.28084))
+              ); // Convert to feet
             }
           },
           (error) => {
-            console.error("Geolocation error:", error);
+            console.error('GPS Error:', error.code, error.message);
+            // Handle different GPS error types
+            switch (error.code) {
+              case error.PERMISSION_DENIED:
+                console.error('Location access denied by user');
+                break;
+              case error.POSITION_UNAVAILABLE:
+                console.error('Location information unavailable');
+                break;
+              case error.TIMEOUT:
+                console.error('Location request timed out');
+                break;
+              default:
+                console.error('Unknown location error');
+                break;
+            }
           },
           {
             enableHighAccuracy: true,
-            timeout: 5000,
-            maximumAge: 0
+            timeout: 10000,
+            maximumAge: 1000,
           }
         );
         setWatchId(id);
@@ -85,13 +209,13 @@ const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
         navigator.geolocation.clearWatch(watchId);
       }
     };
-  }, [isActive, isPaused]);
+  }, [isActive, isPaused, previousLocation, currentDistance]);
 
   // Timer for elapsed time
   useEffect(() => {
     if (isActive && !isPaused) {
       intervalRef.current = setInterval(() => {
-        setElapsedTime(prev => prev + 1);
+        setElapsedTime((prev) => prev + 1);
       }, 1000);
     } else {
       if (intervalRef.current) {
@@ -120,11 +244,18 @@ const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
       elapsedTime,
       isActive,
       isPaused,
-      lastSaved: new Date()
+      lastSaved: new Date(),
     };
-    
+
     onSave(saveData);
-  }, [currentDistance, currentElevation, elapsedTime, isActive, isPaused, onSave]);
+  }, [
+    currentDistance,
+    currentElevation,
+    elapsedTime,
+    isActive,
+    isPaused,
+    onSave,
+  ]);
 
   // Auto-save functionality
   useEffect(() => {
@@ -143,13 +274,51 @@ const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
         clearInterval(autoSaveRef.current);
       }
     };
-  }, [isActive, hikeData, currentDistance, currentElevation, elapsedTime, handleAutoSave]);
+  }, [
+    isActive,
+    hikeData,
+    currentDistance,
+    currentElevation,
+    elapsedTime,
+    handleAutoSave,
+  ]);
 
   const handleStartHike = () => {
+    const actualStartTime = new Date();
     setIsActive(true);
     setIsPaused(false);
-    setStartTime(new Date());
+    setStartTime(actualStartTime);
     setElapsedTime(0);
+    setCurrentDistance(0);
+    setCurrentElevation(0);
+    lastWaypointTime.current = null; // Reset waypoint timer
+
+    console.log('Hike started at:', actualStartTime.toISOString());
+
+    // Add initial waypoint when starting
+    if (currentLocation) {
+      const startWaypoint = {
+        id: Date.now(),
+        ...currentLocation,
+        timestamp: actualStartTime,
+        distance: 0,
+        notes: 'Start Point',
+        isStartPoint: true,
+      };
+      setHikeData((prev) => ({
+        ...prev,
+        waypoints: [startWaypoint],
+        gpsTrack: [
+          {
+            latitude: currentLocation.latitude,
+            longitude: currentLocation.longitude,
+            altitude: currentLocation.altitude,
+            timestamp: actualStartTime,
+            distance: 0,
+          },
+        ],
+      }));
+    }
   };
 
   const handlePauseResume = () => {
@@ -159,30 +328,87 @@ const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
   const handleStopHike = () => {
     setIsActive(false);
     setIsPaused(false);
-    
+
+    // Calculate total distance from waypoints if GPS distance failed
+    let finalDistance = currentDistance;
+    if (finalDistance === 0 && hikeData.waypoints.length > 1) {
+      console.log('Calculating distance from waypoints as fallback');
+      let totalDistance = 0;
+      for (let i = 1; i < hikeData.waypoints.length; i++) {
+        const prev = hikeData.waypoints[i - 1];
+        const curr = hikeData.waypoints[i];
+        totalDistance += calculateDistance(
+          prev.latitude,
+          prev.longitude,
+          curr.latitude,
+          curr.longitude
+        );
+      }
+      finalDistance = totalDistance;
+      console.log('Fallback distance calculation:', finalDistance, 'km');
+    }
+
+    // Add final waypoint - use current location or last known location
+    let finalWaypoints = [...hikeData.waypoints];
+    let finalGpsTrack = [...hikeData.gpsTrack];
+
+    // Get the location to use for end point
+    const endLocation =
+      currentLocation ||
+      previousLocation ||
+      (finalWaypoints.length > 0 ? finalWaypoints[0] : null);
+
+    if (endLocation) {
+      const finalWaypoint = {
+        id: Date.now(),
+        latitude: endLocation.latitude,
+        longitude: endLocation.longitude,
+        altitude: endLocation.altitude,
+        accuracy: endLocation.accuracy,
+        timestamp: new Date(),
+        distance: finalDistance,
+        notes: 'End Point',
+        isEndPoint: true,
+      };
+      finalWaypoints.push(finalWaypoint);
+
+      // Also add to GPS track
+      finalGpsTrack.push({
+        latitude: endLocation.latitude,
+        longitude: endLocation.longitude,
+        altitude: endLocation.altitude,
+        timestamp: finalWaypoint.timestamp,
+        distance: finalDistance,
+      });
+    }
+
     // Save final hike data
+    const endTime = new Date();
     const finalHikeData = {
       ...hikeData,
+      waypoints: finalWaypoints,
+      gpsTrack: finalGpsTrack,
       date: new Date().toISOString(), // Add the date field
       startTime,
-      endTime: new Date(),
+      endTime,
       duration: formatTime(elapsedTime),
-      distance: `${currentDistance.toFixed(1)} miles`,
+      distance: `${finalDistance.toFixed(1)} km`,
       elevation: `${currentElevation} ft`,
-      status: 'completed'
+      status: 'completed',
+      actualStartTime: startTime?.toISOString(),
+      actualEndTime: endTime.toISOString(),
     };
-    
+
+    console.log('Final hike data:', finalHikeData);
     onComplete(finalHikeData);
   };
 
   const handleDataChange = (field, value) => {
-    setHikeData(prev => ({
+    setHikeData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
-
-
 
   const addWaypoint = () => {
     if (currentLocation) {
@@ -191,12 +417,22 @@ const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
         ...currentLocation,
         timestamp: new Date(),
         distance: currentDistance,
-        notes: ""
+        notes: '',
       };
-      
-      setHikeData(prev => ({
+
+      setHikeData((prev) => ({
         ...prev,
-        waypoints: [...prev.waypoints, waypoint]
+        waypoints: [...prev.waypoints, waypoint],
+        gpsTrack: [
+          ...prev.gpsTrack,
+          {
+            latitude: currentLocation.latitude,
+            longitude: currentLocation.longitude,
+            altitude: currentLocation.altitude,
+            timestamp: waypoint.timestamp,
+            distance: currentDistance,
+          },
+        ],
       }));
     }
   };
@@ -207,19 +443,19 @@ const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
       text: accomplishment,
       timestamp: new Date(),
       distance: currentDistance,
-      location: currentLocation
+      location: currentLocation,
     };
-    
-    setHikeData(prev => ({
+
+    setHikeData((prev) => ({
       ...prev,
-      accomplishments: [...prev.accomplishments, newAccomplishment]
+      accomplishments: [...prev.accomplishments, newAccomplishment],
     }));
   };
 
   const handleAddAccomplishment = () => {
     if (accomplishmentText.trim()) {
       addAccomplishment(accomplishmentText.trim());
-      setAccomplishmentText("");
+      setAccomplishmentText('');
       setIsAccomplishmentDialogOpen(false);
     }
   };
@@ -228,7 +464,7 @@ const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    
+
     if (hours > 0) {
       return `${hours}h ${minutes}m ${secs}s`;
     } else if (minutes > 0) {
@@ -243,7 +479,7 @@ const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
   };
 
   const quickUpdateDistance = (increment) => {
-    setCurrentDistance(prev => Math.max(0, prev + increment));
+    setCurrentDistance((prev) => Math.max(0, prev + increment));
   };
 
   return (
@@ -254,11 +490,11 @@ const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="text-2xl text-foreground">
-                {isActive ? "Hiking in Progress" : "Start Your Hike"}
+                {isActive ? 'Hiking in Progress' : 'Start Your Hike'}
               </CardTitle>
               <div className="flex gap-2">
                 {!isActive && (
-                  <Button 
+                  <Button
                     onClick={handleStartHike}
                     className="bg-green-600 hover:bg-green-700"
                   >
@@ -266,17 +502,18 @@ const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
                     Start Hike
                   </Button>
                 )}
-                
+
                 {isActive && (
                   <>
-                    <Button 
-                      onClick={handlePauseResume}
-                      variant="outline"
-                    >
-                      {isPaused ? <Play className="h-4 w-4 mr-2" /> : <Pause className="h-4 w-4 mr-2" />}
-                      {isPaused ? "Resume" : "Pause"}
+                    <Button onClick={handlePauseResume} variant="outline">
+                      {isPaused ? (
+                        <Play className="h-4 w-4 mr-2" />
+                      ) : (
+                        <Pause className="h-4 w-4 mr-2" />
+                      )}
+                      {isPaused ? 'Resume' : 'Pause'}
                     </Button>
-                    <Button 
+                    <Button
                       onClick={handleStopHike}
                       className="bg-red-600 hover:bg-red-700"
                     >
@@ -288,32 +525,38 @@ const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
               </div>
             </div>
           </CardHeader>
-          
+
           {isActive && (
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="text-center">
                   <Clock className="h-6 w-6 mx-auto mb-2 text-blue-600" />
-                  <div className="text-2xl font-bold">{formatTime(elapsedTime)}</div>
+                  <div className="text-2xl font-bold">
+                    {formatTime(elapsedTime)}
+                  </div>
                   <div className="text-sm text-muted-foreground">Duration</div>
                 </div>
                 <div className="text-center">
                   <Mountain className="h-6 w-6 mx-auto mb-2 text-green-600" />
-                  <div className="text-2xl font-bold">{currentDistance.toFixed(1)}</div>
-                  <div className="text-sm text-muted-foreground">Miles</div>
+                  <div className="text-2xl font-bold">
+                    {currentDistance.toFixed(1)}
+                  </div>
+                  <div className="text-sm text-muted-foreground">km</div>
                 </div>
                 <div className="text-center">
                   <Navigation className="h-6 w-6 mx-auto mb-2 text-purple-600" />
                   <div className="text-2xl font-bold">{currentElevation}</div>
-                  <div className="text-sm text-muted-foreground">Elevation (ft)</div>
+                  <div className="text-sm text-muted-foreground">
+                    Elevation (ft)
+                  </div>
                 </div>
                 <div className="text-center">
                   <MapPin className="h-6 w-6 mx-auto mb-2 text-red-600" />
                   <div className="text-sm font-bold">
-                    {currentLocation ? "GPS Active" : "No GPS"}
+                    {currentLocation ? 'GPS Active' : 'No GPS'}
                   </div>
-                  <Badge variant={currentLocation ? "default" : "destructive"}>
-                    {currentLocation ? "Tracking" : "No Signal"}
+                  <Badge variant={currentLocation ? 'default' : 'destructive'}>
+                    {currentLocation ? 'Tracking' : 'No Signal'}
                   </Badge>
                 </div>
               </div>
@@ -329,7 +572,9 @@ const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">Hike Title</label>
+                <label className="text-sm font-medium mb-2 block">
+                  Hike Title
+                </label>
                 <Input
                   value={hikeData.title}
                   onChange={(e) => handleDataChange('title', e.target.value)}
@@ -337,7 +582,9 @@ const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
                 />
               </div>
               <div>
-                <label className="text-sm font-medium mb-2 block">Location</label>
+                <label className="text-sm font-medium mb-2 block">
+                  Starting Location
+                </label>
                 <Input
                   value={hikeData.location}
                   onChange={(e) => handleDataChange('location', e.target.value)}
@@ -345,32 +592,39 @@ const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
                 />
               </div>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">Current Weather</label>
+                <label className="text-sm font-medium mb-2 block">
+                  Current Weather
+                </label>
                 <Input
                   value={hikeData.weather}
                   onChange={(e) => handleDataChange('weather', e.target.value)}
-                                        placeholder="Sunny, 22°C"
+                  placeholder="Sunny, 22°C"
                 />
               </div>
               <div>
-                <label className="text-sm font-medium mb-2 block">Distance Progress</label>
+                <label className="text-sm font-medium mb-2 block">
+                  Distance Progress
+                  <span className="text-xs text-muted-foreground ml-1">
+                    (Auto-tracked)
+                  </span>
+                </label>
                 <div className="flex items-center gap-2">
                   <Button
                     type="button"
                     size="sm"
                     variant="outline"
-                    onClick={() => quickUpdateDistance(-0.1)}
+                    onClick={() => quickUpdateDistance(-0.5)}
                     className="px-2"
                   >
-                    -0.1
+                    -0.5
                   </Button>
                   <Input
                     type="number"
                     step="0.1"
-                    value={currentDistance}
+                    value={currentDistance.toFixed(1)}
                     onChange={(e) => updateDistance(e.target.value)}
                     placeholder="0.0"
                     className="text-center"
@@ -379,12 +633,15 @@ const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
                     type="button"
                     size="sm"
                     variant="outline"
-                    onClick={() => quickUpdateDistance(0.1)}
+                    onClick={() => quickUpdateDistance(0.5)}
                     className="px-2"
                   >
-                    +0.1
+                    +0.5
                   </Button>
                 </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  km (GPS auto-calculated)
+                </p>
                 <div className="flex gap-1 mt-1">
                   <Button
                     type="button"
@@ -393,7 +650,7 @@ const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
                     onClick={() => quickUpdateDistance(0.5)}
                     className="text-xs"
                   >
-                    +0.5mi
+                    +0.5km
                   </Button>
                   <Button
                     type="button"
@@ -402,10 +659,46 @@ const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
                     onClick={() => quickUpdateDistance(1.0)}
                     className="text-xs"
                   >
-                    +1mi
+                    +1km
                   </Button>
                 </div>
               </div>
+            </div>
+
+            {/* Difficulty Level Selector */}
+            <div>
+              <label className="text-sm font-medium mb-2 block">
+                Difficulty Level
+                <span className="text-xs text-muted-foreground ml-1">
+                  (How challenging is this hike?)
+                </span>
+              </label>
+              <div className="flex gap-2">
+                {['Easy', 'Moderate', 'Hard'].map((difficulty) => (
+                  <Button
+                    key={difficulty}
+                    type="button"
+                    variant={
+                      hikeData.difficulty === difficulty ? 'default' : 'outline'
+                    }
+                    onClick={() => handleDataChange('difficulty', difficulty)}
+                    className={`flex-1 ${
+                      hikeData.difficulty === difficulty
+                        ? difficulty === 'Easy'
+                          ? 'bg-green-600 hover:bg-green-700 text-white'
+                          : difficulty === 'Moderate'
+                            ? 'bg-yellow-600 hover:bg-yellow-700 text-white'
+                            : 'bg-red-600 hover:bg-red-700 text-white'
+                        : 'border-border'
+                    }`}
+                  >
+                    {difficulty}
+                  </Button>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                You can update this anytime during or after your hike
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -416,7 +709,7 @@ const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
             <div className="flex items-center justify-between">
               <CardTitle>Notes & Thoughts Along the Way</CardTitle>
               <Badge variant="secondary" className="text-xs">
-                {isActive ? "Live Editing" : "Ready to Edit"}
+                {isActive ? 'Live Editing' : 'Ready to Edit'}
               </Badge>
             </div>
           </CardHeader>
@@ -431,7 +724,9 @@ const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
             <div className="flex justify-between items-center mt-2">
               <div className="flex items-center gap-4">
                 <span className="text-sm text-muted-foreground">
-                  {isActive ? "Auto-saves every 30 seconds" : "Click 'Start Hike' to enable auto-save"}
+                  {isActive
+                    ? 'Auto-saves every 30 seconds'
+                    : "Click 'Start Hike' to enable auto-save"}
                 </span>
                 {hikeData.notes && (
                   <span className="text-xs text-muted-foreground">
@@ -459,7 +754,7 @@ const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
                   <MapPin className="h-4 w-4 mr-2" />
                   Mark Waypoint
                 </Button>
-                <Button 
+                <Button
                   onClick={() => setIsAccomplishmentDialogOpen(true)}
                   variant="outline"
                 >
@@ -471,44 +766,64 @@ const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
           </Card>
         )}
 
-        {/* Waypoints List */}
-        {hikeData.waypoints.length > 0 && (
+        {/* Waypoints List - Only show manually added waypoints (excluding auto-generated but keeping start/end) */}
+        {hikeData.waypoints.filter(
+          (wp) => !wp.autoGenerated || wp.isStartPoint || wp.isEndPoint
+        ).length > 0 && (
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>GPS Waypoints Marked</CardTitle>
                 <Badge variant="outline" className="text-xs">
-                  {hikeData.waypoints.length} waypoints
+                  {
+                    hikeData.waypoints.filter(
+                      (wp) =>
+                        !wp.autoGenerated || wp.isStartPoint || wp.isEndPoint
+                    ).length
+                  }{' '}
+                  waypoints
                 </Badge>
               </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {hikeData.waypoints.map((waypoint, index) => (
-                  <div key={waypoint.id} className="flex items-start justify-between p-3 bg-muted rounded-lg">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Badge variant="secondary" className="text-xs">
-                          Waypoint #{index + 1}
+                {hikeData.waypoints
+                  .filter(
+                    (wp) =>
+                      !wp.autoGenerated || wp.isStartPoint || wp.isEndPoint
+                  )
+                  .map((waypoint, index) => (
+                    <div
+                      key={waypoint.id}
+                      className="flex items-start justify-between p-3 bg-muted rounded-lg"
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge variant="secondary" className="text-xs">
+                            Waypoint #{index + 1}
+                          </Badge>
+                          <span className="text-sm text-muted-foreground">
+                            {waypoint.timestamp.toLocaleTimeString()}
+                          </span>
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          GPS: {waypoint.latitude?.toFixed(6)},{' '}
+                          {waypoint.longitude?.toFixed(6)}
+                          {waypoint.altitude && (
+                            <div>
+                              Altitude:{' '}
+                              {Math.round(waypoint.altitude * 3.28084)} ft
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <Badge variant="outline">
+                          {waypoint.distance.toFixed(1)} km
                         </Badge>
-                        <span className="text-sm text-muted-foreground">
-                          {waypoint.timestamp.toLocaleTimeString()}
-                        </span>
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        GPS: {waypoint.latitude?.toFixed(6)}, {waypoint.longitude?.toFixed(6)}
-                        {waypoint.altitude && (
-                          <div>Altitude: {Math.round(waypoint.altitude * 3.28084)} ft</div>
-                        )}
                       </div>
                     </div>
-                    <div className="text-right">
-                      <Badge variant="outline">
-                        {waypoint.distance.toFixed(1)} mi
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
+                  ))}
               </div>
             </CardContent>
           </Card>
@@ -518,7 +833,9 @@ const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>Keep Track of Your Accomplishments Along the Way</CardTitle>
+              <CardTitle>
+                Keep Track of Your Accomplishments Along the Way
+              </CardTitle>
               <Badge variant="outline" className="text-xs">
                 {hikeData.accomplishments.length} recorded
               </Badge>
@@ -530,16 +847,18 @@ const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
                 <Mountain className="h-12 w-12 mx-auto mb-4 opacity-50" />
                 <p className="text-lg mb-2">No accomplishments recorded yet</p>
                 <p className="text-sm">
-                  {isActive 
-                    ? "Use the 'Add Accomplishment' button above to record milestones as you hike!" 
-                    : "Start your hike to begin tracking accomplishments along the way."
-                  }
+                  {isActive
+                    ? "Use the 'Add Accomplishment' button above to record milestones as you hike!"
+                    : 'Start your hike to begin tracking accomplishments along the way.'}
                 </p>
               </div>
             ) : (
               <div className="space-y-3">
                 {hikeData.accomplishments.map((accomplishment, index) => (
-                  <div key={accomplishment.id} className="flex items-start justify-between p-3 bg-muted rounded-lg">
+                  <div
+                    key={accomplishment.id}
+                    className="flex items-start justify-between p-3 bg-muted rounded-lg"
+                  >
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <Badge variant="secondary" className="text-xs">
@@ -553,11 +872,12 @@ const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
                     </div>
                     <div className="text-right">
                       <Badge variant="outline">
-                        {accomplishment.distance.toFixed(1)} mi
+                        {accomplishment.distance.toFixed(1)} km
                       </Badge>
                       {accomplishment.location && (
                         <div className="text-xs text-muted-foreground mt-1">
-                          GPS: {accomplishment.location.latitude?.toFixed(4)}, {accomplishment.location.longitude?.toFixed(4)}
+                          GPS: {accomplishment.location.latitude?.toFixed(4)},{' '}
+                          {accomplishment.location.longitude?.toFixed(4)}
                         </div>
                       )}
                     </div>
@@ -569,7 +889,10 @@ const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
         </Card>
 
         {/* Accomplishment Dialog */}
-        <Dialog open={isAccomplishmentDialogOpen} onOpenChange={setIsAccomplishmentDialogOpen}>
+        <Dialog
+          open={isAccomplishmentDialogOpen}
+          onOpenChange={setIsAccomplishmentDialogOpen}
+        >
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>Add Accomplishment</DialogTitle>
@@ -591,7 +914,7 @@ const ActiveHike = ({ hikeId, onComplete, onSave, initialData }) => {
                 <Button
                   variant="outline"
                   onClick={() => {
-                    setAccomplishmentText("");
+                    setAccomplishmentText('');
                     setIsAccomplishmentDialogOpen(false);
                   }}
                   className="flex-1"

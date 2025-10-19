@@ -4,14 +4,33 @@ import { verifyAuth } from '../middleware/auth.js';
 import { dbUtils } from '../config/database.js';
 
 import { db } from '../config/firebase.js';
-import admin from "firebase-admin";
+import admin from 'firebase-admin';
 
 import { getDatabase } from '../config/firebase.js';
 import { BADGE_RULES } from '../services/badgeService.js';
 
-
 const router = express.Router();
 
+// Helper function to format dates
+function formatDate(date) {
+  if (!(date instanceof Date) || isNaN(date)) return 'Unknown';
+
+  const day = date.getDate();
+  const month = date.toLocaleString('en-US', { month: 'long' });
+  const year = date.getFullYear();
+
+  // Add ordinal suffix (st, nd, rd, th)
+  const suffix =
+    day % 10 === 1 && day !== 11
+      ? 'st'
+      : day % 10 === 2 && day !== 12
+        ? 'nd'
+        : day % 10 === 3 && day !== 13
+          ? 'rd'
+          : 'th';
+
+  return `${month} ${day}${suffix}, ${year}`;
+}
 
 // Test route to verify router is working
 router.get('/test', (req, res) => {
@@ -21,13 +40,41 @@ router.get('/test', (req, res) => {
 // Create user profile (for Google sign-in users)
 router.post('/create-profile', verifyAuth, async (req, res) => {
   try {
-    const { uid, email, displayName, bio, location, latitude, longitude, photoURL } = req.body;
-    
+    const {
+      uid,
+      email,
+      displayName,
+      bio,
+      location,
+      latitude,
+      longitude,
+      photoURL,
+    } = req.body;
+
     // Verify the authenticated user matches the requested UID
     if (req.user.uid !== uid) {
       return res.status(403).json({
         error: 'Unauthorized: Cannot create profile for another user',
       });
+    }
+
+    // Basic validation
+    if (!uid || !email || !displayName) {
+      return res.status(400).json({
+        errors: [
+          { field: 'uid', message: 'uid is required' },
+          { field: 'email', message: 'email is required' },
+          { field: 'displayName', message: 'displayName is required' },
+        ],
+      });
+    }
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRe.test(String(email).toLowerCase())) {
+      return res
+        .status(400)
+        .json({
+          errors: [{ field: 'email', message: 'Invalid email format' }],
+        });
     }
 
     // Check if profile already exists
@@ -77,21 +124,25 @@ router.post('/create-profile', verifyAuth, async (req, res) => {
     });
   }
 });
-router.get("/:uid/stats", async (req, res) => {
+router.get('/:uid/stats', async (req, res) => {
   try {
     const { uid } = req.params;
-    const hikesRef = admin.firestore().collection("users").doc(uid).collection("hikes");
+    const hikesRef = admin
+      .firestore()
+      .collection('users')
+      .doc(uid)
+      .collection('hikes');
     const snapshot = await hikesRef.get();
 
     let totalDistance = 0;
     let totalElevation = 0;
 
-    snapshot.forEach(doc => {
+    snapshot.forEach((doc) => {
       const data = doc.data();
 
       // strip last 2 chars ("km", "ft", etc.)
-      const distance = parseFloat((data.distance || "0").slice(0, -2)) || 0;
-      const elevation = parseFloat((data.elevation || "0").slice(0, -2)) || 0;
+      const distance = parseFloat((data.distance || '0').slice(0, -2)) || 0;
+      const elevation = parseFloat((data.elevation || '0').slice(0, -2)) || 0;
 
       totalDistance += distance;
       totalElevation += elevation;
@@ -103,17 +154,16 @@ router.get("/:uid/stats", async (req, res) => {
       totalElevation,
     });
   } catch (err) {
-    console.error("Error fetching user stats:", err);
+    console.error('Error fetching user stats:', err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-
 // Get current user profile (protected route)
-router.get("/profile", verifyAuth, async (req, res) => {
+router.get('/profile', verifyAuth, async (req, res) => {
   try {
-    const profile = await AuthService.getUserProfile(req.user.uid); 
-    res.json(profile); 
+    const profile = await AuthService.getUserProfile(req.user.uid);
+    res.json(profile);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -125,7 +175,7 @@ router.get("/profile", verifyAuth, async (req, res) => {
 router.get('/stats', verifyAuth, async (req, res) => {
   try {
     const userId = req.user.uid;
-    
+
     // Get basic hike stats (with fallback to empty stats)
     let hikeStats;
     try {
@@ -135,10 +185,10 @@ router.get('/stats', verifyAuth, async (req, res) => {
         totalHikes: 0,
         totalDistance: 0,
         totalDuration: 0,
-        totalElevation: 0
+        totalElevation: 0,
       };
     }
-    
+
     // Try to get user profile, create one if it doesn't exist
     let profile;
     try {
@@ -154,8 +204,8 @@ router.get('/stats', verifyAuth, async (req, res) => {
           goals: [],
           preferences: {
             units: 'metric',
-            privacy: 'friends'
-          }
+            privacy: 'friends',
+          },
         };
         await dbUtils.createUserProfile(userId, profileData);
         profile = profileData;
@@ -164,20 +214,24 @@ router.get('/stats', verifyAuth, async (req, res) => {
       console.error(`Error with user profile for stats for ${userId}:`, error);
       profile = { badges: [], goals: [] };
     }
-    
+
     // Combine hike stats with profile data
     const stats = {
       ...hikeStats,
       badgesEarned: (profile?.badges || []).length,
-      goalsCompleted: (profile?.goals || []).filter(goal => goal.completed).length,
-      goalsInProgress: (profile?.goals || []).filter(goal => !goal.completed).length,
-      joinDate: profile?.joinDate || new Date().toISOString()
+      goalsCompleted: (profile?.goals || []).filter((goal) => goal.completed)
+        .length,
+      goalsInProgress: (profile?.goals || []).filter((goal) => !goal.completed)
+        .length,
+      joinDate: profile?.joinDate || new Date().toISOString(),
     };
-    
+
     res.json({ success: true, data: stats });
   } catch (error) {
     console.error('Error fetching user stats:', error);
-    res.status(500).json({ error: 'Failed to fetch user stats', details: error.message });
+    res
+      .status(500)
+      .json({ error: 'Failed to fetch user stats', details: error.message });
   }
 });
 
@@ -185,13 +239,16 @@ router.get('/stats', verifyAuth, async (req, res) => {
 router.get('/badges', verifyAuth, async (req, res) => {
   try {
     const userId = req.user.uid;
-    
+
     // Get user stats for progress calculation (with fallback to empty stats)
     let stats;
     try {
       stats = await dbUtils.getUserHikeStats(userId);
     } catch (error) {
-      console.error(`Error getting hike stats for badges for ${userId}:`, error);
+      console.error(
+        `Error getting hike stats for badges for ${userId}:`,
+        error
+      );
       stats = {
         totalHikes: 0,
         totalDistance: 0,
@@ -199,10 +256,10 @@ router.get('/badges', verifyAuth, async (req, res) => {
         totalPeaks: 0,
         uniqueTrails: 0,
         hasEarlyBird: false,
-        hasEndurance: false
+        hasEndurance: false,
       };
     }
-    
+
     // Try to get user profile, create one if it doesn't exist
     let profile;
     try {
@@ -219,8 +276,8 @@ router.get('/badges', verifyAuth, async (req, res) => {
           goals: [],
           preferences: {
             units: 'metric',
-            privacy: 'friends'
-          }
+            privacy: 'friends',
+          },
         };
         await dbUtils.createUserProfile(userId, profileData);
         profile = profileData;
@@ -229,76 +286,85 @@ router.get('/badges', verifyAuth, async (req, res) => {
       console.error(`Error with user profile for badges for ${userId}:`, error);
       profile = { badges: [] };
     }
-    
+
     const earnedBadges = profile?.badges || [];
-    const allBadges = BADGE_RULES.map(rule => {
-      const isEarned = earnedBadges.some(badge => badge.name === rule.name);
-      
+    const allBadges = BADGE_RULES.map((rule) => {
+      const isEarned = earnedBadges.some((badge) => badge.name === rule.name);
+
       // Calculate progress and progress text based on rule type
       let progress = 0;
-      let progressText = "Not started";
-      
+      let progressText = 'Not started';
+
       if (isEarned) {
         progress = 100;
-        progressText = "Completed";
+        progressText = 'Completed';
       } else {
         // Calculate progress based on current stats
-        if (rule.name === "First Steps") {
+        if (rule.name === 'First Steps') {
           progress = Math.min((stats.totalHikes || 0) * 100, 100);
           progressText = `${stats.totalHikes || 0}/1 hikes`;
-        } else if (rule.name === "Distance Walker") {
+        } else if (rule.name === 'Distance Walker') {
           progress = Math.min(((stats.totalDistance || 0) / 100) * 100, 100);
           progressText = `${stats.totalDistance || 0}/100 km`;
-        } else if (rule.name === "Peak Collector") {
+        } else if (rule.name === 'Peak Collector') {
           progress = Math.min(((stats.totalPeaks || 0) / 10) * 100, 100);
           progressText = `${stats.totalPeaks || 0}/10 peaks`;
-        } else if (rule.name === "Trail Explorer") {
+        } else if (rule.name === 'Trail Explorer') {
           progress = Math.min(((stats.uniqueTrails || 0) / 25) * 100, 100);
           progressText = `${stats.uniqueTrails || 0}/25 trails`;
         } else {
           // For binary badges (Early Bird, Endurance Master)
           progress = rule.check(stats) ? 100 : 0;
-          progressText = rule.check(stats) ? "Completed" : "Not achieved";
+          progressText = rule.check(stats) ? 'Completed' : 'Not achieved';
         }
       }
-      
+
       return {
         id: rule.name.toLowerCase().replace(/\s+/g, '-'),
         name: rule.name,
         description: rule.description,
-        icon: rule.icon || "🏆",
-        category: rule.category || "achievement",
+        icon: rule.icon || '🏆',
+        category: rule.category || 'achievement',
         earned: isEarned,
         progress: progress,
         progressText: progressText,
-        earnedDate: isEarned ? (() => {
-          const badge = earnedBadges.find(badge => badge.name === rule.name);
-          if (!badge?.earnedDate) return null;
-          
-          // Convert Firestore Timestamp to ISO string
-          if (badge.earnedDate.toDate && typeof badge.earnedDate.toDate === 'function') {
-            return badge.earnedDate.toDate().toISOString();
-          }
-          // If it's already a Date object
-          else if (badge.earnedDate instanceof Date) {
-            return badge.earnedDate.toISOString();
-          }
-          // If it has seconds property (Firestore Timestamp)
-          else if (badge.earnedDate.seconds) {
-            return new Date(badge.earnedDate.seconds * 1000).toISOString();
-          }
-          // Return as is if it's already a string or other format
-          else {
-            return badge.earnedDate;
-          }
-        })() : null
+        earnedDate: isEarned
+          ? (() => {
+              const badge = earnedBadges.find(
+                (badge) => badge.name === rule.name
+              );
+              if (!badge?.earnedDate) return null;
+
+              // Convert Firestore Timestamp to ISO string
+              if (
+                badge.earnedDate.toDate &&
+                typeof badge.earnedDate.toDate === 'function'
+              ) {
+                return badge.earnedDate.toDate().toISOString();
+              }
+              // If it's already a Date object
+              else if (badge.earnedDate instanceof Date) {
+                return badge.earnedDate.toISOString();
+              }
+              // If it has seconds property (Firestore Timestamp)
+              else if (badge.earnedDate.seconds) {
+                return new Date(badge.earnedDate.seconds * 1000).toISOString();
+              }
+              // Return as is if it's already a string or other format
+              else {
+                return badge.earnedDate;
+              }
+            })()
+          : null,
       };
     });
-    
+
     res.json({ success: true, data: allBadges, count: allBadges.length });
   } catch (error) {
     console.error('Error fetching user badges:', error);
-    res.status(500).json({ error: 'Failed to fetch badges', details: error.message });
+    res
+      .status(500)
+      .json({ error: 'Failed to fetch badges', details: error.message });
   }
 });
 
@@ -315,8 +381,12 @@ router.get('/:uid', async (req, res) => {
 
     // Fetch subcollections using direct database access
     const db = getDatabase();
-    const hikesSnap = await db.collection('users').doc(uid).collection('hikes').get();
-    const hikes = hikesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const hikesSnap = await db
+      .collection('users')
+      .doc(uid)
+      .collection('hikes')
+      .get();
+    const hikes = hikesSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
     // Construct response
     const publicProfile = {
@@ -340,16 +410,14 @@ router.get('/:uid', async (req, res) => {
   }
 });
 
-router.get("/profile", async (req, res) => {
+router.get('/profile', async (req, res) => {
   try {
-    const profile = await AuthService.getUserProfile(req.user.uid); 
-    res.json(profile); 
+    const profile = await AuthService.getUserProfile(req.user.uid);
+    res.json(profile);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
-
- 
 
 // Search users (public route) - Basic implementation
 router.get('/search', async (req, res) => {
@@ -371,13 +439,15 @@ router.get('/search', async (req, res) => {
 
     // Execute query
     const snapshot = await query.limit(50).get(); // Limit results for performance
-    let users = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    let users = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
     // Client-side filtering for display name if query provided
     if (q) {
       const searchTerm = q.toLowerCase();
-      users = users.filter(user => 
-        user.displayName && user.displayName.toLowerCase().includes(searchTerm)
+      users = users.filter(
+        (user) =>
+          user.displayName &&
+          user.displayName.toLowerCase().includes(searchTerm)
       );
     }
 
@@ -406,24 +476,110 @@ router.get('/search', async (req, res) => {
 router.get('/:uid/achievements', async (req, res) => {
   try {
     const { uid } = req.params;
-    const profile = await AuthService.getUserProfile(uid);
+    const { limit = 10 } = req.query;
+    
+    const db = getDatabase();
+    const userRef = db.collection('users').doc(uid);
+    const userSnap = await userRef.get();
 
-    if (!profile) {
-      return res.status(404).json({ error: 'User not found' });
+    if (!userSnap.exists) {
+      return res.status(404).json({ 
+        success: false,
+        error: 'User not found' 
+      });
     }
 
+    const userData = userSnap.data();
+    const badges = userData.badges || [];
+    
+    // Sort by earned date (most recent first) and limit
+    const sortedBadges = badges
+      .sort((a, b) => {
+        const dateA = a.earnedDate?.toDate ? a.earnedDate.toDate() : new Date(0);
+        const dateB = b.earnedDate?.toDate ? b.earnedDate.toDate() : new Date(0);
+        return dateB - dateA;
+      })
+      .slice(0, parseInt(limit))
+      .map(badge => ({
+        name: badge.name,
+        description: badge.description,
+        earned: badge.earnedDate?.toDate ? 
+          formatDate(badge.earnedDate.toDate()) : 'Unknown',
+        earnedDate: badge.earnedDate?.toDate ? 
+          badge.earnedDate.toDate().toISOString() : null
+      }));
+
     res.json({
-      uid: profile.uid,
-      displayName: profile.displayName,
-      achievements: profile.stats.achievements || [],
-      totalHikes: profile.stats.totalHikes || 0,
-      totalDistance: profile.stats.totalDistance || 0,
-      totalElevation: profile.stats.totalElevation || 0,
+      success: true,
+      data: sortedBadges,
+      total: badges.length,
+      limit: parseInt(limit)
     });
   } catch (error) {
     console.error('Get achievements error:', error);
-    res.status(404).json({
-      error: 'User not found',
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get achievements',
+      message: error.message
+    });
+  }
+});
+
+// Get user goals (public route)
+router.get('/:uid/goals', async (req, res) => {
+  try {
+    const { uid } = req.params;
+    const { limit = 10, status = 'active' } = req.query;
+    
+    const db = getDatabase();
+    let query = db
+      .collection('users')
+      .doc(uid)
+      .collection('goals')
+      .orderBy('createdAt', 'desc')
+      .limit(parseInt(limit));
+
+    // Filter by status if provided
+    if (status) {
+      query = query.where('status', '==', status);
+    }
+
+    const snapshot = await query.get();
+    const goals = [];
+
+    snapshot.forEach((doc) => {
+      const goalData = doc.data();
+      
+      // Convert Firestore timestamps to ISO strings
+      if (goalData.createdAt && goalData.createdAt.toDate) {
+        goalData.createdAt = goalData.createdAt.toDate().toISOString();
+      }
+      if (goalData.updatedAt && goalData.updatedAt.toDate) {
+        goalData.updatedAt = goalData.updatedAt.toDate().toISOString();
+      }
+      if (goalData.targetDate && goalData.targetDate.toDate) {
+        goalData.targetDate = goalData.targetDate.toDate().toISOString();
+      }
+
+      goals.push({ 
+        id: doc.id, 
+        ...goalData,
+        progress: Math.round((goalData.currentProgress / goalData.targetValue) * 100) || 0
+      });
+    });
+
+    res.json({
+      success: true,
+      data: goals,
+      total: goals.length,
+      limit: parseInt(limit)
+    });
+  } catch (error) {
+    console.error('Get goals error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get goals',
+      message: error.message
     });
   }
 });
@@ -431,7 +587,6 @@ router.get('/:uid/achievements', async (req, res) => {
 // Search users (public route)
 router.get('/search', async (req, res) => {
   try {
-
     const { q, location } = req.query;
 
     let conditions = [];
@@ -461,7 +616,7 @@ router.get('/search', async (req, res) => {
 
     // Note: This search functionality needs to be implemented
     // For now, return empty array until we implement proper user search
-   const users = await dbUtils.query(collections.USERS, conditions);
+    const users = await dbUtils.query(collections.USERS, conditions);
 
     // Remove sensitive information
     const publicUsers = users.map((user) => ({
@@ -498,7 +653,6 @@ router.get('/search', async (req, res) => {
       limit: parseInt(limit),
       offset: parseInt(offset),
     });
-
   } catch (error) {
     console.error('Search users error:', error);
     res.status(500).json({
@@ -559,7 +713,6 @@ router.get('/:uid/stats', async (req, res) => {
 
 // Update user profile (protected route)
 
-
 // Delete user account (protected route)
 router.delete('/:uid', verifyAuth, async (req, res) => {
   try {
@@ -568,14 +721,14 @@ router.delete('/:uid', verifyAuth, async (req, res) => {
     // Verify the authenticated user matches the requested UID
     if (req.user.uid !== uid) {
       return res.status(403).json({
-        error: 'Unauthorized: Cannot delete another user\'s account',
+        error: "Unauthorized: Cannot delete another user's account",
       });
     }
 
     await AuthService.deleteUser(uid);
 
     res.json({
-      message: 'User account deleted successfully'
+      message: 'User account deleted successfully',
     });
   } catch (error) {
     console.error('Delete user error:', error);
@@ -587,35 +740,35 @@ router.delete('/:uid', verifyAuth, async (req, res) => {
 });
 
 // Get user hiking history (public route)
-router.get("/:uid/hikes", async (req, res) => {
+router.get('/:uid/hikes', async (req, res) => {
   try {
     const { uid } = req.params;
-    const limit = parseInt(req.query.limit || "2", 10);
+    const limit = parseInt(req.query.limit || '2', 10);
 
     const hikesRef = admin
       .firestore()
-      .collection("users")
+      .collection('users')
       .doc(uid)
-      .collection("hikes");
+      .collection('hikes');
 
-    const snap = await hikesRef.orderBy("createdAt", "desc").limit(limit).get();
-    const hikes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const snap = await hikesRef.orderBy('createdAt', 'desc').limit(limit).get();
+    const hikes = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
     res.json({ success: true, data: hikes });
   } catch (err) {
-   console.error("Error fetching user hikes:", err.message, err.stack);
-  res.status(500).json({ success: false, error: err.message });
+    console.error('Error fetching user hikes:', err.message, err.stack);
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
 // Get hike count for a user
-router.get("/:uid/hikes/count", async (req, res) => {
+router.get('/:uid/hikes/count', async (req, res) => {
   try {
     const { uid } = req.params;
     const hikesRef = admin
       .firestore()
-      .collection("users")
+      .collection('users')
       .doc(uid)
-      .collection("hikes");
+      .collection('hikes');
 
     // simple (works fine for small/medium collections)
     const snap = await hikesRef.get();
@@ -624,8 +777,10 @@ router.get("/:uid/hikes/count", async (req, res) => {
     // If you have very large collections, consider maintaining count on user doc instead.
     res.json({ success: true, count });
   } catch (err) {
-    console.error("Error fetching hike count:", err);
-    res.status(500).json({ success: false, error: "Failed to fetch hike count" });
+    console.error('Error fetching hike count:', err);
+    res
+      .status(500)
+      .json({ success: false, error: 'Failed to fetch hike count' });
   }
 });
 
@@ -638,7 +793,7 @@ router.patch('/:uid', verifyAuth, async (req, res) => {
     // Verify the authenticated user matches the requested UID
     if (req.user.uid !== uid) {
       return res.status(403).json({
-        error: 'Unauthorized: Cannot update another user\'s profile',
+        error: "Unauthorized: Cannot update another user's profile",
       });
     }
 
@@ -658,17 +813,15 @@ router.patch('/:uid', verifyAuth, async (req, res) => {
 
     res.json({
       message: 'Profile updated successfully',
-      profile: updatedProfile
+      profile: updatedProfile,
     });
   } catch (error) {
     console.error('Update profile error:', error);
-    res.status(400).json({ 
-      error: "Failed to update profile",
-      details: error.message 
+    res.status(400).json({
+      error: 'Failed to update profile',
+      details: error.message,
     });
   }
 });
-
-
 
 export default router;

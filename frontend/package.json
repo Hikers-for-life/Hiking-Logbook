@@ -26,7 +26,7 @@
     "@radix-ui/react-popover": "^1.1.14",
     "@radix-ui/react-progress": "^1.1.7",
     "@radix-ui/react-radio-group": "^1.3.7",
-    "@radix-ui/react-scroll-area": "^1.2.9",
+    "@radix-ui/react-scroll-area": "^1.2.10",
     "@radix-ui/react-select": "^2.2.5",
     "@radix-ui/react-separator": "^1.1.7",
     "@radix-ui/react-slider": "^1.3.5",
@@ -55,6 +55,7 @@
     "hiking-logbook-root": "file:..",
     "input-otp": "^1.4.2",
     "jest": "^27.5.1",
+    "leaflet": "^1.9.4",
     "lucide-react": "^0.263.1",
     "next-themes": "^0.3.0",
     "react": "^18.3.1",
@@ -62,6 +63,7 @@
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.61.1",
     "react-icons": "^5.5.0",
+    "react-leaflet": "^4.2.1",
     "react-resizable-panels": "^2.1.9",
     "react-router-dom": "^6.30.1",
     "react-scripts": "^5.0.1",
@@ -77,8 +79,8 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "GENERATE_SOURCEMAP=false CI=false react-scripts build",
-    "test:coverage": "react-scripts test --coverage --watchAll=false",
     "test": "react-scripts test",
+    "test:coverage": "react-scripts test --coverage --watchAll=false",
     "eject": "react-scripts eject",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -93,21 +95,39 @@
   },
   "jest": {
     "moduleNameMapper": {
-      "^firebase/(.*)$": "<rootDir>/src/mocks/firebase/$1.js"
+      "^firebase/(.*)$": "<rootDir>/src/mocks/firebase/$1.js",
+      "^leaflet$": "<rootDir>/src/mocks/leaflet.js",
+      "^react-leaflet$": "<rootDir>/src/mocks/react-leaflet.js"
     },
-
+    "transformIgnorePatterns": [
+      "/node_modules/(?!(react-leaflet|leaflet)/)"
+    ],
     "collectCoverageFrom": [
-    "src/**/*.{js,jsx,ts,tsx}",  
-    "src/**/*.test.{js,jsx,ts,tsx}", 
-    "!src/index.js",              
-    "!src/reportWebVitals.js",    
-    "!src/mocks/**", 
-    "!src/components/**",
-    "!src/pages/**",
-    "!src/services/**",
-    "!src/utils/**",
-    "!src/contexts/**"                    
-  ]
+      "src/**/*.{js,jsx,ts,tsx}",
+      "!src/mocks/**",
+      "!src/tests/**",
+      "!src/pages/**",
+      "!src/contexts/AuthContext.jsx",
+      "!src/components/RouteExplorer.jsx",
+      "!src/components/ProgressCharts.jsx",
+      "!src/components/logbook-section.jsx",
+      "!src/components/ui/users.js",
+      "!src/components/ui/profile-view.jsx",
+      "!src/components/ui/view-friend-profile.jsx",
+      "!src/components/ui/navigation.jsx"
+    ],
+    "coveragePathIgnorePatterns": [
+      "/node_modules/",
+      "<rootDir>/src/pages/",
+      "<rootDir>/src/contexts/AuthContext.jsx",
+      "<rootDir>/src/components/RouteExplorer.jsx",
+      "<rootDir>/src/components/ProgressCharts.jsx",
+      "<rootDir>/src/components/logbook-section.jsx",
+      "<rootDir>/src/components/ui/users.js",
+      "<rootDir>/src/components/ui/profile-view.jsx",
+      "<rootDir>/src/components/ui/view-friend-profile.jsx",
+      "<rootDir>/src/components/ui/navigation.jsx"
+    ]
   },
   "browserslist": {
     "production": [

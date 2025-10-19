@@ -1,20 +1,19 @@
-import * as React from "react"
-import { useToast } from "../../hooks/use-toast"
-import { useNavigate } from "react-router-dom"
+import * as React from 'react';
+import { useToast } from '../../hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 export function Toaster() {
-  const { toasts, dismiss } = useToast()
-  const navigate = useNavigate()
+  const { toasts, dismiss } = useToast();
+  const navigate = useNavigate();
 
   const handleClose = (id) => {
-    dismiss(id)             // close the toast
+    dismiss(id); // close the toast
 
-    navigate("/activity-feed")    // navigate to your ViewProfile route
-  }
+    navigate('/activity-feed'); // navigate to your ViewProfile route
+  };
 
   return (
     <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
-
       {toasts
         .filter((t) => t.open) // only show open toasts
         .map((toast) => (
@@ -35,5 +34,5 @@ export function Toaster() {
           </div>
         ))}
     </div>
-  )
+  );
 }

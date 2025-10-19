@@ -1,6 +1,5 @@
 import { getAuth } from '../config/firebase.js';
 
-
 export const verifyAuth = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import {
   Menu,
@@ -9,32 +9,83 @@ import {
   Calendar,
   Book,
   Activity,
+  MessageSquare,
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { ProfileDropdown } from './profile-dropdown.jsx';
 import { ProfileView } from './profile-view.jsx';
-
+import { chatService } from '../../services/chatService';
+import { hikeInviteService } from '../../services/hikeInviteService';
+import { getIncomingRequests } from '../../services/discover';
 
 export const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [friendRequestCount, setFriendRequestCount] = useState(0);
 
   const { currentUser, logout } = useAuth();
 
   const navigate = useNavigate();
 
 
+  // Fetch unread message count (including hike invitations)
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const fetchUnreadCount = async () => {
+      try {
+        // Get unread messages count
+        const messageCount = await chatService.getUnreadCount();
+
+        // Get pending hike invitations count
+        const inviteCount = await hikeInviteService.getPendingInvitationsCount();
+
+        // Combine both counts
+        setUnreadCount(messageCount + inviteCount);
+      } catch (error) {
+        console.error('Error fetching unread count:', error);
+      }
+    };
+
+    fetchUnreadCount();
+
+    // Refresh unread count every 30 seconds
+    const interval = setInterval(fetchUnreadCount, 30000);
+
+    return () => clearInterval(interval);
+  }, [currentUser]);
+
+  // Fetch friend request count
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const fetchFriendRequestCount = async () => {
+      try {
+        const requests = await getIncomingRequests();
+        setFriendRequestCount(requests?.length || 0);
+      } catch (error) {
+        console.error('Error fetching friend request count:', error);
+      }
+    };
+
+    fetchFriendRequestCount();
+
+    // Refresh friend request count every 30 seconds
+    const interval = setInterval(fetchFriendRequestCount, 300000);
+
+    return () => clearInterval(interval);
+  }, [currentUser]);
+
   // Define navigation items based on authentication state
-  const publicNavItems = [
-    { name: 'Home', icon: MapPin, href: '/' },
-  ];
+  const publicNavItems = [{ name: 'Home', icon: MapPin, href: '/' }];
 
   const authenticatedNavItems = [
-    { name: 'Home', icon: MapPin, href: '/' },
     { name: 'Logbook', icon: Book, href: '/logbook' },
     { name: 'Hike Planner', icon: Calendar, href: '/hike-planner' },
     { name: 'Activity Feed', icon: Activity, href: '/activity-feed' },
+    { name: 'Messages', icon: MessageSquare, href: '/messages' },
     { name: 'Achievements', icon: Trophy, href: '/achievements' },
   ];
 
@@ -55,12 +106,11 @@ export const Navigation = () => {
   };
 
   const handleEditProfile = () => {
-    navigate("/edit-profile");
+    navigate('/edit-profile');
   };
 
   const handleSignup = () => {
     navigate('/?auth=login');
-
   };
 
   return (
@@ -74,7 +124,7 @@ export const Navigation = () => {
               to="/"
               className="text-xl font-bold text-foreground hover:text-forest transition-colors"
             >
-              Hiking Log
+              Hiking Logbook
             </Link>
           </div>
 
@@ -84,10 +134,20 @@ export const Navigation = () => {
               <Link
                 key={item.name}
                 to={item.href}
-                className="flex items-center space-x-1 text-muted-foreground hover:text-forest transition-colors duration-200"
+                className="flex items-center space-x-1 text-muted-foreground hover:text-forest transition-colors duration-200 relative"
               >
                 <item.icon className="h-4 w-4" />
                 <span>{item.name}</span>
+                {item.name === 'Messages' && unreadCount > 0 && (
+                  <span className="absolute -top-2 -left bg-red-500 text-white text-xs  rounded-full h-4 w-4 flex items-center justify-center">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+                {item.name === 'Activity Feed' && friendRequestCount > 0 && (
+                  <span className="absolute -top-2 -left bg-red-500 text-white text-xs  rounded-full h-4 w-4 flex items-center justify-center">
+                    {friendRequestCount > 9 ? '9+' : friendRequestCount}
+                  </span>
+                )}
               </Link>
             ))}
             {currentUser ? (
@@ -123,9 +183,9 @@ export const Navigation = () => {
           <div className="md:hidden">
             <Button
               variant="ghost"
-              size="sm"
+              size="icon"
               onClick={() => setIsOpen(!isOpen)}
-              className="text-foreground"
+              className="text-foreground min-h-[44px] min-w-[44px]"
             >
               {isOpen ? (
                 <X className="h-6 w-6" />
@@ -144,11 +204,21 @@ export const Navigation = () => {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className="flex items-center space-x-2 px-3 py-2 text-muted-foreground hover:text-forest hover:bg-muted rounded-md transition-colors duration-200"
+                  className="flex items-center space-x-2 px-3 py-2 text-muted-foreground hover:text-forest hover:bg-muted rounded-md transition-colors duration-200 relative"
                   onClick={() => setIsOpen(false)}
                 >
                   <item.icon className="h-4 w-4" />
                   <span>{item.name}</span>
+                  {item.name === 'Messages' && unreadCount > 0 && (
+                    <span className="ml-auto bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                  {item.name === 'Activity Feed' && friendRequestCount > 0 && (
+                    <span className="ml-auto bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                      {friendRequestCount > 9 ? '9+' : friendRequestCount}
+                    </span>
+                  )}
                 </Link>
               ))}
               <div className="px-3 py-2">

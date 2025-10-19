@@ -1,40 +1,54 @@
-import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Textarea } from "../components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "../components/ui/form";
-import { ArrowLeft, Camera, MapPin, User, FileText } from "lucide-react";
-import { Link } from "react-router-dom";
-import { useToast } from "../hooks/use-toast";
+import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Textarea } from '../components/ui/textarea';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '../components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '../components/ui/form';
+import { ArrowLeft, Camera, MapPin, User, FileText } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { useToast } from '../hooks/use-toast';
 import { useAuth } from '../contexts/AuthContext.jsx';
 // Correctly import both services
 import { userApiService, locationService } from '../services/userService';
 
 const profileSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  bio: z.string().max(500, "Bio must be less than 500 characters"),
-  location: z.string().min(2, "Location must be at least 2 characters"),
+  name: z.string().min(2, 'Name must be at least 2 characters'),
+  bio: z.string().max(500, 'Bio must be less than 500 characters'),
+  location: z.string().min(2, 'Location must be at least 2 characters'),
 });
 
 const EditProfile = () => {
-  const [profileImage, setProfileImage] = useState("/placeholder.svg");
+  const [profileImage, setProfileImage] = useState('/placeholder.svg');
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { currentUser } = useAuth();
   const [profile, setProfile] = useState(null);
   const { toast } = useToast();
-  
+
   const form = useForm({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      name: "",
-      bio: "",
-      location: "",
+      name: '',
+      bio: '',
+      location: '',
     },
   });
 
@@ -49,9 +63,9 @@ const EditProfile = () => {
         setProfile(data);
 
         form.reset({
-          name: data.displayName || currentUser.displayName || "",
-          bio: data.bio || "",
-          location: data.location || "",
+          name: data.displayName || currentUser.displayName || '',
+          bio: data.bio || '',
+          location: data.location || '',
         });
 
         if (data.photoURL) {
@@ -60,9 +74,9 @@ const EditProfile = () => {
       } catch (error) {
         console.error('Failed to fetch profile:', error);
         toast({
-          title: "Error",
-          description: "Failed to load profile data. Please refresh the page.",
-          variant: "destructive",
+          title: 'Error',
+          description: 'Failed to load profile data. Please refresh the page.',
+          variant: 'destructive',
         });
       } finally {
         setIsLoading(false);
@@ -77,17 +91,17 @@ const EditProfile = () => {
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
         toast({
-          title: "File too large",
-          description: "Please select an image smaller than 5MB.",
-          variant: "destructive",
+          title: 'File too large',
+          description: 'Please select an image smaller than 5MB.',
+          variant: 'destructive',
         });
         return;
       }
       if (!file.type.startsWith('image/')) {
         toast({
-          title: "Invalid file type",
-          description: "Please select an image file.",
-          variant: "destructive",
+          title: 'Invalid file type',
+          description: 'Please select an image file.',
+          variant: 'destructive',
         });
         return;
       }
@@ -109,15 +123,18 @@ const EditProfile = () => {
       if (!latitude || !longitude || data.location !== profile?.location) {
         try {
           // FIX: Call getLocationCoordinates from the correct service
-          const coordinates = await locationService.getLocationCoordinates(data.location);
+          const coordinates = await locationService.getLocationCoordinates(
+            data.location
+          );
           latitude = coordinates.latitude;
           longitude = coordinates.longitude;
         } catch (geoError) {
           console.error('Geocoding error:', geoError);
           toast({
-            title: "Invalid location",
-            description: "Could not find coordinates. Please check the spelling and try again.",
-            variant: "destructive",
+            title: 'Invalid location',
+            description:
+              'Could not find coordinates. Please check the spelling and try again.',
+            variant: 'destructive',
           });
           setIsSubmitting(false); // Stop submission
           return;
@@ -132,7 +149,7 @@ const EditProfile = () => {
         longitude,
       };
 
-      // FIX: Removed the redundant 'token' argument. 
+      // FIX: Removed the redundant 'token' argument.
       // The `makeAuthenticatedRequest` in your service handles this automatically.
       const updatedProfile = await userApiService.updateProfile(
         currentUser.uid,
@@ -142,15 +159,16 @@ const EditProfile = () => {
       setProfile(updatedProfile.profile || updatedProfile);
 
       toast({
-        title: "Profile Updated",
-        description: "Your hiking profile has been successfully updated!",
+        title: 'Profile Updated',
+        description: 'Your hiking profile has been successfully updated!',
       });
     } catch (error) {
       console.error('Profile update error:', error);
       toast({
-        title: "Error",
-        description: error.message || "Unable to update profile. Please try again.",
-        variant: "destructive",
+        title: 'Error',
+        description:
+          error.message || 'Unable to update profile. Please try again.',
+        variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);
@@ -173,8 +191,8 @@ const EditProfile = () => {
       {/* Header */}
       <div className="bg-gradient-to-r from-primary via-primary to-accent p-6 text-primary-foreground">
         <div className="max-w-4xl mx-auto">
-          <Link 
-            to="/" 
+          <Link
+            to="/"
             className="inline-flex items-center gap-2 mb-4 hover:opacity-80 transition-opacity"
           >
             <ArrowLeft className="h-5 w-5" />
@@ -188,7 +206,10 @@ const EditProfile = () => {
       </div>
 
       <div className="max-w-4xl mx-auto p-6 -mt-8">
-        <Card className="shadow-lg border-0" style={{ boxShadow: "var(--nature-shadow)" }}>
+        <Card
+          className="shadow-lg border-0"
+          style={{ boxShadow: 'var(--nature-shadow)' }}
+        >
           <CardHeader className="text-center pb-6">
             <div className="relative mx-auto mb-4">
               <Avatar className="h-32 w-32 border-4 border-background shadow-lg">
@@ -207,20 +228,24 @@ const EditProfile = () => {
                   type="file"
                   className="hidden"
                   accept="image/*"
-                  aria-label="Upload avatar" 
+                  aria-label="Upload avatar"
                   onChange={handleImageUpload}
                 />
               </label>
             </div>
             <CardTitle className="text-2xl">Profile Settings</CardTitle>
             <CardDescription>
-              Keep your hiking profile up to date to connect with fellow adventurers
+              Keep your hiking profile up to date to connect with fellow
+              adventurers
             </CardDescription>
           </CardHeader>
 
           <CardContent>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-8"
+              >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Name Field */}
                   <FormField
@@ -233,10 +258,10 @@ const EditProfile = () => {
                           Display Name
                         </FormLabel>
                         <FormControl>
-                          <Input 
-                            placeholder="Enter your hiking name" 
-                            className="focus:ring-primary" 
-                            {...field} 
+                          <Input
+                            placeholder="Enter your hiking name"
+                            className="focus:ring-primary"
+                            {...field}
                           />
                         </FormControl>
                         <FormDescription>
@@ -258,10 +283,10 @@ const EditProfile = () => {
                           Location
                         </FormLabel>
                         <FormControl>
-                          <Input 
-                            placeholder="City, State/Country" 
-                            className="focus:ring-primary" 
-                            {...field} 
+                          <Input
+                            placeholder="City, State/Country"
+                            className="focus:ring-primary"
+                            {...field}
                           />
                         </FormControl>
                         <FormDescription>
@@ -284,14 +309,15 @@ const EditProfile = () => {
                         About You
                       </FormLabel>
                       <FormControl>
-                        <Textarea 
+                        <Textarea
                           placeholder="Tell fellow hikers about your outdoor adventures, favorite trails, hiking experience, and what motivates you to explore nature..."
                           className="min-h-[120px] focus:ring-primary resize-none"
-                          {...field} 
+                          {...field}
                         />
                       </FormControl>
                       <FormDescription>
-                        Share your hiking story and connect with like-minded adventurers ({field.value?.length || 0}/500)
+                        Share your hiking story and connect with like-minded
+                        adventurers ({field.value?.length || 0}/500)
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -300,8 +326,8 @@ const EditProfile = () => {
 
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row gap-4 pt-6">
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-md"
                     disabled={isSubmitting}
                   >

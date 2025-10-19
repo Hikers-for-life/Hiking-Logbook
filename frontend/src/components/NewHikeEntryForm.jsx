@@ -1,14 +1,14 @@
-import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "./ui/dialog";
+} from './ui/dialog';
 import {
   Form,
   FormControl,
@@ -16,42 +16,69 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "./ui/form";
-import { Input } from "./ui/input";
-import { Textarea } from "./ui/textarea";
-import { Button } from "./ui/button";
-import { Calendar, MapPin, Mountain, Clock, Thermometer, Camera } from "lucide-react";
+} from './ui/form';
+import { Input } from './ui/input';
+import { Textarea } from './ui/textarea';
+import { Button } from './ui/button';
+import {
+  Calendar,
+  MapPin,
+  Mountain,
+  Clock,
+  Thermometer,
+  Camera,
+} from 'lucide-react';
 
 // Form validation schema
 const hikeSchema = z.object({
-  title: z.string().min(1, "Title is required").max(100, "Title must be less than 100 characters"),
-  date: z.string().min(1, "Date is required"),
-  location: z.string().min(1, "Location is required").max(200, "Location must be less than 200 characters"),
-  distance: z.string().min(1, "Distance is required"),
-  elevation: z.string().min(1, "Elevation is required"),
-  duration: z.string().min(1, "Duration is required"),
-  weather: z.string().min(1, "Weather is required").max(100, "Weather must be less than 100 characters"),
-  difficulty: z.enum(["Easy", "Moderate", "Hard"], {
-    required_error: "Please select a difficulty level",
+  title: z
+    .string()
+    .min(1, 'Title is required')
+    .max(100, 'Title must be less than 100 characters'),
+  date: z.string().min(1, 'Date is required'),
+  location: z
+    .string()
+    .min(1, 'Location is required')
+    .max(200, 'Location must be less than 200 characters'),
+  distance: z.string().min(1, 'Distance is required'),
+  elevation: z.string().min(1, 'Elevation is required'),
+  duration: z.string().min(1, 'Duration is required'),
+  weather: z
+    .string()
+    .min(1, 'Weather is required')
+    .max(100, 'Weather must be less than 100 characters'),
+  difficulty: z.enum(['Easy', 'Moderate', 'Hard'], {
+    required_error: 'Please select a difficulty level',
   }),
-  notes: z.string().max(1000, "Notes must be less than 1000 characters").optional(),
+  notes: z
+    .string()
+    .max(1000, 'Notes must be less than 1000 characters')
+    .optional(),
 });
 
-const NewHikeEntryForm = ({ open, onOpenChange, onSubmit, initialData = null, title = "Add New Hike Entry" }) => {
-  const [selectedDifficulty, setSelectedDifficulty] = useState(initialData?.difficulty || "");
+const NewHikeEntryForm = ({
+  open,
+  onOpenChange,
+  onSubmit,
+  initialData = null,
+  title = 'Add New Hike Entry',
+}) => {
+  const [selectedDifficulty, setSelectedDifficulty] = useState(
+    initialData?.difficulty || ''
+  );
 
   const form = useForm({
     resolver: zodResolver(hikeSchema),
     defaultValues: {
-      title: initialData?.title || "",
-      date: initialData?.date || "",
-      location: initialData?.location || "",
-      distance: initialData?.distance || "",
-      elevation: initialData?.elevation || "",
-      duration: initialData?.duration || "",
-      weather: initialData?.weather || "",
-      difficulty: initialData?.difficulty || "",
-      notes: initialData?.notes || "",
+      title: initialData?.title || '',
+      date: initialData?.date || '',
+      location: initialData?.location || '',
+      distance: initialData?.distance || '',
+      elevation: initialData?.elevation || '',
+      duration: initialData?.duration || '',
+      weather: initialData?.weather || '',
+      difficulty: initialData?.difficulty || '',
+      notes: initialData?.notes || '',
     },
   });
 
@@ -60,17 +87,17 @@ const NewHikeEntryForm = ({ open, onOpenChange, onSubmit, initialData = null, ti
     if (initialData) {
       // Edit mode - use the hike data
       form.reset({
-        title: initialData.title || "",
-        date: initialData.date || "",
-        location: initialData.location || "",
-        distance: initialData.distance || "",
-        elevation: initialData.elevation || "",
-        duration: initialData.duration || "",
-        weather: initialData.weather || "",
-        difficulty: initialData.difficulty || "",
-        notes: initialData.notes || "",
+        title: initialData.title || '',
+        date: initialData.date || '',
+        location: initialData.location || '',
+        distance: initialData.distance || '',
+        elevation: initialData.elevation || '',
+        duration: initialData.duration || '',
+        weather: initialData.weather || '',
+        difficulty: initialData.difficulty || '',
+        notes: initialData.notes || '',
       });
-      setSelectedDifficulty(initialData.difficulty || "");
+      setSelectedDifficulty(initialData.difficulty || '');
     }
   }, [initialData, form]);
 
@@ -79,32 +106,37 @@ const NewHikeEntryForm = ({ open, onOpenChange, onSubmit, initialData = null, ti
     const newEntry = {
       ...data,
     };
-    
+
     onSubmit(newEntry);
     form.reset();
-    setSelectedDifficulty("");
+    setSelectedDifficulty('');
     onOpenChange(false);
   };
 
   const handleDifficultySelect = (difficulty) => {
     setSelectedDifficulty(difficulty);
-    form.setValue("difficulty", difficulty);
+    form.setValue('difficulty', difficulty);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] sm:max-w-[600px] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl text-foreground">
             {title}
           </DialogTitle>
           <p className="text-muted-foreground">
-            {initialData ? 'Edit your hike entry details' : 'Record a hike you completed before using real-time tracking'}
+            {initialData
+              ? 'Edit your hike entry details'
+              : 'Record a hike you completed before using real-time tracking'}
           </p>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="space-y-6"
+          >
             {/* Title */}
             <FormField
               control={form.control}
@@ -113,10 +145,10 @@ const NewHikeEntryForm = ({ open, onOpenChange, onSubmit, initialData = null, ti
                 <FormItem>
                   <FormLabel className="text-foreground">Hike Title</FormLabel>
                   <FormControl>
-                    <Input 
-                      placeholder="e.g., Sunrise at Eagle Peak" 
+                    <Input
+                      placeholder="e.g., Sunrise at Eagle Peak"
                       className="border-border"
-                      {...field} 
+                      {...field}
                     />
                   </FormControl>
                   <FormMessage />
@@ -136,11 +168,7 @@ const NewHikeEntryForm = ({ open, onOpenChange, onSubmit, initialData = null, ti
                       Date
                     </FormLabel>
                     <FormControl>
-                      <Input 
-                        type="date" 
-                        className="border-border"
-                        {...field} 
-                      />
+                      <Input type="date" className="border-border" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -154,13 +182,13 @@ const NewHikeEntryForm = ({ open, onOpenChange, onSubmit, initialData = null, ti
                   <FormItem>
                     <FormLabel className="text-foreground flex items-center gap-1">
                       <MapPin className="h-4 w-4" />
-                      Location
+                      Starting Location
                     </FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="e.g., Eagle Peak Trail, Colorado" 
+                      <Input
+                        placeholder="e.g., Eagle Peak Trail, Colorado"
                         className="border-border"
-                        {...field} 
+                        {...field}
                       />
                     </FormControl>
                     <FormMessage />
@@ -181,10 +209,10 @@ const NewHikeEntryForm = ({ open, onOpenChange, onSubmit, initialData = null, ti
                       Distance
                     </FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="e.g., 8.2 miles" 
+                      <Input
+                        placeholder="e.g., 8.2 miles"
                         className="border-border"
-                        {...field} 
+                        {...field}
                       />
                     </FormControl>
                     <FormMessage />
@@ -202,10 +230,10 @@ const NewHikeEntryForm = ({ open, onOpenChange, onSubmit, initialData = null, ti
                       Elevation
                     </FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="e.g., 2,400 ft" 
+                      <Input
+                        placeholder="e.g., 2,400 ft"
                         className="border-border"
-                        {...field} 
+                        {...field}
                       />
                     </FormControl>
                     <FormMessage />
@@ -223,10 +251,10 @@ const NewHikeEntryForm = ({ open, onOpenChange, onSubmit, initialData = null, ti
                       Duration
                     </FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="e.g., 4h 30m" 
+                      <Input
+                        placeholder="e.g., 4h 30m"
                         className="border-border"
-                        {...field} 
+                        {...field}
                       />
                     </FormControl>
                     <FormMessage />
@@ -246,10 +274,10 @@ const NewHikeEntryForm = ({ open, onOpenChange, onSubmit, initialData = null, ti
                     Weather
                   </FormLabel>
                   <FormControl>
-                    <Input 
-                      placeholder="e.g., Clear, 7°C" 
+                    <Input
+                      placeholder="e.g., Clear, 7°C"
                       className="border-border"
-                      {...field} 
+                      {...field}
                     />
                   </FormControl>
                   <FormMessage />
@@ -263,19 +291,25 @@ const NewHikeEntryForm = ({ open, onOpenChange, onSubmit, initialData = null, ti
               name="difficulty"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-foreground">Difficulty Level</FormLabel>
+                  <FormLabel className="text-foreground">
+                    Difficulty Level
+                  </FormLabel>
                   <div className="flex gap-2 mt-2">
-                    {["Easy", "Moderate", "Hard"].map((difficulty) => (
+                    {['Easy', 'Moderate', 'Hard'].map((difficulty) => (
                       <Button
                         key={difficulty}
                         type="button"
-                        variant={selectedDifficulty === difficulty ? "default" : "outline"}
+                        variant={
+                          selectedDifficulty === difficulty
+                            ? 'default'
+                            : 'outline'
+                        }
                         size="sm"
                         onClick={() => handleDifficultySelect(difficulty)}
                         className={`min-w-[80px] ${
                           selectedDifficulty === difficulty
-                            ? "bg-forest text-primary-foreground"
-                            : "border-border hover:bg-muted"
+                            ? 'bg-forest text-primary-foreground'
+                            : 'border-border hover:bg-muted'
                         }`}
                       >
                         {difficulty}
@@ -293,7 +327,9 @@ const NewHikeEntryForm = ({ open, onOpenChange, onSubmit, initialData = null, ti
               name="notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-foreground">Notes (Optional)</FormLabel>
+                  <FormLabel className="text-foreground">
+                    Notes (Optional)
+                  </FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder="Share your experience, memorable moments, or tips for other hikers..."

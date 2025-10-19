@@ -2,7 +2,6 @@
 // Tests business logic without external dependencies
 
 describe('Core Backend Functions', () => {
-  
   // Data parsing utilities
   const parseDistance = (value) => {
     if (value === null || value === undefined) return 0;
@@ -28,18 +27,18 @@ describe('Core Backend Functions', () => {
   // Validation functions
   const validateHikeData = (hikeData) => {
     const errors = [];
-    
+
     if (!hikeData.title || hikeData.title.trim() === '') {
       errors.push('Title is required');
     }
-    
+
     if (!hikeData.location || hikeData.location.trim() === '') {
       errors.push('Location is required');
     }
-    
+
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
     };
   };
 
@@ -52,27 +51,42 @@ describe('Core Backend Functions', () => {
         totalElevation: 0,
         totalDuration: 0,
         byDifficulty: { Easy: 0, Moderate: 0, Hard: 0, Extreme: 0 },
-        byStatus: { completed: 0, active: 0, paused: 0 }
+        byStatus: { completed: 0, active: 0, paused: 0 },
       };
     }
 
     return {
       totalHikes: hikes.length,
-      totalDistance: hikes.reduce((sum, hike) => sum + parseDistance(hike.distance), 0),
-      totalElevation: hikes.reduce((sum, hike) => sum + parseElevation(hike.elevation), 0),
-      totalDuration: hikes.reduce((sum, hike) => sum + parseDuration(hike.duration), 0),
-      byDifficulty: hikes.reduce((acc, hike) => {
-        if (hike.difficulty && acc[hike.difficulty] !== undefined) {
-          acc[hike.difficulty]++;
-        }
-        return acc;
-      }, { Easy: 0, Moderate: 0, Hard: 0, Extreme: 0 }),
-      byStatus: hikes.reduce((acc, hike) => {
-        if (hike.status && acc[hike.status] !== undefined) {
-          acc[hike.status]++;
-        }
-        return acc;
-      }, { completed: 0, active: 0, paused: 0 })
+      totalDistance: hikes.reduce(
+        (sum, hike) => sum + parseDistance(hike.distance),
+        0
+      ),
+      totalElevation: hikes.reduce(
+        (sum, hike) => sum + parseElevation(hike.elevation),
+        0
+      ),
+      totalDuration: hikes.reduce(
+        (sum, hike) => sum + parseDuration(hike.duration),
+        0
+      ),
+      byDifficulty: hikes.reduce(
+        (acc, hike) => {
+          if (hike.difficulty && acc[hike.difficulty] !== undefined) {
+            acc[hike.difficulty]++;
+          }
+          return acc;
+        },
+        { Easy: 0, Moderate: 0, Hard: 0, Extreme: 0 }
+      ),
+      byStatus: hikes.reduce(
+        (acc, hike) => {
+          if (hike.status && acc[hike.status] !== undefined) {
+            acc[hike.status]++;
+          }
+          return acc;
+        },
+        { completed: 0, active: 0, paused: 0 }
+      ),
     };
   };
 
@@ -108,9 +122,9 @@ describe('Core Backend Functions', () => {
     test('validateHikeData should validate required fields', () => {
       const validHike = {
         title: 'Test Hike',
-        location: 'Test Location'
+        location: 'Test Location',
       };
-      
+
       const validation = validateHikeData(validHike);
       expect(validation.isValid).toBe(true);
       expect(validation.errors).toHaveLength(0);
@@ -119,9 +133,9 @@ describe('Core Backend Functions', () => {
     test('validateHikeData should catch missing title', () => {
       const invalidHike = {
         title: '',
-        location: 'Test Location'
+        location: 'Test Location',
       };
-      
+
       const validation = validateHikeData(invalidHike);
       expect(validation.isValid).toBe(false);
       expect(validation.errors).toContain('Title is required');
@@ -130,9 +144,9 @@ describe('Core Backend Functions', () => {
     test('validateHikeData should catch missing location', () => {
       const invalidHike = {
         title: 'Test Hike',
-        location: ''
+        location: '',
       };
-      
+
       const validation = validateHikeData(invalidHike);
       expect(validation.isValid).toBe(false);
       expect(validation.errors).toContain('Location is required');
@@ -142,7 +156,7 @@ describe('Core Backend Functions', () => {
   describe('Statistics Calculation', () => {
     test('calculateStats should handle empty array', () => {
       const stats = calculateStats([]);
-      
+
       expect(stats.totalHikes).toBe(0);
       expect(stats.totalDistance).toBe(0);
       expect(stats.totalElevation).toBe(0);
@@ -156,19 +170,19 @@ describe('Core Backend Functions', () => {
           elevation: 300,
           duration: 2.5,
           difficulty: 'Easy',
-          status: 'completed'
+          status: 'completed',
         },
         {
           distance: '10.2',
           elevation: '500',
           duration: '4.0',
           difficulty: 'Moderate',
-          status: 'completed'
-        }
+          status: 'completed',
+        },
       ];
 
       const stats = calculateStats(hikes);
-      
+
       expect(stats.totalHikes).toBe(2);
       expect(stats.totalDistance).toBe(15.7);
       expect(stats.totalElevation).toBe(800);
@@ -185,12 +199,12 @@ describe('Core Backend Functions', () => {
           elevation: 'invalid',
           duration: undefined,
           difficulty: 'Unknown',
-          status: 'invalid'
-        }
+          status: 'invalid',
+        },
       ];
 
       const stats = calculateStats(hikes);
-      
+
       expect(stats.totalHikes).toBe(1);
       expect(stats.totalDistance).toBe(0);
       expect(stats.totalElevation).toBe(0);
@@ -208,18 +222,18 @@ describe('Core Backend Functions', () => {
         difficulty: rawData.difficulty || 'Easy',
         status: rawData.status || 'completed',
         createdAt: rawData.createdAt || new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
     };
 
     test('processHikeData should set defaults', () => {
       const rawData = {
         title: 'Test Hike',
-        location: 'Test Location'
+        location: 'Test Location',
       };
-      
+
       const processed = processHikeData(rawData);
-      
+
       expect(processed.title).toBe('Test Hike');
       expect(processed.location).toBe('Test Location');
       expect(processed.distance).toBe(0);
@@ -235,11 +249,11 @@ describe('Core Backend Functions', () => {
         title: 'Test Hike',
         location: 'Test Location',
         distance: '10.5 km',
-        elevation: '500m'
+        elevation: '500m',
       };
-      
+
       const processed = processHikeData(rawData);
-      
+
       expect(processed.distance).toBe(10.5);
       expect(processed.elevation).toBe(500);
     });
@@ -250,15 +264,16 @@ describe('Core Backend Functions', () => {
       return {
         success,
         data: data || null,
-        message: message || (success ? 'Operation successful' : 'Operation failed'),
-        timestamp: new Date().toISOString()
+        message:
+          message || (success ? 'Operation successful' : 'Operation failed'),
+        timestamp: new Date().toISOString(),
       };
     };
 
     test('formatResponse should create success response', () => {
       const data = { id: '123', name: 'Test' };
       const response = formatResponse(true, data, 'Data retrieved');
-      
+
       expect(response.success).toBe(true);
       expect(response.data).toEqual(data);
       expect(response.message).toBe('Data retrieved');
@@ -267,7 +282,7 @@ describe('Core Backend Functions', () => {
 
     test('formatResponse should create error response', () => {
       const response = formatResponse(false, null, 'Error occurred');
-      
+
       expect(response.success).toBe(false);
       expect(response.data).toBeNull();
       expect(response.message).toBe('Error occurred');
@@ -277,7 +292,7 @@ describe('Core Backend Functions', () => {
     test('formatResponse should use default messages', () => {
       const successResponse = formatResponse(true, {});
       expect(successResponse.message).toBe('Operation successful');
-      
+
       const errorResponse = formatResponse(false);
       expect(errorResponse.message).toBe('Operation failed');
     });
@@ -291,7 +306,7 @@ describe('Core Backend Functions', () => {
         location: 'Rocky Mountains',
         distance: '12.5 km',
         elevation: '800m',
-        difficulty: 'Moderate'
+        difficulty: 'Moderate',
       };
 
       // Process the data
@@ -302,7 +317,7 @@ describe('Core Backend Functions', () => {
         elevation: parseElevation(rawData.elevation),
         difficulty: rawData.difficulty || 'Easy',
         status: rawData.status || 'completed',
-        createdAt: new Date()
+        createdAt: new Date(),
       });
 
       const processed = processHikeData(rawHike);
@@ -328,7 +343,7 @@ describe('Core Backend Functions', () => {
         title: '',
         location: '',
         distance: 'invalid',
-        elevation: 'invalid'
+        elevation: 'invalid',
       };
 
       // Process the data (should handle gracefully)
@@ -336,7 +351,7 @@ describe('Core Backend Functions', () => {
         title: rawData.title || '',
         location: rawData.location || '',
         distance: parseDistance(rawData.distance),
-        elevation: parseElevation(rawData.elevation)
+        elevation: parseElevation(rawData.elevation),
       });
 
       const processed = processHikeData(invalidHike);

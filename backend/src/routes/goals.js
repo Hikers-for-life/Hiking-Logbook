@@ -5,7 +5,7 @@ import {
   listGoals,
   getGoal,
   updateGoal,
-  removeGoal
+  removeGoal,
 } from '../services/goalService.js';
 
 const router = express.Router();

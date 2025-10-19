@@ -20,27 +20,31 @@ router.post('/', async (req, res) => {
 
     // Validate required fields with updated schema
     const requiredFields = ['title', 'date', 'location', 'startTime'];
-    const missingFields = requiredFields.filter(field => !plannedHikeData[field]);
-    
+    const missingFields = requiredFields.filter(
+      (field) => !plannedHikeData[field]
+    );
+
     if (missingFields.length > 0) {
       return res.status(400).json({
         success: false,
-        error: `Missing required fields: ${missingFields.join(', ')}`
+        error: `Missing required fields: ${missingFields.join(', ')}`,
       });
     }
 
-    const result = await plannedHikesService.createPlannedHike(userId, plannedHikeData);
-    
+    const result = await plannedHikesService.createPlannedHike(
+      userId,
+      plannedHikeData
+    );
+
     res.status(201).json({
       success: true,
-      data: result
+      data: result,
     });
-
   } catch (error) {
     console.error('Error creating planned hike:', error);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -55,18 +59,20 @@ router.get('/', async (req, res) => {
     const userId = req.user.uid;
     const filters = req.query;
 
-    const plannedHikes = await plannedHikesService.getUserPlannedHikes(userId, filters);
-    
+    const plannedHikes = await plannedHikesService.getUserPlannedHikes(
+      userId,
+      filters
+    );
+
     res.json({
       success: true,
-      data: plannedHikes
+      data: plannedHikes,
     });
-
   } catch (error) {
     console.error('Error getting planned hikes:', error);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -81,25 +87,27 @@ router.get('/:id', async (req, res) => {
     const userId = req.user.uid;
     const plannedHikeId = req.params.id;
 
-    const plannedHike = await plannedHikesService.getPlannedHike(userId, plannedHikeId);
-    
+    const plannedHike = await plannedHikesService.getPlannedHike(
+      userId,
+      plannedHikeId
+    );
+
     if (!plannedHike) {
       return res.status(404).json({
         success: false,
-        error: 'Planned hike not found'
+        error: 'Planned hike not found',
       });
     }
 
     res.json({
       success: true,
-      data: plannedHike
+      data: plannedHike,
     });
-
   } catch (error) {
     console.error('Error getting planned hike:', error);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -116,26 +124,32 @@ router.put('/:id', async (req, res) => {
     const updateData = req.body;
 
     // Check if planned hike exists first
-    const existingHike = await plannedHikesService.getPlannedHike(userId, plannedHikeId);
+    const existingHike = await plannedHikesService.getPlannedHike(
+      userId,
+      plannedHikeId
+    );
     if (!existingHike) {
       return res.status(404).json({
         success: false,
-        error: 'Planned hike not found'
+        error: 'Planned hike not found',
       });
     }
 
-    const result = await plannedHikesService.updatePlannedHike(userId, plannedHikeId, updateData);
-    
+    const result = await plannedHikesService.updatePlannedHike(
+      userId,
+      plannedHikeId,
+      updateData
+    );
+
     res.json({
       success: true,
-      data: result
+      data: result,
     });
-
   } catch (error) {
     console.error('Error updating planned hike:', error);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -150,18 +164,20 @@ router.delete('/:id', async (req, res) => {
     const userId = req.user.uid;
     const plannedHikeId = req.params.id;
 
-    const result = await plannedHikesService.deletePlannedHike(userId, plannedHikeId);
-    
+    const result = await plannedHikesService.deletePlannedHike(
+      userId,
+      plannedHikeId
+    );
+
     res.json({
       success: true,
-      data: result
+      data: result,
     });
-
   } catch (error) {
     console.error('Error deleting planned hike:', error);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -176,19 +192,21 @@ router.put('/:id/cancel', async (req, res) => {
     const userId = req.user.uid;
     const plannedHikeId = req.params.id;
 
-    const result = await plannedHikesService.cancelPlannedHike(userId, plannedHikeId);
-    
+    const result = await plannedHikesService.cancelPlannedHike(
+      userId,
+      plannedHikeId
+    );
+
     res.json({
       success: true,
       data: result,
-      message: 'Planned hike cancelled successfully'
+      message: 'Planned hike cancelled successfully',
     });
-
   } catch (error) {
     console.error('Error cancelling planned hike:', error);
     res.status(400).json({
       success: false,
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -207,18 +225,21 @@ router.post('/:id/participants', async (req, res) => {
     // If no participantId provided, use the authenticated user
     const targetParticipantId = participantId || userId;
 
-    const result = await plannedHikesService.joinPlannedHike(userId, plannedHikeId, targetParticipantId);
-    
+    const result = await plannedHikesService.joinPlannedHike(
+      userId,
+      plannedHikeId,
+      targetParticipantId
+    );
+
     res.json({
       success: true,
-      data: result
+      data: result,
     });
-
   } catch (error) {
     console.error('Error joining planned hike:', error);
     res.status(400).json({
       success: false,
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -234,18 +255,21 @@ router.delete('/:id/participants/:participantId', async (req, res) => {
     const plannedHikeId = req.params.id;
     const participantId = req.params.participantId;
 
-    const result = await plannedHikesService.leavePlannedHike(userId, plannedHikeId, participantId);
-    
+    const result = await plannedHikesService.leavePlannedHike(
+      userId,
+      plannedHikeId,
+      participantId
+    );
+
     res.json({
       success: true,
-      data: result
+      data: result,
     });
-
   } catch (error) {
     console.error('Error leaving planned hike:', error);
     res.status(400).json({
       success: false,
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -260,19 +284,21 @@ router.post('/:id/start', async (req, res) => {
     const userId = req.user.uid;
     const plannedHikeId = req.params.id;
 
-    const result = await plannedHikesService.startPlannedHike(userId, plannedHikeId);
-    
+    const result = await plannedHikesService.startPlannedHike(
+      userId,
+      plannedHikeId
+    );
+
     res.json({
       success: true,
       data: result,
-      message: 'Planned hike started successfully'
+      message: 'Planned hike started successfully',
     });
-
   } catch (error) {
     console.error('Error starting planned hike:', error);
     res.status(400).json({
       success: false,
-      error: error.message
+      error: error.message,
     });
   }
 });

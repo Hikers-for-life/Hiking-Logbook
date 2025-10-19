@@ -12,7 +12,6 @@ import {
   signInWithPopup,
 } from 'firebase/auth';
 
-
 // Firebase configuration
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
@@ -30,7 +29,7 @@ let auth;
 // Initialize Google Auth Provider
 let googleProvider;
 
-if (process.env.NODE_ENV !== "test") {
+if (process.env.NODE_ENV !== 'test') {
   app = initializeApp(firebaseConfig);
   auth = getAuth(app);
   googleProvider = new GoogleAuthProvider();
@@ -56,19 +55,19 @@ export const AuthProvider = ({ children }) => {
 
   // Get the correct API URL
   const getApiUrl = () => {
-    return process.env.REACT_APP_API_URL || 
-      (window.location.hostname === 'hiking-logbook.web.app' 
+    return (
+      process.env.REACT_APP_API_URL ||
+      (window.location.hostname === 'hiking-logbook.web.app'
         ? 'https://hiking-logbook-hezw.onrender.com'
-        : 'http://localhost:3001');
+        : 'http://localhost:3001')
+    );
   };
-
-
 
   // Sign up function
   const signup = async (email, password, displayName) => {
     try {
       setError(null);
-      
+
       // Call backend signup route to create both Auth user and Firestore document
       const response = await fetch(`${getApiUrl()}/auth/signup`, {
         method: 'POST',
@@ -86,14 +85,23 @@ export const AuthProvider = ({ children }) => {
 
       if (!response.ok) {
         const errorData = await response.json();
+        // Backend may return structured errors: { errors: [{ field, message }] }
+        if (
+          errorData &&
+          Array.isArray(errorData.errors) &&
+          errorData.errors.length > 0
+        ) {
+          const msg = errorData.errors.map((e) => e.message || e).join('; ');
+          throw new Error(msg);
+        }
         throw new Error(errorData.error || 'Signup failed');
       }
 
       const result = await response.json();
-      
+
       // Sign in the user after successful signup
       await signInWithEmailAndPassword(auth, email, password);
-      
+
       return result.user;
     } catch (error) {
       setError(error.message);
@@ -118,7 +126,7 @@ export const AuthProvider = ({ children }) => {
     try {
       setError(null);
       const result = await signInWithPopup(auth, googleProvider);
-      
+
       // After successful Google sign-in, ensure user profile exists in Firestore
       try {
         await createUserProfileIfNeeded(result.user);
@@ -126,7 +134,7 @@ export const AuthProvider = ({ children }) => {
         console.warn('Profile creation warning:', profileError.message);
         // Don't fail the sign-in if profile creation fails
       }
-      
+
       return result.user;
     } catch (error) {
       setError(error.message);
@@ -160,44 +168,45 @@ export const AuthProvider = ({ children }) => {
   const createUserProfileIfNeeded = async (user) => {
     try {
       const token = await user.getIdToken();
-      
+
       // For Google sign-in, directly create the profile
       // This avoids the 500 error when profile doesn't exist
       const apiUrl = `${getApiUrl()}/users/create-profile`;
-      
-      const createResponse = await fetch(
-        apiUrl,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            uid: user.uid,
-            email: user.email,
-            displayName: user.displayName || 'Google User',
-            bio: '',
-            location: null,
-            photoURL: user.photoURL || '',
-          }),
-        }
-      );
+
+      const createResponse = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName || 'Google User',
+          bio: '',
+          location: null,
+          photoURL: user.photoURL || '',
+        }),
+      });
 
       if (!createResponse.ok) {
         // Log the response details for debugging
-        
+
         // If profile already exists, that's fine
         if (createResponse.status === 409) {
           return { message: 'Profile already exists' };
         }
-        
+
         // Try to get error details
         try {
           const errorText = await createResponse.text();
-          throw new Error(`Failed to create user profile: ${createResponse.status} ${createResponse.statusText}`);
+          throw new Error(
+            `Failed to create user profile: ${createResponse.status} ${createResponse.statusText}`
+          );
         } catch (parseError) {
-          throw new Error(`Failed to create user profile: ${createResponse.status} ${createResponse.statusText}`);
+          throw new Error(
+            `Failed to create user profile: ${createResponse.status} ${createResponse.statusText}`
+          );
         }
       }
 
@@ -214,15 +223,12 @@ export const AuthProvider = ({ children }) => {
 
     try {
       const token = await currentUser.getIdToken();
-      const response = await fetch(
-        `${getApiUrl()}/auth/profile`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const response = await fetch(`${getApiUrl()}/auth/profile`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
 
       if (!response.ok) {
         // If profile doesn't exist, return null (will use fallback in Dashboard)
@@ -245,17 +251,14 @@ export const AuthProvider = ({ children }) => {
 
     try {
       const token = await currentUser.getIdToken();
-      const response = await fetch(
-        `${getApiUrl()}/auth/profile`,
-        {
-          method: 'PUT',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(updateData),
-        }
-      );
+      const response = await fetch(`${getApiUrl()}/auth/profile`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updateData),
+      });
 
       if (!response.ok) {
         throw new Error('Failed to update user profile');

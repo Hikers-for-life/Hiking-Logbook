@@ -289,7 +289,9 @@ describe('Feed Service', () => {
     it('unlikes a feed post successfully', async () => {
       fetch.mockResolvedValue({
         ok: true,
-        json: jest.fn().mockResolvedValue({ ...mockLikeResponse, userLiked: false }),
+        json: jest
+          .fn()
+          .mockResolvedValue({ ...mockLikeResponse, userLiked: false }),
       });
 
       await likeFeed(mockFeedId, false);
@@ -454,9 +456,9 @@ describe('Feed Service', () => {
         text: jest.fn().mockResolvedValue('Unauthorized'),
       });
 
-      await expect(deleteCommentFeed(mockFeedId, mockCommentId)).rejects.toThrow(
-        'Failed to delete comment: 403 Unauthorized'
-      );
+      await expect(
+        deleteCommentFeed(mockFeedId, mockCommentId)
+      ).rejects.toThrow('Failed to delete comment: 403 Unauthorized');
     });
 
     it('handles comment not found error', async () => {
@@ -466,9 +468,9 @@ describe('Feed Service', () => {
         text: jest.fn().mockResolvedValue('Comment not found'),
       });
 
-      await expect(deleteCommentFeed(mockFeedId, mockCommentId)).rejects.toThrow(
-        'Failed to delete comment: 404 Comment not found'
-      );
+      await expect(
+        deleteCommentFeed(mockFeedId, mockCommentId)
+      ).rejects.toThrow('Failed to delete comment: 404 Comment not found');
     });
   });
 

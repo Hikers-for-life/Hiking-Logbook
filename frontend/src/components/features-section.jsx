@@ -7,7 +7,7 @@ import {
   Camera,
   TrendingUp,
 } from 'lucide-react';
-import hikersImage from './assets/hikers-group.jpg';
+import hikersImage from './assets/people_group.jpg';
 import appPreviewImage from './assets/app-preview.jpg';
 
 const features = [

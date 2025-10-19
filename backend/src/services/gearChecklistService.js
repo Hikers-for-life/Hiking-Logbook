@@ -24,7 +24,9 @@ export class GearChecklistService {
   async getUserGearChecklist(userId) {
     try {
       const checklist = await dbUtils.getUserGearChecklist(userId);
-      console.log(`Retrieved gear checklist for user ${userId}: ${checklist.length} items`);
+      console.log(
+        `Retrieved gear checklist for user ${userId}: ${checklist.length} items`
+      );
       return checklist;
     } catch (error) {
       console.error('GearChecklistService.getUserGearChecklist error:', error);
@@ -46,12 +48,13 @@ export class GearChecklistService {
       const result = await dbUtils.updateUserGearChecklist(userId, gearItems);
 
       if (result.success) {
-        console.log(`Gear checklist updated for user ${userId}: ${gearItems.length} items`);
+        console.log(
+          `Gear checklist updated for user ${userId}: ${gearItems.length} items`
+        );
         return result;
       }
 
       throw new Error('Failed to update gear checklist');
-
     } catch (error) {
       console.error('GearChecklistService.updateGearChecklist error:', error);
       throw error;
@@ -72,13 +75,13 @@ export class GearChecklistService {
       }
 
       const sanitizedItemName = itemName.trim();
-      
+
       // Check for duplicates
       const currentChecklist = await dbUtils.getUserGearChecklist(userId);
-      const isDuplicate = currentChecklist.some(item => 
-        item.item.toLowerCase() === sanitizedItemName.toLowerCase()
+      const isDuplicate = currentChecklist.some(
+        (item) => item.item.toLowerCase() === sanitizedItemName.toLowerCase()
       );
-      
+
       if (isDuplicate) {
         throw new Error('Item already exists in checklist');
       }
@@ -86,12 +89,13 @@ export class GearChecklistService {
       const result = await dbUtils.addGearItem(userId, sanitizedItemName);
 
       if (result.success) {
-        console.log(`Added gear item "${sanitizedItemName}" for user ${userId}`);
+        console.log(
+          `Added gear item "${sanitizedItemName}" for user ${userId}`
+        );
         return result;
       }
 
       throw new Error('Failed to add gear item');
-
     } catch (error) {
       console.error('GearChecklistService.addGearItem error:', error);
       throw error;
@@ -114,12 +118,13 @@ export class GearChecklistService {
       const result = await dbUtils.removeGearItem(userId, itemIndex);
 
       if (result.success) {
-        console.log(`Removed gear item at index ${itemIndex} for user ${userId}`);
+        console.log(
+          `Removed gear item at index ${itemIndex} for user ${userId}`
+        );
         return result;
       }
 
       throw new Error('Failed to remove gear item');
-
     } catch (error) {
       console.error('GearChecklistService.removeGearItem error:', error);
       throw error;
@@ -142,12 +147,13 @@ export class GearChecklistService {
       const result = await dbUtils.toggleGearItem(userId, itemIndex);
 
       if (result.success) {
-        console.log(`Toggled gear item at index ${itemIndex} for user ${userId}`);
+        console.log(
+          `Toggled gear item at index ${itemIndex} for user ${userId}`
+        );
         return result;
       }
 
       throw new Error('Failed to toggle gear item');
-
     } catch (error) {
       console.error('GearChecklistService.toggleGearItem error:', error);
       throw error;
@@ -162,8 +168,11 @@ export class GearChecklistService {
   async resetGearChecklist(userId) {
     try {
       const currentChecklist = await dbUtils.getUserGearChecklist(userId);
-      const resetChecklist = currentChecklist.map(item => ({ ...item, checked: false }));
-      
+      const resetChecklist = currentChecklist.map((item) => ({
+        ...item,
+        checked: false,
+      }));
+
       const result = await this.updateGearChecklist(userId, resetChecklist);
 
       if (result.success) {
@@ -172,7 +181,6 @@ export class GearChecklistService {
       }
 
       throw new Error('Failed to reset gear checklist');
-
     } catch (error) {
       console.error('GearChecklistService.resetGearChecklist error:', error);
       throw error;
@@ -187,18 +195,22 @@ export class GearChecklistService {
   async getGearStats(userId) {
     try {
       const checklist = await dbUtils.getUserGearChecklist(userId);
-      
+
       const stats = {
         totalItems: checklist.length,
-        checkedItems: checklist.filter(item => item.checked).length,
-        uncheckedItems: checklist.filter(item => !item.checked).length,
-        completionPercentage: checklist.length > 0 
-          ? Math.round((checklist.filter(item => item.checked).length / checklist.length) * 100)
-          : 0
+        checkedItems: checklist.filter((item) => item.checked).length,
+        uncheckedItems: checklist.filter((item) => !item.checked).length,
+        completionPercentage:
+          checklist.length > 0
+            ? Math.round(
+                (checklist.filter((item) => item.checked).length /
+                  checklist.length) *
+                  100
+              )
+            : 0,
       };
 
       return stats;
-
     } catch (error) {
       console.error('GearChecklistService.getGearStats error:', error);
       throw error;
@@ -219,15 +231,25 @@ export class GearChecklistService {
 
     gearItems.forEach((item, index) => {
       if (!item || typeof item !== 'object') {
-        throw new Error(`Invalid gear item at index ${index}: must be an object`);
+        throw new Error(
+          `Invalid gear item at index ${index}: must be an object`
+        );
       }
 
-      if (!item.item || typeof item.item !== 'string' || item.item.trim() === '') {
-        throw new Error(`Invalid gear item at index ${index}: item name is required`);
+      if (
+        !item.item ||
+        typeof item.item !== 'string' ||
+        item.item.trim() === ''
+      ) {
+        throw new Error(
+          `Invalid gear item at index ${index}: item name is required`
+        );
       }
 
       if (typeof item.checked !== 'boolean') {
-        throw new Error(`Invalid gear item at index ${index}: checked must be a boolean`);
+        throw new Error(
+          `Invalid gear item at index ${index}: checked must be a boolean`
+        );
       }
     });
   }

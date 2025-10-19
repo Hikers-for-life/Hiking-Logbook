@@ -1,14 +1,14 @@
-import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "./ui/dialog";
+} from './ui/dialog';
 import {
   Form,
   FormControl,
@@ -16,40 +16,58 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "./ui/form";
-import { Input } from "./ui/input";
-import { Textarea } from "./ui/textarea";
-import { Button } from "./ui/button";
-import { Calendar, MapPin, Mountain, Clock } from "lucide-react";
+} from './ui/form';
+import { Input } from './ui/input';
+import { Textarea } from './ui/textarea';
+import { Button } from './ui/button';
+import { Calendar, MapPin, Mountain, Clock } from 'lucide-react';
 
 // Updated form validation schema
 const hikePlanSchema = z.object({
-  title: z.string().min(1, "Title is required").max(100, "Title must be less than 100 characters"),
-  date: z.string().min(1, "Date is required"),
-  startTime: z.string().min(1, "Start time is required"),
-  location: z.string().min(1, "Location is required").max(200, "Location must be less than 200 characters"),
-  distance: z.string().min(1, "Distance is required"),
-  difficulty: z.enum(["Easy", "Moderate", "Hard"], {
-    required_error: "Please select a difficulty level",
+  title: z
+    .string()
+    .min(1, 'Title is required')
+    .max(100, 'Title must be less than 100 characters'),
+  date: z.string().min(1, 'Date is required'),
+  startTime: z.string().min(1, 'Start time is required'),
+  location: z
+    .string()
+    .min(1, 'Location is required')
+    .max(200, 'Location must be less than 200 characters'),
+  distance: z.string().min(1, 'Distance is required'),
+  difficulty: z.enum(['Easy', 'Moderate', 'Hard'], {
+    required_error: 'Please select a difficulty level',
   }),
-  description: z.string().max(500, "Description must be less than 500 characters").optional(),
-  notes: z.string().max(1000, "Notes must be less than 1000 characters").optional(),
+  description: z
+    .string()
+    .max(500, 'Description must be less than 500 characters')
+    .optional(),
+  notes: z
+    .string()
+    .max(1000, 'Notes must be less than 1000 characters')
+    .optional(),
 });
 
-const NewHikePlanForm = ({ open, onOpenChange, onSubmit, editingHike, isEditMode }) => {
-  const [selectedDifficulty, setSelectedDifficulty] = useState("");
+const NewHikePlanForm = ({
+  open,
+  onOpenChange,
+  onSubmit,
+  editingHike,
+  isEditMode,
+}) => {
+  const [selectedDifficulty, setSelectedDifficulty] = useState('');
 
   const form = useForm({
     resolver: zodResolver(hikePlanSchema),
     defaultValues: {
-      title: "",
-      date: "",
-      startTime: "",
-      location: "",
-      distance: "",
-      difficulty: "",
-      description: "",
-      notes: "",
+      title: '',
+      date: '',
+      startTime: '',
+      location: '',
+      distance: '',
+      difficulty: '',
+      description: '',
+      notes: '',
     },
   });
 
@@ -57,67 +75,83 @@ const NewHikePlanForm = ({ open, onOpenChange, onSubmit, editingHike, isEditMode
   useEffect(() => {
     if (isEditMode && editingHike) {
       form.reset({
-        title: editingHike.title || "",
-        date: editingHike.date || "",
-        startTime: editingHike.startTime || "",
-        location: editingHike.location || "",
-        distance: editingHike.distance || "",
-        difficulty: editingHike.difficulty || "",
-        description: editingHike.description || "",
-        notes: editingHike.notes || "",
+        title: editingHike.title || editingHike.trailName || '',
+        date: editingHike.date || '',
+        startTime: editingHike.startTime || '',
+        location: editingHike.location || '',
+        distance: editingHike.distance || '',
+        difficulty: editingHike.difficulty || '',
+        description: editingHike.description || '',
+        notes: editingHike.notes || '',
       });
-      setSelectedDifficulty(editingHike.difficulty || "");
+      setSelectedDifficulty(editingHike.difficulty || '');
+    } else if (editingHike) {
+      // Handle trail data from TrailExplorer
+      form.reset({
+        title: editingHike.trailName || editingHike.title || '',
+        date: editingHike.date || '',
+        startTime: editingHike.startTime || '',
+        location: editingHike.location || '',
+        distance: editingHike.distance || '',
+        difficulty: editingHike.difficulty || '',
+        description: editingHike.description || '',
+        notes: editingHike.notes || '',
+      });
+      setSelectedDifficulty(editingHike.difficulty || '');
     } else {
       form.reset({
-        title: "",
-        date: "",
-        startTime: "",
-        location: "",
-        distance: "",
-        difficulty: "",
-        description: "",
-        notes: "",
+        title: '',
+        date: '',
+        startTime: '',
+        location: '',
+        distance: '',
+        difficulty: '',
+        description: '',
+        notes: '',
       });
-      setSelectedDifficulty("");
+      setSelectedDifficulty('');
     }
   }, [isEditMode, editingHike, form]);
 
   const handleSubmit = (data) => {
     const planData = {
       ...data,
-      participants: ["You"],
-      status: "planning",
+      participants: ['You'],
+      status: 'planning',
       createdAt: new Date().toISOString(),
     };
-    
+
     onSubmit(planData);
     form.reset();
-    setSelectedDifficulty("");
+    setSelectedDifficulty('');
     onOpenChange(false);
   };
 
   const handleDifficultySelect = (difficulty) => {
     setSelectedDifficulty(difficulty);
-    form.setValue("difficulty", difficulty);
+    form.setValue('difficulty', difficulty);
   };
 
   const handleClose = () => {
     form.reset();
-    setSelectedDifficulty("");
+    setSelectedDifficulty('');
     onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl text-foreground">
-            {isEditMode ? "Edit Hike Plan" : "Plan New Hike"}
+            {isEditMode ? 'Edit Hike Plan' : 'Plan New Hike'}
           </DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="space-y-6"
+          >
             {/* Title */}
             <FormField
               control={form.control}
@@ -126,10 +160,10 @@ const NewHikePlanForm = ({ open, onOpenChange, onSubmit, editingHike, isEditMode
                 <FormItem>
                   <FormLabel className="text-foreground">Hike Title</FormLabel>
                   <FormControl>
-                    <Input 
-                      placeholder="e.g., Weekend Warriors: Table Mountain" 
+                    <Input
+                      placeholder="e.g., Weekend Warriors: Table Mountain"
                       className="border-border"
-                      {...field} 
+                      {...field}
                     />
                   </FormControl>
                   <FormMessage />
@@ -149,11 +183,7 @@ const NewHikePlanForm = ({ open, onOpenChange, onSubmit, editingHike, isEditMode
                       Date
                     </FormLabel>
                     <FormControl>
-                      <Input 
-                        type="date" 
-                        className="border-border"
-                        {...field} 
-                      />
+                      <Input type="date" className="border-border" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -170,11 +200,7 @@ const NewHikePlanForm = ({ open, onOpenChange, onSubmit, editingHike, isEditMode
                       Start Time
                     </FormLabel>
                     <FormControl>
-                      <Input 
-                        type="time" 
-                        className="border-border"
-                        {...field} 
-                      />
+                      <Input type="time" className="border-border" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -194,10 +220,10 @@ const NewHikePlanForm = ({ open, onOpenChange, onSubmit, editingHike, isEditMode
                       Trail Location
                     </FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="e.g., Table Mountain National Park" 
+                      <Input
+                        placeholder="e.g., Table Mountain National Park"
                         className="border-border"
-                        {...field} 
+                        {...field}
                       />
                     </FormControl>
                     <FormMessage />
@@ -215,10 +241,10 @@ const NewHikePlanForm = ({ open, onOpenChange, onSubmit, editingHike, isEditMode
                       Distance
                     </FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="e.g., 8.5 km" 
+                      <Input
+                        placeholder="e.g., 8.5 km"
                         className="border-border"
-                        {...field} 
+                        {...field}
                       />
                     </FormControl>
                     <FormMessage />
@@ -233,19 +259,25 @@ const NewHikePlanForm = ({ open, onOpenChange, onSubmit, editingHike, isEditMode
               name="difficulty"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-foreground">Difficulty Level</FormLabel>
+                  <FormLabel className="text-foreground">
+                    Difficulty Level
+                  </FormLabel>
                   <div className="flex gap-2 mt-2">
-                    {["Easy", "Moderate", "Hard"].map((difficulty) => (
+                    {['Easy', 'Moderate', 'Hard'].map((difficulty) => (
                       <Button
                         key={difficulty}
                         type="button"
-                        variant={selectedDifficulty === difficulty ? "default" : "outline"}
+                        variant={
+                          selectedDifficulty === difficulty
+                            ? 'default'
+                            : 'outline'
+                        }
                         size="sm"
                         onClick={() => handleDifficultySelect(difficulty)}
                         className={`min-w-[80px] ${
                           selectedDifficulty === difficulty
-                            ? "bg-forest text-primary-foreground"
-                            : "border-border hover:bg-muted"
+                            ? 'bg-forest text-primary-foreground'
+                            : 'border-border hover:bg-muted'
                         }`}
                       >
                         {difficulty}
@@ -282,7 +314,9 @@ const NewHikePlanForm = ({ open, onOpenChange, onSubmit, editingHike, isEditMode
               name="notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-foreground">Additional Notes (Optional)</FormLabel>
+                  <FormLabel className="text-foreground">
+                    Additional Notes (Optional)
+                  </FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder="Equipment needed, special considerations, meeting instructions..."
@@ -308,7 +342,7 @@ const NewHikePlanForm = ({ open, onOpenChange, onSubmit, editingHike, isEditMode
                 type="submit"
                 className="bg-gradient-trail text-primary-foreground"
               >
-                {isEditMode ? "Update Hike Plan" : "Create Hike Plan"}
+                {isEditMode ? 'Update Hike Plan' : 'Create Hike Plan'}
               </Button>
             </DialogFooter>
           </form>

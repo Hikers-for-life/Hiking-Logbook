@@ -25,16 +25,20 @@ describe('Utility Functions', () => {
 
   test('should handle array utilities', () => {
     const arr = [1, 2, 3, 4, 5];
-    expect(arr.map(x => x * 2)).toEqual([2, 4, 6, 8, 10]);
+    expect(arr.map((x) => x * 2)).toEqual([2, 4, 6, 8, 10]);
     expect(arr.reduce((sum, x) => sum + x, 0)).toBe(15);
-    expect(arr.some(x => x > 3)).toBe(true);
-    expect(arr.every(x => x > 0)).toBe(true);
+    expect(arr.some((x) => x > 3)).toBe(true);
+    expect(arr.every((x) => x > 0)).toBe(true);
   });
 
   test('should handle object utilities', () => {
     const obj = { a: 1, b: 2, c: 3 };
     expect(Object.keys(obj)).toEqual(['a', 'b', 'c']);
     expect(Object.values(obj)).toEqual([1, 2, 3]);
-    expect(Object.entries(obj)).toEqual([['a', 1], ['b', 2], ['c', 3]]);
+    expect(Object.entries(obj)).toEqual([
+      ['a', 1],
+      ['b', 2],
+      ['c', 3],
+    ]);
   });
 });
