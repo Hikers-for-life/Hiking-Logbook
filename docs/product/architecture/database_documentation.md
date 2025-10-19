@@ -221,6 +221,135 @@ Stores hikes submitted via public API.
 
 ---
 
+### 8. `conversations/`
+
+Stores one-on-one conversation metadata between two users.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | String | Deterministic ID composed of sorted participant UIDs (document ID) |
+| `participants` | Array<String> | Two user IDs participating in the conversation |
+| `lastMessage` | String | Preview of the last message (truncated) |
+| `lastMessageTime` | Timestamp | When the last message was sent |
+| `lastMessageSender` | String | UID of the sender of the last message |
+| `createdAt` | Timestamp | Conversation creation time |
+| `updatedAt` | Timestamp | Last update time |
+
+**Example:**
+```json
+{
+  "id": "abc123xyz_xyz789abc",
+  "participants": ["abc123xyz", "xyz789abc"],
+  "lastMessage": "See you at the trailhead...",
+  "lastMessageTime": "2024-02-01T09:30:00Z",
+  "lastMessageSender": "abc123xyz",
+  "createdAt": "2024-02-01T09:00:00Z",
+  "updatedAt": "2024-02-01T09:30:00Z"
+}
+```
+
+---
+
+### 9. `messages/`
+
+Stores messages for each conversation using a two-level structure: a `messages` collection where each document key is a `conversationId`, and a subcollection `messages` containing the actual message documents.
+
+Path structure: `messages/{conversationId}/messages/{messageId}`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | String | Message ID (document ID within the subcollection) |
+| `senderId` | String | UID of the message sender |
+| `recipientId` | String | UID of the message recipient |
+| `content` | String | Message body |
+| `createdAt` | Timestamp | When the message was created |
+| `read` | Boolean | Whether the recipient has read the message |
+
+**Example message document:**
+```json
+{
+  "id": "msg_001",
+  "senderId": "abc123xyz",
+  "recipientId": "xyz789abc",
+  "content": "Meet at 7am?",
+  "createdAt": "2024-02-01T09:25:00Z",
+  "read": false
+}
+```
+
+---
+
+### 10. `hikeInvitations/`
+
+Stores hike invitation records sent between users.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | String | Invitation ID (document ID) |
+| `fromUserId` | String | UID of the sender |
+| `toUserId` | String | UID of the recipient |
+| `hikeId` | String | Related hike identifier |
+| `hikeDetails` | Object | Snapshot of hike details at invite time |
+| `status` | String | `pending`, `accepted`, or `rejected` |
+| `createdAt` | Timestamp | When the invitation was created |
+| `updatedAt` | Timestamp | Last update time |
+
+**Example:**
+```json
+{
+  "id": "invite_001",
+  "fromUserId": "abc123xyz",
+  "toUserId": "xyz789abc",
+  "hikeId": "hike_123",
+  "hikeDetails": {
+    "title": "Table Mountain Sunrise",
+    "location": "Cape Town",
+    "plannedDate": "2024-02-10T05:30:00Z"
+  },
+  "status": "pending",
+  "createdAt": "2024-02-01T09:15:00Z",
+  "updatedAt": "2024-02-01T09:15:00Z"
+}
+```
+
+---
+
+## Additional Security Rules (Messaging and Invitations)
+
+```javascript
+// Conversations: participants can read/write their conversation
+match /conversations/{conversationId} {
+  allow read, write: if request.auth != null &&
+    request.auth.uid in resource.data.participants;
+}
+
+// Messages: nested under messages/{conversationId}/messages/{messageId}
+match /messages/{conversationId}/messages/{messageId} {
+  // Only participants of the parent conversation can read or write messages
+  allow read, write: if request.auth != null &&
+    exists(/databases/$(database)/documents/conversations/$(conversationId)) &&
+    request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
+}
+
+// Hike Invitations: sender or recipient can read; sender creates; recipient updates status
+match /hikeInvitations/{invitationId} {
+  allow read: if request.auth != null &&
+    (request.auth.uid == resource.data.fromUserId || request.auth.uid == resource.data.toUserId);
+  allow create: if request.auth != null && request.auth.uid == request.resource.data.fromUserId;
+  allow update, delete: if request.auth != null &&
+    (request.auth.uid == resource.data.fromUserId || request.auth.uid == resource.data.toUserId);
+}
+```
+
+---
+
+## Additional Indexes (Messaging and Invitations)
+
+6. **conversations** - `(participants ARRAY_CONTAINS, lastMessageTime DESC)`
+7. **messages** - For subcollection queries: index on `createdAt DESC` per `conversationId`
+8. **hikeInvitations** - `(toUserId ASC, status ASC, createdAt DESC)`
+9. **hikeInvitations** - `(fromUserId ASC, status ASC, createdAt DESC)`
+
 ## Security Rules
 
 Firebase Firestore security rules ensure data protection:
