@@ -46,7 +46,7 @@ This documentation hub serves as your guide to understanding both the **product*
      - [Sprint Planning Meeting](methodology/sprint1/first_meeting.md)
      - [Backlog Refinement](methodology/sprint1/backlog_refinement.md)
      - [Sprint Retrospective](methodology/sprint1/sprint_retrospective.md)
-     - [Daily Meeting](methodology/sprint1/)
+     - [Daily Meeting](methodology/sprint1/daily_meetings.md)
        
 - [Sprint 2](methodology/sprint2/)
   - [Sprint Review](methodology/sprint2/sprint_review.md)
@@ -118,6 +118,7 @@ This documentation hub serves as your guide to understanding both the **product*
 - [Project Work Tracker](https://github.com/orgs/Hikers-for-life/projects/1/views/1). 
 
 ---
+
 
 
 
