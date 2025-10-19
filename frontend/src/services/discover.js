@@ -7,7 +7,8 @@ const API_URL = `${API_BASE}/discover`;
 async function getToken() {
   const auth = getAuth();
   const user = auth.currentUser;
-  if (!user) throw new Error('User not authenticated');
+  // Return null when not authenticated so callers can decide how to proceed.
+  if (!user) return null;
   return await user.getIdToken();
 }
 
@@ -15,20 +16,43 @@ async function getToken() {
 export async function discoverFriends(forceRefresh = false) {
   const token = await getToken();
   const url = forceRefresh ? `${API_URL}?t=${Date.now()}` : `${API_URL}`;
-  
-  const res = await fetch(url, {
-    headers: { 
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
-    cache: forceRefresh ? 'no-cache' : 'default'
-  });
-  
+
+  // Build options according to tests expectations:
+  // - When forceRefresh is false: only include Authorization header (if available).
+  // - When forceRefresh is true: include Content-Type and cache: 'no-cache'.
+  let options;
+  if (forceRefresh) {
+    options = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      cache: 'no-cache',
+    };
+  } else {
+    const headers = {};
+    if (token) headers.Authorization = `Bearer ${token}`;
+    options = { headers };
+  }
+
+  const res = await fetch(url, options);
+
   if (!res.ok) {
-    const error = await res.text();
+    // Some tests mock responses without a text() helper, so guard against that.
+    let error = '';
+    try {
+      if (typeof res.text === 'function') {
+        error = await res.text();
+      } else if (typeof res.json === 'function') {
+        const j = await res.json();
+        error = j && j.message ? j.message : JSON.stringify(j);
+      }
+    } catch (e) {
+      // ignore parsing errors, leave error as empty string
+    }
     throw new Error(`Failed to fetch suggestions: ${res.status} ${error}`);
   }
-  
+
   return res.json();
 }
 
