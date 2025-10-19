@@ -63,7 +63,7 @@ This documentation hub serves as your guide to understanding both the **product*
      - [Daily Meetings](methodology/sprint3/daily_meetings.md)
    
 - [Sprint 4](methodology/sprint4/)
-   - [Sprint Planning Meeting](methodology/sprint4/first_meeting.md)
+   - [Sprint Planning Meeting](methodology/sprint4/sprint_planning.md)
    - [Final Submission Meeting](methodology/sprint4/final_submission_meeting.md)
        
 
@@ -118,6 +118,7 @@ This documentation hub serves as your guide to understanding both the **product*
 - [Project Work Tracker](https://github.com/orgs/Hikers-for-life/projects/1/views/1). 
 
 ---
+
 
 
 
