@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Navigation } from '../components/ui/navigation';
 import { Button } from '../components/ui/button';
@@ -128,27 +128,29 @@ const Friends = () => {
     });
   }, [currentUser]);
 
-  useEffect(() => {
-    const fetchFriends = async () => {
-      try {
-        setFriendsLoading(true);
-        const res = await fetch(`${API_BASE_URL}/friends/${currentUser.uid}`);
-        const data = await res.json();
-        if (data.success) {
-          setFriends(data.data);
-        } else {
-          console.error('Failed to fetch friends:', data.error);
-        }
-      } catch (err) {
-        console.error('Error fetching friends:', err);
-      } finally {
-        setFriendsLoading(false); // stop loading
-      }
-    };
+ const fetchFriends = useCallback(async () => {
+    if (!currentUser) return;
 
-    if (currentUser) fetchFriends();
+    try {
+      setFriendsLoading(true);
+      const res = await fetch(`${API_BASE_URL}/friends/${currentUser.uid}`);
+      const data = await res.json();
+      if (data.success) {
+        setFriends(data.data);
+      } else {
+        console.error('Failed to fetch friends:', data.error);
+      }
+    } catch (err) {
+      console.error('Error fetching friends:', err);
+    }finally{
+      setFriendsLoading(false); // stop loading
+    }
   }, [currentUser]);
 
+   useEffect(() => {
+    if (currentUser) fetchFriends();
+  }, [currentUser, fetchFriends]);
+  
   console.log('Fetching friends:', friends);
   const handleBlockFriend = async (fid) => {
     try {
@@ -938,7 +940,14 @@ const Friends = () => {
           <Input
             placeholder="Search for friends or hikers..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              // Auto-close search suggestions when search bar is cleared
+              if (e.target.value.trim() === '') {
+                setSearchResults([]);
+                setSearchError('');
+              }
+            }}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             className="pl-10"
           />
@@ -974,11 +983,17 @@ const Friends = () => {
                     <div className="flex items-center gap-2">
                       <span
                         className="font-semibold text-foreground cursor-pointer hover:underline"
-                        onClick={() => {
-                          const isFriend = friends.some((f) => f.id === user.id);
-                          // Pass user object with uid property for profile view
-                          handleViewProfile({ ...user, uid: user.id }, !isFriend); // showAddFriend = false if already friend
-                        }}
+                          onClick={() => {
+                              // Check if this is the current user's own profile
+                              if (user.id === currentUser?.uid) {
+                                setIsOwnProfile(true);
+                                setIsProfileOpen(true);
+                              } else {
+                                const isFriend = friends.some((f) => f.id === user.id);
+                                // Pass user object with uid property for profile view
+                                handleViewProfile({ ...user, uid: user.id }, !isFriend); // showAddFriend = false if already friend
+                              }
+                            }}
                       >
                         {user.displayName}
                       </span>
@@ -1148,6 +1163,7 @@ const Friends = () => {
                                   setIncomingRequests((prev) =>
                                     prev.filter((x) => x.id !== r.id)
                                   );
+                                  await fetchFriends();
                                   toast({
                                     title: 'Friend added',
                                     description: `${r.fromName} is now your friend.`,
