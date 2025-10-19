@@ -1,7 +1,7 @@
 # Strategy Roadmap
 This document aligns our vision, process, and delivery for the Hiking Logbook. It covers project structure, goals & alignment, and development roadmap.
 
-> 📋 **Note**: For detailed methodology information, see [Project Methodology](../methodology/methodology.md)
+> **Note**: For detailed methodology information, see [Project Methodology](../methodology/methodology.md)
 
 ## 1. Project Structure
 Our structure is designed to support **clarity, scalability, collaboration, and maintainability**.
@@ -133,6 +133,7 @@ The project aligns with:
 *Milestone*: The app is stable, tested, and ready for release.  
 
 ---
+
 
 
 
