@@ -38,7 +38,7 @@ This documentation hub serves as your guide to understanding both the **product*
 #### Project Management
 - [Strategy Roadmap](process/strategy.md) - Project vision, structure, and alignment
 - [Release Process](process/release.md) - Release planning and deployment
-- [Git Methodology](process/git-methodology.md) - Git workflow and commit conventions
+- [Git Methodology](process/git_methodology.md) - Git workflow and commit conventions
 
 #### Development Methodology
 - [Project Methodology](methodology/methodology.md) 
@@ -98,6 +98,7 @@ This documentation hub serves as your guide to understanding both the **product*
 - [Project Work Tracker](https://github.com/orgs/Hikers-for-life/projects/1/views/1). 
 
 ---
+
 
 
 
