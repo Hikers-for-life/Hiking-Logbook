@@ -17,8 +17,8 @@ router.get("/", verifyAuth, async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const currentUserData = currentUserDoc.data();
-    const currentUserFriends = new Set(currentUserData.friends || []);
+  const currentUserData = currentUserDoc.data();
+  const currentUserFriends = new Set(currentUserData.friends || []);
 
     // Get ALL pending friend requests involving current user (both sent and received)
     const requestsRef = db.collection('friend_requests');
@@ -28,6 +28,11 @@ router.get("/", verifyAuth, async (req, res) => {
 
     // Create sets for users to exclude
     const excludedUsers = new Set([userId]); // Always exclude self
+
+    // Exclude already-friended users so suggestions only contain non-friends
+    for (const f of currentUserFriends) {
+      excludedUsers.add(f);
+    }
 
     // Add users who have pending requests with current user in ANY direction
     pendingRequestsQuery.forEach(doc => {
