@@ -1417,19 +1417,18 @@ export const dbUtils = {
       
       console.log('🔍 Querying invitations for:', userId);
       
-      // ✅ SIMPLIFIED: Query without orderBy to avoid index requirement
       const snapshot = await db
         .collection('hikeInvitations')
         .where('toUserId', '==', userId)
         .where('status', '==', 'pending')
         .get(); // Removed .orderBy('createdAt', 'desc')
 
-      console.log('📊 Query returned:', snapshot.size, 'documents');
+      console.log('Query returned:', snapshot.size, 'documents');
       
       const invitations = [];
       snapshot.forEach(doc => {
         const data = doc.data();
-        console.log('📄 Document:', doc.id, data);
+        console.log('Document:', doc.id, data);
         
         invitations.push({
           id: doc.id,
@@ -1438,7 +1437,6 @@ export const dbUtils = {
         });
       });
 
-      // ✅ Sort in JavaScript instead of Firestore (no index needed)
       invitations.sort((a, b) => {
         const dateA = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt);
         const dateB = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt);
@@ -1447,7 +1445,7 @@ export const dbUtils = {
 
       return invitations;
     } catch (err) {
-      console.error('❌ getPendingHikeInvitations error:', err);
+      console.error('getPendingHikeInvitations error:', err);
       throw new Error(`getPendingHikeInvitations failed: ${err.message}`);
     }
   },
