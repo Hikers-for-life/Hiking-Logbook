@@ -44,11 +44,27 @@ This documentation hub serves as your guide to understanding both the **product*
 - [Project Methodology](methodology/methodology.md) 
 - [Sprint 1](methodology/sprint1/)
      - [Sprint Planning Meeting](methodology/sprint1/first_meeting.md)
-     - [Backlog Refinement](methodology/sprint1//backlog_refinement.md)
+     - [Backlog Refinement](methodology/sprint1/backlog_refinement.md)
+     - [Sprint Retrospective](methodology/sprint1/sprint_retrospective.md)
+     - [Daily Meeting](methodology/sprint1/)
 - [Sprint 2](methodology/sprint2/)
-    - 
+       - [Sprint Review](methodology/sprint2/sprint_review.md)
+       - [Sprint Planning Meeting](methodology/sprint2/first_meeting.md)
+       - [Backlog Refinement](methodology/sprint2/backlog_refinement.md)
+       - [Sprint Retrospective 1](methodology/sprint2/sprint_retrospective.md)
+       - [Sprint Retrospective 2](methodology/sprint1/sprint_retrospective2.md)
+       - [Daily Meeting](methodology/sprint2/)
+  
+        
 - [Sprint 3](methodology/sprint3/)
-- [Sprint 4](methodology/sprint4/) 
+       - [Sprint Review](methodology/sprint3/sprint_review.md)
+       - [Sprint Planning Meeting](methodology/sprint3/first_meeting.md)
+       - [Backlog Refinement](methodology/sprint3/backlog_refinement.md)
+       - [Sprint Retrospective 1](methodology/sprint3/sprint_retrospective.md)
+       - [Daily Meeting](methodology/sprint3/)
+- [Sprint 4](methodology/sprint4/)
+       - [Sprint Planning Meeting](methodology/sprint3/first_meeting.md)
+       - [Final Submission Meeting](methodology/sprint3/final_submission_meeting.md)
 
 #### Security & Quality
 - [Security Audits](security-audits/) 
@@ -101,6 +117,7 @@ This documentation hub serves as your guide to understanding both the **product*
 - [Project Work Tracker](https://github.com/orgs/Hikers-for-life/projects/1/views/1). 
 
 ---
+
 
 
 
