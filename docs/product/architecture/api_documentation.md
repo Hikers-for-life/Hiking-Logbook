@@ -623,6 +623,295 @@ Get planned hikes.
 
 ---
 
+### Chat (`/api/chat`)
+
+#### GET `/api/chat/conversations`
+
+Get all conversations for the current user ordered by last message time.
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "abc123xyz_xyz789abc",
+      "participants": ["abc123xyz", "xyz789abc"],
+      "otherUser": {
+        "uid": "xyz789abc",
+        "displayName": "Jane Smith",
+        "email": "jane@example.com",
+        "location": {"latitude": -33.9, "longitude": 18.4}
+      },
+      "lastMessage": "See you at the trailhead...",
+      "lastMessageTime": "2024-02-01T09:30:00Z",
+      "lastMessageSender": "abc123xyz"
+    }
+  ]
+}
+```
+
+#### GET `/api/chat/conversation/:userId`
+
+Get or create a one-on-one conversation with a specific user and return its metadata.
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "abc123xyz_xyz789abc",
+    "participants": ["abc123xyz", "xyz789abc"],
+    "otherUser": { "uid": "xyz789abc", "displayName": "Jane Smith" },
+    "lastMessage": "",
+    "lastMessageTime": "2024-02-01T09:00:00Z"
+  }
+}
+```
+
+#### GET `/api/chat/messages/:conversationId`
+
+Get the most recent messages for a conversation (default limit 50).
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Query Parameters:**
+- `limit` (optional): number of recent messages to return
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "msg_001",
+      "senderId": "abc123xyz",
+      "recipientId": "xyz789abc",
+      "content": "Meet at 7am?",
+      "createdAt": "2024-02-01T09:25:00Z",
+      "read": false
+    }
+  ]
+}
+```
+
+#### POST `/api/chat/send`
+
+Send a message in a conversation.
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Request:**
+```json
+{
+  "conversationId": "abc123xyz_xyz789abc",
+  "recipientId": "xyz789abc",
+  "content": "See you then!"
+}
+```
+
+**Response (201):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "msg_002",
+    "senderId": "abc123xyz",
+    "recipientId": "xyz789abc",
+    "content": "See you then!",
+    "createdAt": "2024-02-01T09:31:00Z",
+    "read": false
+  }
+}
+```
+
+#### PUT `/api/chat/mark-read/:conversationId`
+
+Mark all unread messages addressed to the current user in the conversation as read.
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": { "markedCount": 3 }
+}
+```
+
+#### GET `/api/chat/unread-count`
+
+Get the total number of unread messages across all conversations for the current user.
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": { "unreadCount": 5 }
+}
+```
+
+---
+
+### Hike Invitations (`/api/hike-invites`)
+
+#### POST `/api/hike-invites/send`
+
+Send a hike invitation to a friend.
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Request:**
+```json
+{
+  "friendId": "xyz789abc",
+  "hikeId": "hike_123",
+  "hikeDetails": {
+    "title": "Table Mountain Sunrise",
+    "location": "Cape Town",
+    "plannedDate": "2024-02-10T05:30:00Z"
+  }
+}
+```
+
+**Response (201):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "invite_001",
+    "status": "pending"
+  }
+}
+```
+
+#### GET `/api/hike-invites/pending`
+
+Get pending invitations for the current user.
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "invite_001",
+      "fromUserId": "abc123xyz",
+      "toUserId": "xyz789abc",
+      "hikeId": "hike_123",
+      "hikeDetails": { "title": "Table Mountain Sunrise" },
+      "status": "pending",
+      "createdAt": "2024-02-01T09:15:00Z"
+    }
+  ]
+}
+```
+
+#### GET `/api/hike-invites/pending/count`
+
+Get the number of pending invitations for the current user.
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": { "count": 2 }
+}
+```
+
+#### POST `/api/hike-invites/:invitationId/accept`
+
+Accept a hike invitation and add the hike to the recipient's planner.
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": { "status": "accepted" },
+  "message": "Invitation accepted and hike added to your planner"
+}
+```
+
+#### POST `/api/hike-invites/:invitationId/reject`
+
+Reject a hike invitation.
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": { "status": "rejected" },
+  "message": "Invitation rejected"
+}
+```
+
+#### GET `/api/hike-invites/:invitationId`
+
+Get a specific invitation by ID.
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "invite_001",
+    "fromUserId": "abc123xyz",
+    "toUserId": "xyz789abc",
+    "status": "pending"
+  }
+}
+```
+
+#### GET `/api/hike-invites/sent/all`
+
+Get invitations sent by the current user.
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": [
+    { "id": "invite_001", "toUserId": "xyz789abc", "status": "pending" }
+  ]
+}
+```
+
+#### DELETE `/api/hike-invites/:invitationId`
+
+Cancel a pending invitation (sender only).
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": { "status": "cancelled" },
+  "message": "Invitation cancelled"
+}
+```
+
+---
+
+
 
 ## Error Handling
 
