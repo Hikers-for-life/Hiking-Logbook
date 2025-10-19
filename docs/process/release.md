@@ -84,7 +84,7 @@ This document outlines the release strategy for our software project, with versi
 ### Version 1.0 (Final Release)
 - **Target Release**: 19 October 2025
 - **Sprint**: Sprint 4
-- **Status**:  In Planning
+- **Status**:  Released
 - **Milestone**: Platform Completion & Launch Ready
 - **Final Features**:
   - **Advanced User Features**:
@@ -196,7 +196,3 @@ This roadmap is reviewed and updated every sprint. Changes may occur based on:
 
 ---
 
-## Sprint 1 proof
-
-- [First meeting](../sprint1/first-meeting.md)
-- [Second meeting](../sprint1/second-meeting.md)
