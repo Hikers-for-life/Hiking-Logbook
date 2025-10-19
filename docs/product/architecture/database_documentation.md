@@ -402,4 +402,4 @@ Required composite indexes for efficient queries:
 
 ---
 
-_For setup instructions, see [Database Setup Guide](developer_guides/database_setup.md)_
+_For setup instructions, see [Database Setup Guide](product/developer_guides/database_setup.md)_
