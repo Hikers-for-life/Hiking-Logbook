@@ -2,7 +2,7 @@
 #  Hiking Logbook
 
 
-![Test Coverage](https://img.shields.io/badge/Test%20Coverage-68.14%25-brightgreen)
+![Test Coverage](https://img.shields.io/badge/Test%20Coverage-81.0%25-brightgreen)
 
 Hiking Logbook is a modern web app that lets users track their hikes, set goals, earn achievements, and share their journeys with friends through a social activity feed. It combines adventure tracking with community interaction, offering a fun and motivating way to explore the outdoors and connect with fellow hikers.
 
@@ -192,6 +192,7 @@ For issues and questions:
 
 
 *Built with ❤️ for the hiking community*
+
 
 
 
