@@ -40,15 +40,19 @@ We use a **layered testing strategy**:
 ---
 
 ## Example Test Cases
-
 ### 1. Backend API Tests
 
-| Endpoint             | Test Case                                         | Expected Result                   |
-| -------------------- | ------------------------------------------------ | --------------------------------- |
-| `POST /api/hikes`    | Create a new hike with valid data                | Returns `201 Created` with hike ID |
-| `GET /api/hikes`     | Fetch all hikes for logged-in user               | Returns list of hikes             |
-| `PATCH /api/hikes/:id/pin` | Pin a hike                                 | Returns `success: true` and hike updated |
-| `GET /api/stats`     | Retrieve stats for user                          | Returns total hikes, distance, streak |
+| Endpoint                     | Test Case                                         | Expected Result                   |
+| ----------------------------- | ------------------------------------------------ | --------------------------------- |
+| `POST /api/hikes`             | Create a new hike with valid data                | Returns `201 Created` with hike ID |
+| `GET /api/hikes`              | Fetch all hikes for logged-in user               | Returns list of hikes             |
+| `PATCH /api/hikes/:id/pin`    | Pin a hike                                       | Returns `success: true` and hike updated |
+| `GET /api/stats`              | Retrieve stats for user                          | Returns total hikes, distance, streak |
+| `POST /api/messages`          | Send a new message to a friend                   | Returns `201 Created` with message details |
+| `POST /api/invitations`       | Invite a friend to a hike                        | Returns `201 Created` and notifies invitee |
+| `GET /api/achievements`       | Fetch user’s achievements and badges             | Returns list of badges and progress |
+| `GET /api/friends`            | Retrieve user’s friend list                      | Returns array of friend profiles   |
+
 
 ---
 
@@ -60,6 +64,12 @@ We use a **layered testing strategy**:
 | `ProgressCharts`     | Load progress stats                          | Line and bar charts render with data |
 | `PinnedHikes`        | Pin/unpin hike buttons                       | UI updates without reload            |
 | `HikePlannerForm`    | Form validation with missing fields           | Error messages are shown             |
+| `MessagesPage`       | Send and receive messages                    | Messages appear instantly in chat    |
+| `InvitationsPanel`   | Display received invitations                  | Invitations render correctly         |
+| `AchievementsPage`   | Display badges and progress charts            | Charts update dynamically            |
+| `ActivityFeedPage`   | Fetch and display friends’ activity           | Posts load and render in correct order |
+| `UserProfilePage`    | Load and edit user details                    | Profile updates persist after reload |
+
 
 ---
 
@@ -104,14 +114,43 @@ We use a **layered testing strategy**:
 - Then the hike is saved and displayed under **Upcoming Hikes**  
 
 ---
-
-### Story 5 – Secure personal data  
-**As a user**, I want my hikes to remain private so that only I can see my progress.  
+### Story 5 – Chat with friends  
+**As a user**, I want to send and receive messages in real time so that I can communicate with my hiking partners.  
 
 **Acceptance Test:**  
-- Given two users are logged in separately  
-- When User A views their hikes  
-- Then User B’s hikes are **not accessible** and a **permission denied** error is returned if attempted  
+- Given two friends are logged in  
+- When User A sends a message  
+- Then User B sees the message instantly and can reply without refreshing 
+
+---
+
+### Story 6 – View activity feed  
+**As a user**, I want to see my friends’ recent hikes so that I can stay updated on their adventures.  
+
+**Acceptance Test:**  
+- Given the user has connected friends  
+- When they open the **Activity Feed** page  
+- Then posts appear showing likes and comments  
+
+---
+
+### Story 8 – Manage user profile  
+**As a user**, I want to edit my profile information and view my hiking stats in one place.  
+
+**Acceptance Test:**  
+- Given the user is logged in  
+- When they update their profile details  
+- Then the changes are saved and reflected immediately in their account view  
+
+---
+
+### Story 9 – Track achievements  
+**As a user**, I want to unlock badges based on my hiking milestones so that I stay motivated.  
+
+**Acceptance Test:**  
+- Given the user completes several hikes  
+- When thresholds (e.g., 10 hikes, 100 km) are reached  
+- Then corresponding achievement badges appear automatically
 
 ---
 
@@ -126,3 +165,4 @@ We use a **layered testing strategy**:
    ```bash
    cd frontend
    npm test
+
