@@ -58,9 +58,14 @@ const Messages = () => {
         setConversations(convs);
         setFilteredConversations(convs);
 
-        // Get unread count
-        const count = await chatService.getUnreadCount();
-        setUnreadCount(count);
+        // Get unread count from messages
+        const messageCount = await chatService.getUnreadCount();
+
+        // Get pending hike invitations count
+        const inviteCount = await hikeInviteService.getPendingInvitationsCount();
+
+        // Combine both counts
+        setUnreadCount(messageCount + inviteCount);
       } catch (error) {
         console.error('Error loading conversations:', error);
       } finally {
@@ -70,8 +75,8 @@ const Messages = () => {
 
     loadConversations();
 
-    // Refresh conversations every 30 seconds
-    const interval = setInterval(loadConversations, 30000);
+    // Refresh conversations every 300 seconds
+    const interval = setInterval(loadConversations, 300000);
 
     return () => clearInterval(interval);
   }, [currentUser]);
@@ -83,11 +88,11 @@ const Messages = () => {
     // Initial load
     loadInvitations();
 
-    // Auto-refresh every 10 seconds for more responsive updates
+    // Auto-refresh every 300 seconds for more responsive updates
     const interval = setInterval(() => {
       console.log('🔄 Auto-refreshing invitations...');
       loadInvitations();
-    }, 10000);
+    }, 300000);
 
     return () => clearInterval(interval);
   }, [currentUser, loadInvitations]);
