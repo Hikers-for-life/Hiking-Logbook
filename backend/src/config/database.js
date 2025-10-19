@@ -1415,20 +1415,19 @@ export const dbUtils = {
     try {
       const db = this.getDb();
       
-      console.log('🔍 Querying invitations for:', userId);
-    
+      console.log('Querying invitations for:', userId);
       const snapshot = await db
         .collection('hikeInvitations')
         .where('toUserId', '==', userId)
         .where('status', '==', 'pending')
         .get(); // Removed .orderBy('createdAt', 'desc')
 
-      console.log('📊 Query returned:', snapshot.size, 'documents');
+      console.log('Query returned:', snapshot.size, 'documents');
       
       const invitations = [];
       snapshot.forEach(doc => {
         const data = doc.data();
-        console.log('📄 Document:', doc.id, data);
+        console.log('Document:', doc.id, data);
         
         invitations.push({
           id: doc.id,
@@ -1444,7 +1443,7 @@ export const dbUtils = {
 
       return invitations;
     } catch (err) {
-      console.error('❌ getPendingHikeInvitations error:', err);
+      console.error('getPendingHikeInvitations error:', err);
       throw new Error(`getPendingHikeInvitations failed: ${err.message}`);
     }
   },
