@@ -68,16 +68,16 @@ const Friends = () => {
   //ANNAH HERE
   const [friendsLoading, setFriendsLoading] = useState(true);
   const [activityLoading, setActivityLoading] = useState(true);
-//ANNAH HERE
+  //ANNAH HERE
 
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState([]);
 
   const [searchError, setSearchError] = useState("");
-   const { currentUser } = useAuth();
-   const [friends, setFriends] = useState([]);
-   const [userStats,setUserStats] = useState([]);
-    const { toast } = useToast();
+  const { currentUser } = useAuth();
+  const [friends, setFriends] = useState([]);
+  const [userStats, setUserStats] = useState([]);
+  const { toast } = useToast();
 
 
   const handleSearch = async () => {
@@ -141,7 +141,7 @@ const Friends = () => {
         }
       } catch (err) {
         console.error('Error fetching friends:', err);
-      }finally{
+      } finally {
         setFriendsLoading(false); // stop loading
       }
     };
@@ -227,7 +227,7 @@ const Friends = () => {
         description: 'Could not load user profile.',
       });
     }
-};
+  };
 
   //ANNAH HERE
   const auth = getAuth();
@@ -399,12 +399,12 @@ const Friends = () => {
         prev.map((a) =>
           a.id === activityId
             ? {
-                ...a,
-                comments: [
-                  ...(a.comments || []).filter((c) => c.id !== tempComment.id),
-                  res.comment,
-                ],
-              }
+              ...a,
+              comments: [
+                ...(a.comments || []).filter((c) => c.id !== tempComment.id),
+                res.comment,
+              ],
+            }
             : a
         )
       );
@@ -419,11 +419,11 @@ const Friends = () => {
         prev.map((a) =>
           a.id === activityId
             ? {
-                ...a,
-                comments: (a.comments || []).filter(
-                  (c) => c.id !== tempComment.id
-                ),
-              }
+              ...a,
+              comments: (a.comments || []).filter(
+                (c) => c.id !== tempComment.id
+              ),
+            }
             : a
         )
       );
@@ -578,7 +578,7 @@ const Friends = () => {
     // keep previous list for rollback
     const prev = [...recentActivity];
     setEditingPost(null);
-  
+
     // find activity to decide whether it's a share (edit caption) or original (edit description)
     const activity = recentActivity.find((a) => a.id === activityId) || {};
     const isShare = activity.type === 'share';
@@ -591,11 +591,11 @@ const Friends = () => {
       curr.map((a) =>
         a.id === activityId
           ? {
-              ...a,
-              ...(isShare
-                ? { shareCaption: payload.shareCaption }
-                : { description: payload.description }),
-            }
+            ...a,
+            ...(isShare
+              ? { shareCaption: payload.shareCaption }
+              : { description: payload.description }),
+          }
           : a
       )
     );
@@ -803,28 +803,77 @@ const Friends = () => {
     }
   };
 
+  // Clean up stale localStorage entries
+  const cleanupStalePendingRequests = (suggestions) => {
+    try {
+      const suggestionIds = new Set(suggestions.map(s => s.id));
+      const keysToRemove = [];
+
+      // Check all localStorage keys that start with 'pending_request_'
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('pending_request_')) {
+          const userId = key.replace('pending_request_', '');
+          // If this user is not in current suggestions, remove the stale entry
+          if (!suggestionIds.has(userId)) {
+            keysToRemove.push(key);
+          }
+        }
+      }
+
+      // Remove stale entries
+      keysToRemove.forEach(key => {
+        localStorage.removeItem(key);
+        console.log('Removed stale pending request entry:', key);
+      });
+    } catch (e) {
+      console.warn('Error cleaning up stale pending requests:', e);
+    }
+  };
+
+  // Clear ALL pending request localStorage entries (more aggressive cleanup)
+  const clearAllPendingRequestEntries = () => {
+    try {
+      const keysToRemove = [];
+
+      // Find all localStorage keys that start with 'pending_request_'
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('pending_request_')) {
+          keysToRemove.push(key);
+        }
+      }
+
+      // Remove all pending request entries
+      keysToRemove.forEach(key => {
+        localStorage.removeItem(key);
+        console.log('Cleared pending request entry:', key);
+      });
+
+      console.log(`Cleared ${keysToRemove.length} pending request entries`);
+    } catch (e) {
+      console.warn('Error clearing pending request entries:', e);
+    }
+  };
+
   useEffect(() => {
     if (!auth?.currentUser) return;
+
+    // Clear all pending request entries on component mount to ensure clean state
+    clearAllPendingRequestEntries();
+
     const loadSuggestions = async () => {
       try {
         setLoading(true);
         const data = await discoverFriends();
         console.log('suggestion :', data);
-        // reflect local pending markers
-        let marked = data;
-        try {
-          marked = data.map((s) => {
-            try {
-              const pending = localStorage.getItem(`pending_request_${s.id}`);
-              if (pending)
-                return { ...s, _requestSent: true, _requestId: pending };
-            } catch (e) {}
-            return s;
-          });
-        } catch (e) {
-          marked = data;
-        }
-        setSuggestions(marked);
+
+        // Clean up stale localStorage entries
+        cleanupStalePendingRequests(data);
+
+        // For now, don't use localStorage markers at all - rely only on backend data
+        // This ensures we start with a clean state
+        setSuggestions(data);
       } catch (err) {
         console.error('Failed to fetch suggestions:', err);
       } finally {
@@ -896,49 +945,49 @@ const Friends = () => {
         </div>
 
 
-          {searchError && <p className="text-red-500 mt-2">{searchError}</p>}
-            {searchResults.map((user) => (
-              <Card 
-                key={user.id} 
-                className="relative flex flex-col sm:flex-row gap-3 items-start mt-4 mb-4"
-              >
-                {/* Close button */}
-                <button
-                  onClick={() => setSearchResults(searchResults.filter(u => u.id !== user.id))}
-                  className="absolute top-2 right-2 text-gray-400 hover:text-red-500 transition-colors"
-                >
-                  ✕ 
-                </button>
+        {searchError && <p className="text-red-500 mt-2">{searchError}</p>}
+        {searchResults.map((user) => (
+          <Card
+            key={user.id}
+            className="relative flex flex-col sm:flex-row gap-3 items-start mt-4 mb-4"
+          >
+            {/* Close button */}
+            <button
+              onClick={() => setSearchResults(searchResults.filter(u => u.id !== user.id))}
+              className="absolute top-2 right-2 text-gray-400 hover:text-red-500 transition-colors"
+            >
+              ✕
+            </button>
 
-                <div className="flex items-center gap-2 mb-2">
-                  <CardHeader className="pb-4">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-12 w-12">
-                        <AvatarFallback className="text-xl">
-                          {user.displayName
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <span
-                            className="font-semibold text-foreground cursor-pointer hover:underline"
-                            onClick={() => {
-                              const isFriend = friends.some((f) => f.id === user.id);
-                              // Pass user object with uid property for profile view
-                              handleViewProfile({ ...user, uid: user.id }, !isFriend); // showAddFriend = false if already friend
-                            }}
-                          >
-                            {user.displayName}
-                          </span>
-                        </div>
-                        <p className="text-sm text-muted-foreground flex items-center gap-1">
-                          <MapPin className="h-3 w-3" />
-                          {user.location || "Not yet set"}
-                        </p>
-                      </div>
+            <div className="flex items-center gap-2 mb-2">
+              <CardHeader className="pb-4">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-12 w-12">
+                    <AvatarFallback className="text-xl">
+                      {user.displayName
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="font-semibold text-foreground cursor-pointer hover:underline"
+                        onClick={() => {
+                          const isFriend = friends.some((f) => f.id === user.id);
+                          // Pass user object with uid property for profile view
+                          handleViewProfile({ ...user, uid: user.id }, !isFriend); // showAddFriend = false if already friend
+                        }}
+                      >
+                        {user.displayName}
+                      </span>
+                    </div>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1">
+                      <MapPin className="h-3 w-3" />
+                      {user.location || "Not yet set"}
+                    </p>
+                  </div>
                 </div>
               </CardHeader>
             </div>
@@ -964,94 +1013,94 @@ const Friends = () => {
                 No friends yet. Search or discover new potential friends!
               </p>
             ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {friends.map((friend) => (
-                <Card
-                  key={friend.id}
-                  className="bg-card border-border shadow-elevation"
-                >
-                  <CardHeader className="pb-4">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-12 w-12">
-                        <AvatarFallback className="bg-gradient-trail text-white text-l">
-                          {friend.displayName
-                            .split(' ')
-                            .map((n) => n[0])
-                            .join('')}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-semibold text-foreground">
-                            {friend.displayName}
-                          </h3>
-                          <div
-                            className={`w-2 h-2 rounded-full ${friend.status === 'online' ? 'bg-green-500' : 'bg-gray-400'}`}
-                          />
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {friends.map((friend) => (
+                  <Card
+                    key={friend.id}
+                    className="bg-card border-border shadow-elevation"
+                  >
+                    <CardHeader className="pb-4">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-12 w-12">
+                          <AvatarFallback className="bg-gradient-trail text-white text-l">
+                            {friend.displayName
+                              .split(' ')
+                              .map((n) => n[0])
+                              .join('')}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-semibold text-foreground">
+                              {friend.displayName}
+                            </h3>
+                            <div
+                              className={`w-2 h-2 rounded-full ${friend.status === 'online' ? 'bg-green-500' : 'bg-gray-400'}`}
+                            />
+                          </div>
+                          <p className="text-sm text-muted-foreground flex items-center gap-1">
+                            <MapPin className="h-3 w-3" />
+                            {friend.location || 'Not yet set'}
+                          </p>
                         </div>
-                        <p className="text-sm text-muted-foreground flex items-center gap-1">
-                          <MapPin className="h-3 w-3" />
-                          {friend.location || 'Not yet set'}
-                        </p>
                       </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4 text-center">
-                      <div>
-                        <p className="text-2xl font-bold text-summit">
-                          {friend.totalHikes}
-                        </p>
-                        <p className="text-xs text-muted-foreground">Hikes</p>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4 text-center">
+                        <div>
+                          <p className="text-2xl font-bold text-summit">
+                            {friend.totalHikes}
+                          </p>
+                          <p className="text-xs text-muted-foreground">Hikes</p>
+                        </div>
+                        <div>
+                          <p className="text-2xl font-bold text-forest">
+                            {friend.totalDistance} km
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Distance
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-2xl font-bold text-forest">
-                          {friend.totalDistance} km
-                        </p>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-sm">
+                          <Mountain className="h-4 w-4 text-trail" />
+                          <span className="text-muted-foreground">
+                            Last hike:
+                          </span>
+                        </div>
+                        <p className="text-sm font-medium">{friend.lastHike}</p>
                         <p className="text-xs text-muted-foreground">
-                          Distance
+                          {friend.lastHikeDate}
                         </p>
                       </div>
-                    </div>
 
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Mountain className="h-4 w-4 text-trail" />
-                        <span className="text-muted-foreground">
-                          Last hike:
-                        </span>
-                      </div>
-                      <p className="text-sm font-medium">{friend.lastHike}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {friend.lastHikeDate}
-                      </p>
-                    </div>
+                      <Badge variant="secondary" className="text-xs">
+                        <Medal className="h-3 w-3 mr-1" />
+                        {friend.recentAchievement}
+                      </Badge>
 
-                    <Badge variant="secondary" className="text-xs">
-                      <Medal className="h-3 w-3 mr-1" />
-                      {friend.recentAchievement}
-                    </Badge>
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        size="sm"
+                        onClick={() => handleViewProfile(friend)}
+                      >
+                        View Profile
+                      </Button>
 
-                    <Button
-                      variant="outline"
-                      className="w-full"
-                      size="sm"
-                      onClick={() => handleViewProfile(friend)}
-                    >
-                      View Profile
-                    </Button>
-
-                    <Button
-                      className="w-full bg-gradient-trail text-primary-foreground hover:opacity-90"
-                      size="sm"
-                      onClick={() => handleBlockFriend(friend.id)}
-                    >
-                      Block Friend
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                      <Button
+                        className="w-full bg-gradient-trail text-primary-foreground hover:opacity-90"
+                        size="sm"
+                        onClick={() => handleBlockFriend(friend.id)}
+                      >
+                        Block Friend
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             )}
           </TabsContent>
 
@@ -1211,8 +1260,8 @@ const Friends = () => {
                                           origId,
                                           origId
                                             ? !friends.some(
-                                                (f) => f.id === origId
-                                              )
+                                              (f) => f.id === origId
+                                            )
                                             : false
                                         );
                                       }}
@@ -1613,24 +1662,27 @@ const Friends = () => {
                               const resp = await sendFriendRequest(
                                 suggestion.id
                               );
-                              // mark locally as requested so UI shows 'Request Sent'
-                              setSuggestions((prev) =>
-                                prev.map((s) =>
-                                  s.id === suggestion.id
-                                    ? {
+
+                              // Refresh suggestions from backend instead of relying on localStorage
+                              try {
+                                const refreshedSuggestions = await discoverFriends(true);
+                                setSuggestions(refreshedSuggestions);
+                              } catch (refreshErr) {
+                                console.warn('Failed to refresh suggestions, marking locally:', refreshErr);
+                                // Fallback: mark locally as requested
+                                setSuggestions((prev) =>
+                                  prev.map((s) =>
+                                    s.id === suggestion.id
+                                      ? {
                                         ...s,
                                         _requestSent: true,
                                         _requestId: resp.requestId,
                                       }
-                                    : s
-                                )
-                              );
-                              try {
-                                localStorage.setItem(
-                                  `pending_request_${suggestion.id}`,
-                                  resp.requestId
+                                      : s
+                                  )
                                 );
-                              } catch (e) {}
+                              }
+
                               toast({
                                 title: 'Friend request sent',
                                 description: `A request was sent to ${suggestion.name}.`,
