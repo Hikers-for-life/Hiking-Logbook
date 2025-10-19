@@ -1,34 +1,5 @@
-import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Badge } from '../components/ui/badge';
-import { Navigation } from '../components/ui/navigation';
-import { Input } from '../components/ui/input';
-import NewHikePlanForm from '../components/NewHikePlanForm';
-import FriendInviteDialog from '../components/FriendInviteDialog';
-import {
-  Calendar,
-  MapPin,
-  Users,
-  Backpack,
-  Mountain,
-  Plus,
-  X,
-  RotateCcw,
-  Search,
-  UserPlus,
-  Trash2,
-  Edit,
-} from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext.jsx';
-import { plannedHikeApiService } from '../services/plannedHikesService.js';
-import { useGearChecklist } from '../services/gearService.js';
+
+
 
 import clear from '../components/assets/clear.jpg';
 import sunny from '../components/assets/sunny.jpg';
