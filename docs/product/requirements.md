@@ -1,6 +1,6 @@
 # Hiking Logbook – Functional & Non-Functional Requirements
 
-> ⚠️ **Note**:  
+>  **Note**:  
 > This document is a **living document**. Requirements may evolve as the project progresses and new feedback or constraints are introduced. All updates will be versioned and traceable via Git history.  
 
 ---
@@ -25,8 +25,7 @@
 - Users shall be able to **edit** hikes (e.g., notes, details, attached media).  
 - Users shall be able to **delete** hikes.  
 - Users shall be able to **view their personal logbook** with all recorded hikes.  
-- Users shall be able to **filter/search hikes** by date, difficulty, or location.  
-- Users shall be able to upload **photos** associated with hikes.  
+- Users shall be able to **filter/search hikes** by date, difficulty, or location.   
 
 ### 1.3 Hike Planning
 - Users shall be able to create planned hikes with details including route, date/time, and invite list.  
