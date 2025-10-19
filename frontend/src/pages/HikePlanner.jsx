@@ -141,13 +141,33 @@ const HikePlanner = () => {
     '13d': snow,
   };
 
-  useEffect(() => {
+   useEffect(() => {
+    // Check if user has set location in profile
     if (profile?.latitude && profile?.longitude) {
       search(profile.latitude, profile.longitude);
+    } else {
+      // If no location set, try to get current location using geolocation API
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            console.log('Using current location:', latitude, longitude);
+            // Fetch weather which will also set the location name
+            search(latitude, longitude, true); // Pass true to indicate this is from geolocation
+          },
+          (error) => {
+            console.error('Geolocation error:', error);
+            // If geolocation fails, show a message or use default location
+            console.log('Unable to get current location. Please set your location in profile or search manually.');
+          }
+        );
+      } else {
+        console.log('Geolocation is not supported by this browser.');
+      }
     }
   }, [profile]);
 
-  const search = async (latitude, longitude) => {
+  const search = async (latitude, longitude, isFromGeolocation = false) => {
     try {
       const url = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&units=metric&appid=${
         process.env.REACT_APP_OPENWEATHER_API_KEY
@@ -175,6 +195,14 @@ const HikePlanner = () => {
         description: data.weather[0].description,
         icon: icon,
       });
+
+      if (isFromGeolocation && data.name) {
+        setLocation({
+          location: data.name,
+          latitude,
+          longitude,
+        });
+      }
     } catch (error) {
       console.error('Error fetching weather:', error);
     }
