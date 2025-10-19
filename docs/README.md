@@ -15,7 +15,9 @@ This documentation hub serves as your guide to understanding both the **product*
 #### Core Requirements & Design
 - [Requirements](product/requirements.md) 
 - [UX Documentation](product/ux.md)
-- [Testing Strategy](product/testing.md) 
+- [Testing Strategy](product/testing_strategy.md)
+- [Feature Login](product/feature_login.md)
+- [Project Features](product/hiking_logbook_features.md)
 
 #### Architecture & Technical Documentation
 - [API Documentation](product/architecture/api_documentation.md) 
@@ -25,10 +27,10 @@ This documentation hub serves as your guide to understanding both the **product*
 - [Third-Party Integrations](product/architecture/third_party_documentation.md) 
 
 #### Developer Setup Guides
-- [Database Setup](product/architecture/developer_guides/database_setup.md) 
-- [API Setup](product/architecture/developer_guides/api_setup.md) 
-- [Frontend Setup](product/architecture/developer_guides/site_setup.md) 
-- [Deployment Guide](product/architecture/developer_guides/deployment.md) 
+- [Database Setup](product/developer_guides/database_setup.md) 
+- [API Setup](product/developer_guides/api_setup.md) 
+- [Frontend Setup](product/developer_guides/site_setup.md) 
+- [Deployment Guide](product/developer_guides/deployment.md) 
 
 ### Process Documentation
 
@@ -96,6 +98,7 @@ This documentation hub serves as your guide to understanding both the **product*
 - [Project Work Tracker](https://github.com/orgs/Hikers-for-life/projects/1/views/1). 
 
 ---
+
 
 
 
