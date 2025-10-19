@@ -52,7 +52,7 @@ This documentation hub serves as your guide to understanding both the **product*
   - [Sprint Review](methodology/sprint2/sprint_review.md)
   - [Backlog Refinement](methodology/sprint2/backlog_refinement.md)
   - [Sprint Retrospective 1](methodology/sprint2/sprint_retrospective.md)
-  - [Sprint Retrospective 2](methodology/sprint1/sprint_retrospective2.md)
+  - [Sprint Retrospective 2](methodology/sprint2/sprint_retrospective2.md)
   - [Daily Meetings](methodology/sprint2/)
         
 - [Sprint 3](methodology/sprint3/)
@@ -63,8 +63,8 @@ This documentation hub serves as your guide to understanding both the **product*
      - [Daily Meetings](methodology/sprint3/)
    
 - [Sprint 4](methodology/sprint4/)
-   - [Sprint Planning Meeting](methodology/sprint3/first_meeting.md)
-   - [Final Submission Meeting](methodology/sprint3/final_submission_meeting.md)
+   - [Sprint Planning Meeting](methodology/sprint4/first_meeting.md)
+   - [Final Submission Meeting](methodology/sprint4/final_submission_meeting.md)
        
 
 #### Security & Quality
@@ -118,6 +118,7 @@ This documentation hub serves as your guide to understanding both the **product*
 - [Project Work Tracker](https://github.com/orgs/Hikers-for-life/projects/1/views/1). 
 
 ---
+
 
 
 
