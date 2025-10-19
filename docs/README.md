@@ -42,7 +42,8 @@ This documentation hub serves as your guide to understanding both the **product*
 - [Project Methodology](methodology/methodology.md) 
 - [Sprint 1](methodology/sprint1/)
 - [Sprint 2](methodology/sprint2/)
-- [Sprint 3](methodology/sprint3/) 
+- [Sprint 3](methodology/sprint3/)
+- [Sprint 4](methodology/sprint4/) 
 
 #### Security & Quality
 - [Security Audits](security-audits/) 
@@ -95,6 +96,7 @@ This documentation hub serves as your guide to understanding both the **product*
 - [Project Work Tracker](https://github.com/orgs/Hikers-for-life/projects/1/views/1). 
 
 ---
+
 
 
 
