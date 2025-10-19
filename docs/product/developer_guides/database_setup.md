@@ -103,7 +103,7 @@ npm start
 - **Solution:** Check frontend .env has correct Firebase config
 
 
-For detailed database schema and structure, see  [Database Documentation](product/architecture/database_documentation.md)  
+For detailed database schema and structure, see database documentation
 
 ---
 
